@@ -1,0 +1,17 @@
+{
+  "name": "@workbuddy/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@workbuddy/application": "workspace:*",
+    "@workbuddy/contracts": "workspace:*",
+    "@workbuddy/fixtures": "workspace:*",
+    "@workbuddy/harness": "workspace:*",
+    "@workbuddy/mock-classin": "workspace:*"
+  },
+  "devDependencies": { "@types/node": "latest" }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "classin-ai-buddy",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "pnpm --filter @workbuddy/workbench dev",
+    "dev:api": "pnpm --filter @workbuddy/api dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint .",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm check:architecture && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@types/node": "latest",
+    "eslint": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "tsx": "latest",
+    "typescript": "6.0.3",
+    "typescript-eslint": "latest"
+  }
+}

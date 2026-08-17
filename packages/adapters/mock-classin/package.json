@@ -1,0 +1,14 @@
+{
+  "name": "@workbuddy/mock-classin",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "build": "tsc -b" },
+  "dependencies": {
+    "@workbuddy/application": "workspace:*",
+    "@workbuddy/contracts": "workspace:*",
+    "@workbuddy/domain": "workspace:*",
+    "@workbuddy/fixtures": "workspace:*"
+  }
+}
+
