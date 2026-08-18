@@ -11,6 +11,10 @@
 
 - [新版 AI 学情与 Agent Harness 内部案例系统研究](./internal_case_ai_learning_agent_harness_20260817.md)
 
+## 公开 AI 产品案例
+
+- [希沃 AI 赋能教育全场景方案产品设计链路研究](./seewo_ai_education_full_scenario_solution_20260818.md)
+
 ## ClassIn 业务与教学
 
 - [ClassIn 公开资料研究底稿](./public_research_classin_20260815.md)
