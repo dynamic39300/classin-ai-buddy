@@ -7,3 +7,4 @@
 ## 当前基线
 
 - [教师 WorkBuddy 全量能力覆盖矩阵](./CAPABILITY-COVERAGE-MATRIX.md)：终局能力域到产品逻辑、知识、业务数据和 Harness 的映射。
+- [教师 WorkBuddy AI 编排蓝图](./AI-ORCHESTRATION-BLUEPRINT.md)：从教师业务场景到 AI 流程、Skill、业务数据、Domain Knowledge、前端体验和评价的产品拆解基线。
