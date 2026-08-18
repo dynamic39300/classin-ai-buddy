@@ -11,6 +11,7 @@
 | D-007 | LOCKED | 框架和供应商不在原型阶段锁死 | 先验证 Interface 和状态，再做 Spike | 具体 SDK 只能位于 Adapter/Provider 后 |
 | D-008 | LOCKED | 使用 `pnpm workspace + TypeScript strict + 模块化单体` 建立 production-shaped prototype | 同时验证前端、API、共享契约、Harness 和模拟 Adapter 的边界 | React/Vite 工作台与单一 API/BFF；暂缓微服务和重型编排 |
 | D-009 | LOCKED | 教师首屏采用任务引导式体验，默认隐藏 Harness 和业务系统术语 | 第一版让教师先理解系统再开始工作，产生焦虑和操作不确定性 | 默认路径只表达“说目标 → 看方案 → 确认保存”；工程状态进入评审模式或辅助信息 |
+| R-001 | RECOMMENDATION | WorkBuddy 全局能力围绕三条核心业务结果链组织：作业到订正、备课演练到改进、诊断到干预；工程按“课程目标到课程对象、作业到订正、备课演练到改进、诊断到干预”四条纵向切片推进 | 同时保持终局业务地图完整，并用课程生产基础链先验证共享 Harness，再逐步引入学生证据、媒体证据和跨对象副作用 | 产品能力矩阵、AI 编排蓝图和系统交付地图采用业务场景名称；内部 ID 只用于工程追踪。该建议待真实用户、数据和权限证据验证后再决定是否升级为 LOCKED |
 
 ## 变更规则
 
