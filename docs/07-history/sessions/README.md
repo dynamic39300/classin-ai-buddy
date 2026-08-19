@@ -4,3 +4,4 @@
 
 - [ClassIn AI Buddy 历史会话导出](./历史会话导出_20260815.md)
 - [教师 WorkBuddy 推进与 AI 编排蓝图 Session 日志](./20260818-教师WorkBuddy推进与AI编排蓝图-session-log.md)
+- [业务场景产品设计框架与课件审教迭代 Session 日志](./20260819-业务场景产品设计框架与课件审教迭代-session-log.md)
