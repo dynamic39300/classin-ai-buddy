@@ -1,6 +1,6 @@
 # WorkBuddy M4 Phase 4 Review Checklist
 
-**Status:** READY_FOR_INTERNAL_REREVIEW
+**Status:** READY_FOR_USER_REVIEW
 **Date:** 2026-08-21  
 **Fixture:** `workbuddy-m4-course-production-v1`
 
@@ -46,13 +46,13 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 
 - TypeScript：通过；
 - ESLint：通过；
-- Vitest：50 files / 335 tests 通过；
+- Vitest：50 files / 378 tests 通过（单 worker 全量复跑）；
 - Production build：通过；Vite 仅保留既有大 chunk 提示；
-- Playwright E2E：65/65 通过；
+- Playwright E2E：67/67 通过（单 worker 全量复跑）；
 - WorkBuddy Visual：8/8 通过，覆盖 1440×900 与 1000×768；
 - M4 E2E 内 axe serious/critical：0。
 
-## 5. 首轮双轴审查整改
+## 5. 双轴审查整改与终审结论
 
 首轮 Standards/Spec 审查发现的 P1/P2/P3 已全部进入实现整改，并通过上述自动化验证：
 
@@ -61,8 +61,14 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 - Package Run 写入任务历史，活动面板、Artifact 与 Receipt 可离开页面后恢复；
 - ContextProjection 改为按 Capability Manifest 和步骤用途生成，展示 Snapshot、用途、生成时间、来源版本与敏感项裁剪数量；
 - 单课件和方案包 Adapter 均覆盖权限、冲突、可恢复失败、超时和幂等重试，并使用 Mock 与 deterministic test 两个具体实现执行契约测试；
+- 幂等键在第一次合法执行尝试时即绑定规范化请求指纹；审批、Run/Context/Artifact 归属先于缓存重放校验，同键异请求被拒绝，同语义乱序请求可稳定重放；
+- ProposedAction 的时间策略改为共享的失败关闭规则；无效时间、过期审批和过期执行均拒绝，续期只更换 ID、幂等键与有效期并保留教师已确认目标；
+- Core Context hierarchy 与课程包 Artifact Graph 均在领域入口校验重复 ID、悬空依赖和环；合法乱序 DAG 按依赖关系解析；
+- Courseware 与 Package application controller 已从 Workspace Provider 拆出，公开 Workspace Interface 不变；
 - UI 只消费 Feature-owned presentation model，Fixture 文案、ID、时间和对象定义移至 Mock scenarios；
 - 侧栏关闭恢复焦点，CSS 字号与间距回到已锁定 token。
+
+固定基线 `24e758b` 至交付 HEAD 的最终 Code Review 结论：**Standards PASS / Spec PASS，P0–P3 为 0**。
 
 ## 6. 明确不属于 M4
 
@@ -73,4 +79,4 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 
 ## 7. 用户 Review 记录
 
-等待第二轮 Standards/Spec 双轴审查。只有审查无剩余 P0–P3 后才恢复 `READY_FOR_USER_REVIEW`；用户确认前不把 M4 自动升级为新的 `LOCKED` 产品决策。
+内部工程门禁已完成，当前进入用户验收。Standards/Spec 双轴终审均无剩余 P0–P3；用户确认前不把 M4 自动升级为新的 `LOCKED` 产品决策。

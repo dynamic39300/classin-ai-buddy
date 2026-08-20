@@ -4,14 +4,14 @@
 
 **Blocked by:** 03 — 单课件成功闭环；04 — 写回异常恢复；05 — 课程方案包；06 — 派生 Run；07 — Context Replanning 与恢复。
 
-**Status:** in-review
+**Status:** complete
 
 - [x] 一键重置恢复固定 M4 Fixture、稳定 ID、版本、场景状态和真值标签。
 - [x] 最高层浏览器旅程完整覆盖两类 Task Type 及 Context→Receipt 主链。
 - [x] needs_attention、waiting、recoverable failure、permission denial、conflict、partial success、completed、superseded 可复现。
 - [x] 1440×900 与紧凑桌面视觉无溢出、遮挡、不可达动作或未经标注的模拟能力。
 - [x] Typecheck、Lint、完整 Vitest、生产 Build、全量 E2E、相关 Visual 和可访问性通过。
-- [ ] Standards/Spec 双轴 Code Review 无剩余 P0–P3 finding。
+- [x] Standards/Spec 双轴 Code Review 无剩余 P0–P3 finding。
 - [x] Spec、Decision Ledger、实施清单、Tickets 和 Phase 4 Review 材料回写并提交当前分支。
 
-**Verification so far:** 首轮双轴 review 的 P1/P2/P3 已完成整改；50 Vitest files / 335 tests；65 E2E；8 WorkBuddy visual；production build；M4 axe serious/critical 0。待第二轮双轴 review。
+**Verification:** 固定基线 `24e758b` 至交付 HEAD 的 Standards/Spec 终审均 PASS，剩余 P0–P3 为 0；50 Vitest files / 378 tests；67/67 全量 E2E；8/8 WorkBuddy visual；production build；M4 axe serious/critical 0。当前等待用户验收，不自动锁定 M4 产品决策。
