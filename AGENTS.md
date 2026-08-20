@@ -4,15 +4,16 @@
 
 ## 1. 项目使命
 
-把教师 WorkBuddy 从终局产品定义推进为可验证的产品、Harness 和工程纵向切片。当前首条切片是“课程目标到课程对象”，使用可重置的模拟 ClassIn 机构和模拟业务对象。
+在可运行的 ClassIn PC 产品基座内，把教师 WorkBuddy 从终局产品定义推进为可验证的产品、Harness 和工程纵向切片。当前首条切片是“课程目标到课程对象”，使用可重置的模拟 ClassIn 机构和模拟业务对象。
 
 当前交付物分为三类：
 
 - 产品与架构事实：`docs/00-project/`、`docs/02-product/`、`docs/06-architecture/`；
 - 外部研究与证据：`docs/01-research/`；
-- 可操作原型与未来生产代码：`prototype/`、`src/`。
+- 可操作产品基座与未来生产代码：`src/`、`tests/`；
+- 原型说明、评审记录和导出快照：`prototype/`。
 
-原型是结构和状态验证工具，不伪装成最终品牌 UI、生产服务或真实 ClassIn 集成。
+当前代码同时承载教师端与学生端的可运行 PC Demo；WorkBuddy 只进入教师端。它用于结构、状态和交互验证，不伪装成生产服务或真实 ClassIn 集成。
 
 ## 2. 事实优先级
 
@@ -65,21 +66,21 @@
 
 ## 6. 目录与依赖
 
-可运行的 D1 原型位于 `apps/workbench`，`prototype/` 只保存原型说明、评审记录和导出快照。后续生产化代码仍沿用同一 workspace 的模块边界，目标依赖方向为：
+可运行应用位于仓库根目录的 `src/`，使用 npm、React、Vite 和 TypeScript；`prototype/` 只保存原型说明、评审记录和导出快照。教师端与学生端使用独立页面树，共享经过明确授权的 Domain、Feature 与 Design System。目标依赖方向为：
 
 ```text
-app -> features -> domain
-app -> harness -> contracts
-adapters -> contracts/domain
+app -> pages -> features -> domain
+app -> features -> design-system
+adapters/mocks -> domain/contracts
 features -> design-system
-domain/contracts -> no UI or browser dependency
+domain/contracts -> no React, DOM or browser dependency
 ```
 
-`domain` 不依赖 React、DOM、Mock 或具体 Adapter；`design-system` 不依赖业务 Feature；`mocks` 只实现已有 Interface。
+`domain` 不依赖 React、DOM、Mock 或具体 Adapter；`design-system` 不依赖业务 Feature；`mocks` 只实现已有 Interface。WorkBuddy 通过教师路由下的嵌套路由布局提供扁平二级导航，不给 AppShell 暴露 WorkBuddy 私有状态。
 
 ## 7. 原型规则
 
-原型设计规范见 `docs/03-design/PROTOTYPE-DESIGN-STANDARDS.md`，原型工程规则见 `docs/05-engineering/ENGINEERING-STANDARDS.md`。当前原型采用结构高保真、视觉低保真：中性黑白灰和单一语义强调色，不绑定 ClassIn 品牌色或最终视觉规范。
+产品与原型设计规范见 `docs/03-design/PROTOTYPE-DESIGN-STANDARDS.md`，工程规则见 `docs/05-engineering/ENGINEERING-STANDARDS.md`。迁入的 ClassIn PC 基座保留已评审的现有视觉；新增 WorkBuddy 首先追求结构与交互高保真，并遵循当前 Token、可访问性和视觉规则，不自行创造第二套 Shell。
 
 原型必须表达空白、生成中、需要补充、待确认、部分成功、权限拒绝、可恢复失败、完成待复查和撤销/过期状态中的适用部分。
 
@@ -97,7 +98,7 @@ domain/contracts -> no UI or browser dependency
 
 - 变更符合锁定决策、Spec 和当前 Write Set；
 - 核心、空、加载、错误、权限和恢复状态按范围处理；
-- 原型可用一条明确命令启动，且关键交互可操作；
+- 应用可用 `npm run dev` 启动，且范围内关键交互可操作；
 - 视觉验收无溢出、遮挡、不可达操作和未标注的模拟能力；
 - 规范、目录和研究结果已写回仓库并可被后续 Agent 定位；
 - 未验证内容和剩余风险已明确记录。
@@ -108,4 +109,4 @@ domain/contracts -> no UI or browser dependency
 - 设计 Module、Interface、Seam 或 Adapter：读取 `codebase-design` 词汇和相关 Spec；
 - 进行外部资料、GitHub、协议或框架调研：使用 `research` 技能并保留一手来源；
 - 构建一次性 UI/状态原型：使用 `prototype` 技能；
-- 修改已有前端产品而非本仓库原型：先读取对应项目的本地规范，不将本文件复制过去。
+- 修改既有 ClassIn PC 页面：读取 `docs/05-engineering/FRONTEND-STANDARDS.md`、目标 Feature 和对应测试；保持教师/学生路由边界。

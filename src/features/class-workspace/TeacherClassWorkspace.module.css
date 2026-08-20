@@ -1,0 +1,1712 @@
+.page {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+.page[data-surface='detail'] {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.listHeader,
+.detailHeader {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: 0 var(--space-xl);
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-surface);
+}
+
+.listHeader nav,
+.detailIdentity nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.listHeader nav strong,
+.detailIdentity nav span {
+  overflow: hidden;
+  color: var(--color-ink-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailIdentity nav button {
+  padding: 0;
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.primaryButton,
+.listHeader > button,
+.detailCommands button,
+.courseHeader button,
+.unitCommands button,
+.activityRow > button,
+.emptyState button,
+.emptyCourse button,
+.editorForm footer button,
+.confirmActions button,
+.announcementWorkspace form button,
+.settingsForm footer button,
+.settingsLifecycle button,
+.unsavedPrompt button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.primaryButton,
+.listHeader > button {
+  border-color: transparent;
+  background: var(--color-action-strong);
+  color: var(--color-on-action);
+}
+
+.collection {
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-lg) var(--space-xl) var(--space-2xl);
+  overflow: auto;
+}
+
+.collectionTitle {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.collectionTitle > div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.collectionTitle h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+}
+
+.collectionTitle span {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.listToolbar {
+  display: flex;
+  min-width: 0;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.collectionCount {
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.collectionCount strong { color: var(--color-ink); }
+
+.searchBox {
+  display: flex;
+  width: 15rem;
+  min-height: 2rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+  color: var(--color-ink-muted);
+}
+
+.searchBox:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 var(--rule-thin) var(--color-focus);
+}
+
+.searchBox input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.segmented,
+.contentFilters {
+  display: inline-flex;
+  flex: none;
+  min-height: 2rem;
+  gap: var(--space-3xs);
+  padding: var(--space-3xs);
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.segmented button,
+.contentFilters button {
+  min-height: 1.625rem;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  font-size: var(--text-xs);
+}
+
+.segmented button[aria-pressed='true'],
+.contentFilters button[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 var(--rule-thin) var(--color-line-subtle);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sortControl {
+  position: relative;
+  display: inline-grid;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-secondary);
+}
+
+.sortControl:hover { background: var(--color-surface-hover); }
+
+.sortControl:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 var(--rule-thin) var(--color-focus);
+}
+
+.sortControl select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.listToolbar > .primaryButton {
+  min-height: 2rem;
+  margin-left: auto;
+  padding: 0 var(--space-md);
+  border: 0;
+}
+
+.classTable {
+  min-width: 64rem;
+  border-top: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.tableHeader,
+.tableRow {
+  display: grid;
+  grid-template-columns: minmax(14rem, 2fr) minmax(7rem, 1fr) 5rem 5rem 5rem minmax(8rem, 1fr) 3rem;
+  align-items: center;
+}
+
+.tableHeader {
+  min-height: var(--collection-header-height);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  font-weight: inherit;
+}
+
+.tableHeader > span,
+.tableRow > [role='cell'] { min-width: 0; padding: 0 var(--space-sm); }
+
+.tableRow {
+  min-height: var(--collection-row-height);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-sm);
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+
+.tableRow:hover {
+  background: var(--color-surface-hover);
+}
+
+.tableRow:focus-within {
+  background: var(--color-surface-selected);
+  box-shadow: inset 0 0 0 var(--rule-thin) var(--color-focus);
+}
+
+.classRowLink {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--collection-row-height);
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.classRowLink > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3xs);
+}
+
+.classRowLink strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classRowLink small {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.operationCell {
+  display: grid;
+  min-height: var(--collection-row-height);
+  place-items: center;
+  color: var(--color-ink-muted);
+}
+
+.iconAction {
+  display: grid;
+  width: 1.875rem;
+  height: 1.875rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+}
+
+.iconAction:hover,
+.iconAction:focus-visible { background: var(--color-surface-selected); }
+
+.classMark,
+.memberAvatar {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: var(--radius-control);
+  background: var(--color-ink-object);
+  color: var(--color-on-ink-object);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.classMark[data-tone='green'] { background: var(--color-success); }
+.classMark[data-tone='blue'] { background: var(--color-info); }
+.classMark[data-tone='amber'] { background: var(--color-warning); color: var(--color-brand-ink); }
+
+.statusTag,
+.unitStatus {
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.statusTag[data-status='active'],
+.unitStatus[data-status='published'] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.pendingCell {
+  width: max-content;
+  min-width: 2rem;
+  padding: var(--space-2xs) var(--space-xs);
+  border-radius: var(--radius-control);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+}
+
+.editableName {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.editableName strong {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--color-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-semibold);
+}
+
+.dialogHeader > button,
+.unitToggle,
+.detailCommands button:last-child,
+.railIconAction {
+  display: inline-grid;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.emptyState,
+.emptyCourse,
+.safeState {
+  display: grid;
+  min-height: 16rem;
+  place-content: center;
+  place-items: center;
+  gap: var(--space-xs);
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
+.emptyState strong,
+.emptyCourse strong,
+.safeState h1 {
+  margin: 0;
+  color: var(--color-ink-secondary);
+  font-size: var(--text-md);
+}
+
+.emptyState span,
+.emptyCourse span,
+.safeState p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.safeState button {
+  min-height: 2.25rem;
+  margin-top: var(--space-sm);
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-control);
+  background: var(--color-action-strong);
+  color: var(--color-on-action);
+  cursor: pointer;
+}
+
+.detailIdentity {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-xs);
+}
+
+.detailIdentity > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.detailIdentity h1 {
+  min-width: 0;
+  margin: 0;
+  font-size: inherit;
+}
+
+.detailName strong {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.detailCommands {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.detailCommands button:last-child {
+  border: var(--rule-thin) solid var(--color-line-control);
+}
+
+.quickActions {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-xl);
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-surface);
+}
+
+.quickActions > label,
+.quickActions > button {
+  display: flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+
+.quickActions > label {
+  border: var(--rule-thin) solid var(--color-line-control);
+  background: var(--color-surface-muted);
+}
+
+.quickActions select {
+  max-width: 13rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+}
+
+.quickActions strong {
+  min-width: 1.25rem;
+  padding: 0 var(--space-2xs);
+  border-radius: var(--radius-round);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.quickActions > .statusTag {
+  flex: none;
+}
+
+.quickActions > .classSettingsAction {
+  margin-left: auto;
+}
+
+.detailBody {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(20.5rem, 21.5rem);
+  align-items: stretch;
+  gap: var(--space-lg);
+  padding-right: var(--space-xl);
+  overflow: hidden;
+  transition: grid-template-columns var(--dur-panel) var(--ease-out);
+}
+
+.detailBody[data-rail-open='false'] {
+  grid-template-columns: minmax(0, 1fr) 2.5rem;
+}
+
+.courseMain {
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-lg) 0 var(--space-2xl) var(--space-xl);
+  overflow-y: auto;
+}
+
+.courseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding-bottom: var(--space-xs);
+}
+
+.courseHeader > div:first-child {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2xs);
+}
+
+.courseHeader small {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.courseHeader h2 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.courseHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.actionMenuHost {
+  position: relative;
+  flex: none;
+}
+
+.actionMenuTrigger {
+  min-width: 2.25rem;
+  padding: 0 var(--space-sm);
+}
+
+.actionMenuTrigger[data-icon-only='true'] {
+  width: 2.25rem;
+  padding: 0;
+}
+
+.courseHeaderActions .actionMenuTrigger[data-icon-only='true'] {
+  border-color: transparent;
+  background: transparent;
+}
+
+.actionMenu {
+  position: absolute;
+  z-index: var(--z-popover);
+  top: calc(100% + var(--space-2xs));
+  right: 0;
+  display: grid;
+  min-width: 11rem;
+  gap: var(--space-3xs);
+  padding: var(--space-2xs);
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+.actionMenu > button {
+  width: 100%;
+  min-height: 2rem;
+  justify-content: flex-start;
+  padding: 0 var(--space-sm);
+  border: 0;
+  background: transparent;
+  font-weight: inherit;
+}
+
+.actionMenu > button:hover,
+.actionMenu > button:focus-visible {
+  background: var(--color-surface-hover);
+}
+
+.actionMenu > button[data-tone='danger'] {
+  color: var(--color-danger);
+}
+
+.actionMenu > button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.contentFilters {
+  width: max-content;
+  margin: var(--space-xs) 0 var(--space-md);
+}
+
+.unitList {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.unit {
+  position: relative;
+  border-radius: var(--radius-control);
+  background: transparent;
+}
+
+.unit > header {
+  display: grid;
+  min-height: 3.5rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-control);
+}
+
+.unit > header:hover {
+  background: var(--color-surface-hover);
+}
+
+.treeBranchIcon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  color: var(--color-ink-muted);
+}
+
+.unitToggle svg {
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.unitToggle[aria-expanded='false'] svg {
+  transform: rotate(-90deg);
+}
+
+.unitCopy {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, auto) auto;
+  align-items: center;
+  justify-content: start;
+  gap: var(--space-xs);
+}
+
+.unitCopy p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.unit > header > .actionMenuHost > .actionMenuTrigger {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.activityList {
+  position: relative;
+  display: grid;
+  gap: var(--space-3xs);
+  margin-left: var(--space-lg);
+  padding: 0 0 var(--space-xs) var(--space-xl);
+}
+
+.activityList::before {
+  position: absolute;
+  top: 0;
+  bottom: var(--space-lg);
+  left: var(--space-sm);
+  width: var(--rule-thin);
+  background: var(--color-line-control);
+  content: '';
+}
+
+.activityRow {
+  position: relative;
+  display: grid;
+  min-height: 3.5rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-control);
+}
+
+.activityRow::before {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--space-lg) * -1);
+  width: var(--space-lg);
+  height: var(--rule-thin);
+  background: var(--color-line-control);
+  content: '';
+}
+
+.activityRow:hover,
+.activityRow:focus-within {
+  background: var(--color-surface-hover);
+}
+
+.activityRow[data-highlighted='true'] {
+  border-left: var(--space-3xs) solid var(--color-brand);
+  background: var(--color-surface-selected);
+  animation: activity-highlight var(--dur-panel) var(--ease-in-out) 3;
+}
+
+@keyframes activity-highlight {
+  0%,
+  100% {
+    background: var(--color-surface-selected);
+    box-shadow: inset 0 0 0 0 var(--color-brand);
+  }
+
+  50% {
+    background: var(--color-brand-soft);
+    box-shadow: inset 0 0 0 var(--space-2xs) var(--color-brand-soft);
+  }
+}
+
+.activityIcon {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+  color: var(--color-action-strong);
+}
+
+.activityCopy {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2xs);
+}
+
+button.activityCopy {
+  display: grid;
+  min-height: 0;
+  justify-content: stretch;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  white-space: normal;
+}
+
+button.activityCopy:hover {
+  color: var(--color-ink);
+}
+
+button.activityCopy:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.activityCopy small {
+  overflow: hidden;
+  color: var(--color-ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+}
+
+.activityActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2xs);
+}
+
+.compactEmpty {
+  margin: 0;
+  padding: var(--space-sm);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.railToggle,
+.collapsedRailButton {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+
+.collapsedRailButton {
+  margin: var(--space-2xs);
+}
+
+.railToggle:hover,
+.railToggle:focus-visible,
+.collapsedRailButton:hover,
+.collapsedRailButton:focus-visible {
+  background: var(--color-surface-hover);
+}
+
+.contextRail {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  margin: var(--space-md) 0;
+  overflow: auto;
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-panel) var(--ease-out);
+}
+
+.contextRail[data-collapsed='true'] {
+  width: 2.5rem;
+  min-height: 2.5rem;
+  align-self: start;
+  justify-self: end;
+  overflow: hidden;
+}
+
+.contextRail > section {
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.contextRail > section > header > button:first-child {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-md);
+  background: transparent;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.contextRail > section > header > button span {
+  flex: 1;
+}
+
+.contextRail > section > header > button strong {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.contextRail > section > header > button svg {
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.contextRail > section > header > button[aria-expanded='false'] svg {
+  transform: rotate(-90deg);
+}
+
+.railContent,
+.railLinks {
+  display: grid;
+  gap: var(--space-xs);
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+.memberStack {
+  display: flex;
+  padding: var(--space-xs) 0;
+}
+
+.memberAvatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-left: calc(var(--space-xs) * -1);
+  border: var(--rule-thin) solid var(--color-surface);
+  border-radius: var(--radius-round);
+}
+
+.memberAvatar:first-child {
+  margin-left: 0;
+}
+
+.memberLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+}
+
+.memberLine small {
+  color: var(--color-ink-muted);
+}
+
+.railActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-xs);
+}
+
+.railActions button:first-child,
+.railLinks button {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0;
+  background: transparent;
+  color: var(--color-action-strong);
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--text-xs);
+}
+
+.feedback {
+  margin: 0;
+  padding: var(--space-xs) var(--space-xl);
+  border-top: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: var(--text-xs);
+}
+
+.dialogBackdrop {
+  position: fixed;
+  z-index: var(--z-modal);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-xl);
+  background: var(--color-overlay);
+}
+
+.workspaceDialog {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  display: grid;
+  width: min(36rem, calc(100% - var(--space-3xl)));
+  max-height: min(46rem, calc(100% - var(--space-3xl)));
+  grid-template-rows: auto minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-ink);
+  transform: translate(-50%, -50%);
+}
+
+.workspaceDialog::backdrop {
+  background: transparent;
+}
+
+.workspaceDialog[data-wide='true'] {
+  width: min(62rem, calc(100% - var(--space-3xl)));
+  height: min(43rem, calc(100% - var(--space-3xl)));
+}
+
+.workspaceDialog[data-settings='true'] {
+  width: min(var(--dialog-width-settings), calc(100% - var(--space-3xl)));
+  height: min(var(--dialog-height-settings), calc(100% - var(--space-2xl)));
+  max-height: min(var(--dialog-height-settings), calc(100% - var(--space-2xl)));
+}
+
+.workspaceDialog[data-settings='true'] .dialogHeader {
+  min-height: 4.5rem;
+  padding-inline: var(--space-xl);
+}
+
+.dialogHeader {
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.dialogHeader h2,
+.dialogHeader p {
+  margin: 0;
+}
+
+.dialogHeader h2 {
+  font-size: var(--text-md);
+}
+
+.dialogHeader p {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.dialogBody {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.editorForm {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+}
+
+.settingsForm {
+  display: grid;
+  min-height: 100%;
+  grid-template-columns: minmax(0, 1.05fr) minmax(21rem, 0.95fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.settingsMain,
+.settingsSide {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--space-xl);
+  padding: var(--space-xl);
+}
+
+.settingsSide {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  gap: var(--space-lg);
+  border-left: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-surface);
+}
+
+.settingsSectionHeader {
+  display: flex;
+  min-width: 0;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.settingsSectionHeader h3,
+.settingsSectionHeader p {
+  margin: 0;
+}
+
+.settingsSectionHeader h3 {
+  font-size: var(--text-sm);
+}
+
+.primaryRailHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2rem;
+  align-items: center;
+  padding-right: var(--space-xs);
+}
+
+.primaryRailHeader > .railToggle {
+  width: 2rem;
+}
+
+.settingsSectionHeader p {
+  margin-top: var(--space-2xs);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.settingsIdentity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-block: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.settingsColorSwatch {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-object);
+}
+
+.settingsIdentity > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2xs);
+}
+
+.settingsIdentity strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settingsIdentity span {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.editorForm label,
+.settingsField,
+.settingsSelectField,
+.announcementWorkspace form label {
+  display: grid;
+  gap: var(--space-xs);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.editorForm input,
+.editorForm select,
+.editorForm textarea,
+.settingsMain input,
+.settingsMain textarea,
+.settingsSide select,
+.settingsSide input,
+.announcementWorkspace input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-control);
+  outline: 0;
+  background: var(--color-surface-muted);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.editorForm textarea,
+.settingsMain textarea {
+  min-height: 7rem;
+  padding-top: var(--space-sm);
+  resize: vertical;
+}
+
+.settingsSelectField {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.settingsSelectField > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.settingsSelectField select {
+  background: var(--color-surface);
+}
+
+.settingsMemberSummary {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-object);
+  background: var(--color-surface-raised);
+}
+
+.settingsMemberSummary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  font-size: var(--text-sm);
+}
+
+.settingsMemberSummary > div > span,
+.settingsFieldLabel > span,
+.switchField > span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.settingsMemberSummary em {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.settingsMemberSummary button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+}
+
+.settingsPermissionList {
+  display: grid;
+  border-block: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.settingsPermissionList .switchField {
+  min-height: 3.25rem;
+  padding-block: var(--space-sm);
+}
+
+.settingsPermissionList .switchField + .switchField {
+  border-top: var(--rule-thin) solid var(--color-line-faint);
+}
+
+.editorForm label > span,
+.editorForm p,
+.editorForm small {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.editorForm small {
+  color: var(--color-danger);
+}
+
+.settingsFieldLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.settingsField label,
+.settingsSelectField label {
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.settingsFieldLabel small {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
+}
+
+.settingsField > small[role='alert'] {
+  color: var(--color-danger);
+  font-size: var(--text-xs);
+}
+
+.fieldHelp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.fieldHelp > button {
+  display: inline-grid;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-round);
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: help;
+}
+
+.fieldHelp > button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.fieldHelp > [role='tooltip'] {
+  position: absolute;
+  z-index: var(--z-tooltip);
+  top: calc(100% + var(--space-xs));
+  left: 50%;
+  width: max-content;
+  max-width: 15rem;
+  padding: var(--space-xs) var(--space-sm);
+  visibility: hidden;
+  border-radius: var(--radius-control);
+  background: var(--color-ink);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-surface);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, var(--space-2xs));
+  transition: opacity var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out), visibility var(--dur-micro) var(--ease-out);
+}
+
+.fieldHelp:hover > [role='tooltip'],
+.fieldHelp:focus-within > [role='tooltip'] {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.editorForm fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.editorForm legend {
+  margin-bottom: var(--space-xs);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.activityTypeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+.activityTypeGrid button {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+}
+
+.activityTypeGrid button[aria-checked='true'] {
+  border-color: var(--color-action-strong);
+  background: var(--color-surface-selected);
+  color: var(--color-action-strong);
+}
+
+.editorForm footer,
+.settingsForm footer,
+.confirmActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+
+.settingsForm > .unsavedPrompt,
+.settingsForm > footer {
+  grid-column: 1 / -1;
+  margin: 0 var(--space-lg);
+}
+
+.settingsForm > footer {
+  position: sticky;
+  z-index: var(--z-raised);
+  bottom: 0;
+  margin: 0;
+  padding: var(--space-sm) var(--space-lg);
+  border-top: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-surface);
+}
+
+.settingsForm footer .primaryButton {
+  border-color: transparent;
+  background: var(--color-action-strong);
+  color: var(--color-on-action);
+}
+
+.dangerButton,
+.confirmActions .dangerButton,
+.settingsLifecycle button,
+.unsavedPrompt .dangerButton {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+.confirmActions {
+  padding: var(--space-lg);
+}
+
+.confirmBody > p {
+  margin: 0;
+  padding: var(--space-lg) var(--space-lg) 0;
+  color: var(--color-ink-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.unsavedPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  border: var(--rule-thin) solid var(--color-warning);
+  border-radius: var(--radius-control);
+  background: var(--color-warning-soft);
+}
+
+.announcementWorkspace > .unsavedPrompt {
+  margin: var(--space-sm) var(--space-lg) 0;
+}
+
+.unsavedPrompt > div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.unsavedPrompt > div:first-child {
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.unsavedPrompt span {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.chatFrame {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatFrame > * {
+  height: 100%;
+}
+
+.announcementWorkspace {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.announcementWorkspace form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.announcementList {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.announcementList article {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+}
+
+.announcementList article header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.announcementList article h3,
+.announcementList article p {
+  margin: 0;
+}
+
+.announcementList article h3 {
+  font-size: var(--text-sm);
+}
+
+.announcementList article span,
+.announcementList article small,
+.announcementList article p {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.announcementList article p {
+  margin-top: var(--space-sm);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-sm);
+}
+
+.colorField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.colorField input {
+  width: 2.5rem;
+  padding: var(--space-3xs);
+}
+
+.colorField span {
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.switchField {
+  display: flex !important;
+  grid-template-columns: none;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settingsSide > .switchField {
+  min-height: 3.25rem;
+}
+
+.switchField input {
+  position: relative;
+  width: 2rem;
+  min-width: 2rem;
+  min-height: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-line-control);
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out);
+}
+
+.switchField input::after {
+  position: absolute;
+  top: var(--space-3xs);
+  left: var(--space-3xs);
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: var(--radius-round);
+  background: var(--color-surface);
+  content: '';
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.switchField input:checked {
+  background: var(--color-action-strong);
+}
+
+.switchField input:checked::after {
+  transform: translateX(0.875rem);
+}
+
+.switchField input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.switchField input:disabled {
+  cursor: not-allowed;
+}
+
+.settingsLifecycle {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin: 0;
+  padding: var(--space-md) var(--space-xl);
+  border-top: var(--rule-thin) solid var(--color-danger);
+  background: var(--color-surface);
+}
+
+.settingsLifecycle > div {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.settingsLifecycle span {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.settingsLifecycle button:disabled,
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (hover: hover) {
+  .detailCommands button:hover,
+  .courseHeader button:hover,
+  .quickActions > button:hover,
+  .settingsMemberSummary button:hover,
+  .contextRail button:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-ink);
+  }
+
+  .primaryButton:hover,
+  .listHeader > button:hover {
+    background: var(--color-action-strong-hover);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detailBody,
+  .contextRail,
+  .switchField input,
+  .switchField input::after,
+  .activityAction > [role='tooltip'],
+  .fieldHelp > [role='tooltip'],
+  .unitToggle svg,
+  .contextRail > section > header > button svg {
+    transition: none;
+  }
+
+  .activityRow[data-highlighted='true'] {
+    animation: none;
+  }
+}

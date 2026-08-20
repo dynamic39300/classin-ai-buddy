@@ -1,0 +1,46 @@
+.shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  width: 100%;
+  min-height: 100vh;
+  background: var(--color-canvas);
+}
+
+.stage {
+  display: grid;
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.workspace {
+  min-width: 0;
+  overflow: auto;
+  background: var(--color-canvas);
+}
+
+.shell[data-shell-mode='linear-workbench'] {
+  --color-shell: var(--color-app-frame);
+  --color-sidebar-divider: var(--color-app-frame);
+  background: var(--color-app-frame);
+}
+
+.shell[data-shell-mode='linear-workbench'] .stage {
+  height: calc(100vh - var(--space-lg));
+  margin: var(--space-sm) var(--space-sm) var(--space-sm) 0;
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-workbench);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-workbench);
+}
+
+.shell[data-shell-mode='linear-workbench'] .workspace {
+  background: var(--color-surface);
+}
+
+@media (max-width: 68rem) {
+  .shell {
+    grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr);
+  }
+}

@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 node_modules/
+.vite/
+.pnpm-store/
+pnpm-lock.yaml
 dist/
 dist-types/
 *.tsbuildinfo

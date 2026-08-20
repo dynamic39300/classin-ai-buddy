@@ -1,8 +1,0 @@
-{
-  "name": "@workbuddy/domain",
-  "private": true,
-  "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "build": "tsc -b" }
-}
-

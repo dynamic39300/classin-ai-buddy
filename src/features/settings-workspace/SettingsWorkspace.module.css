@@ -1,0 +1,30 @@
+.page { position: relative; display: grid; min-width: 0; min-height: 100%; grid-template-rows: minmax(0, 1fr); background: var(--color-canvas); overflow: hidden; }
+.workspace { display: grid; min-height: 0; grid-template-columns: 15rem minmax(0, 1fr); }
+.navigation { min-height: 0; padding: var(--space-md) var(--space-sm); border-right: var(--rule-thin) solid var(--color-line-subtle); background: var(--color-surface); overflow-y: auto; }
+.navigation button { display: flex; width: 100%; min-height: 2.75rem; align-items: center; gap: var(--space-sm); padding: 0 var(--space-md); border-radius: var(--radius-control); background: transparent; color: var(--color-ink-secondary); cursor: pointer; text-align: left; }
+.navigation button[aria-current='page'] { background: var(--color-surface-muted); color: var(--color-ink); font-weight: var(--font-weight-semibold); }
+.navigation button:nth-last-child(2) { margin-top: var(--space-md); border-top: var(--rule-thin) solid var(--color-line-subtle); border-radius: 0; }
+.navigation button:last-child { color: var(--color-danger); }
+.detail { min-width: 0; min-height: 0; padding: var(--space-xl); overflow-y: auto; }
+.benefits { max-width: 48rem; }
+.accountHeader { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-md); padding-bottom: var(--space-xl); border-bottom: var(--rule-thin) solid var(--color-line-subtle); }
+.avatar { display: grid; width: 4rem; height: 4rem; place-items: center; border-radius: var(--radius-round); background: var(--color-ink-object); color: var(--color-on-ink-object); font-family: var(--font-display); font-size: var(--text-xl); }
+.accountHeader h2 { display: inline; margin: var(--space-2xs) var(--space-xs) 0 0; font-size: var(--text-xl); }
+.plan { display: inline-block; padding: var(--space-3xs) var(--space-xs); border-radius: var(--radius-control); background: var(--color-surface-muted); color: var(--color-ink-muted); font-size: var(--text-xs); }
+.upgradeButton, .secondaryButton { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; gap: var(--space-xs); padding: 0 var(--space-md); border: var(--rule-thin) solid var(--color-line-subtle); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-action-strong); cursor: pointer; font-size: var(--text-sm); font-weight: var(--font-weight-semibold); white-space: nowrap; }
+.upgradeButton { border-color: transparent; background: var(--color-brand); color: var(--color-brand-ink); }
+.entitlementMetrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--rule-thin); margin: var(--space-xl) 0; padding: var(--rule-thin); background: var(--color-line-subtle); }
+.entitlementMetrics div { display: grid; gap: var(--space-sm); padding: var(--space-lg); background: var(--color-surface); }
+.entitlementMetrics dt { color: var(--color-ink-muted); font-size: var(--text-sm); }
+.entitlementMetrics dd { margin: 0; color: var(--color-ink); font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--font-weight-semibold); }
+.benefitDetails { padding: var(--space-lg) 0; border-top: var(--rule-thin) solid var(--color-line-subtle); border-bottom: var(--rule-thin) solid var(--color-line-subtle); }
+.benefitDetails header { display: flex; align-items: center; gap: var(--space-xs); color: var(--color-action-strong); }
+.benefitDetails h3 { margin: 0; color: var(--color-ink); font-size: var(--text-md); }
+.benefitDetails ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm) var(--space-xl); margin: var(--space-md) 0 0; padding-left: var(--space-lg); color: var(--color-ink-secondary); font-size: var(--text-sm); }
+.placeholder { display: grid; max-width: 50rem; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--space-md); padding: var(--space-lg) 0; border-top: var(--rule-thin) solid var(--color-line-subtle); border-bottom: var(--rule-thin) solid var(--color-line-subtle); }
+.placeholderIcon { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: var(--radius-object); background: var(--color-warning-soft); color: var(--color-warning-ink); }
+.placeholder h2 { margin: var(--space-xs) 0; font-size: var(--text-lg); }
+.placeholder p { margin: 0; color: var(--color-ink-secondary); font-size: var(--text-sm); }
+.placeholder .boundary { margin-top: var(--space-sm); color: var(--color-ink-muted); font-size: var(--text-xs); }
+.feedback { position: fixed; z-index: var(--z-raised); right: var(--space-lg); bottom: var(--space-lg); max-width: 30rem; margin: 0; padding: var(--space-xs) var(--space-sm); border: var(--rule-thin) solid var(--color-line-control); border-left: var(--space-3xs) solid var(--color-success); border-radius: var(--radius-control); background: var(--color-surface); box-shadow: var(--shadow-overlay); color: var(--color-success); font-size: var(--text-xs); }
+@media (max-width: 68rem) { .workspace { grid-template-columns: 12rem minmax(0, 1fr); } .detail { padding: var(--space-lg); } .placeholder { grid-template-columns: auto minmax(0, 1fr); } .placeholder button { grid-column: 2; justify-self: start; } }

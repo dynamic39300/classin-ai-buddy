@@ -1,0 +1,10 @@
+{
+  "name": "ClassIn PC",
+  "short_name": "ClassIn",
+  "description": "ClassIn PC 双视角工作台与教师 WorkBuddy 高保真 Demo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f5",
+  "theme_color": "#171a19",
+  "lang": "zh-CN"
+}

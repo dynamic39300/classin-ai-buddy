@@ -1,0 +1,110 @@
+.wrapper {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-xs);
+  padding: 0 0 var(--space-xs);
+}
+
+.control {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3xs);
+  padding: var(--space-3xs) 0;
+}
+
+.currentRole,
+.switchButton {
+  display: flex;
+  min-height: 1.625rem;
+  align-items: center;
+  gap: var(--space-3xs);
+  padding: 0 var(--space-2xs);
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: var(--text-xs);
+}
+
+.currentRole {
+  flex: 0 0 auto;
+  background: var(--color-surface-muted);
+  color: var(--color-shell-text);
+  white-space: nowrap;
+}
+
+.currentRole svg {
+  color: var(--color-brand);
+}
+
+.currentRole strong {
+  font-weight: var(--font-weight-medium);
+}
+
+.currentRole span {
+  color: var(--color-shell-muted);
+}
+
+.switchButton {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-shell-muted);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  white-space: nowrap;
+  transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+}
+
+.switchButton svg {
+  flex: 0 0 auto;
+}
+
+.switchButton:focus-visible {
+  outline: var(--rule-medium) solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.notice {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-warning-soft);
+  color: var(--color-warning-ink);
+}
+
+.notice p {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.noticeActions {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.notice button {
+  min-height: 1.75rem;
+  padding: 0 var(--space-xs);
+  border: 0;
+  background: transparent;
+  color: var(--color-warning-ink);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+
+@media (hover: hover) {
+  .switchButton:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-shell-text);
+  }
+
+  .notice button:hover {
+    text-decoration: underline;
+  }
+}

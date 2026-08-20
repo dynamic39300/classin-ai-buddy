@@ -4,6 +4,8 @@
 
 前端是 WorkBuddy 状态的投影层，不是 Agent SDK、Graph 或 Workflow 私有事件的拼装器。所有页面只消费稳定 View Model，并通过 Command Interface 发送教师意图。
 
+当前前端同时包含教师端和学生端页面树。AI Agent 是教师端一级入口；其内部是单层扁平二级导航。学生端不展示 WorkBuddy，两个角色页面不得跨树读取内部实现。
+
 ## 模块组织
 
 - `app` 负责组合根、路由、Provider、Shell 和全局错误边界；
@@ -51,4 +53,3 @@ UI 不直接依赖模型供应商响应、MCP 结果或 A2A Task 结构。
 ## 验证
 
 生产阶段至少运行类型检查、Lint、单元/集成测试、Playwright E2E、axe 可访问性和关键视口截图。原型阶段采用同样的行为检查思想，但不为可抛弃代码建立生产抽象。
-

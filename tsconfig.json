@@ -1,15 +1,7 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/domain" },
-    { "path": "packages/contracts" },
-    { "path": "packages/application" },
-    { "path": "packages/harness" },
-    { "path": "packages/fixtures" },
-    { "path": "packages/adapters/mock-classin" },
-    { "path": "packages/ui" },
-    { "path": "apps/api" },
-    { "path": "apps/workbench" }
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
   ]
 }
-
