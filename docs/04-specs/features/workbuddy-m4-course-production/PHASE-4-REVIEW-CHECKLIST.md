@@ -1,0 +1,63 @@
+# WorkBuddy M4 Phase 4 Review Checklist
+
+**Status:** READY_FOR_USER_REVIEW  
+**Date:** 2026-08-21  
+**Fixture:** `workbuddy-m4-course-production-v1`
+
+## 1. 本阶段交付结论
+
+M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标注为 Mock 的课程生产纵向闭环：
+
+- 单课件：`Goal → Core Context → ContextSnapshot → 补参 → Plan → RunEvent → ArtifactDraft → ProposedAction → Approval → Mock Adapter → ExecutionReceipt`；
+- 课程方案包：独立 `course-package` Task Type → 产物范围确认 → Artifact Graph → 逐项审批/排除 → 对象级部分成功 Receipt → 失败项重试；
+- 衔接：从已审阅课件创建关联但独立的方案包 Run，保留 `parentRunRef` 与 `sourceArtifactRef`；
+- 恢复：主教学范围变更先展示影响，确认后生成新 Snapshot，旧 Snapshot/Artifact/Action/Receipt 保留为 superseded 证据。
+
+所有生成内容、执行结果和 ClassIn 写回均为固定、脱敏、内存态 Mock，不代表真实模型、文件生成或生产 API 已接入。
+
+## 2. 建议 Review 路径
+
+1. 以老师身份进入 `AI Agent → 新建任务`。
+2. 打开“核心上下文”，检查七层结构、来源/版本/权限/敏感度；应用动量课程建议并确认 `ContextSnapshot`。
+3. 选择“生成单个课件”，检查补参、计划、稳定过程事件、ArtifactDraft 与最小 ContextProjection。
+4. 在产物面板发起“保存到 ClassIn”，检查 ProposedAction 信息，再分别体验批准、执行和 ExecutionReceipt。
+5. 通过“Mock 写回场景”依次检查权限拒绝、版本冲突、临时失败与安全重试。
+6. 返回新建任务，选择“生成课程方案包”，检查四类 Artifact Graph、取消单项、部分成功与失败项重试。
+7. 从单课件产物选择“基于此课件生成课程方案包”，检查独立 Run/Snapshot 与双向来源引用。
+8. 在单课件 Run 选择“调整教学范围”，检查影响预览、新 Snapshot 和 superseded 证据。
+9. 返回新建任务，在 Core Context 面板执行“重置 M4 场景”，确认动态历史与所有 M4 内存状态恢复固定初始值。
+
+## 3. 状态覆盖
+
+| 状态 | 可复现入口 |
+|---|---|
+| `needs_attention` | 新建任务只带 Actor/组织；或 Replanning 后等待补参 |
+| `waiting` | 计划确认、审批前、已批准未执行 |
+| `completed_pending_review` | 单课件 ArtifactDraft 已生成 |
+| `permission_denied` | Mock 写回场景选择权限拒绝 |
+| `version_conflict` | Mock 写回场景选择版本冲突 |
+| `recoverable_failure` | Mock 写回场景选择临时失败后安全重试 |
+| `partial_success` | 课程方案包首次对象级写回 |
+| `completed` | 成功 ExecutionReceipt 或可用方案包项完成写回 |
+| `superseded` | 调整主教学范围并确认重新规划 |
+
+## 4. 自动化证据
+
+- TypeScript：通过；
+- ESLint：通过；
+- Vitest：50 files / 326 tests 通过；
+- Production build：通过；Vite 仅保留既有大 chunk 提示；
+- Playwright E2E：65/65 通过；
+- WorkBuddy Visual：8/8 通过，覆盖 1440×900 与 1000×768；
+- M4 E2E 内 axe serious/critical：0。
+
+## 5. 明确不属于 M4
+
+- 真实 LLM、流式 Provider、Skill/MCP 执行、真实 PPTX/DOCX/视频文件；
+- ClassIn 生产 API、数据库、跨刷新/跨设备持久化、生产权限与冲突协议；
+- 学生个人证据与学生姓名进入普通课程生产 Projection；
+- 最终品牌视觉和完整文档编辑器。
+
+## 6. 用户 Review 记录
+
+等待用户审阅。本文件在用户确认前保持 `READY_FOR_USER_REVIEW`，不把 M4 自动升级为新的 `LOCKED` 产品决策。

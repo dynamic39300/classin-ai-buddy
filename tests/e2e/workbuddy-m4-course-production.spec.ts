@@ -244,3 +244,15 @@ test('teacher previews Context impact and preserves superseded evidence when rep
   await expect(context.getByText('机械波基础', { exact: true })).toBeVisible();
   await expect(context.getByText('第一单元 机械波', { exact: true })).toBeVisible();
 });
+
+test('reviewer resets every M4 in-memory object to the fixed fixture', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createCoursewareArtifact(page);
+  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '新建任务', exact: true }).click();
+  await page.getByRole('button', { name: /核心上下文/ }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '重置 M4 场景' }).click();
+  await expect(context.getByText('需要补充教学范围', { exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: '核心上下文摘要' }).getByText('需要选择教学范围', { exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '生成动量守恒模型课件', exact: true })).toHaveCount(0);
+});

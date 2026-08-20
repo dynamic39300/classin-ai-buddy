@@ -89,6 +89,17 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
     resetCoreContext: () => {
       setContextSnapshot(null);
       setContextProposal(createContextProposal(initialContextItems, 'single-courseware'));
+      setTaskTypeState('single-courseware');
+      setCoursewareRun(null);
+      setCoursewareAction(null);
+      setCoursewareApproval(null);
+      setCoursewareReceipt(null);
+      setPackageRun(null);
+      setPackageReceipt(null);
+      setActiveCoursewarePanel('none');
+      writebackScenarioController.setScenario('success');
+      setWritebackScenarioState('success');
+      setRuns((current) => current.filter(({ fixtureVersion }) => fixtureVersion === 'workbuddy-m3-v1'));
     },
     coursewareRun,
     coursewareProjection: contextSnapshot ? projectContext(contextSnapshot, ['actor_organization', 'teaching_scope', 'resources_input', 'domain_knowledge']) : null,
