@@ -29,6 +29,32 @@ describe('ClassIn writeback Adapter contract', () => {
   it.each([
     ['Mock', () => new MockClassInWritebackAdapter()],
     ['deterministic test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter rejects a conflicting request that reuses a completed idempotency key', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    const approved = approvedAction();
+    adapter.execute(approved.action, approved.approval);
+    const conflictingAction = {
+      ...approved.action,
+      target: { ...approved.action.target, unitId: 'unit-other', label: '另一个写回目标' },
+    } as const;
+
+    expect(() => adapter.execute(conflictingAction, approved.approval)).toThrow(/Idempotency key/);
+  });
+
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['deterministic test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter validates approval before replaying a cached receipt', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    const approved = approvedAction();
+    adapter.execute(approved.action, approved.approval);
+
+    expect(() => adapter.execute({ ...approved.action, status: 'proposed' }, approved.approval)).toThrow(/approved action/i);
+  });
+
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['deterministic test', () => new DeterministicTestWritebackAdapter()],
   ] as const)('%s Adapter returns the replanned target object instead of the superseded momentum object', (_name, createAdapter) => {
     const proposed = createCoursewareSaveAction({
       ...WORKBUDDY_COURSEWARE_SAVE_ACTION,

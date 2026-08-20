@@ -61,6 +61,34 @@ describe('Package writeback Adapter contract', () => {
   it.each([
     ['Mock', () => new MockPackageWritebackAdapter()],
     ['test', () => new DeterministicTestPackageWritebackAdapter()],
+  ] as const)('%s Adapter rejects a conflicting package request that reuses a completed idempotency key', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    adapter.setScenario('success');
+    const input = approvedPackage();
+    adapter.execute(input.action, input.approval, input.candidates);
+    const conflictingAction = {
+      ...input.action,
+      target: { ...input.action.target, unitId: 'unit-other', label: '另一个课程包目标' },
+    } as const;
+
+    expect(() => adapter.execute(conflictingAction, input.approval, input.candidates)).toThrow(/Idempotency key/);
+  });
+
+  it.each([
+    ['Mock', () => new MockPackageWritebackAdapter()],
+    ['test', () => new DeterministicTestPackageWritebackAdapter()],
+  ] as const)('%s Adapter validates approval before replaying a cached package receipt', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    adapter.setScenario('success');
+    const input = approvedPackage();
+    adapter.execute(input.action, input.approval, input.candidates);
+
+    expect(() => adapter.execute({ ...input.action, status: 'proposed' }, input.approval, input.candidates)).toThrow(/approved action/i);
+  });
+
+  it.each([
+    ['Mock', () => new MockPackageWritebackAdapter()],
+    ['test', () => new DeterministicTestPackageWritebackAdapter()],
   ] as const)('%s Adapter safely retries a recoverable package action and then replays its receipt', (_name, createAdapter) => {
     const adapter = createAdapter();
     adapter.setScenario('recoverable_failure');

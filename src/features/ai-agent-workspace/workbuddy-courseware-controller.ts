@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import type { WorkBuddyClock } from '@contracts/workbuddy/clock';
 import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixture';
+import { addMinutesToTimestamp } from '@domain/workbuddy/action-time';
 import {
   confirmContext, createContextProposal, selectContextItems,
   type ContextProposal, type ContextSnapshot, type CoreContextItem,
@@ -53,10 +54,6 @@ export type WorkBuddyCoursewareController = Readonly<{
   commands: Omit<WorkBuddyCourseware, 'coursewareView'>;
 }>;
 
-function addMinutes(iso: string, minutes: number): string {
-  return new Date(Date.parse(iso) + minutes * 60_000).toISOString();
-}
-
 export function createWorkBuddyCoursewareController(params: CoursewareControllerParams): WorkBuddyCoursewareController {
   const {
     contextSnapshot, initialContextItems, coursewareDefinition, coursewareOutput, replannedCoursewareOutput, coursewareActionInput,
@@ -94,7 +91,7 @@ export function createWorkBuddyCoursewareController(params: CoursewareController
           ? renewCoursewareSaveAction(action, {
             id: runtimeFixture.expirationRecovery.coursewareActionId,
             idempotencyKey: runtimeFixture.expirationRecovery.coursewareIdempotencyKey,
-            expiresAt: addMinutes(clock.now(), runtimeFixture.expirationRecovery.ttlMinutes),
+            expiresAt: addMinutesToTimestamp(clock.now(), runtimeFixture.expirationRecovery.ttlMinutes),
           })
           : createCoursewareSaveAction({
             ...coursewareActionInput,

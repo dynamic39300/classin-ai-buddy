@@ -6,9 +6,13 @@ import type {
 } from '@contracts/workbuddy/package-writeback';
 import type { PackageExecutionReceipt, PackageReceiptItem } from '@domain/workbuddy/course-package';
 import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
+import {
+  assertPackageWritebackRequest, cacheIdempotentReceipt, packageWritebackFingerprint, readIdempotentReceipt,
+  type IdempotencyEntry,
+} from './writeback-idempotency';
 
 export class MockPackageWritebackAdapter implements PackageWritebackAdapter, PackageWritebackScenarioController {
-  private readonly receipts = new Map<string, PackageExecutionReceipt>();
+  private readonly receipts = new Map<string, IdempotencyEntry<PackageExecutionReceipt>>();
   private readonly attempts = new Map<string, number>();
   private scenario: PackageWritebackScenario = 'partial_success';
 
@@ -22,26 +26,10 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
   }
 
   execute(action: PackageProposedAction, approval: PackageApproval, candidates: readonly PackageWritebackCandidate[]): PackageExecutionReceipt {
-    const existing = this.receipts.get(action.idempotencyKey);
+    assertPackageWritebackRequest(action, approval, candidates);
+    const fingerprint = packageWritebackFingerprint(action, approval, candidates);
+    const existing = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (existing) return existing;
-    if (action.status !== 'approved' || approval.decision !== 'approved' || approval.actionId !== action.id) {
-      throw new Error('PackageWritebackAdapter requires an approved action and matching approval.');
-    }
-    const candidatesById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-    if (candidates.some((candidate) => candidate.runRef !== action.runRef || candidate.contextSnapshotId !== action.contextSnapshotId)) {
-      throw new Error('PackageWritebackAdapter rejected candidates owned by another run or context snapshot.');
-    }
-    const actionMatchesCandidates = action.artifactRefs.every((reference) => {
-      const candidate = candidatesById.get(reference.id);
-      return candidate?.version === reference.version
-        && candidate.runRef === action.runRef
-        && candidate.contextSnapshotId === action.contextSnapshotId
-        && candidate.approvalState === 'approved';
-    });
-    const approvedCandidateIds = candidates.filter(({ approvalState }) => approvalState === 'approved').map(({ id }) => id);
-    if (!actionMatchesCandidates || approvedCandidateIds.length !== action.artifactRefs.length) {
-      throw new Error('PackageWritebackAdapter rejected stale or unapproved artifact references.');
-    }
 
     if (this.scenario === 'permission_denied' || action.permission === 'denied') {
       return this.failure(action, approval, candidates, 'permission_denied', '当前教师无权写入所选课程单元。');
@@ -75,8 +63,7 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
     const receipt: PackageExecutionReceipt = items.every((item): item is Extract<PackageReceiptItem, { result: 'succeeded' | 'not_executed' }> => item.result === 'succeeded' || item.result === 'not_executed')
       ? Object.freeze({ ...common, id: 'receipt-package-success-1', status: 'success', items: Object.freeze(items), result: '已执行所有获批对象' })
       : Object.freeze({ ...common, id: 'receipt-package-partial-1', status: 'partial_success', items: Object.freeze(items), result: '部分对象执行失败或等待依赖，成功对象不会重复执行' });
-    this.receipts.set(action.idempotencyKey, receipt);
-    return receipt;
+    return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, receipt);
   }
 
   private failure(

@@ -74,7 +74,31 @@ function buildProposal(taskType: WorkBuddyTaskType, items: readonly ProposedCont
   return Object.freeze({ taskType, status: proposalStatus(taskType, items), items });
 }
 
+function validateContextHierarchy(items: readonly CoreContextItem[]): void {
+  const byId = new Map<string, CoreContextItem>();
+  for (const item of items) {
+    if (byId.has(item.id)) throw new Error(`Duplicate Core Context item id: ${item.id}`);
+    byId.set(item.id, item);
+  }
+  for (const item of items) {
+    if (item.parentId && !byId.has(item.parentId)) throw new Error(`Unknown Core Context parent ${item.parentId} for item ${item.id}`);
+  }
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (itemId: string): void => {
+    if (visiting.has(itemId)) throw new Error(`Cyclic Core Context hierarchy at: ${itemId}`);
+    if (visited.has(itemId)) return;
+    visiting.add(itemId);
+    const parentId = byId.get(itemId)?.parentId;
+    if (parentId) visit(parentId);
+    visiting.delete(itemId);
+    visited.add(itemId);
+  };
+  for (const item of items) visit(item.id);
+}
+
 export function createContextProposal(items: readonly CoreContextItem[], taskType: WorkBuddyTaskType): ContextProposal {
+  validateContextHierarchy(items);
   return buildProposal(taskType, items.map((item) => Object.freeze({ ...item, included: item.selection === 'locked' })));
 }
 
@@ -82,11 +106,12 @@ export function selectContextItems(proposal: ContextProposal, selectedIds: reado
   const selected = new Set(selectedIds);
   const byId = new Map(proposal.items.map((item) => [item.id, item]));
 
-  const hasSelectedAncestors = (item: ProposedContextItem): boolean => {
+  const hasSelectedAncestors = (item: ProposedContextItem, visited = new Set<string>()): boolean => {
+    if (visited.has(item.id)) return false;
     if (!item.parentId) return true;
     const parent = byId.get(item.parentId);
     if (!parent) return false;
-    return (parent.selection === 'locked' || selected.has(parent.id)) && hasSelectedAncestors(parent);
+    return (parent.selection === 'locked' || selected.has(parent.id)) && hasSelectedAncestors(parent, new Set(visited).add(item.id));
   };
 
   const items = proposal.items.map((item) => Object.freeze({
@@ -101,9 +126,11 @@ export function toggleContextItem(proposal: ContextProposal, itemId: string): Co
   if (!target || target.selection === 'locked') return proposal;
   const selected = new Set(proposal.items.filter(({ included, selection }) => included && selection === 'suggested').map(({ id }) => id));
   const byId = new Map(proposal.items.map((item) => [item.id, item]));
-  const isDescendantOf = (item: ProposedContextItem, ancestorId: string): boolean => {
+  const isDescendantOf = (item: ProposedContextItem, ancestorId: string, visited = new Set<string>()): boolean => {
+    if (visited.has(item.id)) return false;
     if (!item.parentId) return false;
-    return item.parentId === ancestorId || Boolean(byId.get(item.parentId) && isDescendantOf(byId.get(item.parentId)!, ancestorId));
+    return item.parentId === ancestorId || Boolean(byId.get(item.parentId)
+      && isDescendantOf(byId.get(item.parentId)!, ancestorId, new Set(visited).add(item.id)));
   };
 
   if (target.included) {

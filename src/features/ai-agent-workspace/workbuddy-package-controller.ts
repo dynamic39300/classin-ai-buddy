@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { WorkBuddyClock } from '@contracts/workbuddy/clock';
 import type { PackageWritebackAdapter, PackageWritebackScenario, PackageWritebackScenarioController } from '@contracts/workbuddy/package-writeback';
 import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixture';
+import { addMinutesToTimestamp } from '@domain/workbuddy/action-time';
 import {
   createContextProposal, selectContextItems,
   type ContextProposal, type ContextSnapshot, type CoreContextItem, type WorkBuddyTaskType,
@@ -59,10 +60,6 @@ export type WorkBuddyPackageController = Readonly<{
   commands: Omit<WorkBuddyCoursePackage, 'packageView'>;
 }>;
 
-function addMinutes(iso: string, minutes: number): string {
-  return new Date(Date.parse(iso) + minutes * 60_000).toISOString();
-}
-
 export function createWorkBuddyPackageController(params: PackageControllerParams): WorkBuddyPackageController {
   const {
     contextSnapshot, taskType, initialContextItems, packageDefinition, packageActionInput, failedArtifactIds, runtimeFixture, clock,
@@ -118,7 +115,7 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
           ? renewPackageSaveAction(actionRun, action, {
             id: runtimeFixture.expirationRecovery.packageActionId,
             idempotencyKey: runtimeFixture.expirationRecovery.packageIdempotencyKey,
-            expiresAt: addMinutes(clock.now(), runtimeFixture.expirationRecovery.ttlMinutes),
+            expiresAt: addMinutesToTimestamp(clock.now(), runtimeFixture.expirationRecovery.ttlMinutes),
           })
           : createPackageSaveAction(actionRun, retrying ? {
             ...packageActionInput,

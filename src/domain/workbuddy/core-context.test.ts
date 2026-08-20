@@ -27,6 +27,15 @@ describe('CoreContext Module', () => {
     expect(proposal.items.filter(({ included }) => included).map(({ id }) => id)).toEqual(['teacher', 'org']);
   });
 
+  it('rejects duplicate, missing-parent and cyclic context hierarchies at the proposal boundary', () => {
+    expect(() => createContextProposal([...ITEMS, ITEMS[0]!], 'single-courseware')).toThrow(/Duplicate/);
+    expect(() => createContextProposal([{ ...ITEMS[2]!, parentId: 'missing-class' }], 'single-courseware')).toThrow(/Unknown Core Context parent/);
+    expect(() => createContextProposal([
+      { ...ITEMS[2]!, id: 'class-cycle', parentId: 'course-cycle' },
+      { ...ITEMS[3]!, id: 'course-cycle', parentId: 'class-cycle' },
+    ], 'single-courseware')).toThrow(/Cyclic/);
+  });
+
   it('clears incompatible descendants when the selected class changes', () => {
     const first = selectContextItems(createContextProposal(ITEMS, 'single-courseware'), ['class-a', 'course-a', 'unit-a', 'learners-a']);
     const switched = selectContextItems(first, ['class-b']);

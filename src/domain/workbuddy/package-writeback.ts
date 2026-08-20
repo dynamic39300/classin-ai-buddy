@@ -1,4 +1,5 @@
 import { getPackageApprovableArtifactIds, type CoursePackageRun } from './course-package';
+import { isActionExpired } from './action-time';
 
 export type PackageProposedAction = Readonly<{
   id: string;
@@ -72,9 +73,5 @@ export function decidePackageAction(
 
 export function expirePackageAction(action: PackageProposedAction, at: string): PackageProposedAction {
   if (action.status === 'rejected' || action.status === 'expired') return action;
-  const expiresAt = Date.parse(action.expiresAt);
-  const checkedAt = Date.parse(at);
-  return Number.isFinite(expiresAt) && Number.isFinite(checkedAt) && checkedAt < expiresAt
-    ? action
-    : Object.freeze({ ...action, status: 'expired' });
+  return isActionExpired(action.expiresAt, at) ? Object.freeze({ ...action, status: 'expired' }) : action;
 }

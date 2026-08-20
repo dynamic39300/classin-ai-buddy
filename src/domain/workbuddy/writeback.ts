@@ -1,3 +1,5 @@
+import { isActionExpired } from './action-time';
+
 export type ProposedActionStatus = 'proposed' | 'approved' | 'rejected' | 'expired';
 
 export type ProposedAction = Readonly<{
@@ -131,11 +133,7 @@ function decideAction(action: ProposedAction, approvalId: string, decidedAt: str
 
 export function expireAction(action: ProposedAction, at: string): ProposedAction {
   if (action.status === 'rejected' || action.status === 'expired') return action;
-  const expiresAt = Date.parse(action.expiresAt);
-  const checkedAt = Date.parse(at);
-  return Number.isFinite(expiresAt) && Number.isFinite(checkedAt) && checkedAt < expiresAt
-    ? action
-    : Object.freeze({ ...action, status: 'expired' });
+  return isActionExpired(action.expiresAt, at) ? Object.freeze({ ...action, status: 'expired' }) : action;
 }
 
 export function approveAction(action: ProposedAction, approvalId: string, decidedAt: string, decidedBy: string) {

@@ -3,16 +3,21 @@ import type { PackageWritebackAdapter, PackageWritebackCandidate, PackageWriteba
 import type { PackageExecutionReceipt, PackageReceiptItem } from '@domain/workbuddy/course-package';
 import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
+import {
+  assertCoursewareWritebackRequest, assertPackageWritebackRequest, cacheIdempotentReceipt,
+  coursewareWritebackFingerprint, packageWritebackFingerprint, readIdempotentReceipt, type IdempotencyEntry,
+} from './writeback-idempotency';
 
 export class DeterministicTestWritebackAdapter implements ClassInWritebackAdapter, WritebackScenarioController {
   private scenario: WritebackScenario = 'success';
-  private readonly receipts = new Map<string, ExecutionReceipt>();
+  private readonly receipts = new Map<string, IdempotencyEntry<ExecutionReceipt>>();
   private readonly attempts = new Set<string>();
 
   execute(action: ProposedAction, approval: Approval): ExecutionReceipt {
-    const replay = this.receipts.get(action.idempotencyKey);
+    assertCoursewareWritebackRequest(action, approval);
+    const fingerprint = coursewareWritebackFingerprint(action, approval);
+    const replay = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (replay) return replay;
-    if (action.status !== 'approved' || approval.decision !== 'approved' || approval.actionId !== action.id) throw new Error('approved action required');
     const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, executedAt: '2026-08-20T10:06:00+08:00', truthLabel: '[模拟]确定性测试执行回执' };
     if (this.scenario === 'permission_denied') return Object.freeze({ ...base, id: 'receipt-courseware-permission-denied-1', status: 'permission_denied', result: 'denied', recovery: 'choose-another-target', unexecutedTarget: action.target.unitId });
     const currentVersion = this.scenario === 'version_conflict'
@@ -36,8 +41,7 @@ export class DeterministicTestWritebackAdapter implements ClassInWritebackAdapte
       }),
       result: '课件已保存到 ClassIn 单元资料',
     });
-    this.receipts.set(action.idempotencyKey, receipt);
-    return receipt;
+    return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, receipt);
   }
 
   setScenario(scenario: WritebackScenario) { this.scenario = scenario; this.reset(); }
@@ -47,23 +51,14 @@ export class DeterministicTestWritebackAdapter implements ClassInWritebackAdapte
 
 export class DeterministicTestPackageWritebackAdapter implements PackageWritebackAdapter, PackageWritebackScenarioController {
   private scenario: PackageWritebackScenario = 'partial_success';
-  private readonly receipts = new Map<string, PackageExecutionReceipt>();
+  private readonly receipts = new Map<string, IdempotencyEntry<PackageExecutionReceipt>>();
   private readonly attempts = new Set<string>();
 
   execute(action: PackageProposedAction, approval: PackageApproval, candidates: readonly PackageWritebackCandidate[]): PackageExecutionReceipt {
-    const replay = this.receipts.get(action.idempotencyKey);
+    assertPackageWritebackRequest(action, approval, candidates);
+    const fingerprint = packageWritebackFingerprint(action, approval, candidates);
+    const replay = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (replay) return replay;
-    if (action.status !== 'approved' || approval.decision !== 'approved' || approval.actionId !== action.id) throw new Error('approved action required');
-    const candidateMap = new Map(candidates.map((item) => [item.id, item]));
-    if (candidates.some((candidate) => candidate.runRef !== action.runRef || candidate.contextSnapshotId !== action.contextSnapshotId)) throw new Error('foreign package candidate');
-    const actionMatchesCandidates = action.artifactRefs.every((ref) => {
-      const candidate = candidateMap.get(ref.id);
-      return candidate?.version === ref.version
-        && candidate.runRef === action.runRef
-        && candidate.contextSnapshotId === action.contextSnapshotId
-        && candidate.approvalState === 'approved';
-    });
-    if (!actionMatchesCandidates || candidates.filter(({ approvalState }) => approvalState === 'approved').length !== action.artifactRefs.length) throw new Error('stale package action');
     const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, truthLabel: '[模拟]确定性测试执行回执' };
     const notExecuted = candidates.map(({ id, approvalState }) => Object.freeze({ artifactId: id, result: approvalState === 'waiting' ? 'waiting' as const : 'not_executed' as const }));
     if (this.scenario === 'permission_denied') return Object.freeze({ ...base, id: 'receipt-package-permission_denied-1', status: 'permission_denied', recovery: 'choose-another-target', result: 'denied', items: Object.freeze(notExecuted) });
@@ -83,8 +78,7 @@ export class DeterministicTestPackageWritebackAdapter implements PackageWritebac
     const receipt: PackageExecutionReceipt = items.every((item): item is Extract<PackageReceiptItem, { result: 'succeeded' | 'not_executed' }> => item.result === 'succeeded' || item.result === 'not_executed')
       ? Object.freeze({ ...base, id: 'receipt-package-success-1', status: 'success', result: 'success', items: Object.freeze(items) })
       : Object.freeze({ ...base, id: 'receipt-package-partial-1', status: 'partial_success', result: 'partial_success', items: Object.freeze(items) });
-    this.receipts.set(action.idempotencyKey, receipt);
-    return receipt;
+    return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, receipt);
   }
 
   setScenario(scenario: PackageWritebackScenario) { this.scenario = scenario; this.reset(); }
