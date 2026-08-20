@@ -45,6 +45,8 @@ export type SingleCoursewareRun = Readonly<{
   plan: readonly CoursewarePlanStep[];
   events: readonly CoursewareRunEvent[];
   artifact: CoursewareArtifactDraft | null;
+  revision: number;
+  supersededEvidence: readonly Readonly<{ snapshotId: string; artifact: CoursewareArtifactDraft | null; actionId?: string; receiptId?: string; reason: string }>[];
 }>;
 
 const PLAN: readonly CoursewarePlanStep[] = Object.freeze([
@@ -79,7 +81,14 @@ export function createSingleCoursewareRun(goal: string, contextSnapshotId: strin
     plan: PLAN,
     events: Object.freeze([]),
     artifact: null,
+    revision: 1,
+    supersededEvidence: Object.freeze([]),
   });
+}
+
+export function replanCoursewareRun(run: SingleCoursewareRun, newContextSnapshotId: string, evidence?: Readonly<{ actionId?: string; receiptId?: string }>): SingleCoursewareRun {
+  const superseded = Object.freeze({ snapshotId: run.contextSnapshotId, artifact: run.artifact, actionId: evidence?.actionId, receiptId: evidence?.receiptId, reason: '主教学范围从高二物理 3 班调整为高二物理 1 班' });
+  return freezeRun({ ...run, contextSnapshotId: newContextSnapshotId, stage: 'needs_information', events: Object.freeze([]), artifact: null, revision: run.revision + 1, supersededEvidence: Object.freeze([...run.supersededEvidence, superseded]) });
 }
 
 export function updateCoursewareBrief(run: SingleCoursewareRun, patch: Partial<CoursewareBrief>): SingleCoursewareRun {

@@ -203,6 +203,24 @@
   font-size: var(--text-xs);
 }
 
+.supersededEvidence {
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-faint);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.supersededEvidence strong,
+.supersededEvidence p {
+  font-size: var(--text-xs);
+}
+
+.supersededEvidence p {
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-ink-muted);
+}
+
 .waitingPoint {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-control);

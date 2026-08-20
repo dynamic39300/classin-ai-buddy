@@ -15,6 +15,7 @@ import {
   confirmCoursewareBrief,
   createSingleCoursewareRun,
   executeCoursewarePlan,
+  replanCoursewareRun,
   reviseCoursewareBrief,
   updateCoursewareBrief,
   type SingleCoursewareRun,
@@ -64,6 +65,7 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
   const [taskType, setTaskTypeState] = useState<WorkBuddyTaskType>('single-courseware');
   const [packageRun, setPackageRun] = useState<CoursePackageRun | null>(null);
   const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(null);
+  const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<WorkBuddyWorkspace['activeCoursewarePanel']>('none');
 
   const value = useMemo<WorkBuddyWorkspace>(() => ({
     runs,
@@ -194,7 +196,23 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
       setPackageReceipt(null);
       return run.id;
     },
-  }), [contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, packageReceipt, packageRun, packageWritebackAdapter, recommendedContextItemIds, runs, taskType, writebackAdapter, writebackScenario, writebackScenarioController]);
+    activeCoursewarePanel,
+    setActiveCoursewarePanel,
+    replanCoursewareToWaveContext: () => {
+      if (!coursewareRun) return;
+      const proposal = selectContextItems(createContextProposal(initialContextItems, 'single-courseware'), ['physics-1', 'course-physics-1', 'unit-wave-1']);
+      const result = confirmContext(proposal, { snapshotId: 'context-snapshot-courseware-2', confirmedAt: '2026-08-20T10:20:00+08:00' });
+      if (!result.ok) return;
+      const next = replanCoursewareRun(coursewareRun, result.snapshot.id, { actionId: coursewareAction?.id, receiptId: coursewareReceipt?.id });
+      setContextSnapshot(result.snapshot);
+      setContextProposal(proposal);
+      setCoursewareRun(next);
+      setCoursewareAction(null);
+      setCoursewareApproval(null);
+      setCoursewareReceipt(null);
+      setActiveCoursewarePanel('none');
+    },
+  }), [activeCoursewarePanel, contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, packageReceipt, packageRun, packageWritebackAdapter, recommendedContextItemIds, runs, taskType, writebackAdapter, writebackScenario, writebackScenarioController]);
 
   return <WorkBuddyWorkspaceContext.Provider value={value}>{children}</WorkBuddyWorkspaceContext.Provider>;
 }

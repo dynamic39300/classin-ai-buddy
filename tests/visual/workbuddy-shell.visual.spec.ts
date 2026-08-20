@@ -123,6 +123,13 @@ test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) 
   await expect(page).toHaveScreenshot('workbuddy-m4-course-package-partial-1440x900.png', { fullPage: true });
 });
 
+test('WorkBuddy M4 Context replanning impact at 1440x900', async ({ page }) => {
+  await createCoursewareArtifact(page);
+  await page.getByRole('button', { name: '调整教学范围' }).click();
+  await expect(page.getByRole('complementary', { name: '重新规划影响' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-m4-context-replanning-1440x900.png', { fullPage: true });
+});
+
 test('WorkBuddy keeps embedded navigation reachable at compact desktop width', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 768 });
   await page.goto('/');

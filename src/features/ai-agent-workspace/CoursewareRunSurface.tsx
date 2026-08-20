@@ -1,12 +1,9 @@
 import { CheckCircle2, FileText, PanelRight, Presentation, ShieldCheck, Sparkles } from 'lucide-react';
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './CoursewareRunSurface.module.css';
-
-type ActivePanel = 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'none';
 
 export function CoursewareRunSurface() {
   const {
@@ -25,9 +22,11 @@ export function CoursewareRunSurface() {
     writebackScenario,
     setWritebackScenario,
     derivePackageFromCourseware,
+    activeCoursewarePanel: activePanel,
+    setActiveCoursewarePanel: setActivePanel,
+    replanCoursewareToWaveContext,
   } = useWorkBuddyWorkspace();
   const navigate = useNavigate();
-  const [activePanel, setActivePanel] = useState<ActivePanel>('none');
 
   if (!run) return null;
   const artifact = run.artifact;
@@ -39,6 +38,7 @@ export function CoursewareRunSurface() {
           <div><h1 id="m4-courseware-title">{run.title}</h1><span>{run.stage === 'needs_information' ? '需要补充' : run.stage === 'awaiting_plan_confirmation' ? '待确认计划' : '完成待复查'} · 固定 Mock</span></div>
           <nav aria-label="任务辅助面板">
             <button type="button" aria-pressed={activePanel === 'core_context'} onClick={() => setActivePanel('core_context')}>核心上下文</button>
+            <button type="button" aria-pressed={activePanel === 'replan'} onClick={() => setActivePanel('replan')}>调整教学范围</button>
             <button type="button" aria-pressed={activePanel === 'process_detail'} disabled={!run.events.length} onClick={() => setActivePanel('process_detail')}>执行详情</button>
             <button type="button" aria-pressed={activePanel === 'artifact'} disabled={!artifact} onClick={() => setActivePanel('artifact')}><PanelRight aria-hidden="true" size={15} />查看产物</button>
           </nav>
@@ -55,7 +55,8 @@ export function CoursewareRunSurface() {
               <span className={styles.stageIcon}><Sparkles aria-hidden="true" size={17} /></span>
               <div className={styles.stageBody}>
                 <h2 id="courseware-brief-title">补齐任务信息</h2>
-                <p>已从 ContextSnapshot 复用：高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量</p>
+                <p>{run.revision > 1 ? '已从新 ContextSnapshot 复用：高二物理 1 班 · 机械波基础 · 第一单元 机械波' : '已从 ContextSnapshot 复用：高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量'}</p>
+                {run.supersededEvidence.length ? <section className={styles.supersededEvidence} aria-label="Superseded 证据"><strong>Superseded 证据已保留</strong>{run.supersededEvidence.map((evidence) => <p key={evidence.snapshotId}>{evidence.snapshotId} · {evidence.artifact?.id} · {evidence.actionId ?? '无 Action'} · {evidence.receiptId ?? '无 Receipt'}</p>)}</section> : null}
                 <div className={styles.fields}>
                   <label>课时长度<select aria-label="课时长度" value={run.brief.durationMinutes} onChange={(event) => updateCoursewareTaskBrief({ durationMinutes: Number(event.target.value) })}><option value={40}>40 分钟</option><option value={45}>45 分钟</option><option value={60}>60 分钟</option></select></label>
                   <label>教学方式<select aria-label="教学方式" value={run.brief.teachingApproach} onChange={(event) => updateCoursewareTaskBrief({ teachingApproach: event.target.value })}><option>实验探究</option><option>概念讲解</option><option>问题驱动</option></select></label>
@@ -123,6 +124,19 @@ export function CoursewareRunSurface() {
             {coursewareAction.status === 'proposed' ? <><button type="button" onClick={rejectCoursewareSave}>拒绝</button><button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareSave}>批准保存</button></> : null}
             {coursewareAction.status === 'approved' ? <button className={styles.primaryPanelAction} type="button" onClick={() => { executeApprovedCoursewareSave(); setActivePanel('receipt'); }}>执行已批准动作</button> : null}
           </footer>
+        </aside>
+      ) : null}
+
+      {activePanel === 'replan' ? (
+        <aside className={styles.panel} aria-label="重新规划影响">
+          <header><strong>调整教学范围</strong><button type="button" onClick={() => setActivePanel('none')}>取消</button></header>
+          <div className={styles.approvalBody}>
+            <span className={styles.objectType}>Context Change Proposal</span>
+            <h2>切换到高二物理 1 班</h2>
+            <p>确认前不会修改当前 Run。以下影响会生成新 Snapshot 与计划，旧证据不会被覆盖。</p>
+            <dl><div><dt>移除 Context</dt><dd>高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量</dd></div><div><dt>新增 Context</dt><dd>高二物理 1 班 · 机械波基础 · 第一单元 机械波</dd></div><div><dt>受影响步骤</dt><dd>目标理解、教学结构、课件组装、质量检查</dd></div><div><dt>受影响对象</dt><dd>当前 ArtifactDraft、ProposedAction 与 ExecutionReceipt</dd></div></dl>
+          </div>
+          <footer><button type="button" onClick={() => setActivePanel('none')}>保留当前范围</button><button className={styles.primaryPanelAction} type="button" onClick={replanCoursewareToWaveContext}>确认并重新规划</button></footer>
         </aside>
       ) : null}
 

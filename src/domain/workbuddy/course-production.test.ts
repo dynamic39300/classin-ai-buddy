@@ -5,6 +5,7 @@ import {
   executeCoursewarePlan,
   reviseCoursewareBrief,
   updateCoursewareBrief,
+  replanCoursewareRun,
 } from './course-production';
 
 describe('single-courseware Course Production Module', () => {
@@ -27,6 +28,13 @@ describe('single-courseware Course Production Module', () => {
       '质量检查通过',
     ]);
     expect(completed.artifact).toMatchObject({ id: 'artifact-courseware-momentum-v1', version: 'v1', pageCount: 16, validationState: 'passed' });
+  });
+
+  it('preserves the previous Snapshot and Artifact as superseded evidence when replanning', () => {
+    const completed = executeCoursewarePlan(confirmCoursewareBrief(createSingleCoursewareRun('设计动量守恒模型课件', 'snapshot-1')));
+    const replanned = replanCoursewareRun(completed, 'snapshot-2', { actionId: 'action-1', receiptId: 'receipt-1' });
+    expect(replanned).toMatchObject({ revision: 2, contextSnapshotId: 'snapshot-2', stage: 'needs_information', artifact: null });
+    expect(replanned.supersededEvidence[0]).toMatchObject({ snapshotId: 'snapshot-1', artifact: { id: 'artifact-courseware-momentum-v1' }, actionId: 'action-1', receiptId: 'receipt-1' });
   });
 
   it('only accepts commands allowed by the current discriminated stage', () => {

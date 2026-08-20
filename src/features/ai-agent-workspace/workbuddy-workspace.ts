@@ -44,6 +44,9 @@ export type WorkBuddyWorkspace = {
   executePackageSave: () => void;
   retryPackageItem: (artifactId: string) => void;
   derivePackageFromCourseware: () => string | null;
+  activeCoursewarePanel: 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'replan' | 'none';
+  setActiveCoursewarePanel: (panel: WorkBuddyWorkspace['activeCoursewarePanel']) => void;
+  replanCoursewareToWaveContext: () => void;
 };
 
 export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);

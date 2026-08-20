@@ -217,6 +217,30 @@ test('teacher derives an independent package Run from the reviewed courseware', 
   await page.getByRole('link', { name: '返回源课件 Run' }).click();
   await expect(page).toHaveURL(/run-m4-courseware/);
   await expect(page.getByRole('heading', { name: '课件初稿已生成' })).toBeVisible();
-  await page.getByRole('button', { name: '查看产物' }).click();
-  await expect(page.getByText('artifact-courseware-momentum-v1', { exact: true })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: '当前任务产物' }).getByText('artifact-courseware-momentum-v1', { exact: true })).toBeVisible();
+});
+
+test('teacher previews Context impact and preserves superseded evidence when replanning', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createCoursewareArtifact(page);
+  const artifact = page.getByRole('complementary', { name: '当前任务产物' });
+  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
+  await page.getByRole('complementary', { name: '保存审批' }).getByRole('button', { name: '批准保存' }).click();
+  await page.getByRole('button', { name: '执行已批准动作' }).click();
+  await page.getByRole('button', { name: '调整教学范围' }).click();
+
+  const impact = page.getByRole('complementary', { name: '重新规划影响' });
+  await expect(impact.getByText('高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量', { exact: true })).toBeVisible();
+  await expect(impact.getByText('高二物理 1 班 · 机械波基础 · 第一单元 机械波', { exact: true })).toBeVisible();
+  await expect(impact.getByText('当前 ArtifactDraft、ProposedAction 与 ExecutionReceipt', { exact: true })).toBeVisible();
+  await impact.getByRole('button', { name: '确认并重新规划' }).click();
+
+  await expect(page.getByRole('heading', { name: '补齐任务信息' })).toBeVisible();
+  await expect(page.getByText('Superseded 证据已保留', { exact: true })).toBeVisible();
+  await expect(page.getByText(/context-snapshot-courseware-1 · artifact-courseware-momentum-v1 · action-courseware-save-1 · receipt-courseware-save-1/)).toBeVisible();
+  await page.getByRole('button', { name: '核心上下文' }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await expect(context.getByText('高二物理 1 班', { exact: true })).toBeVisible();
+  await expect(context.getByText('机械波基础', { exact: true })).toBeVisible();
+  await expect(context.getByText('第一单元 机械波', { exact: true })).toBeVisible();
 });
