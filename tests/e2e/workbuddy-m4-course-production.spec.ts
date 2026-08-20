@@ -12,6 +12,14 @@ async function openPreparedWorkBuddy(page: import('@playwright/test').Page) {
   await panel.getByRole('button', { name: '关闭核心上下文' }).click();
 }
 
+async function createCoursewareArtifact(page: import('@playwright/test').Page) {
+  await openPreparedWorkBuddy(page);
+  await page.getByRole('button', { name: '生成单个课件' }).click();
+  await page.getByRole('button', { name: '创建任务' }).click();
+  await page.getByRole('button', { name: '确认任务信息' }).click();
+  await page.getByRole('button', { name: '确认计划并执行' }).click();
+}
+
 test('teacher reviews Core Context and freezes a resettable Snapshot @a11y', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
@@ -87,4 +95,33 @@ test('teacher turns a single-courseware goal into an auditable ArtifactDraft', a
   await expect(processDetail.getByText('最小 ContextProjection')).toBeVisible();
   await expect(processDetail.getByText('高二物理 3 班', { exact: true })).toBeVisible();
   await expect(processDetail.getByText('李明', { exact: true })).toHaveCount(0);
+});
+
+test('teacher approves a courseware writeback and trusts only its ExecutionReceipt', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createCoursewareArtifact(page);
+
+  const artifact = page.getByRole('complementary', { name: '当前任务产物' });
+  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
+
+  const approval = page.getByRole('complementary', { name: '保存审批' });
+  await expect(approval.getByText('ProposedAction', { exact: true })).toBeVisible();
+  await expect(approval.getByText('目标：高二物理 3 班 / 动量与碰撞 / 第一单元 受力与动量')).toBeVisible();
+  await expect(approval.getByText('artifact-courseware-momentum-v1 · v1', { exact: true })).toBeVisible();
+  await expect(approval.getByText('风险：低 · 可逆：是 · 权限：允许写入')).toBeVisible();
+  await expect(approval.getByText('保存成功', { exact: true })).toHaveCount(0);
+
+  await approval.getByRole('button', { name: '批准保存' }).click();
+  await expect(approval.getByText('已批准 · 尚未执行', { exact: true })).toBeVisible();
+  await expect(approval.getByText('保存成功', { exact: true })).toHaveCount(0);
+  await approval.getByRole('button', { name: '执行已批准动作' }).click();
+
+  const receipt = page.getByRole('complementary', { name: 'ExecutionReceipt' });
+  await expect(receipt.getByText('保存成功', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('receipt-courseware-save-1', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('classin-courseware-momentum-v1', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('v1', { exact: true })).toBeVisible();
+  await expect(receipt.getByRole('link', { name: '返回 ClassIn 课程对象' })).toHaveAttribute('href', /\/teacher\/classes\/physics-3/);
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
 });

@@ -3,6 +3,7 @@ import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { ContextProposal, ContextSnapshot } from '@domain/workbuddy/core-context';
 import type { ContextProjection } from '@domain/workbuddy/core-context';
 import type { CoursewareBrief, SingleCoursewareRun } from '@domain/workbuddy/course-production';
+import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 
 export type WorkBuddyWorkspace = {
   runs: readonly WorkBuddyRunViewModel[];
@@ -22,6 +23,13 @@ export type WorkBuddyWorkspace = {
   confirmCoursewareTaskBrief: () => void;
   reviseCoursewareTaskBrief: () => void;
   executeCoursewareTaskPlan: () => void;
+  coursewareAction: ProposedAction | null;
+  coursewareApproval: Approval | null;
+  coursewareReceipt: ExecutionReceipt | null;
+  proposeCoursewareSave: () => void;
+  approveCoursewareSave: () => void;
+  rejectCoursewareSave: () => void;
+  executeApprovedCoursewareSave: () => void;
 };
 
 export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
+import type { ClassInWritebackAdapter } from '@contracts/workbuddy/classin-writeback';
 import {
   confirmContext,
   createContextProposal,
@@ -16,12 +17,14 @@ import {
   updateCoursewareBrief,
   type SingleCoursewareRun,
 } from '@domain/workbuddy/course-production';
+import { approveAction, createCoursewareSaveAction, rejectAction, type Approval, type ExecutionReceipt, type ProposedAction } from '@domain/workbuddy/writeback';
 import { WorkBuddyWorkspaceContext, type WorkBuddyWorkspace } from './workbuddy-workspace';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
   initialRuns: readonly WorkBuddyRunViewModel[];
   initialContextItems: readonly CoreContextItem[];
   recommendedContextItemIds: readonly string[];
+  writebackAdapter: ClassInWritebackAdapter;
   children: ReactNode;
 }>;
 
@@ -44,11 +47,14 @@ function projectCoursewareRunIntoHistory(current: readonly WorkBuddyRunViewModel
   } : item);
 }
 
-export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, recommendedContextItemIds, children }: WorkBuddyWorkspaceProviderProps) {
+export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, recommendedContextItemIds, writebackAdapter, children }: WorkBuddyWorkspaceProviderProps) {
   const [runs, setRuns] = useState<readonly WorkBuddyRunViewModel[]>(initialRuns);
   const [contextProposal, setContextProposal] = useState(() => createContextProposal(initialContextItems, 'single-courseware'));
   const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(null);
   const [coursewareRun, setCoursewareRun] = useState<SingleCoursewareRun | null>(null);
+  const [coursewareAction, setCoursewareAction] = useState<ProposedAction | null>(null);
+  const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(null);
+  const [coursewareReceipt, setCoursewareReceipt] = useState<ExecutionReceipt | null>(null);
 
   const value = useMemo<WorkBuddyWorkspace>(() => ({
     runs,
@@ -102,7 +108,34 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
       setRuns((history) => projectCoursewareRunIntoHistory(history, next));
       return next;
     }),
-  }), [contextProposal, contextSnapshot, coursewareRun, initialContextItems, recommendedContextItemIds, runs]);
+    coursewareAction,
+    coursewareApproval,
+    coursewareReceipt,
+    proposeCoursewareSave: () => {
+      if (!coursewareRun?.artifact) return;
+      setCoursewareAction(createCoursewareSaveAction({ artifactId: coursewareRun.artifact.id, artifactVersion: coursewareRun.artifact.version }));
+      setCoursewareApproval(null);
+      setCoursewareReceipt(null);
+    },
+    approveCoursewareSave: () => {
+      if (!coursewareAction) return;
+      const result = approveAction(coursewareAction, 'approval-courseware-save-1', '2026-08-20T10:05:00+08:00');
+      if (!result) return;
+      setCoursewareAction(result.action);
+      setCoursewareApproval(result.approval);
+    },
+    rejectCoursewareSave: () => {
+      if (!coursewareAction) return;
+      const result = rejectAction(coursewareAction, 'approval-courseware-reject-1', '2026-08-20T10:05:00+08:00');
+      if (!result) return;
+      setCoursewareAction(result.action);
+      setCoursewareApproval(result.approval);
+    },
+    executeApprovedCoursewareSave: () => {
+      if (!coursewareAction || !coursewareApproval) return;
+      setCoursewareReceipt(writebackAdapter.execute(coursewareAction, coursewareApproval));
+    },
+  }), [contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, recommendedContextItemIds, runs, writebackAdapter]);
 
   return <WorkBuddyWorkspaceContext.Provider value={value}>{children}</WorkBuddyWorkspaceContext.Provider>;
 }

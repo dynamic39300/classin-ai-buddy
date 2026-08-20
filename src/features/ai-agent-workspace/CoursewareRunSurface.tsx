@@ -1,10 +1,11 @@
-import { CheckCircle2, FileText, PanelRight, Presentation, Sparkles } from 'lucide-react';
+import { CheckCircle2, FileText, PanelRight, Presentation, ShieldCheck, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './CoursewareRunSurface.module.css';
 
-type ActivePanel = 'artifact' | 'core_context' | 'process_detail' | 'none';
+type ActivePanel = 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'none';
 
 export function CoursewareRunSurface() {
   const {
@@ -14,6 +15,12 @@ export function CoursewareRunSurface() {
     confirmCoursewareTaskBrief,
     reviseCoursewareTaskBrief,
     executeCoursewareTaskPlan,
+    coursewareAction,
+    coursewareReceipt,
+    proposeCoursewareSave,
+    approveCoursewareSave,
+    rejectCoursewareSave,
+    executeApprovedCoursewareSave,
   } = useWorkBuddyWorkspace();
   const [activePanel, setActivePanel] = useState<ActivePanel>('none');
 
@@ -85,7 +92,53 @@ export function CoursewareRunSurface() {
             <p>{artifact.validationSummary}</p>
             <strong className={styles.truthLabel}>{artifact.truthLabel}</strong>
           </div>
-          <footer><button type="button" disabled>保存到 ClassIn</button></footer>
+          <footer><button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button></footer>
+        </aside>
+      ) : null}
+
+      {activePanel === 'action' && coursewareAction ? (
+        <aside className={styles.panel} aria-label="保存审批">
+          <header><div><ShieldCheck aria-hidden="true" size={17} /><strong>保存审批</strong></div><button type="button" onClick={() => setActivePanel('artifact')}>返回产物</button></header>
+          <div className={styles.approvalBody}>
+            <span className={styles.objectType}>ProposedAction</span>
+            <h2>保存课件到 ClassIn</h2>
+            <p>目标：{coursewareAction.target.label}</p>
+            <dl>
+              <div><dt>变更</dt><dd>{coursewareAction.difference}</dd></div>
+              <div><dt>影响</dt><dd>{coursewareAction.impact}</dd></div>
+              <div><dt>来源版本</dt><dd>{coursewareAction.artifactRef.id} · {coursewareAction.artifactRef.version}</dd></div>
+              <div><dt>风险与权限</dt><dd>风险：低 · 可逆：是 · 权限：允许写入</dd></div>
+              <div><dt>审批有效期</dt><dd>{coursewareAction.expiresAt}</dd></div>
+            </dl>
+            {coursewareAction.status === 'approved' ? <p className={styles.approvedStatus} role="status">已批准 · 尚未执行</p> : null}
+            {coursewareAction.status === 'rejected' ? <p className={styles.rejectedStatus} role="status">已拒绝 · 未执行任何写入</p> : null}
+          </div>
+          <footer>
+            {coursewareAction.status === 'proposed' ? <><button type="button" onClick={rejectCoursewareSave}>拒绝</button><button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareSave}>批准保存</button></> : null}
+            {coursewareAction.status === 'approved' ? <button className={styles.primaryPanelAction} type="button" onClick={() => { executeApprovedCoursewareSave(); setActivePanel('receipt'); }}>执行已批准动作</button> : null}
+          </footer>
+        </aside>
+      ) : null}
+
+      {activePanel === 'receipt' && coursewareReceipt ? (
+        <aside className={styles.panel} aria-label="ExecutionReceipt">
+          <header><div><CheckCircle2 aria-hidden="true" size={17} /><strong>ExecutionReceipt</strong></div><button type="button" onClick={() => setActivePanel('artifact')}>返回产物</button></header>
+          <div className={styles.receiptBody}>
+            {coursewareReceipt.status === 'success' ? <>
+              <span className={styles.successMark}><CheckCircle2 aria-hidden="true" size={22} /></span>
+              <h2>保存成功</h2>
+              <p>只有这份回执证明固定 Mock Adapter 已接受并执行本次动作。</p>
+              <dl>
+                <div><dt>Receipt ID</dt><dd>{coursewareReceipt.id}</dd></div>
+                <div><dt>Action / Approval</dt><dd>{coursewareReceipt.actionId} · {coursewareReceipt.approvalId}</dd></div>
+                <div><dt>ClassIn 对象</dt><dd>{coursewareReceipt.object.id}</dd></div>
+                <div><dt>对象版本</dt><dd>{coursewareReceipt.object.version}</dd></div>
+                <div><dt>执行时间</dt><dd>{coursewareReceipt.executedAt}</dd></div>
+                <div><dt>结果</dt><dd>{coursewareReceipt.result}</dd></div>
+              </dl>
+              <Link className={styles.returnLink} to={coursewareReceipt.object.returnUrl}>返回 ClassIn 课程对象</Link>
+            </> : <><h2>执行未完成</h2><p>{coursewareReceipt.result}</p></>}
+          </div>
         </aside>
       ) : null}
 

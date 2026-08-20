@@ -85,6 +85,16 @@ test('WorkBuddy M4 courseware ArtifactDraft at 1440x900', async ({ page }) => {
   await expect(page).toHaveScreenshot('workbuddy-m4-courseware-artifact-1440x900.png', { fullPage: true });
 });
 
+test('WorkBuddy M4 ExecutionReceipt at 1440x900', async ({ page }) => {
+  await createCoursewareArtifact(page);
+  await page.getByRole('complementary', { name: '当前任务产物' }).getByRole('button', { name: '保存到 ClassIn' }).click();
+  const approval = page.getByRole('complementary', { name: '保存审批' });
+  await approval.getByRole('button', { name: '批准保存' }).click();
+  await approval.getByRole('button', { name: '执行已批准动作' }).click();
+  await expect(page.getByRole('complementary', { name: 'ExecutionReceipt' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-m4-courseware-receipt-1440x900.png', { fullPage: true });
+});
+
 test('WorkBuddy keeps embedded navigation reachable at compact desktop width', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 768 });
   await page.goto('/');
