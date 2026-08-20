@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WORKBUDDY_COURSE_PACKAGE_DEFINITION, WORKBUDDY_PACKAGE_ACTION_INPUT } from '@mocks/scenarios/workbuddy-course-production';
-import { createPackageSaveAction, decidePackageAction } from './package-writeback';
+import { createPackageSaveAction, decidePackageAction, expirePackageAction } from './package-writeback';
 import type { PackageExecutionReceipt } from './course-package';
 import {
   applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
@@ -38,6 +38,8 @@ describe('course-package Artifact Graph', () => {
     const selected = setPackageArtifactIncluded(generated, 'package-quiz', false);
     const action = createPackageSaveAction(selected, WORKBUDDY_PACKAGE_ACTION_INPUT);
     if (!action) throw new Error('Expected action');
+    expect(expirePackageAction(action, action.expiresAt)).toMatchObject({ status: 'expired' });
+    expect(decidePackageAction(action, { id: 'approval-late', decidedBy: 'teacher-1', decidedAt: action.expiresAt }, 'approved')).toBeNull();
     const decision = decidePackageAction(action, { id: 'approval-1', decidedBy: 'teacher-1', decidedAt: '2026-08-20T10:00:00+08:00' }, 'approved');
     if (!decision) throw new Error('Expected approval');
     const approved = markPackageArtifactsApproved(selected, decision.action.artifactRefs.map(({ id }) => id));
@@ -52,12 +54,14 @@ describe('course-package Artifact Graph', () => {
       result: '部分成功', truthLabel: '[模拟]课程方案包执行回执',
     };
     const applied = applyPackageExecutionReceipt(approved, decision.action, decision.approval, receipt);
-    expect(applied.artifacts.map(({ state }) => state)).toEqual(['written_back', 'failed', 'excluded', 'failed']);
-    expect(retryPackageArtifact(applied, 'package-homework').artifacts[1]?.state).toBe('ready');
-    expect(applyPackageExecutionReceipt(approved, { ...decision.action, runRef: 'foreign-run' }, decision.approval, receipt)).toBe(approved);
+    expect(applied.accepted).toBe(true);
+    if (!applied.accepted) throw new Error('Expected accepted receipt');
+    expect(applied.run.artifacts.map(({ state }) => state)).toEqual(['written_back', 'failed', 'excluded', 'failed']);
+    expect(retryPackageArtifact(applied.run, 'package-homework').artifacts[1]?.state).toBe('ready');
+    expect(applyPackageExecutionReceipt(approved, { ...decision.action, runRef: 'foreign-run' }, decision.approval, receipt)).toMatchObject({ accepted: false, run: approved });
 
     const contradictorySuccess = { ...receipt, status: 'success', items: receipt.items } as unknown as PackageExecutionReceipt;
-    expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, contradictorySuccess)).toBe(approved);
+    expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, contradictorySuccess)).toMatchObject({ accepted: false, run: approved });
 
     const recoverable = {
       ...receipt,
@@ -65,6 +69,6 @@ describe('course-package Artifact Graph', () => {
       recovery: 'retry',
       items: approved.artifacts.map(({ id, state }) => ({ artifactId: id, result: state === 'waiting' ? 'waiting' : 'not_executed' })),
     } as unknown as PackageExecutionReceipt;
-    expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, recoverable)).toBe(approved);
+    expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, recoverable)).toEqual({ accepted: true, run: approved });
   });
 });

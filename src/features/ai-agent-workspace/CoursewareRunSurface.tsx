@@ -117,7 +117,7 @@ export function CoursewareRunSurface() {
             <strong className={styles.truthLabel}>{artifact.truthLabel}</strong>
             <details><summary>评审工具</summary><label className={styles.scenarioPicker}>写回结果场景<select aria-label="模拟写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option><option value="timeout">超时后可重试</option></select></label></details>
           </div>
-          <footer>{run.reviewStatus === 'pending' ? <button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareArtifact}>确认课件可用于后续任务</button> : <><button type="button" onClick={() => { const runId = derivePackageFromCourseware(); if (runId) navigate(`/teacher/ai-agent/runs/${runId}`); }}>基于此课件生成课程方案包</button>{coursewareReceipt ? <button type="button" onClick={() => setActivePanel('receipt')}>查看执行回执</button> : coursewareAction ? <button type="button" onClick={() => setActivePanel('action')}>继续保存审批</button> : <button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button>}</>}</footer>
+          <footer>{run.reviewStatus === 'pending' ? <button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareArtifact}>确认课件可用于后续任务</button> : <>{run.derivedPackageRunRef ? <button type="button" onClick={() => navigate(`/teacher/ai-agent/runs/${run.derivedPackageRunRef}`)}>打开已派生课程方案包</button> : <button type="button" onClick={() => { const runId = derivePackageFromCourseware(); if (runId) navigate(`/teacher/ai-agent/runs/${runId}`); }}>基于此课件生成课程方案包</button>}{coursewareReceipt ? <button type="button" onClick={() => setActivePanel('receipt')}>查看执行回执</button> : coursewareAction ? <button type="button" onClick={() => setActivePanel('action')}>继续保存审批</button> : <button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button>}</>}</footer>
         </aside>
       ) : null}
 
@@ -138,10 +138,12 @@ export function CoursewareRunSurface() {
             </dl>
             {coursewareAction.status === 'approved' ? <p className={styles.approvedStatus} role="status">已批准 · 尚未执行</p> : null}
             {coursewareAction.status === 'rejected' ? <p className={styles.rejectedStatus} role="status">已拒绝 · 未执行任何写入</p> : null}
+            {coursewareAction.status === 'expired' ? <p className={styles.rejectedStatus} role="status">审批已过期 · 未执行任何写入，请重新生成保存提案</p> : null}
           </div>
           <footer>
             {coursewareAction.status === 'proposed' ? <><button type="button" onClick={rejectCoursewareSave}>拒绝</button><button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareSave}>批准保存</button></> : null}
             {coursewareAction.status === 'approved' ? <button className={styles.primaryPanelAction} type="button" onClick={() => { executeApprovedCoursewareSave(); setActivePanel('receipt'); }}>执行已批准动作</button> : null}
+            {coursewareAction.status === 'expired' ? <button className={styles.primaryPanelAction} type="button" onClick={proposeCoursewareSave}>重新生成保存提案</button> : null}
           </footer>
         </aside>
       ) : null}

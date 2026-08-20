@@ -8,11 +8,16 @@ export type WorkBuddyRuntimeFixture = Readonly<{
     packageApproveId: string; packageRejectId: string; packageDecidedAt: string;
   }>;
   coursewareRecovery: Readonly<{
-    actionId: string; idempotencyKey: string; fallbackTarget: Readonly<{ unitId: string; label: string }>;
+    actionId: string; approvalId: string; idempotencyKey: string; fallbackTarget: Readonly<{ unitId: string; label: string }>;
   }>;
   packageRecovery: Readonly<{
-    actionId: string; idempotencyKey: string; retryActionId: string; retryIdempotencyKey: string;
+    actionId: string; approvalId: string; idempotencyKey: string; retryActionId: string; retryApprovalId: string; retryIdempotencyKey: string;
     fallbackTarget: Readonly<{ unitId: string; label: string }>;
+  }>;
+  expirationRecovery: Readonly<{
+    ttlMinutes: number;
+    coursewareActionId: string; coursewareApprovalId: string; coursewareIdempotencyKey: string;
+    packageActionId: string; packageApprovalId: string; packageIdempotencyKey: string;
   }>;
   history: Readonly<{
     coursewareEyebrow: string;
@@ -26,6 +31,7 @@ export type WorkBuddyRuntimeFixture = Readonly<{
   replan: Readonly<{
     selectedContextItemIds: readonly string[];
     reason: string;
+    title: string;
     goal: string;
     actionId: string;
     approvalId: string;

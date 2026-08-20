@@ -264,6 +264,8 @@ test('teacher writes a course package with object-level partial results', async 
   await expect(receipt.getByText('碰撞实验录播脚本', { exact: true })).toBeVisible();
   await expect(receipt.getByText('已成功，本次未重复执行', { exact: true })).toHaveCount(2);
   await expect(receipt.getByText('执行成功', { exact: true })).toHaveCount(1);
+  await receipt.getByText('技术证据', { exact: true }).last().click();
+  await expect(receipt.getByText('receipt-package-success-1 · action-package-save-retry-1 · approval-package-save-retry-1', { exact: true })).toBeVisible();
 
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
   await page.getByRole('list', { name: '近期任务列表' }).getByRole('link', { name: /动量单元课程方案包/ }).click();
@@ -354,7 +356,12 @@ test('teacher derives an independent package Run from the reviewed courseware', 
   await page.getByRole('link', { name: '返回源课件任务' }).click();
   await expect(page).toHaveURL(/run-m4-courseware/);
   await expect(page.getByRole('heading', { name: '课件初稿已生成' })).toBeVisible();
-  const sourceArtifact = page.getByRole('complementary', { name: '当前任务产物' });
+  let sourceArtifact = page.getByRole('complementary', { name: '当前任务产物' });
+  await sourceArtifact.getByRole('button', { name: '打开已派生课程方案包' }).click();
+  await expect(page).toHaveURL(/run-m4-course-package/);
+  await page.getByRole('link', { name: '返回源课件任务' }).click();
+  await expect(page).toHaveURL(/run-m4-courseware/);
+  sourceArtifact = page.getByRole('complementary', { name: '当前任务产物' });
   await sourceArtifact.getByText('技术证据', { exact: true }).click();
   await expect(sourceArtifact.getByText('artifact-courseware-momentum-v1', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '执行详情' }).click();
@@ -393,8 +400,11 @@ test('teacher previews Context impact and preserves superseded evidence when rep
   await expect(context.getByText('第一单元 机械波', { exact: true })).toBeVisible();
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '确认任务信息' }).click();
+  await expect(page.getByRole('heading', { name: '生成机械波基础课件', level: 1 })).toBeVisible();
   await expect(page.getByText('机械波主题 · 目标与课时约束', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '确认计划并执行' }).click();
+  await expect(page.getByText('从碰撞实验进入动量守恒模型，再进入例题与练习。', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('从传播现象、振源与介质进入波动概念，再进入判断与练习。', { exact: true })).toBeVisible();
   const replannedArtifact = page.getByRole('complementary', { name: '当前任务产物' });
   await expect(replannedArtifact.getByRole('heading', { name: '机械波基础：从传播现象到核心概念' })).toBeVisible();
   await replannedArtifact.getByRole('button', { name: '确认课件可用于后续任务' }).click();

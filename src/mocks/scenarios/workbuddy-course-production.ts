@@ -1,9 +1,12 @@
 import type { CapabilityContextManifest } from '@domain/workbuddy/core-context';
 import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixture';
+import type { WorkBuddyClock } from '@contracts/workbuddy/clock';
 import type { CoursewareExecutionOutput, CoursewareRunDefinition } from '@domain/workbuddy/course-production';
 import type { CoursePackageDefinition } from '@domain/workbuddy/course-package';
 import type { PackageActionInput } from '@domain/workbuddy/package-writeback';
 import type { CoursewareSaveActionInput } from '@domain/workbuddy/writeback';
+
+export const WORKBUDDY_FIXED_CLOCK: WorkBuddyClock = Object.freeze({ now: () => '2026-08-20T10:20:00+08:00' });
 
 export const WORKBUDDY_COURSEWARE_DEFINITION: CoursewareRunDefinition = Object.freeze({
   fixtureVersion: 'workbuddy-m4-course-production-v1', id: 'run-m4-courseware', title: '生成动量守恒模型课件',
@@ -28,6 +31,21 @@ export const WORKBUDDY_COURSEWARE_OUTPUT: CoursewareExecutionOutput = Object.fre
     id: 'artifact-courseware-momentum-v1', kind: 'courseware', version: 'v1', title: '动量守恒模型：从碰撞实验到守恒定律',
     pageCount: 18, sourceStepId: 'step-generate-courseware', validationState: 'passed',
     validationSummary: '教学目标、内容结构、术语与课堂练习覆盖检查通过', truthLabel: '[模拟]课件草稿 · 未写入 ClassIn',
+  }),
+});
+
+export const WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT: CoursewareExecutionOutput = Object.freeze({
+  events: Object.freeze([
+    Object.freeze({ id: 'event-wave-context', title: '机械波上下文已载入', summary: '高二物理 1 班、机械波课程与第一单元范围已校验。', state: 'completed' }),
+    Object.freeze({ id: 'event-wave-plan', title: '机械波课件计划已确认', summary: '教师确认从传播现象进入机械波概念的四步计划。', state: 'completed' }),
+    Object.freeze({ id: 'event-wave-structure', title: '机械波教学结构已生成', summary: '从传播现象、振源与介质进入波动概念，再进入判断与练习。', capability: 'lesson-structure', state: 'completed' }),
+    Object.freeze({ id: 'event-wave-draft', title: '机械波课件草稿已组装', summary: '[模拟]机械波课件页面与讲解结构已形成。', capability: 'courseware-renderer', state: 'completed' }),
+    Object.freeze({ id: 'event-wave-validation', title: '机械波内容质量检查通过', summary: '机械波目标、结构、术语与练习覆盖检查通过。', capability: 'courseware-quality-check', state: 'completed' }),
+  ]),
+  artifact: Object.freeze({
+    id: 'artifact-courseware-wave-v2', kind: 'courseware', version: 'v2', title: '机械波基础：从传播现象到核心概念',
+    pageCount: 18, sourceStepId: 'step-generate-courseware-r2', validationState: 'passed',
+    validationSummary: '机械波教学目标、内容结构、术语与课堂练习覆盖检查通过', truthLabel: '[模拟]课件草稿 · 未写入 ClassIn',
   }),
 });
 
@@ -68,11 +86,16 @@ export const WORKBUDDY_RUNTIME_FIXTURE: WorkBuddyRuntimeFixture = Object.freeze(
   projectionGeneratedAt: '2026-08-20T10:04:00+08:00',
   snapshot: Object.freeze({ coursewareId: 'context-snapshot-courseware-1', packageId: 'context-snapshot-package-1', replannedCoursewareId: 'context-snapshot-courseware-2', confirmedAt: '2026-08-20T10:00:00+08:00', replannedAt: '2026-08-20T10:20:00+08:00' }),
   approval: Object.freeze({ actorId: 'teacher-wang', coursewareApproveId: 'approval-courseware-save-1', coursewareRejectId: 'approval-courseware-reject-1', coursewareDecidedAt: '2026-08-20T10:05:00+08:00', packageApproveId: 'approval-package-save-1', packageRejectId: 'approval-package-reject-1', packageDecidedAt: '2026-08-20T10:15:00+08:00' }),
-  coursewareRecovery: Object.freeze({ actionId: 'action-courseware-save-recovery-1', idempotencyKey: 'workbuddy-courseware-save-recovery-1', fallbackTarget: Object.freeze({ unitId: 'unit-momentum-drafts', label: '高二物理 3 班 / 动量与碰撞 / 教师草稿区' }) }),
+  coursewareRecovery: Object.freeze({ actionId: 'action-courseware-save-recovery-1', approvalId: 'approval-courseware-save-recovery-1', idempotencyKey: 'workbuddy-courseware-save-recovery-1', fallbackTarget: Object.freeze({ unitId: 'unit-momentum-drafts', label: '高二物理 3 班 / 动量与碰撞 / 教师草稿区' }) }),
   packageRecovery: Object.freeze({
-    actionId: 'action-package-save-recovery-1', idempotencyKey: 'workbuddy-package-save-recovery-1',
-    retryActionId: 'action-package-save-retry-1', retryIdempotencyKey: 'workbuddy-package-save-retry-1',
+    actionId: 'action-package-save-recovery-1', approvalId: 'approval-package-save-recovery-1', idempotencyKey: 'workbuddy-package-save-recovery-1',
+    retryActionId: 'action-package-save-retry-1', retryApprovalId: 'approval-package-save-retry-1', retryIdempotencyKey: 'workbuddy-package-save-retry-1',
     fallbackTarget: Object.freeze({ unitId: 'unit-momentum-drafts', label: '高二物理 3 班 / 动量与碰撞 / 教师草稿区' }),
+  }),
+  expirationRecovery: Object.freeze({
+    ttlMinutes: 10,
+    coursewareActionId: 'action-courseware-save-renewed-1', coursewareApprovalId: 'approval-courseware-save-renewed-1', coursewareIdempotencyKey: 'workbuddy-courseware-save-renewed-1',
+    packageActionId: 'action-package-save-renewed-1', packageApprovalId: 'approval-package-save-renewed-1', packageIdempotencyKey: 'workbuddy-package-save-renewed-1',
   }),
   history: Object.freeze({
     coursewareEyebrow: '高二物理 · 动量与碰撞',
@@ -86,6 +109,7 @@ export const WORKBUDDY_RUNTIME_FIXTURE: WorkBuddyRuntimeFixture = Object.freeze(
   replan: Object.freeze({
     selectedContextItemIds: Object.freeze(['physics-1', 'course-physics-1', 'unit-wave-1']),
     reason: '主教学范围从高二物理 3 班调整为高二物理 1 班',
+    title: '生成机械波基础课件',
     goal: '为高二物理 1 班设计一份机械波基础课件，从波的传播现象进入核心概念',
     actionId: 'action-courseware-wave-save-1',
     approvalId: 'approval-courseware-wave-save-1',

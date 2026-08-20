@@ -56,7 +56,7 @@ export function replanCoursewareRun(
   run: SingleCoursewareRun,
   newContextSnapshotId: string,
   reason: string,
-  replacement: Readonly<{ goal: string; plan: readonly CoursewarePlanStep[] }>,
+  replacement: Readonly<{ title: string; goal: string; plan: readonly CoursewarePlanStep[] }>,
   evidence?: Readonly<{ action?: ProposedAction; receipt?: ExecutionReceipt }>,
 ): SingleCoursewareRun {
   const superseded = Object.freeze({
@@ -64,7 +64,7 @@ export function replanCoursewareRun(
     action: evidence?.action, receipt: evidence?.receipt, reason,
   });
   return freezeRun({
-    ...run, goal: replacement.goal.trim(), plan: replacement.plan, contextSnapshotId: newContextSnapshotId, stage: 'needs_information', events: Object.freeze([]), artifact: null,
+    ...run, title: replacement.title.trim(), goal: replacement.goal.trim(), plan: replacement.plan, contextSnapshotId: newContextSnapshotId, stage: 'needs_information', events: Object.freeze([]), artifact: null,
     reviewStatus: 'not_available',
     allowedCommands: Object.freeze(['update-brief', 'confirm-brief']), recovery: 'complete-required-information',
     revision: run.revision + 1, supersededEvidence: Object.freeze([...run.supersededEvidence, superseded]),

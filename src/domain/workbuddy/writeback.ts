@@ -1,4 +1,4 @@
-export type ProposedActionStatus = 'proposed' | 'approved' | 'rejected';
+export type ProposedActionStatus = 'proposed' | 'approved' | 'rejected' | 'expired';
 
 export type ProposedAction = Readonly<{
   id: string;
@@ -99,11 +99,20 @@ export function createCoursewareSaveAction(input: CoursewareSaveActionInput): Pr
 }
 
 function decideAction(action: ProposedAction, approvalId: string, decidedAt: string, decidedBy: string, decision: Approval['decision']) {
-  if (action.status !== 'proposed') return null;
+  const current = expireAction(action, decidedAt);
+  if (current.status !== 'proposed') return null;
   return Object.freeze({
-    action: Object.freeze({ ...action, status: decision === 'approved' ? 'approved' as const : 'rejected' as const }),
-    approval: Object.freeze({ id: approvalId, actionId: action.id, decision, decidedBy, decidedAt }),
+    action: Object.freeze({ ...current, status: decision === 'approved' ? 'approved' as const : 'rejected' as const }),
+    approval: Object.freeze({ id: approvalId, actionId: current.id, decision, decidedBy, decidedAt }),
   });
+}
+
+export function expireAction(action: ProposedAction, at: string): ProposedAction {
+  if (action.status === 'rejected' || action.status === 'expired') return action;
+  const expiresAt = Date.parse(action.expiresAt);
+  const checkedAt = Date.parse(at);
+  if (!Number.isFinite(expiresAt) || !Number.isFinite(checkedAt) || checkedAt < expiresAt) return action;
+  return Object.freeze({ ...action, status: 'expired' });
 }
 
 export function approveAction(action: ProposedAction, approvalId: string, decidedAt: string, decidedBy: string) {

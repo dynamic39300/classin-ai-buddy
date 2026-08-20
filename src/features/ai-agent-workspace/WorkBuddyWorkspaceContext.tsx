@@ -3,6 +3,7 @@ import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackAdapter, PackageWritebackScenario, PackageWritebackScenarioController } from '@contracts/workbuddy/package-writeback';
 import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixture';
+import type { WorkBuddyClock } from '@contracts/workbuddy/clock';
 import {
   confirmContext, createContextProposal, projectContext, selectContextItems, toggleContextItem,
   type CapabilityContextManifest, type ContextSnapshot, type CoreContextItem, type WorkBuddyTaskType,
@@ -17,12 +18,13 @@ import {
   markPackageArtifactsApproved, reopenPackageArtifacts, retryPackageArtifact, setPackageArtifactIncluded,
   type CoursePackageDefinition, type CoursePackageRun, type PackageExecutionReceipt,
 } from '@domain/workbuddy/course-package';
-import { createPackageSaveAction, decidePackageAction, type PackageActionInput, type PackageApproval, type PackageProposedAction } from '@domain/workbuddy/package-writeback';
+import { createPackageSaveAction, decidePackageAction, expirePackageAction, type PackageActionInput, type PackageApproval, type PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import {
-  approveAction, createCoursewareSaveAction, rejectAction,
+  approveAction, createCoursewareSaveAction, expireAction, rejectAction,
   type Approval, type CoursewareSaveActionInput, type ExecutionReceipt, type ProposedAction,
 } from '@domain/workbuddy/writeback';
 import { projectCoreContextView, projectCoursewareRunView, projectPackageRunView } from './workbuddy-course-production-view';
+import { useWorkBuddyHistory } from './use-workbuddy-history';
 import {
   WorkBuddyWorkspaceContext,
   type CoursewarePanel,
@@ -40,12 +42,14 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   recommendedContextItemIds: readonly string[];
   coursewareDefinition: CoursewareRunDefinition;
   coursewareOutput: CoursewareExecutionOutput;
+  replannedCoursewareOutput: CoursewareExecutionOutput;
   capabilityManifests: readonly CapabilityContextManifest[];
   coursewareActionInput: CoursewareSaveActionInput;
   packageDefinition: CoursePackageDefinition;
   packageActionInput: PackageActionInput;
   packageFailedArtifactIds: readonly string[];
   runtimeFixture: WorkBuddyRuntimeFixture;
+  clock: WorkBuddyClock;
   writebackAdapter: ClassInWritebackAdapter;
   writebackScenarioController: WritebackScenarioController;
   packageWritebackAdapter: PackageWritebackAdapter;
@@ -53,7 +57,9 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   children: ReactNode;
 }>;
 
-type HistoryOverride = Readonly<{ title?: string; pinned?: boolean; removed?: boolean }>;
+function addMinutes(iso: string, minutes: number): string {
+  return new Date(Date.parse(iso) + minutes * 60_000).toISOString();
+}
 type WorkspaceImplementation = WorkBuddyHistory
   & WorkBuddyContext
   & Omit<WorkBuddyCourseware, 'activePanel' | 'setActivePanel' | 'replanToWaveContext'>
@@ -66,56 +72,12 @@ type WorkspaceImplementation = WorkBuddyHistory
     replanCoursewareToWaveContext: () => void;
   }>;
 
-function projectCoursewareHistory(current: readonly WorkBuddyRunViewModel[], run: SingleCoursewareRun, fixture: WorkBuddyRuntimeFixture): readonly WorkBuddyRunViewModel[] {
-  const existing = current.find(({ id }) => id === run.id);
-  const item: WorkBuddyRunViewModel = {
-    fixtureVersion: run.fixtureVersion, id: run.id, title: run.title, relativeTime: fixture.history.relativeTime, pinned: existing?.pinned,
-    runState: run.stage === 'artifact_ready'
-      ? { status: 'completed', allowedCommands: ['review-artifact'], recovery: null }
-      : { status: 'waiting', allowedCommands: ['confirm', 'revise'], recovery: 'confirm-or-revise' },
-    goal: run.goal,
-    contextLabels: existing?.contextLabels ?? [],
-    steps: run.events.length
-      ? run.events.map((event) => ({ title: event.title, summary: event.summary, time: fixture.history.eventTime, state: 'completed' }))
-      : [{ title: '等待教师确认', summary: '核心上下文与计划仍在确认阶段。', time: fixture.history.currentStepTime, state: 'waiting' }],
-    artifact: run.artifact
-      ? { title: run.artifact.title, version: run.artifact.version, progress: `${run.artifact.pageCount} 页`, eyebrow: fixture.history.coursewareEyebrow, heading: run.artifact.title, summary: run.artifact.validationSummary, truthLabel: run.artifact.truthLabel }
-      : { title: '课件草稿', version: '尚未生成', progress: '等待计划确认', eyebrow: '[模拟]课程生产', heading: '尚未生成课件', summary: '确认任务信息和计划后生成[模拟]产物。', truthLabel: '[模拟]当前没有已生成的课件草稿。' },
-  };
-  return [item, ...current.filter(({ id }) => id !== run.id)];
-}
-
-function projectPackageHistory(current: readonly WorkBuddyRunViewModel[], run: CoursePackageRun, fixture: WorkBuddyRuntimeFixture): readonly WorkBuddyRunViewModel[] {
-  const existing = current.find(({ id }) => id === run.id);
-  const completed = run.stage === 'completed' || (run.stage === 'artifact_ready' && run.artifacts.every(({ state }) => !['failed', 'waiting', 'generating', 'planned'].includes(state)));
-  const failedCount = run.artifacts.filter(({ state }) => state === 'failed').length;
-  const readyCount = run.artifacts.filter(({ state }) => ['ready', 'approved', 'written_back'].includes(state)).length;
-  const item: WorkBuddyRunViewModel = {
-    fixtureVersion: run.fixtureVersion, id: run.id, title: run.title, relativeTime: fixture.history.relativeTime, pinned: existing?.pinned,
-    runState: completed
-      ? { status: 'completed', allowedCommands: ['review-artifact'], recovery: null }
-      : run.stage === 'generating'
-        ? { status: 'running', allowedCommands: ['supplement', 'stop'], recovery: 'stop-or-wait' }
-      : run.stage === 'partial_success' || failedCount
-        ? { status: 'failed', allowedCommands: ['retry', 'revise'], recovery: 'retry-or-revise' }
-        : { status: 'waiting', allowedCommands: ['confirm', 'revise'], recovery: 'confirm-or-revise' },
-    goal: run.goal, contextLabels: existing?.contextLabels ?? [],
-    steps: [{
-      title: run.stage === 'awaiting_context' ? '等待确认独立上下文' : run.stage === 'configuring' ? '等待确认产物清单' : run.stage === 'generating' ? '课程方案包生成中' : run.stage === 'partial_success' ? '部分产物写回失败' : '课程方案包已生成',
-      summary: `${readyCount} 项可用${failedCount ? ` · ${failedCount} 项需恢复` : ''}`, time: fixture.history.currentStepTime, state: run.stage === 'generating' ? 'running' : failedCount ? 'failed' : completed ? 'completed' : 'waiting',
-    }],
-    artifact: { title: '课程方案包', version: 'v1', progress: `${readyCount}/${run.artifacts.length} 项`, eyebrow: fixture.history.packageEyebrow, heading: run.title, summary: fixture.history.packageSummary, truthLabel: '[模拟]课程方案包 · 未连接真实 ClassIn 写回。' },
-  };
-  return [item, ...current.filter(({ id }) => id !== run.id)];
-}
-
 export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProps) {
   const {
-    initialRuns, initialContextItems, recommendedContextItemIds, coursewareDefinition, coursewareOutput,
-    capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture,
+    initialRuns, initialContextItems, recommendedContextItemIds, coursewareDefinition, coursewareOutput, replannedCoursewareOutput,
+    capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture, clock,
     writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, children,
   } = props;
-  const [historyOverrides, setHistoryOverrides] = useState<Readonly<Record<string, HistoryOverride>>>({});
   const [contextProposal, setContextProposal] = useState(() => createContextProposal(initialContextItems, 'single-courseware'));
   const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(null);
   const [snapshotsById, setSnapshotsById] = useState<Readonly<Record<string, ContextSnapshot>>>({});
@@ -133,21 +95,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<CoursewarePanel>('none');
   const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>('none');
   const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(null);
-
-  const runs = useMemo(() => {
-    let projected = [...initialRuns];
-    if (coursewareRun) {
-      const labels = snapshotsById[coursewareRun.contextSnapshotId]?.items.filter(({ kind }) => runtimeFixture.contextSummaryKinds.includes(kind)).map(({ label }) => label) ?? [];
-      projected = projectCoursewareHistory(projected, coursewareRun, runtimeFixture).map((item) => item.id === coursewareRun.id ? { ...item, contextLabels: labels } : item);
-    }
-    if (packageRun) {
-      const labels = packageRun.contextSnapshotId ? snapshotsById[packageRun.contextSnapshotId]?.items.filter(({ kind }) => runtimeFixture.contextSummaryKinds.includes(kind)).map(({ label }) => label) ?? [] : [];
-      projected = projectPackageHistory(projected, packageRun, runtimeFixture).map((item) => item.id === packageRun.id ? { ...item, contextLabels: labels } : item);
-    }
-    return Object.freeze(projected
-      .filter(({ id }) => !historyOverrides[id]?.removed)
-      .map((run) => Object.freeze({ ...run, title: historyOverrides[run.id]?.title ?? run.title, pinned: historyOverrides[run.id]?.pinned ?? run.pinned })));
-  }, [coursewareRun, historyOverrides, initialRuns, packageRun, runtimeFixture, snapshotsById]);
+  const history = useWorkBuddyHistory(initialRuns, coursewareRun, packageRun, snapshotsById, runtimeFixture);
 
   const coursewareSnapshot = coursewareRun ? snapshotsById[coursewareRun.contextSnapshotId] ?? null : null;
   const projections = useMemo(() => coursewareSnapshot && coursewareRun
@@ -158,11 +106,11 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     : [], [capabilityManifests, coursewareRun, coursewareSnapshot, runtimeFixture.projectionGeneratedAt]);
 
   const implementation = useMemo<WorkspaceImplementation>(() => ({
-    runs,
-    getRun: (runId) => runs.find((run) => run.id === runId),
-    renameRun: (runId, title) => setHistoryOverrides((current) => ({ ...current, [runId]: { ...current[runId], title } })),
-    togglePinRun: (runId) => setHistoryOverrides((current) => ({ ...current, [runId]: { ...current[runId], pinned: !(current[runId]?.pinned ?? runs.find((run) => run.id === runId)?.pinned) } })),
-    removeRun: (runId) => setHistoryOverrides((current) => ({ ...current, [runId]: { ...current[runId], removed: true } })),
+    runs: history.runs,
+    getRun: history.getRun,
+    renameRun: history.renameRun,
+    togglePinRun: history.togglePinRun,
+    removeRun: history.removeRun,
     contextView: projectCoreContextView(contextProposal, contextSnapshot),
     coursewareContextView: coursewareSnapshot ? projectCoreContextView(contextProposal, coursewareSnapshot) : null,
     applyRecommendedContext: () => {
@@ -194,9 +142,16 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       setActivePackageArtifactId(null);
       writebackScenarioController.setScenario('success'); setWritebackScenarioState('success');
       packageWritebackScenarioController.setScenario('partial_success'); setPackageWritebackScenarioState('partial_success');
-      setHistoryOverrides({});
+      history.resetHistory();
     },
-    coursewareView: projectCoursewareRunView(coursewareRun, projections, coursewareAction, coursewareReceipt, snapshotsById),
+    coursewareView: projectCoursewareRunView(
+      coursewareRun,
+      projections,
+      coursewareAction,
+      coursewareReceipt,
+      snapshotsById,
+      packageRun && packageRun.parentRunRef === coursewareRun?.id ? packageRun.id : null,
+    ),
     createCoursewareTask: (goal) => {
       if (!contextSnapshot || !goal.trim()) return null;
       const run = createSingleCoursewareRun(coursewareDefinition, goal, contextSnapshot.id);
@@ -209,11 +164,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     reviseCoursewareTaskBrief: () => setCoursewareRun((current) => current ? reviseCoursewareBrief(current) : current),
     executeCoursewareTaskPlan: () => setCoursewareRun((current) => {
       if (!current) return current;
-      const output = current.revision > 1 ? {
-        ...coursewareOutput,
-        events: coursewareOutput.events.map((event) => Object.freeze({ ...event, id: `${event.id}-r${current.revision}` })),
-        artifact: Object.freeze({ ...coursewareOutput.artifact, ...runtimeFixture.replan.artifact, sourceStepId: `${coursewareOutput.artifact.sourceStepId}-r${current.revision}` }),
-      } : coursewareOutput;
+      const output = current.revision > 1 ? replannedCoursewareOutput : coursewareOutput;
       const next = executeCoursewarePlan(current, output);
       return next;
     }),
@@ -221,10 +172,12 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     proposeCoursewareSave: () => {
       if (!coursewareRun?.artifact || coursewareRun.reviewStatus !== 'approved') return;
       const target = coursewareRun.revision > 1 ? runtimeFixture.replan.target : coursewareActionInput.target;
+      const renewingExpiredAction = coursewareAction?.status === 'expired';
       setCoursewareAction(createCoursewareSaveAction({
         ...coursewareActionInput,
-        id: coursewareRun.revision > 1 ? runtimeFixture.replan.actionId : coursewareActionInput.id,
-        idempotencyKey: coursewareRun.revision > 1 ? runtimeFixture.replan.idempotencyKey : coursewareActionInput.idempotencyKey,
+        id: renewingExpiredAction ? runtimeFixture.expirationRecovery.coursewareActionId : coursewareRun.revision > 1 ? runtimeFixture.replan.actionId : coursewareActionInput.id,
+        idempotencyKey: renewingExpiredAction ? runtimeFixture.expirationRecovery.coursewareIdempotencyKey : coursewareRun.revision > 1 ? runtimeFixture.replan.idempotencyKey : coursewareActionInput.idempotencyKey,
+        expiresAt: renewingExpiredAction ? addMinutes(clock.now(), runtimeFixture.expirationRecovery.ttlMinutes) : coursewareActionInput.expiresAt,
         runRef: coursewareRun.id, contextSnapshotId: coursewareRun.contextSnapshotId,
         artifactId: coursewareRun.artifact.id, artifactVersion: coursewareRun.artifact.version, target,
       }));
@@ -232,21 +185,30 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     },
     approveCoursewareSave: () => {
       if (!coursewareAction) return;
-      const approvalId = coursewareRun && coursewareRun.revision > 1 ? runtimeFixture.replan.approvalId : runtimeFixture.approval.coursewareApproveId;
-      const result = approveAction(coursewareAction, approvalId, runtimeFixture.approval.coursewareDecidedAt, runtimeFixture.approval.actorId);
+      const checkedAction = expireAction(coursewareAction, clock.now());
+      if (checkedAction.status === 'expired') { setCoursewareAction(checkedAction); setCoursewareApproval(null); return; }
+      const approvalId = coursewareAction.id === runtimeFixture.coursewareRecovery.actionId
+        ? runtimeFixture.coursewareRecovery.approvalId
+        : coursewareAction.id === runtimeFixture.expirationRecovery.coursewareActionId ? runtimeFixture.expirationRecovery.coursewareApprovalId
+        : coursewareRun && coursewareRun.revision > 1 ? runtimeFixture.replan.approvalId : runtimeFixture.approval.coursewareApproveId;
+      const result = approveAction(checkedAction, approvalId, clock.now(), runtimeFixture.approval.actorId);
       if (result) { setCoursewareAction(result.action); setCoursewareApproval(result.approval); }
     },
     rejectCoursewareSave: () => {
       if (!coursewareAction) return;
-      const result = rejectAction(coursewareAction, runtimeFixture.approval.coursewareRejectId, runtimeFixture.approval.coursewareDecidedAt, runtimeFixture.approval.actorId);
+      const checkedAction = expireAction(coursewareAction, clock.now());
+      if (checkedAction.status === 'expired') { setCoursewareAction(checkedAction); setCoursewareApproval(null); return; }
+      const result = rejectAction(checkedAction, runtimeFixture.approval.coursewareRejectId, clock.now(), runtimeFixture.approval.actorId);
       if (result) { setCoursewareAction(result.action); setCoursewareApproval(result.approval); }
     },
     executeApprovedCoursewareSave: () => {
       if (!coursewareRun?.artifact || !coursewareAction || !coursewareApproval) return;
-      if (coursewareAction.runRef !== coursewareRun.id || coursewareAction.contextSnapshotId !== coursewareRun.contextSnapshotId
-        || coursewareAction.artifactRef.id !== coursewareRun.artifact.id || coursewareAction.artifactRef.version !== coursewareRun.artifact.version
-        || coursewareApproval.actionId !== coursewareAction.id) return;
-      setCoursewareReceipt(writebackAdapter.execute(coursewareAction, coursewareApproval));
+      const checkedAction = expireAction(coursewareAction, clock.now());
+      if (checkedAction.status === 'expired') { setCoursewareAction(checkedAction); setCoursewareApproval(null); setCoursewareReceipt(null); setActiveCoursewarePanel('action'); return; }
+      if (checkedAction.runRef !== coursewareRun.id || checkedAction.contextSnapshotId !== coursewareRun.contextSnapshotId
+        || checkedAction.artifactRef.id !== coursewareRun.artifact.id || checkedAction.artifactRef.version !== coursewareRun.artifact.version
+        || coursewareApproval.actionId !== checkedAction.id) return;
+      setCoursewareReceipt(writebackAdapter.execute(checkedAction, coursewareApproval));
     },
     recoverCoursewareSave: () => {
       if (!coursewareRun?.artifact || !coursewareReceipt || coursewareReceipt.status === 'success') return;
@@ -308,35 +270,53 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     proposePackageSave: () => {
       if (!packageRun) return;
       const retrying = packageReceipt?.status === 'partial_success';
-      const action = createPackageSaveAction(packageRun, retrying ? {
+      const renewingExpiredAction = packageAction?.status === 'expired';
+      const actionRun = renewingExpiredAction ? reopenPackageArtifacts(packageRun) : packageRun;
+      const action = createPackageSaveAction(actionRun, renewingExpiredAction ? {
+        ...packageActionInput,
+        id: runtimeFixture.expirationRecovery.packageActionId,
+        idempotencyKey: runtimeFixture.expirationRecovery.packageIdempotencyKey,
+        expiresAt: addMinutes(clock.now(), runtimeFixture.expirationRecovery.ttlMinutes),
+      } : retrying ? {
         ...packageActionInput,
         id: runtimeFixture.packageRecovery.retryActionId,
         idempotencyKey: runtimeFixture.packageRecovery.retryIdempotencyKey,
       } : packageActionInput);
-      if (action) { setPackageAction(action); setPackageApproval(null); setPackageReceipt(null); }
+      if (action) { setPackageRun(actionRun); setPackageAction(action); setPackageApproval(null); setPackageReceipt(null); }
     },
     approvePackageSave: () => {
       if (!packageAction || !packageRun) return;
-      const result = decidePackageAction(packageAction, { id: runtimeFixture.approval.packageApproveId, decidedBy: runtimeFixture.approval.actorId, decidedAt: runtimeFixture.approval.packageDecidedAt }, 'approved');
+      const checkedAction = expirePackageAction(packageAction, clock.now());
+      if (checkedAction.status === 'expired') { setPackageAction(checkedAction); setPackageApproval(null); return; }
+      const approvalId = packageAction.id === runtimeFixture.packageRecovery.retryActionId
+        ? runtimeFixture.packageRecovery.retryApprovalId
+        : packageAction.id === runtimeFixture.expirationRecovery.packageActionId ? runtimeFixture.expirationRecovery.packageApprovalId
+        : packageAction.id === runtimeFixture.packageRecovery.actionId ? runtimeFixture.packageRecovery.approvalId : runtimeFixture.approval.packageApproveId;
+      const result = decidePackageAction(checkedAction, { id: approvalId, decidedBy: runtimeFixture.approval.actorId, decidedAt: clock.now() }, 'approved');
       if (!result) return;
       setPackageAction(result.action); setPackageApproval(result.approval); setPackageRun(markPackageArtifactsApproved(packageRun, result.action.artifactRefs.map(({ id }) => id)));
     },
     rejectPackageSave: () => {
       if (!packageAction) return;
-      const result = decidePackageAction(packageAction, { id: runtimeFixture.approval.packageRejectId, decidedBy: runtimeFixture.approval.actorId, decidedAt: runtimeFixture.approval.packageDecidedAt }, 'rejected');
+      const checkedAction = expirePackageAction(packageAction, clock.now());
+      if (checkedAction.status === 'expired') { setPackageAction(checkedAction); setPackageApproval(null); return; }
+      const result = decidePackageAction(checkedAction, { id: runtimeFixture.approval.packageRejectId, decidedBy: runtimeFixture.approval.actorId, decidedAt: clock.now() }, 'rejected');
       if (result) { setPackageAction(result.action); setPackageApproval(result.approval); }
     },
     executeApprovedPackageSave: () => {
       if (!packageRun || !packageRun.contextSnapshotId || !packageAction || !packageApproval) return;
-      if (packageAction.runRef !== packageRun.id || packageAction.contextSnapshotId !== packageRun.contextSnapshotId || packageApproval.actionId !== packageAction.id) return;
+      const checkedAction = expirePackageAction(packageAction, clock.now());
+      if (checkedAction.status === 'expired') { setPackageAction(checkedAction); setPackageApproval(null); setPackageReceipt(null); setActivePackagePanel('approval'); return; }
+      if (checkedAction.runRef !== packageRun.id || checkedAction.contextSnapshotId !== packageRun.contextSnapshotId || packageApproval.actionId !== checkedAction.id) return;
       const contextSnapshotId = packageRun.contextSnapshotId;
       const candidates = packageRun.artifacts.map(({ id, kind, version, state }) => ({
         id, kind, version, runRef: packageRun.id, contextSnapshotId,
         approvalState: state === 'approved' || state === 'written_back' || state === 'waiting' ? state : 'not_selected' as const,
       }));
-      const receipt = packageWritebackAdapter.execute(packageAction, packageApproval, candidates);
-      const next = applyPackageExecutionReceipt(packageRun, packageAction, packageApproval, receipt);
-      setPackageReceipt(receipt); setPackageRun(next);
+      const receipt = packageWritebackAdapter.execute(checkedAction, packageApproval, candidates);
+      const application = applyPackageExecutionReceipt(packageRun, checkedAction, packageApproval, receipt);
+      if (!application.accepted) return;
+      setPackageReceipt(receipt); setPackageRun(application.run);
     },
     recoverPackageSave: () => {
       if (!packageRun || !packageReceipt || (packageReceipt.status !== 'permission_denied' && packageReceipt.status !== 'version_conflict')) return;
@@ -390,7 +370,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
         coursewareRun,
         result.snapshot.id,
         runtimeFixture.replan.reason,
-        { goal: runtimeFixture.replan.goal, plan: nextPlan },
+        { title: runtimeFixture.replan.title, goal: runtimeFixture.replan.goal, plan: nextPlan },
         { action: coursewareAction ?? undefined, receipt: coursewareReceipt ?? undefined },
       );
       setSnapshotsById((current) => ({ ...current, [result.snapshot.id]: result.snapshot }));
@@ -398,11 +378,11 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       setCoursewareAction(null); setCoursewareApproval(null); setCoursewareReceipt(null); setActiveCoursewarePanel('none');
     },
   }), [
-    activeCoursewarePanel, activePackageArtifactId, activePackagePanel, contextProposal, contextSnapshot, coursewareAction,
+    activeCoursewarePanel, activePackageArtifactId, activePackagePanel, clock, contextProposal, contextSnapshot, coursewareAction,
     coursewareActionInput, coursewareApproval, coursewareDefinition, coursewareOutput, coursewareReceipt, coursewareRun, coursewareSnapshot,
-    initialContextItems, packageAction, packageActionInput, packageApproval, packageDefinition, packageFailedArtifactIds,
+    initialContextItems, packageAction, packageActionInput, packageApproval, packageDefinition, packageFailedArtifactIds, replannedCoursewareOutput,
     packageReceipt, packageRun, packageWritebackAdapter, packageWritebackScenario, packageWritebackScenarioController,
-    projections, recommendedContextItemIds, runs, runtimeFixture, snapshotsById, taskType, writebackAdapter, writebackScenario,
+    history, projections, recommendedContextItemIds, runtimeFixture, snapshotsById, taskType, writebackAdapter, writebackScenario,
     writebackScenarioController,
   ]);
 

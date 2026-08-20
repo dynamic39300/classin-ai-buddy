@@ -5,7 +5,7 @@ export type PackageProposedAction = Readonly<{
   kind: 'save-course-package-to-classin';
   runRef: string;
   contextSnapshotId: string;
-  status: 'proposed' | 'approved' | 'rejected';
+  status: 'proposed' | 'approved' | 'rejected' | 'expired';
   artifactRefs: readonly Readonly<{ id: string; version: string }>[];
   target: Readonly<{ classId: string; courseId: string; unitId: string; expectedVersion: string; label: string }>;
   difference: string;
@@ -45,9 +45,18 @@ export function decidePackageAction(
   approval: Omit<PackageApproval, 'actionId' | 'decision'>,
   decision: PackageApproval['decision'],
 ): Readonly<{ action: PackageProposedAction; approval: PackageApproval }> | null {
-  if (action.status !== 'proposed') return null;
+  const current = expirePackageAction(action, approval.decidedAt);
+  if (current.status !== 'proposed') return null;
   return Object.freeze({
-    action: Object.freeze({ ...action, status: decision === 'approved' ? 'approved' : 'rejected' }),
-    approval: Object.freeze({ ...approval, actionId: action.id, decision }),
+    action: Object.freeze({ ...current, status: decision === 'approved' ? 'approved' : 'rejected' }),
+    approval: Object.freeze({ ...approval, actionId: current.id, decision }),
   });
+}
+
+export function expirePackageAction(action: PackageProposedAction, at: string): PackageProposedAction {
+  if (action.status === 'rejected' || action.status === 'expired') return action;
+  const expiresAt = Date.parse(action.expiresAt);
+  const checkedAt = Date.parse(at);
+  if (!Number.isFinite(expiresAt) || !Number.isFinite(checkedAt) || checkedAt < expiresAt) return action;
+  return Object.freeze({ ...action, status: 'expired' });
 }

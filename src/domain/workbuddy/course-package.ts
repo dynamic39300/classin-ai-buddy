@@ -38,6 +38,9 @@ export type PackageExecutionReceipt =
   | PackageReceiptBase & Readonly<{ status: 'permission_denied'; items: readonly (PackageNotExecutedReceiptItem | PackageWaitingReceiptItem)[]; recovery: 'choose-another-target'; expectedVersion?: never; currentVersion?: never }>
   | PackageReceiptBase & Readonly<{ status: 'version_conflict'; items: readonly (PackageNotExecutedReceiptItem | PackageWaitingReceiptItem)[]; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
   | PackageReceiptBase & Readonly<{ status: 'recoverable_failure' | 'timeout'; items: readonly (PackageNotExecutedReceiptItem | PackageWaitingReceiptItem)[]; recovery: 'retry'; expectedVersion?: never; currentVersion?: never }>;
+export type PackageReceiptApplication =
+  | Readonly<{ accepted: true; run: CoursePackageRun }>
+  | Readonly<{ accepted: false; run: CoursePackageRun; reason: string }>;
 
 function artifactState(state: PackageArtifactState): Pick<PackageArtifact, 'allowedCommands' | 'recovery'> {
   switch (state) {
@@ -163,14 +166,16 @@ export function applyPackageExecutionReceipt(
   action: PackageProposedAction,
   approval: PackageApproval,
   receipt: PackageExecutionReceipt,
-): CoursePackageRun {
-  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
+): PackageReceiptApplication {
+  const rejected = (reason: string): PackageReceiptApplication => Object.freeze({ accepted: false, run, reason });
+  const accepted = (next: CoursePackageRun): PackageReceiptApplication => Object.freeze({ accepted: true, run: next });
+  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return rejected('run-stage-rejects-receipt');
   if (!run.contextSnapshotId || action.runRef !== run.id || action.contextSnapshotId !== run.contextSnapshotId
     || action.status !== 'approved' || approval.actionId !== action.id || approval.decision !== 'approved'
-    || receipt.actionId !== action.id || receipt.approvalId !== approval.id || receipt.idempotencyKey !== action.idempotencyKey) return run;
+    || receipt.actionId !== action.id || receipt.approvalId !== approval.id || receipt.idempotencyKey !== action.idempotencyKey) return rejected('receipt-ownership-mismatch');
   const approvedRefs = new Map(action.artifactRefs.map(({ id, version }) => [id, version]));
-  if (run.artifacts.some((item) => item.state === 'approved' && approvedRefs.get(item.id) !== item.version)) return run;
-  if (receipt.items.length !== run.artifacts.length || new Set(receipt.items.map(({ artifactId }) => artifactId)).size !== run.artifacts.length) return run;
+  if (run.artifacts.some((item) => item.state === 'approved' && approvedRefs.get(item.id) !== item.version)) return rejected('approved-artifact-version-mismatch');
+  if (receipt.items.length !== run.artifacts.length || new Set(receipt.items.map(({ artifactId }) => artifactId)).size !== run.artifacts.length) return rejected('receipt-items-do-not-cover-run');
   const results = new Map(receipt.items.map((item) => [item.artifactId, item.result]));
   const itemsMatchRun = run.artifacts.every((item) => {
     const result = results.get(item.id);
@@ -179,14 +184,14 @@ export function applyPackageExecutionReceipt(
     if (item.state === 'waiting') return result === 'waiting';
     return result === 'not_executed';
   });
-  if (!itemsMatchRun) return run;
+  if (!itemsMatchRun) return rejected('receipt-item-state-mismatch');
   const hasSucceeded = receipt.items.some(({ result }) => result === 'succeeded');
   const hasIncomplete = receipt.items.some(({ result }) => result === 'failed' || result === 'waiting');
   const selectedResultsSucceeded = action.artifactRefs.every(({ id }) => results.get(id) === 'succeeded');
-  if (receipt.status === 'success' && (!selectedResultsSucceeded || hasIncomplete)) return run;
-  if (receipt.status === 'partial_success' && (!hasSucceeded || !hasIncomplete)) return run;
-  if (!['success', 'partial_success'].includes(receipt.status) && receipt.items.some(({ result }) => result === 'succeeded' || result === 'failed')) return run;
-  if (receipt.status !== 'success' && receipt.status !== 'partial_success') return run;
+  if (receipt.status === 'success' && (!selectedResultsSucceeded || hasIncomplete)) return rejected('success-receipt-contains-incomplete-results');
+  if (receipt.status === 'partial_success' && (!hasSucceeded || !hasIncomplete)) return rejected('partial-receipt-missing-mixed-results');
+  if (!['success', 'partial_success'].includes(receipt.status) && receipt.items.some(({ result }) => result === 'succeeded' || result === 'failed')) return rejected('non-execution-receipt-contains-execution-results');
+  if (receipt.status !== 'success' && receipt.status !== 'partial_success') return accepted(run);
   const artifacts = run.artifacts.map((item) => {
     const result = results.get(item.id);
     if (result === 'succeeded' && item.state === 'approved' && approvedRefs.get(item.id) === item.version) return withArtifactState(item, 'written_back');
@@ -194,6 +199,6 @@ export function applyPackageExecutionReceipt(
     if (result === 'not_executed' && item.state === 'approved') return withArtifactState(item, 'ready');
     return item;
   });
-  if (receipt.status === 'success') return freezeRun({ ...run, stage: 'completed', artifacts, allowedCommands: Object.freeze(['review-receipt']), recovery: null });
-  return freezeRun({ ...run, stage: 'partial_success', artifacts, allowedCommands: Object.freeze(['review-receipt', 'retry-failed']), recovery: 'retry-failed-items' });
+  if (receipt.status === 'success') return accepted(freezeRun({ ...run, stage: 'completed', artifacts, allowedCommands: Object.freeze(['review-receipt']), recovery: null }));
+  return accepted(freezeRun({ ...run, stage: 'partial_success', artifacts, allowedCommands: Object.freeze(['review-receipt', 'retry-failed']), recovery: 'retry-failed-items' }));
 }

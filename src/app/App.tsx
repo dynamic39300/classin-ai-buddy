@@ -17,7 +17,9 @@ import {
   WORKBUDDY_COURSE_PACKAGE_DEFINITION,
   WORKBUDDY_COURSEWARE_DEFINITION,
   WORKBUDDY_COURSEWARE_OUTPUT,
+  WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT,
   WORKBUDDY_COURSEWARE_SAVE_ACTION,
+  WORKBUDDY_FIXED_CLOCK,
   WORKBUDDY_PACKAGE_ACTION_INPUT,
   WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS,
   WORKBUDDY_RUNTIME_FIXTURE,
@@ -81,12 +83,14 @@ export function App() {
                     recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
                     coursewareDefinition={WORKBUDDY_COURSEWARE_DEFINITION}
                     coursewareOutput={WORKBUDDY_COURSEWARE_OUTPUT}
+                    replannedCoursewareOutput={WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT}
                     capabilityManifests={WORKBUDDY_CAPABILITY_MANIFESTS}
                     coursewareActionInput={WORKBUDDY_COURSEWARE_SAVE_ACTION}
                     packageDefinition={WORKBUDDY_COURSE_PACKAGE_DEFINITION}
                     packageActionInput={WORKBUDDY_PACKAGE_ACTION_INPUT}
                     packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
                     runtimeFixture={WORKBUDDY_RUNTIME_FIXTURE}
+                    clock={WORKBUDDY_FIXED_CLOCK}
                     writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
                     writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
                     packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}

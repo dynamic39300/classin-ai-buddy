@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { approveAction, createCoursewareSaveAction, rejectAction } from './writeback';
+import { approveAction, createCoursewareSaveAction, expireAction, rejectAction } from './writeback';
 
 const ACTION_INPUT = {
   id: 'action-1', runRef: 'run-1', contextSnapshotId: 'snapshot-1', artifactId: 'artifact-1', artifactVersion: 'v1',
@@ -24,5 +24,14 @@ describe('WorkBuddy writeback policy', () => {
     if (!rejected) throw new Error('Expected rejected action');
     expect(rejected.action.status).toBe('rejected');
     expect(approveAction(rejected.action, 'approval-3', '2026-08-20T10:06:00+08:00', 'teacher-1')).toBeNull();
+  });
+
+  it('expires proposals and approved actions at the deterministic execution boundary', () => {
+    const proposed = createCoursewareSaveAction(ACTION_INPUT);
+    expect(approveAction(proposed, 'approval-late', '2026-08-21T10:05:00+08:00', 'teacher-1')).toBeNull();
+    expect(expireAction(proposed, '2026-08-21T10:05:00+08:00')).toMatchObject({ status: 'expired' });
+    const approved = approveAction(proposed, 'approval-1', '2026-08-20T10:05:00+08:00', 'teacher-1');
+    if (!approved) throw new Error('Expected approved action');
+    expect(expireAction(approved.action, '2026-08-22T10:05:00+08:00')).toMatchObject({ status: 'expired' });
   });
 });

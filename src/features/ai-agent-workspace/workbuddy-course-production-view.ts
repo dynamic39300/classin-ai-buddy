@@ -8,6 +8,7 @@ type CoursewarePresentation = Readonly<{
   id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string;
   brief: SingleCoursewareRun['brief']; plan: SingleCoursewareRun['plan']; events: SingleCoursewareRun['events'];
   artifact: SingleCoursewareRun['artifact']; revision: number;
+  derivedPackageRunRef: string | null;
   reviewStatus: SingleCoursewareRun['reviewStatus'];
   supersededEvidence: readonly Readonly<SingleCoursewareRun['supersededEvidence'][number] & { contextLabels: readonly string[] }>[];
   allowedCommands: SingleCoursewareRun['allowedCommands']; recovery: SingleCoursewareRun['recovery'];
@@ -99,6 +100,7 @@ export function projectCoursewareRunView(
   action: ProposedAction | null,
   receipt: ExecutionReceipt | null,
   snapshotsById: Readonly<Record<string, ContextSnapshot>>,
+  derivedPackageRunRef: string | null,
 ): CoursewareRunView | null {
   if (!run) return null;
   const stageProjection = {
@@ -110,6 +112,7 @@ export function projectCoursewareRunView(
     run: Object.freeze({
       id: run.id, title: run.title, goal: run.goal, contextSnapshotId: run.contextSnapshotId, ...stageProjection,
       brief: run.brief, plan: run.plan, events: run.events, artifact: run.artifact, revision: run.revision, reviewStatus: run.reviewStatus,
+      derivedPackageRunRef,
       supersededEvidence: Object.freeze(run.supersededEvidence.map((evidence) => Object.freeze({
         ...evidence,
         contextLabels: Object.freeze(snapshotsById[evidence.snapshotId]?.items.map(({ label }) => label) ?? []),

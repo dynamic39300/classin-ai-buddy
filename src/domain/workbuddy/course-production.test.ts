@@ -26,7 +26,7 @@ describe('single-courseware Course Production Module', () => {
       executedAt: '2026-08-20T10:06:00+08:00', truthLabel: '[模拟]单课件执行回执', status: 'success' as const,
       object: { id: 'object-1', version: 'v1', label: '原课件', returnUrl: '/teacher/classes/physics-3' }, result: '原课件已保存',
     };
-    const replanned = replanCoursewareRun(completed, 'snapshot-2', '切换教学范围', { goal: '设计机械波课件', plan: completed.plan.map((step) => ({ ...step, id: `${step.id}-r2` })) }, { action, receipt });
+    const replanned = replanCoursewareRun(completed, 'snapshot-2', '切换教学范围', { title: '生成机械波课件', goal: '设计机械波课件', plan: completed.plan.map((step) => ({ ...step, id: `${step.id}-r2` })) }, { action, receipt });
     expect(replanned).toMatchObject({ revision: 2, goal: '设计机械波课件', contextSnapshotId: 'snapshot-2', stage: 'needs_information', artifact: null });
     expect(replanned.supersededEvidence[0]).toMatchObject({ snapshotId: 'snapshot-1', artifact: { id: 'artifact-courseware-momentum-v1' }, reason: '切换教学范围' });
     expect(replanned.supersededEvidence[0]?.action).toMatchObject({ id: 'action-courseware-save-1', target: { unitId: 'unit-momentum-1' } });
