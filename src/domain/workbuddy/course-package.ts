@@ -1,4 +1,6 @@
-export type PackageArtifactState = 'planned' | 'generating' | 'ready' | 'failed' | 'excluded' | 'approved' | 'written_back';
+import type { PackageApproval, PackageProposedAction } from './package-writeback';
+
+export type PackageArtifactState = 'planned' | 'generating' | 'waiting' | 'ready' | 'failed' | 'excluded' | 'approved' | 'written_back';
 export type PackageArtifactKind = 'courseware' | 'homework' | 'quiz' | 'recording-script';
 export type PackageArtifactCommand = 'generate' | 'wait' | 'review' | 'exclude' | 'include' | 'retry' | 'approve' | 'execute';
 export type PackageArtifact = Readonly<{
@@ -23,7 +25,7 @@ export type CoursePackageDefinition = Readonly<{
   id: string; fixtureVersion: 'workbuddy-m4-course-production-v1'; title: string; artifacts: readonly PackageArtifactDefinition[];
 }>;
 export type PackageReceiptItem = Readonly<{
-  artifactId: string; result: 'succeeded' | 'failed' | 'not_executed' | 'waiting'; objectId?: string;
+  artifactId: string; result: 'succeeded' | 'failed' | 'not_executed' | 'already_executed'; objectId?: string;
 }>;
 type PackageReceiptBase = Readonly<{
   id: string; actionId: string; approvalId: string; idempotencyKey: string; items: readonly PackageReceiptItem[];
@@ -39,6 +41,7 @@ function artifactState(state: PackageArtifactState): Pick<PackageArtifact, 'allo
   switch (state) {
     case 'planned': return { allowedCommands: Object.freeze(['generate']), recovery: null };
     case 'generating': return { allowedCommands: Object.freeze(['wait']), recovery: null };
+    case 'waiting': return { allowedCommands: Object.freeze(['wait']), recovery: null };
     case 'ready': return { allowedCommands: Object.freeze(['review', 'exclude', 'approve']), recovery: null };
     case 'failed': return { allowedCommands: Object.freeze(['retry', 'exclude']), recovery: 'retry-or-exclude' };
     case 'excluded': return { allowedCommands: Object.freeze(['include']), recovery: 'include' };
@@ -82,13 +85,21 @@ export function beginPackageGeneration(run: CoursePackageRun): CoursePackageRun 
 export function completePackageGeneration(run: CoursePackageRun, failedArtifactIds: readonly string[]): CoursePackageRun {
   if (run.stage !== 'generating') return run;
   const failures = new Set(failedArtifactIds);
-  return freezeRun({ ...run, stage: 'artifact_ready', artifacts: run.artifacts.map((item) => withArtifactState(item, failures.has(item.id) ? 'failed' : 'ready')), allowedCommands: Object.freeze(['review-artifacts', 'propose-save']), recovery: null });
+  const resolved = new Map<string, PackageArtifactState>();
+  const artifacts = run.artifacts.map((item) => {
+    const state = failures.has(item.id)
+      ? 'failed'
+      : item.dependsOn.every((dependencyId) => resolved.get(dependencyId) === 'ready') ? 'ready' : 'waiting';
+    resolved.set(item.id, state);
+    return withArtifactState(item, state);
+  });
+  return freezeRun({ ...run, stage: 'artifact_ready', artifacts, allowedCommands: Object.freeze(['review-artifacts', 'propose-save']), recovery: null });
 }
 
 export function setPackageArtifactIncluded(run: CoursePackageRun, artifactId: string, included: boolean): CoursePackageRun {
   if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
   const target = run.artifacts.find(({ id }) => id === artifactId);
-  if (!target || (included ? target.state !== 'excluded' : target.state !== 'ready')) return run;
+  if (!target || (included ? target.state !== 'excluded' : !['ready', 'failed', 'waiting'].includes(target.state))) return run;
   const byId = new Map(run.artifacts.map((item) => [item.id, item]));
   const dependsOn = (item: PackageArtifact, dependencyId: string): boolean => item.dependsOn.some((id) => id === dependencyId || Boolean(byId.get(id) && dependsOn(byId.get(id)!, dependencyId)));
   if (included && target.dependsOn.some((id) => !['ready', 'written_back'].includes(byId.get(id)?.state ?? 'failed'))) return run;
@@ -102,15 +113,32 @@ export function setPackageArtifactIncluded(run: CoursePackageRun, artifactId: st
 
 export function retryPackageArtifact(run: CoursePackageRun, artifactId: string): CoursePackageRun {
   if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
-  return freezeRun({ ...run, stage: 'artifact_ready', artifacts: run.artifacts.map((item) => item.id === artifactId && item.state === 'failed' ? withArtifactState(item, 'ready') : item), allowedCommands: Object.freeze(['review-artifacts', 'propose-save']), recovery: null });
+  const target = run.artifacts.find(({ id }) => id === artifactId);
+  if (!target || target.state !== 'failed') return run;
+  const states = new Map(run.artifacts.map((item) => [item.id, item.id === artifactId ? 'ready' as const : item.state]));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const item of run.artifacts) {
+      if (states.get(item.id) === 'waiting' && item.dependsOn.every((dependencyId) => ['ready', 'written_back'].includes(states.get(dependencyId) ?? 'failed'))) {
+        states.set(item.id, 'ready');
+        changed = true;
+      }
+    }
+  }
+  return freezeRun({ ...run, stage: 'artifact_ready', artifacts: run.artifacts.map((item) => withArtifactState(item, states.get(item.id) ?? item.state)), allowedCommands: Object.freeze(['review-artifacts', 'propose-save']), recovery: null });
 }
 
 export function markPackageArtifactsApproved(run: CoursePackageRun, selectedArtifactIds: readonly string[]): CoursePackageRun {
+  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
+  const approvable = new Set(getPackageApprovableArtifactIds(run));
   const selected = new Set(selectedArtifactIds);
+  if ([...selected].some((id) => !approvable.has(id))) return run;
   return freezeRun({ ...run, artifacts: run.artifacts.map((item) => selected.has(item.id) && item.state === 'ready' ? withArtifactState(item, 'approved') : item) });
 }
 
 export function reopenPackageArtifacts(run: CoursePackageRun): CoursePackageRun {
+  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
   return freezeRun({ ...run, artifacts: run.artifacts.map((item) => item.state === 'approved' ? withArtifactState(item, 'ready') : item) });
 }
 
@@ -128,13 +156,23 @@ export function getPackageApprovableArtifactIds(run: CoursePackageRun): readonly
   return Object.freeze(run.artifacts.filter((item) => canApprove(item)).map(({ id }) => id));
 }
 
-export function applyPackageExecutionReceipt(run: CoursePackageRun, receipt: PackageExecutionReceipt): CoursePackageRun {
+export function applyPackageExecutionReceipt(
+  run: CoursePackageRun,
+  action: PackageProposedAction,
+  approval: PackageApproval,
+  receipt: PackageExecutionReceipt,
+): CoursePackageRun {
   if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
+  if (!run.contextSnapshotId || action.runRef !== run.id || action.contextSnapshotId !== run.contextSnapshotId
+    || action.status !== 'approved' || approval.actionId !== action.id || approval.decision !== 'approved'
+    || receipt.actionId !== action.id || receipt.approvalId !== approval.id || receipt.idempotencyKey !== action.idempotencyKey) return run;
+  const approvedRefs = new Map(action.artifactRefs.map(({ id, version }) => [id, version]));
+  if (run.artifacts.some((item) => item.state === 'approved' && approvedRefs.get(item.id) !== item.version)) return run;
   const results = new Map(receipt.items.map((item) => [item.artifactId, item.result]));
   const artifacts = run.artifacts.map((item) => {
     const result = results.get(item.id);
-    if (result === 'succeeded') return withArtifactState(item, 'written_back');
-    if (result === 'failed') return withArtifactState(item, 'failed');
+    if (result === 'succeeded' && item.state === 'approved' && approvedRefs.get(item.id) === item.version) return withArtifactState(item, 'written_back');
+    if (result === 'failed' && item.state === 'approved') return withArtifactState(item, 'failed');
     if (result === 'not_executed' && item.state === 'approved') return withArtifactState(item, 'ready');
     return item;
   });

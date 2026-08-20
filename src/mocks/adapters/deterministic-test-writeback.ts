@@ -59,7 +59,7 @@ export class DeterministicTestPackageWritebackAdapter implements PackageWritebac
     }
     const selected = new Set(action.artifactRefs.map(({ id }) => id));
     const items = candidates.map((candidate) => candidate.approvalState === 'written_back'
-      ? Object.freeze({ artifactId: candidate.id, result: 'waiting' as const, objectId: `classin-${candidate.id}` })
+      ? Object.freeze({ artifactId: candidate.id, result: 'already_executed' as const, objectId: `classin-${candidate.id}` })
       : candidate.approvalState === 'not_selected' || !selected.has(candidate.id)
         ? Object.freeze({ artifactId: candidate.id, result: 'not_executed' as const })
         : this.scenario === 'partial_success' && candidate.kind === 'recording-script'

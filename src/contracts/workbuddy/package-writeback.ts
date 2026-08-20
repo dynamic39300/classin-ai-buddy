@@ -13,7 +13,6 @@ export type PackageWritebackCandidate = Readonly<{
 
 export interface PackageWritebackAdapter {
   execute(action: PackageProposedAction, approval: PackageApproval, candidates: readonly PackageWritebackCandidate[]): PackageExecutionReceipt;
-  reset(): void;
 }
 
 export interface PackageWritebackScenarioController {

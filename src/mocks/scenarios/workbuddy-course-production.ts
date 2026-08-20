@@ -39,7 +39,7 @@ export const WORKBUDDY_CAPABILITY_MANIFESTS: readonly CapabilityContextManifest[
 ]);
 
 export const WORKBUDDY_COURSEWARE_SAVE_ACTION: CoursewareSaveActionInput = Object.freeze({
-  id: 'action-courseware-save-1', artifactId: 'artifact-courseware-momentum-v1', artifactVersion: 'v1',
+  id: 'action-courseware-save-1', runRef: 'run-m4-courseware', contextSnapshotId: 'context-snapshot-courseware-1', artifactId: 'artifact-courseware-momentum-v1', artifactVersion: 'v1',
   target: Object.freeze({ classId: 'physics-3', courseId: 'course-momentum', unitId: 'unit-momentum-1', expectedVersion: 'unit-momentum-1-v1', label: '高二物理 3 班 / 动量与碰撞 / 第一单元 受力与动量' }),
   difference: '新增一份课件对象，不覆盖现有课程资料', impact: '课程教师可在单元资料中查看，尚未下发给学生',
   permission: 'allowed', risk: 'low', reversible: true, expiresAt: '2026-08-21T10:05:00+08:00', idempotencyKey: 'workbuddy-courseware-save-1',
@@ -86,6 +86,9 @@ export const WORKBUDDY_RUNTIME_FIXTURE: WorkBuddyRuntimeFixture = Object.freeze(
   replan: Object.freeze({
     selectedContextItemIds: Object.freeze(['physics-1', 'course-physics-1', 'unit-wave-1']),
     reason: '主教学范围从高二物理 3 班调整为高二物理 1 班',
+    goal: '为高二物理 1 班设计一份机械波基础课件，从波的传播现象进入核心概念',
+    artifact: Object.freeze({ id: 'artifact-courseware-wave-v2', version: 'v2', title: '机械波基础：从传播现象到核心概念' }),
+    target: Object.freeze({ classId: 'physics-1', courseId: 'course-physics-1', unitId: 'unit-wave-1', expectedVersion: 'unit-wave-1-v1', label: '高二物理 1 班 / 机械波基础 / 第一单元 机械波' }),
     previousScopeLabel: '高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量',
     nextScopeLabel: '高二物理 1 班 · 机械波基础 · 第一单元 机械波',
   }),

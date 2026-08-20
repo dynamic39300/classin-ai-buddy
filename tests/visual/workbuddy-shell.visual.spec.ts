@@ -99,6 +99,7 @@ test('WorkBuddy M4 ExecutionReceipt at 1440x900', async ({ page }) => {
 test('WorkBuddy M4 writeback conflict at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
   const artifact = page.getByRole('complementary', { name: '当前任务产物' });
+  await artifact.getByText('评审工具', { exact: true }).click();
   await artifact.getByRole('combobox', { name: '模拟写回场景' }).selectOption('version_conflict');
   await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
   const approval = page.getByRole('complementary', { name: '保存审批' });
@@ -118,7 +119,7 @@ test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) 
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
   await page.getByRole('button', { name: '确认产物清单并开始生成' }).click();
-  await page.getByRole('button', { name: '完成[模拟]生成' }).click();
+  await page.getByRole('button', { name: '查看生成结果' }).click();
   const navigator = page.getByRole('complementary', { name: '课程方案包导航' });
   await navigator.getByRole('button', { name: '重试失败项' }).click();
   await navigator.getByRole('button', { name: '生成批量写回提案' }).click();

@@ -76,7 +76,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
       </div>
 
       {!readOnly ? <footer className={styles.footer}>
-        <button type="button" onClick={resetCoreContext}><RotateCcw aria-hidden="true" size={14} />重置 M4 场景</button>
+        <button type="button" onClick={resetCoreContext}><RotateCcw aria-hidden="true" size={14} />重置演示数据</button>
         <button className={styles.confirmButton} type="button" disabled={view.status !== 'ready_to_confirm'} onClick={confirmCoreContext}>确认上下文版本</button>
       </footer> : null}
     </aside>

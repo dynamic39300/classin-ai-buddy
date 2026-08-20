@@ -1,3 +1,5 @@
+import type { ExecutionReceipt, ProposedAction } from './writeback';
+
 export type CoursewareRunStage = 'needs_information' | 'awaiting_plan_confirmation' | 'artifact_ready';
 
 export type CoursewareBrief = Readonly<{ durationMinutes: number; teachingApproach: string; expectedPages: number }>;
@@ -12,13 +14,14 @@ type SingleCoursewareRunBase = Readonly<{
   brief: CoursewareBrief; plan: readonly CoursewarePlanStep[]; events: readonly CoursewareRunEvent[]; revision: number;
   supersededEvidence: readonly Readonly<{
     snapshotId: string; artifact: CoursewareArtifactDraft | null; plan: readonly CoursewarePlanStep[];
-    events: readonly CoursewareRunEvent[]; actionId?: string; receiptId?: string; reason: string;
+    events: readonly CoursewareRunEvent[]; action?: ProposedAction; receipt?: ExecutionReceipt; reason: string;
   }>[];
 }>;
 export type SingleCoursewareRun = SingleCoursewareRunBase & (
   | Readonly<{ stage: 'needs_information'; artifact: null; reviewStatus: 'not_available'; allowedCommands: readonly ['update-brief', 'confirm-brief']; recovery: 'complete-required-information' }>
   | Readonly<{ stage: 'awaiting_plan_confirmation'; artifact: null; reviewStatus: 'not_available'; allowedCommands: readonly ['revise-brief', 'execute-plan']; recovery: 'confirm-or-revise-plan' }>
-  | Readonly<{ stage: 'artifact_ready'; artifact: CoursewareArtifactDraft; reviewStatus: 'pending' | 'approved'; allowedCommands: readonly ('review-artifact' | 'approve-artifact' | 'propose-save' | 'derive-package' | 'replan')[]; recovery: null }>
+  | Readonly<{ stage: 'artifact_ready'; artifact: CoursewareArtifactDraft; reviewStatus: 'pending'; allowedCommands: readonly ['review-artifact', 'approve-artifact', 'replan']; recovery: null }>
+  | Readonly<{ stage: 'artifact_ready'; artifact: CoursewareArtifactDraft; reviewStatus: 'approved'; allowedCommands: readonly ['review-artifact', 'propose-save', 'derive-package', 'replan']; recovery: null }>
 );
 export type CoursewareRunDefinition = Readonly<{
   fixtureVersion: 'workbuddy-m4-course-production-v1'; id: string; title: string; initialBrief: CoursewareBrief; plan: readonly CoursewarePlanStep[];
@@ -53,14 +56,15 @@ export function replanCoursewareRun(
   run: SingleCoursewareRun,
   newContextSnapshotId: string,
   reason: string,
-  evidence?: Readonly<{ actionId?: string; receiptId?: string }>,
+  replacement: Readonly<{ goal: string; plan: readonly CoursewarePlanStep[] }>,
+  evidence?: Readonly<{ action?: ProposedAction; receipt?: ExecutionReceipt }>,
 ): SingleCoursewareRun {
   const superseded = Object.freeze({
     snapshotId: run.contextSnapshotId, artifact: run.artifact, plan: run.plan, events: run.events,
-    actionId: evidence?.actionId, receiptId: evidence?.receiptId, reason,
+    action: evidence?.action, receipt: evidence?.receipt, reason,
   });
   return freezeRun({
-    ...run, contextSnapshotId: newContextSnapshotId, stage: 'needs_information', events: Object.freeze([]), artifact: null,
+    ...run, goal: replacement.goal.trim(), plan: replacement.plan, contextSnapshotId: newContextSnapshotId, stage: 'needs_information', events: Object.freeze([]), artifact: null,
     reviewStatus: 'not_available',
     allowedCommands: Object.freeze(['update-brief', 'confirm-brief']), recovery: 'complete-required-information',
     revision: run.revision + 1, supersededEvidence: Object.freeze([...run.supersededEvidence, superseded]),

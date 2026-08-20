@@ -74,7 +74,7 @@ export function CoursewareRunSurface() {
               <div className={styles.stageBody}>
                 <h2 id="courseware-brief-title">补齐任务信息</h2>
                 <p>{run.revision > 1 ? `已从新核心上下文复用：${replanScope.nextLabel}` : `已从核心上下文复用：${replanScope.previousLabel}`}</p>
-                {run.supersededEvidence.length ? <section className={styles.supersededEvidence} aria-label="历史版本证据"><strong>调整前的证据已保留</strong>{run.supersededEvidence.map((evidence) => <p key={evidence.snapshotId}>原上下文：{evidence.contextLabels.join(' · ')}</p>)}<details><summary>查看技术证据</summary>{run.supersededEvidence.map((evidence) => <p key={evidence.snapshotId}>{evidence.snapshotId} · {evidence.artifact?.id} · {evidence.actionId ?? '无保存提案'} · {evidence.receiptId ?? '无执行回执'}</p>)}</details></section> : null}
+                {run.supersededEvidence.length ? <section className={styles.supersededEvidence} aria-label="历史版本证据"><strong>调整前的证据已保留</strong>{run.supersededEvidence.map((evidence) => <div key={evidence.snapshotId}><p>原上下文：{evidence.contextLabels.join(' · ')}</p>{evidence.action ? <p>原保存提案：{evidence.action.target.label} · {evidence.action.status}</p> : null}{evidence.receipt ? <p>原执行结果：{evidence.receipt.result} · {evidence.receipt.truthLabel}</p> : null}</div>)}<details><summary>查看技术证据</summary>{run.supersededEvidence.map((evidence) => <p key={evidence.snapshotId}>{evidence.snapshotId} · {evidence.artifact?.id} · {evidence.action?.id ?? '无保存提案'} · {evidence.receipt?.id ?? '无执行回执'}</p>)}</details></section> : null}
                 <div className={styles.fields}>
                   <label>课时长度<select aria-label="课时长度" value={run.brief.durationMinutes} onChange={(event) => updateCoursewareTaskBrief({ durationMinutes: Number(event.target.value) })}><option value={40}>40 分钟</option><option value={45}>45 分钟</option><option value={60}>60 分钟</option></select></label>
                   <label>教学方式<select aria-label="教学方式" value={run.brief.teachingApproach} onChange={(event) => updateCoursewareTaskBrief({ teachingApproach: event.target.value })}><option>实验探究</option><option>概念讲解</option><option>问题驱动</option></select></label>
@@ -112,12 +112,12 @@ export function CoursewareRunSurface() {
           <header><div><Presentation aria-hidden="true" size={17} /><strong>{artifact.title}</strong></div><button type="button" onClick={closePanel}>关闭</button></header>
           <div className={styles.artifactBody}>
             <div className={styles.metadata}><span>{artifact.version}</span><span>{artifact.pageCount} 页</span><span>质量检查通过</span></div><details><summary>技术证据</summary><code>{artifact.id}</code><span>{artifact.validationState}</span></details>
-            <div className={styles.slide}><small>高二物理 · 动量与碰撞</small><h2>从碰撞实验到动量守恒</h2><p>观察现象 → 选择系统 → 建立模型 → 验证守恒条件</p><div><span /><span /></div></div>
+            <div className={styles.slide}><small>{run.revision > 1 ? '高二物理 · 机械波基础' : '高二物理 · 动量与碰撞'}</small><h2>{artifact.title}</h2><p>{run.revision > 1 ? '观察传播现象 → 识别振源 → 建立波动概念 → 检查理解' : '观察现象 → 选择系统 → 建立模型 → 验证守恒条件'}</p><div><span /><span /></div></div>
             <p>{artifact.validationSummary}</p>
             <strong className={styles.truthLabel}>{artifact.truthLabel}</strong>
-            <label className={styles.scenarioPicker}>[模拟]写回场景<select aria-label="模拟写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option><option value="timeout">超时后可重试</option></select></label>
+            <details><summary>评审工具</summary><label className={styles.scenarioPicker}>写回结果场景<select aria-label="模拟写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option><option value="timeout">超时后可重试</option></select></label></details>
           </div>
-          <footer>{run.reviewStatus === 'pending' ? <button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareArtifact}>确认课件可用于后续任务</button> : <><button type="button" onClick={() => { const runId = derivePackageFromCourseware(); if (runId) navigate(`/teacher/ai-agent/runs/${runId}`); }}>基于此课件生成课程方案包</button><button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button></>}</footer>
+          <footer>{run.reviewStatus === 'pending' ? <button className={styles.primaryPanelAction} type="button" onClick={approveCoursewareArtifact}>确认课件可用于后续任务</button> : <><button type="button" onClick={() => { const runId = derivePackageFromCourseware(); if (runId) navigate(`/teacher/ai-agent/runs/${runId}`); }}>基于此课件生成课程方案包</button>{coursewareReceipt ? <button type="button" onClick={() => setActivePanel('receipt')}>查看执行回执</button> : coursewareAction ? <button type="button" onClick={() => setActivePanel('action')}>继续保存审批</button> : <button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button>}</>}</footer>
         </aside>
       ) : null}
 
@@ -195,11 +195,10 @@ export function CoursewareRunSurface() {
         <aside className={styles.panel} aria-label="执行详情">
           <header><strong>执行详情</strong><button type="button" onClick={closePanel}>关闭</button></header>
           <div className={styles.processDetail}>
-            <h2>最小 ContextProjection</h2>
-            <p>以下字段是固定 Capability Manifest 为本次步骤声明的最小输入；完整 Snapshot 未下发。</p>
-            {coursewareProjections.map((projection) => <section key={projection.capabilityId} aria-label={`${projection.capabilityId} ContextProjection`}><h3>{projection.capabilityId}</h3><p>任务目标：{projection.taskGoal}</p><p>{projection.purpose} · {projection.snapshotId} · 生成于 {projection.generatedAt}</p><ul>{projection.items.map((item) => <li key={item.id}><strong>{item.label}</strong><span>{item.section} · {item.sensitivity} · {item.sourceVersion}</span></li>)}</ul><small>敏感项裁剪：{projection.excludedSensitiveCount}</small></section>)}
-            <h2>能力追踪</h2>
-            <ul>{run.events.filter(({ capability }) => capability).map((event) => <li key={event.id}><strong>{event.capability}</strong><span>{event.title} · [模拟]输出</span></li>)}</ul>
+            <h2>能力所用上下文</h2>
+            <p>每项能力只取得当前步骤所需范围；完整上下文不会直接下发。</p>
+            {coursewareProjections.map((projection) => <section key={projection.capabilityId} aria-label={`${projection.purpose}上下文`}><h3>{projection.purpose}</h3><p>任务目标：{projection.taskGoal}</p><ul>{projection.items.map((item) => <li key={item.id}><strong>{item.label}</strong><span>已按最小必要范围提供</span></li>)}</ul><small>已排除 {projection.excludedSensitiveCount} 项非必要敏感信息</small><details><summary>技术证据</summary><p>{projection.capabilityId} · {projection.snapshotId} · 生成于 {projection.generatedAt}</p>{projection.items.map((item) => <code key={item.id}>{item.section} · {item.sensitivity} · {item.sourceVersion}</code>)}</details></section>)}
+            <details><summary>能力追踪技术证据</summary><ul>{run.events.filter(({ capability }) => capability).map((event) => <li key={event.id}><strong>{event.capability}</strong><span>{event.title} · [模拟]输出</span></li>)}</ul></details>
           </div>
         </aside>
       ) : null}

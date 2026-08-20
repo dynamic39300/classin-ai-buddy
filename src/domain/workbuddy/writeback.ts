@@ -3,6 +3,8 @@ export type ProposedActionStatus = 'proposed' | 'approved' | 'rejected';
 export type ProposedAction = Readonly<{
   id: string;
   kind: 'save-courseware-to-classin';
+  runRef: string;
+  contextSnapshotId: string;
   status: ProposedActionStatus;
   artifactRef: Readonly<{ id: string; version: string }>;
   target: Readonly<{
@@ -63,6 +65,8 @@ export type ExecutionReceipt = SuccessfulExecutionReceipt | FailedExecutionRecei
 
 export type CoursewareSaveActionInput = Readonly<{
   id: string;
+  runRef: string;
+  contextSnapshotId: string;
   artifactId: string;
   artifactVersion: string;
   target: ProposedAction['target'];
@@ -79,6 +83,8 @@ export function createCoursewareSaveAction(input: CoursewareSaveActionInput): Pr
   return Object.freeze({
     id: input.id,
     kind: 'save-courseware-to-classin',
+    runRef: input.runRef,
+    contextSnapshotId: input.contextSnapshotId,
     status: 'proposed',
     artifactRef: Object.freeze({ id: input.artifactId, version: input.artifactVersion }),
     target: Object.freeze({ ...input.target }),

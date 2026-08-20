@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { WORKBUDDY_COURSEWARE_DEFINITION, WORKBUDDY_COURSEWARE_OUTPUT } from '@mocks/scenarios/workbuddy-course-production';
+import { WORKBUDDY_COURSEWARE_DEFINITION, WORKBUDDY_COURSEWARE_OUTPUT, WORKBUDDY_COURSEWARE_SAVE_ACTION } from '@mocks/scenarios/workbuddy-course-production';
+import { createCoursewareSaveAction } from './writeback';
 import {
   approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
   reviseCoursewareBrief, updateCoursewareBrief,
@@ -19,9 +20,17 @@ describe('single-courseware Course Production Module', () => {
 
   it('preserves the previous plan, events, Snapshot and Artifact when replanning', () => {
     const completed = executeCoursewarePlan(confirmCoursewareBrief(createSingleCoursewareRun(WORKBUDDY_COURSEWARE_DEFINITION, '设计动量守恒模型课件', 'snapshot-1')), WORKBUDDY_COURSEWARE_OUTPUT);
-    const replanned = replanCoursewareRun(completed, 'snapshot-2', '切换教学范围', { actionId: 'action-1', receiptId: 'receipt-1' });
-    expect(replanned).toMatchObject({ revision: 2, contextSnapshotId: 'snapshot-2', stage: 'needs_information', artifact: null });
-    expect(replanned.supersededEvidence[0]).toMatchObject({ snapshotId: 'snapshot-1', artifact: { id: 'artifact-courseware-momentum-v1' }, actionId: 'action-1', receiptId: 'receipt-1', reason: '切换教学范围' });
+    const action = createCoursewareSaveAction({ ...WORKBUDDY_COURSEWARE_SAVE_ACTION, contextSnapshotId: 'snapshot-1' });
+    const receipt = {
+      id: 'receipt-1', actionId: action.id, approvalId: 'approval-1', idempotencyKey: action.idempotencyKey,
+      executedAt: '2026-08-20T10:06:00+08:00', truthLabel: '[模拟]单课件执行回执', status: 'success' as const,
+      object: { id: 'object-1', version: 'v1', label: '原课件', returnUrl: '/teacher/classes/physics-3' }, result: '原课件已保存',
+    };
+    const replanned = replanCoursewareRun(completed, 'snapshot-2', '切换教学范围', { goal: '设计机械波课件', plan: completed.plan.map((step) => ({ ...step, id: `${step.id}-r2` })) }, { action, receipt });
+    expect(replanned).toMatchObject({ revision: 2, goal: '设计机械波课件', contextSnapshotId: 'snapshot-2', stage: 'needs_information', artifact: null });
+    expect(replanned.supersededEvidence[0]).toMatchObject({ snapshotId: 'snapshot-1', artifact: { id: 'artifact-courseware-momentum-v1' }, reason: '切换教学范围' });
+    expect(replanned.supersededEvidence[0]?.action).toMatchObject({ id: 'action-courseware-save-1', target: { unitId: 'unit-momentum-1' } });
+    expect(replanned.supersededEvidence[0]?.receipt).toMatchObject({ id: 'receipt-1', status: 'success', result: '原课件已保存' });
     expect(replanned.supersededEvidence[0]?.plan).toHaveLength(4);
     expect(replanned.supersededEvidence[0]?.events).toHaveLength(5);
   });

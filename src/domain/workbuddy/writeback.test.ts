@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { approveAction, createCoursewareSaveAction, rejectAction } from './writeback';
 
 const ACTION_INPUT = {
-  id: 'action-1', artifactId: 'artifact-1', artifactVersion: 'v1',
+  id: 'action-1', runRef: 'run-1', contextSnapshotId: 'snapshot-1', artifactId: 'artifact-1', artifactVersion: 'v1',
   target: { classId: 'class-1', courseId: 'course-1', unitId: 'unit-1', expectedVersion: 'v1', label: '目标单元' },
   difference: '新增课件', impact: '教师可见', permission: 'allowed' as const, risk: 'low' as const,
   reversible: true, expiresAt: '2026-08-21T10:05:00+08:00', idempotencyKey: 'key-1',

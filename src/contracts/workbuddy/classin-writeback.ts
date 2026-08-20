@@ -2,7 +2,6 @@ import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbud
 
 export interface ClassInWritebackAdapter {
   execute(action: ProposedAction, approval: Approval): ExecutionReceipt;
-  reset(): void;
 }
 
 export type WritebackScenario = 'success' | 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout';

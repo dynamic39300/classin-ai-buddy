@@ -19,7 +19,7 @@ type PackagePresentation = Readonly<{
   allowedCommands: CoursePackageRun['allowedCommands']; recovery: CoursePackageRun['recovery'];
   showContextConfirmation: boolean; showPackageConfiguration: boolean; showGeneration: boolean; showArtifacts: boolean;
 }>;
-type CoursewareActionPresentation = Pick<ProposedAction, 'id' | 'status' | 'artifactRef' | 'target' | 'difference' | 'impact' | 'permission' | 'risk' | 'reversible' | 'expiresAt' | 'idempotencyKey'>;
+type CoursewareActionPresentation = Pick<ProposedAction, 'id' | 'runRef' | 'contextSnapshotId' | 'status' | 'artifactRef' | 'target' | 'difference' | 'impact' | 'permission' | 'risk' | 'reversible' | 'expiresAt' | 'idempotencyKey'>;
 type PackageActionPresentation = Pick<PackageProposedAction, 'id' | 'status' | 'artifactRefs' | 'target' | 'difference' | 'impact' | 'permission' | 'risk' | 'reversible' | 'expiresAt' | 'idempotencyKey'>;
 type CoursewareReceiptPresentation =
   | Readonly<{
@@ -28,10 +28,16 @@ type CoursewareReceiptPresentation =
   }>
   | Readonly<{
     id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string;
-    status: 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout'; result: string;
-    truthLabel: string;
-    recovery: 'choose-another-target' | 'compare-and-reconfirm' | 'retry'; unexecutedTarget: string;
-    expectedVersion?: string; currentVersion?: string;
+    status: 'permission_denied'; result: string; truthLabel: string; recovery: 'choose-another-target'; unexecutedTarget: string;
+  }>
+  | Readonly<{
+    id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string;
+    status: 'version_conflict'; result: string; truthLabel: string; recovery: 'compare-and-reconfirm'; unexecutedTarget: string;
+    expectedVersion: string; currentVersion: string;
+  }>
+  | Readonly<{
+    id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string;
+    status: 'recoverable_failure' | 'timeout'; result: string; truthLabel: string; recovery: 'retry'; unexecutedTarget: string;
   }>;
 type PackageReceiptPresentation = Readonly<{
   id: string; actionId: string; approvalId: string; idempotencyKey: string; status: PackageExecutionReceipt['status'];
@@ -70,11 +76,15 @@ const SOURCE_LABELS = {
   classin: 'ClassIn 业务事实', 'teacher-input': '教师输入', 'institution-rule': '机构规则', 'domain-knowledge': '受版本治理的知识',
 } as const;
 
+const SENSITIVITY_LABELS = {
+  public: '公开信息', organization: '机构内信息', class: '班级范围信息', personal: '教师个人信息', student_sensitive: '学生敏感信息',
+} as const;
+
 export function projectCoreContextView(proposal: ContextProposal, snapshot: ContextSnapshot | null): CoreContextView {
   const selectedIds = new Set(snapshot?.items.map(({ id }) => id) ?? proposal.items.filter(({ included }) => included).map(({ id }) => id));
   const items = proposal.items.map((item) => Object.freeze({
     id: item.id, section: item.section, kind: item.kind, label: item.label, sourceLabel: SOURCE_LABELS[item.source],
-    sourceVersion: item.sourceVersion, permissionLabel: item.permission === 'read' ? '可读取' : '受限', sensitivity: item.sensitivity,
+    sourceVersion: item.sourceVersion, permissionLabel: item.permission === 'read' ? '可读取' : '受限', sensitivity: SENSITIVITY_LABELS[item.sensitivity],
     included: selectedIds.has(item.id), locked: item.selection === 'locked',
     selectable: !snapshot && item.selection !== 'locked' && (!item.parentId || selectedIds.has(item.parentId)),
   }));
@@ -112,7 +122,7 @@ export function projectCoursewareRunView(
     }),
     projections,
     action: action ? Object.freeze({
-      id: action.id, status: action.status, artifactRef: action.artifactRef, target: action.target,
+      id: action.id, runRef: action.runRef, contextSnapshotId: action.contextSnapshotId, status: action.status, artifactRef: action.artifactRef, target: action.target,
       difference: action.difference, impact: action.impact, permission: action.permission, risk: action.risk, reversible: action.reversible,
       expiresAt: action.expiresAt, idempotencyKey: action.idempotencyKey,
     }) : null,

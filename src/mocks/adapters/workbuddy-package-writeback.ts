@@ -60,12 +60,12 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
 
     const selected = new Set(action.artifactRefs.map(({ id }) => id));
     const items: PackageReceiptItem[] = candidates.map((item) => {
-      if (item.approvalState === 'written_back') return Object.freeze({ artifactId: item.id, result: 'waiting', objectId: `classin-${item.id}` });
+      if (item.approvalState === 'written_back') return Object.freeze({ artifactId: item.id, result: 'already_executed', objectId: `classin-${item.id}` });
       if (item.approvalState === 'not_selected' || !selected.has(item.id)) return Object.freeze({ artifactId: item.id, result: 'not_executed' });
       if (this.scenario === 'partial_success' && item.kind === 'recording-script') return Object.freeze({ artifactId: item.id, result: 'failed' });
       return Object.freeze({ artifactId: item.id, result: 'succeeded', objectId: `classin-${item.id}` });
     });
-    const status = items.every(({ result }) => result === 'succeeded' || result === 'waiting' || result === 'not_executed') ? 'success' : 'partial_success';
+    const status = items.every(({ result }) => result === 'succeeded' || result === 'already_executed' || result === 'not_executed') ? 'success' : 'partial_success';
     const receipt = Object.freeze({
       id: status === 'success' ? 'receipt-package-success-1' : 'receipt-package-partial-1',
       actionId: action.id,
