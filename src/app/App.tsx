@@ -68,6 +68,7 @@ export function App() {
                     initialContextItems={WORKBUDDY_CONTEXT_ITEMS}
                     recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
                     writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
+                    writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
                   >
                     <BrowserRouter>
                       <RootRouter />

@@ -4,3 +4,10 @@ export interface ClassInWritebackAdapter {
   execute(action: ProposedAction, approval: Approval): ExecutionReceipt;
   reset(): void;
 }
+
+export type WritebackScenario = 'success' | 'permission_denied' | 'version_conflict' | 'recoverable_failure';
+
+export interface WritebackScenarioController {
+  setScenario(scenario: WritebackScenario): void;
+  getScenario(): WritebackScenario;
+}

@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
+import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { ContextProposal, ContextSnapshot } from '@domain/workbuddy/core-context';
 import type { ContextProjection } from '@domain/workbuddy/core-context';
 import type { CoursewareBrief, SingleCoursewareRun } from '@domain/workbuddy/course-production';
@@ -30,6 +31,8 @@ export type WorkBuddyWorkspace = {
   approveCoursewareSave: () => void;
   rejectCoursewareSave: () => void;
   executeApprovedCoursewareSave: () => void;
+  writebackScenario: WritebackScenario;
+  setWritebackScenario: (scenario: WritebackScenario) => void;
 };
 
 export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);

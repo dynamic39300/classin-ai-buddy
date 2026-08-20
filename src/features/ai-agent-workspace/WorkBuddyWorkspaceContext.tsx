@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
-import type { ClassInWritebackAdapter } from '@contracts/workbuddy/classin-writeback';
+import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import {
   confirmContext,
   createContextProposal,
@@ -25,6 +25,7 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   initialContextItems: readonly CoreContextItem[];
   recommendedContextItemIds: readonly string[];
   writebackAdapter: ClassInWritebackAdapter;
+  writebackScenarioController: WritebackScenarioController;
   children: ReactNode;
 }>;
 
@@ -47,7 +48,7 @@ function projectCoursewareRunIntoHistory(current: readonly WorkBuddyRunViewModel
   } : item);
 }
 
-export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, recommendedContextItemIds, writebackAdapter, children }: WorkBuddyWorkspaceProviderProps) {
+export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, recommendedContextItemIds, writebackAdapter, writebackScenarioController, children }: WorkBuddyWorkspaceProviderProps) {
   const [runs, setRuns] = useState<readonly WorkBuddyRunViewModel[]>(initialRuns);
   const [contextProposal, setContextProposal] = useState(() => createContextProposal(initialContextItems, 'single-courseware'));
   const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(null);
@@ -55,6 +56,7 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
   const [coursewareAction, setCoursewareAction] = useState<ProposedAction | null>(null);
   const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(null);
   const [coursewareReceipt, setCoursewareReceipt] = useState<ExecutionReceipt | null>(null);
+  const [writebackScenario, setWritebackScenarioState] = useState<WritebackScenario>(() => writebackScenarioController.getScenario());
 
   const value = useMemo<WorkBuddyWorkspace>(() => ({
     runs,
@@ -135,7 +137,13 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
       if (!coursewareAction || !coursewareApproval) return;
       setCoursewareReceipt(writebackAdapter.execute(coursewareAction, coursewareApproval));
     },
-  }), [contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, recommendedContextItemIds, runs, writebackAdapter]);
+    writebackScenario,
+    setWritebackScenario: (scenario) => {
+      writebackScenarioController.setScenario(scenario);
+      setWritebackScenarioState(scenario);
+      setCoursewareReceipt(null);
+    },
+  }), [contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, recommendedContextItemIds, runs, writebackAdapter, writebackScenario, writebackScenarioController]);
 
   return <WorkBuddyWorkspaceContext.Provider value={value}>{children}</WorkBuddyWorkspaceContext.Provider>;
 }

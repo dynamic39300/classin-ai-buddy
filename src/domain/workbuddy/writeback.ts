@@ -54,6 +54,9 @@ export type FailedExecutionReceipt = Readonly<{
   status: 'permission_denied' | 'version_conflict' | 'recoverable_failure';
   result: string;
   recovery: 'choose-another-target' | 'compare-and-reconfirm' | 'retry';
+  unexecutedTarget: string;
+  expectedVersion?: string;
+  currentVersion?: string;
 }>;
 
 export type ExecutionReceipt = SuccessfulExecutionReceipt | FailedExecutionReceipt;

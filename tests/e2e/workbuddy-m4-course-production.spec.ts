@@ -125,3 +125,39 @@ test('teacher approves a courseware writeback and trusts only its ExecutionRecei
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
 });
+
+test('teacher can inspect writeback failures and safely retry a recoverable action', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createCoursewareArtifact(page);
+  const artifact = page.getByRole('complementary', { name: '当前任务产物' });
+
+  await artifact.getByRole('combobox', { name: 'Mock 写回场景' }).selectOption('permission_denied');
+  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
+  await page.getByRole('complementary', { name: '保存审批' }).getByRole('button', { name: '批准保存' }).click();
+  await page.getByRole('button', { name: '执行已批准动作' }).click();
+  let receipt = page.getByRole('complementary', { name: 'ExecutionReceipt' });
+  await expect(receipt.getByRole('heading', { name: '权限拒绝' })).toBeVisible();
+  await expect(receipt.getByText('未执行目标：unit-momentum-1', { exact: true })).toBeVisible();
+  await receipt.getByRole('button', { name: '返回产物' }).click();
+
+  await artifact.getByRole('combobox', { name: 'Mock 写回场景' }).selectOption('version_conflict');
+  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
+  await page.getByRole('complementary', { name: '保存审批' }).getByRole('button', { name: '批准保存' }).click();
+  await page.getByRole('button', { name: '执行已批准动作' }).click();
+  receipt = page.getByRole('complementary', { name: 'ExecutionReceipt' });
+  await expect(receipt.getByRole('heading', { name: '版本冲突' })).toBeVisible();
+  await expect(receipt.getByText('expected：unit-momentum-1-v1 · current：unit-momentum-1-v2', { exact: true })).toBeVisible();
+  await receipt.getByRole('button', { name: '返回产物' }).click();
+
+  await artifact.getByRole('combobox', { name: 'Mock 写回场景' }).selectOption('recoverable_failure');
+  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
+  await page.getByRole('complementary', { name: '保存审批' }).getByRole('button', { name: '批准保存' }).click();
+  await page.getByRole('button', { name: '执行已批准动作' }).click();
+  receipt = page.getByRole('complementary', { name: 'ExecutionReceipt' });
+  await expect(receipt.getByRole('heading', { name: '临时失败' })).toBeVisible();
+  await expect(receipt.getByText('已保留 Approval 与 idempotencyKey', { exact: true })).toBeVisible();
+  await receipt.getByRole('button', { name: '安全重试' }).click();
+  await expect(receipt.getByRole('heading', { name: '保存成功' })).toBeVisible();
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
+});

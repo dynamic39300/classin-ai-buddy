@@ -1,6 +1,7 @@
 import { CheckCircle2, FileText, PanelRight, Presentation, ShieldCheck, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './CoursewareRunSurface.module.css';
@@ -21,6 +22,8 @@ export function CoursewareRunSurface() {
     approveCoursewareSave,
     rejectCoursewareSave,
     executeApprovedCoursewareSave,
+    writebackScenario,
+    setWritebackScenario,
   } = useWorkBuddyWorkspace();
   const [activePanel, setActivePanel] = useState<ActivePanel>('none');
 
@@ -91,6 +94,7 @@ export function CoursewareRunSurface() {
             <div className={styles.slide}><small>高二物理 · 动量与碰撞</small><h2>从碰撞实验到动量守恒</h2><p>观察现象 → 选择系统 → 建立模型 → 验证守恒条件</p><div><span /><span /></div></div>
             <p>{artifact.validationSummary}</p>
             <strong className={styles.truthLabel}>{artifact.truthLabel}</strong>
+            <label className={styles.scenarioPicker}>Mock 写回场景<select aria-label="Mock 写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option></select></label>
           </div>
           <footer><button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button></footer>
         </aside>
@@ -137,7 +141,17 @@ export function CoursewareRunSurface() {
                 <div><dt>结果</dt><dd>{coursewareReceipt.result}</dd></div>
               </dl>
               <Link className={styles.returnLink} to={coursewareReceipt.object.returnUrl}>返回 ClassIn 课程对象</Link>
-            </> : <><h2>执行未完成</h2><p>{coursewareReceipt.result}</p></>}
+            </> : <>
+              <span className={styles.failureMark}>!</span>
+              <h2>{coursewareReceipt.status === 'permission_denied' ? '权限拒绝' : coursewareReceipt.status === 'version_conflict' ? '版本冲突' : '临时失败'}</h2>
+              <p>{coursewareReceipt.result}</p>
+              <dl>
+                <div><dt>未执行范围</dt><dd>未执行目标：{coursewareReceipt.unexecutedTarget}</dd></div>
+                {coursewareReceipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>expected：{coursewareReceipt.expectedVersion} · current：{coursewareReceipt.currentVersion}</dd></div> : null}
+                <div><dt>恢复方式</dt><dd>{coursewareReceipt.status === 'permission_denied' ? '选择其他可写入位置' : coursewareReceipt.status === 'version_conflict' ? '比较版本并重新确认，禁止静默覆盖' : '已保留 Approval 与 idempotencyKey'}</dd></div>
+              </dl>
+              {coursewareReceipt.status === 'recoverable_failure' ? <button className={styles.retryButton} type="button" onClick={executeApprovedCoursewareSave}>安全重试</button> : null}
+            </>}
           </div>
         </aside>
       ) : null}
