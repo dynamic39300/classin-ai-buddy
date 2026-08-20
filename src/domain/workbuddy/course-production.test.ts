@@ -11,7 +11,7 @@ describe('single-courseware Course Production Module', () => {
     const planned = confirmCoursewareBrief(updateCoursewareBrief(created, { expectedPages: 16 }));
     const completed = executeCoursewarePlan(planned, WORKBUDDY_COURSEWARE_OUTPUT);
     expect(planned).toMatchObject({ stage: 'awaiting_plan_confirmation', brief: { expectedPages: 16 } });
-    expect(completed.events.map(({ title }) => title)).toEqual(['ContextSnapshot 已载入', '任务计划已确认', '教学结构已生成', '课件草稿已组装', '质量检查通过']);
+    expect(completed.events.map(({ title }) => title)).toEqual(['核心上下文已载入', '任务计划已确认', '教学结构已生成', '课件草稿已组装', '质量检查通过']);
     expect(completed.artifact).toMatchObject({ id: 'artifact-courseware-momentum-v1', pageCount: 16, validationState: 'passed' });
   });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WORKBUDDY_COURSE_PACKAGE_DEFINITION } from '@mocks/scenarios/workbuddy-course-production';
 import {
-  applyPackageExecutionReceipt, attachPackageContext, createCoursePackageRun, generatePackageArtifacts,
+  applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
   markPackageArtifactsApproved, retryPackageArtifact, setPackageArtifactIncluded,
 } from './course-package';
 
@@ -14,7 +14,10 @@ describe('course-package Artifact Graph', () => {
 
   it('keeps selection, approval and receipt application as pure state transitions', () => {
     const created = createCoursePackageRun(WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成动量单元课程方案包', 'snapshot-package-1');
-    const generated = generatePackageArtifacts(created, ['package-recording']);
+    const generating = beginPackageGeneration(created);
+    expect(generating).toMatchObject({ stage: 'generating', recovery: 'wait-or-complete-fixture' });
+    expect(generating.artifacts.every(({ state }) => state === 'generating')).toBe(true);
+    const generated = completePackageGeneration(generating, ['package-recording']);
     const selected = setPackageArtifactIncluded(generated, 'package-quiz', false);
     const approved = markPackageArtifactsApproved(selected, ['package-courseware', 'package-homework']);
     const receipt = {
@@ -25,7 +28,7 @@ describe('course-package Artifact Graph', () => {
         { artifactId: 'package-quiz', result: 'not_executed' as const },
         { artifactId: 'package-recording', result: 'not_executed' as const },
       ],
-      result: '部分成功', truthLabel: '固定 Mock Receipt',
+      result: '部分成功', truthLabel: '[模拟]课程方案包执行回执',
     };
     const applied = applyPackageExecutionReceipt(approved, receipt);
     expect(applied.artifacts.map(({ state }) => state)).toEqual(['written_back', 'failed', 'excluded', 'failed']);

@@ -57,7 +57,7 @@ export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, Wri
       return this.failure(action, approval, {
         id: `receipt-courseware-${this.scenario}-1`,
         status: this.scenario,
-        result: this.scenario === 'timeout' ? '请求超时，尚未产生可确认的副作用。' : 'Mock ClassIn Adapter 暂时不可用，尚未产生副作用。',
+        result: this.scenario === 'timeout' ? '请求超时，尚未产生可确认的副作用。' : '[模拟]写回接口暂时不可用，尚未产生副作用。',
         recovery: 'retry',
       });
     }

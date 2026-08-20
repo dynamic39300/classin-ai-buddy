@@ -82,7 +82,7 @@ test('teacher prepares either approved task type with structured Core Context', 
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const contextPanel = page.getByRole('complementary', { name: '核心上下文' });
   await contextPanel.getByRole('button', { name: '应用动量课程建议' }).click();
-  await contextPanel.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await contextPanel.getByRole('button', { name: '确认上下文版本' }).click();
   await contextPanel.getByRole('button', { name: '关闭核心上下文' }).click();
   await expect(createTask).toBeEnabled();
 

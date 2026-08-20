@@ -20,6 +20,7 @@ import {
   WORKBUDDY_COURSEWARE_SAVE_ACTION,
   WORKBUDDY_PACKAGE_ACTION_INPUT,
   WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS,
+  WORKBUDDY_RUNTIME_FIXTURE,
 } from '@mocks/scenarios/workbuddy-course-production';
 import { MockClassInWritebackAdapter } from '@mocks/adapters/workbuddy-classin-writeback';
 import { MockPackageWritebackAdapter } from '@mocks/adapters/workbuddy-package-writeback';
@@ -85,6 +86,7 @@ export function App() {
                     packageDefinition={WORKBUDDY_COURSE_PACKAGE_DEFINITION}
                     packageActionInput={WORKBUDDY_PACKAGE_ACTION_INPUT}
                     packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
+                    runtimeFixture={WORKBUDDY_RUNTIME_FIXTURE}
                     writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
                     writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
                     packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}

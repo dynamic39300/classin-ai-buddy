@@ -7,17 +7,21 @@ export type CoursewareArtifactDraft = Readonly<{
   id: string; kind: 'courseware'; version: string; title: string; pageCount: number; sourceStepId: string;
   validationState: 'passed'; validationSummary: string; truthLabel: string;
 }>;
-export type SingleCoursewareRun = Readonly<{
-  fixtureVersion: string; id: string; taskType: 'single-courseware'; title: string; goal: string; contextSnapshotId: string;
-  stage: CoursewareRunStage; brief: CoursewareBrief; plan: readonly CoursewarePlanStep[]; events: readonly CoursewareRunEvent[];
-  artifact: CoursewareArtifactDraft | null; revision: number;
+type SingleCoursewareRunBase = Readonly<{
+  fixtureVersion: 'workbuddy-m4-course-production-v1'; id: string; taskType: 'single-courseware'; title: string; goal: string; contextSnapshotId: string;
+  brief: CoursewareBrief; plan: readonly CoursewarePlanStep[]; events: readonly CoursewareRunEvent[]; revision: number;
   supersededEvidence: readonly Readonly<{
     snapshotId: string; artifact: CoursewareArtifactDraft | null; plan: readonly CoursewarePlanStep[];
     events: readonly CoursewareRunEvent[]; actionId?: string; receiptId?: string; reason: string;
   }>[];
 }>;
+export type SingleCoursewareRun = SingleCoursewareRunBase & (
+  | Readonly<{ stage: 'needs_information'; artifact: null; allowedCommands: readonly ['update-brief', 'confirm-brief']; recovery: 'complete-required-information' }>
+  | Readonly<{ stage: 'awaiting_plan_confirmation'; artifact: null; allowedCommands: readonly ['revise-brief', 'execute-plan']; recovery: 'confirm-or-revise-plan' }>
+  | Readonly<{ stage: 'artifact_ready'; artifact: CoursewareArtifactDraft; allowedCommands: readonly ['review-artifact', 'propose-save', 'derive-package', 'replan']; recovery: null }>
+);
 export type CoursewareRunDefinition = Readonly<{
-  fixtureVersion: string; id: string; title: string; initialBrief: CoursewareBrief; plan: readonly CoursewarePlanStep[];
+  fixtureVersion: 'workbuddy-m4-course-production-v1'; id: string; title: string; initialBrief: CoursewareBrief; plan: readonly CoursewarePlanStep[];
 }>;
 export type CoursewareExecutionOutput = Readonly<{ events: readonly CoursewareRunEvent[]; artifact: CoursewareArtifactDraft }>;
 
@@ -40,6 +44,7 @@ export function createSingleCoursewareRun(definition: CoursewareRunDefinition, g
     fixtureVersion: definition.fixtureVersion, id: definition.id, taskType: 'single-courseware', title: definition.title,
     goal: goal.trim(), contextSnapshotId, stage: 'needs_information', brief: definition.initialBrief, plan: definition.plan,
     events: Object.freeze([]), artifact: null, revision: 1, supersededEvidence: Object.freeze([]),
+    allowedCommands: Object.freeze(['update-brief', 'confirm-brief']), recovery: 'complete-required-information',
   });
 }
 
@@ -55,6 +60,7 @@ export function replanCoursewareRun(
   });
   return freezeRun({
     ...run, contextSnapshotId: newContextSnapshotId, stage: 'needs_information', events: Object.freeze([]), artifact: null,
+    allowedCommands: Object.freeze(['update-brief', 'confirm-brief']), recovery: 'complete-required-information',
     revision: run.revision + 1, supersededEvidence: Object.freeze([...run.supersededEvidence, superseded]),
   });
 }
@@ -70,15 +76,15 @@ export function updateCoursewareBrief(run: SingleCoursewareRun, patch: Partial<C
 }
 
 export function confirmCoursewareBrief(run: SingleCoursewareRun): SingleCoursewareRun {
-  return run.stage === 'needs_information' ? freezeRun({ ...run, stage: 'awaiting_plan_confirmation' }) : run;
+  return run.stage === 'needs_information' ? freezeRun({ ...run, stage: 'awaiting_plan_confirmation', allowedCommands: Object.freeze(['revise-brief', 'execute-plan']), recovery: 'confirm-or-revise-plan' }) : run;
 }
 
 export function reviseCoursewareBrief(run: SingleCoursewareRun): SingleCoursewareRun {
-  return run.stage === 'awaiting_plan_confirmation' ? freezeRun({ ...run, stage: 'needs_information' }) : run;
+  return run.stage === 'awaiting_plan_confirmation' ? freezeRun({ ...run, stage: 'needs_information', allowedCommands: Object.freeze(['update-brief', 'confirm-brief']), recovery: 'complete-required-information' }) : run;
 }
 
 export function executeCoursewarePlan(run: SingleCoursewareRun, output: CoursewareExecutionOutput): SingleCoursewareRun {
   if (run.stage !== 'awaiting_plan_confirmation') return run;
   const artifact = Object.freeze({ ...output.artifact, pageCount: run.brief.expectedPages });
-  return freezeRun({ ...run, stage: 'artifact_ready', events: output.events, artifact });
+  return freezeRun({ ...run, stage: 'artifact_ready', events: output.events, artifact, allowedCommands: Object.freeze(['review-artifact', 'propose-save', 'derive-package', 'replan']), recovery: null });
 }

@@ -2,10 +2,9 @@ import { createContext, useContext } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
-import type { ContextProposal, ContextSnapshot } from '@domain/workbuddy/core-context';
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
 import type { CoursewareBrief } from '@domain/workbuddy/course-production';
-import type { CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
+import type { CoreContextView, CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
 
 export type WorkBuddyWorkspace = {
   runs: readonly WorkBuddyRunViewModel[];
@@ -13,9 +12,10 @@ export type WorkBuddyWorkspace = {
   renameRun: (runId: string, title: string) => void;
   togglePinRun: (runId: string) => void;
   removeRun: (runId: string) => void;
-  contextProposal: ContextProposal;
-  contextSnapshot: ContextSnapshot | null;
+  contextView: CoreContextView;
+  coursewareContextView: CoreContextView | null;
   applyRecommendedContext: () => void;
+  toggleCoreContextItem: (itemId: string) => void;
   confirmCoreContext: () => void;
   resetCoreContext: () => void;
   coursewareView: CoursewareRunView | null;
@@ -37,18 +37,23 @@ export type WorkBuddyWorkspace = {
   packageWritebackScenario: PackageWritebackScenario;
   setPackageWritebackScenario: (scenario: PackageWritebackScenario) => void;
   createPackageTask: (goal: string) => string | null;
-  generatePackage: () => void;
+  beginPackageGeneration: () => void;
+  completePackageGeneration: () => void;
   setPackageItemIncluded: (artifactId: string, included: boolean) => void;
   proposePackageSave: () => void;
   approvePackageSave: () => void;
   rejectPackageSave: () => void;
   executeApprovedPackageSave: () => void;
+  recoverPackageSave: () => void;
   retryPackageItem: (artifactId: string) => void;
   derivePackageFromCourseware: () => string | null;
   activeCoursewarePanel: 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'replan' | 'none';
   setActiveCoursewarePanel: (panel: WorkBuddyWorkspace['activeCoursewarePanel']) => void;
   activePackagePanel: 'navigator' | 'approval' | 'receipt' | 'core_context' | 'none';
   setActivePackagePanel: (panel: WorkBuddyWorkspace['activePackagePanel']) => void;
+  activePackageArtifactId: string | null;
+  setActivePackageArtifactId: (artifactId: string) => void;
+  replanScope: Readonly<{ previousLabel: string; nextLabel: string }>;
   replanCoursewareToWaveContext: () => void;
 };
 

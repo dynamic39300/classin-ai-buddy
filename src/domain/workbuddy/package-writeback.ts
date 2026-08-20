@@ -3,6 +3,8 @@ import type { CoursePackageRun } from './course-package';
 export type PackageProposedAction = Readonly<{
   id: string;
   kind: 'save-course-package-to-classin';
+  runRef: string;
+  contextSnapshotId: string;
   status: 'proposed' | 'approved' | 'rejected';
   artifactRefs: readonly Readonly<{ id: string; version: string }>[];
   target: Readonly<{ classId: string; courseId: string; unitId: string; expectedVersion: string; label: string }>;
@@ -19,14 +21,22 @@ export type PackageApproval = Readonly<{
   id: string; actionId: string; decision: 'approved' | 'rejected'; decidedBy: string; decidedAt: string;
 }>;
 
-export type PackageActionInput = Omit<PackageProposedAction, 'kind' | 'status' | 'artifactRefs'>;
+export type PackageActionInput = Omit<PackageProposedAction, 'kind' | 'status' | 'artifactRefs' | 'runRef' | 'contextSnapshotId'>;
 
 export function createPackageSaveAction(run: CoursePackageRun, input: PackageActionInput): PackageProposedAction | null {
+  if (!run.contextSnapshotId || (run.stage !== 'artifact_ready' && run.stage !== 'partial_success')) return null;
   const artifactRefs = run.artifacts
     .filter(({ state }) => state === 'ready')
     .map(({ id, version }) => Object.freeze({ id, version }));
   if (!artifactRefs.length) return null;
-  return Object.freeze({ ...input, kind: 'save-course-package-to-classin', status: 'proposed', artifactRefs: Object.freeze(artifactRefs) });
+  return Object.freeze({
+    ...input,
+    kind: 'save-course-package-to-classin',
+    status: 'proposed',
+    runRef: run.id,
+    contextSnapshotId: run.contextSnapshotId,
+    artifactRefs: Object.freeze(artifactRefs),
+  });
 }
 
 export function decidePackageAction(

@@ -4,6 +4,7 @@ import {
   createContextProposal,
   projectContext,
   selectContextItems,
+  toggleContextItem,
   type CoreContextItem,
 } from './core-context';
 
@@ -31,6 +32,15 @@ describe('CoreContext Module', () => {
     const switched = selectContextItems(first, ['class-b']);
 
     expect(switched.items.filter(({ included }) => included).map(({ id }) => id)).toEqual(['teacher', 'org', 'class-b']);
+  });
+
+  it('lets the teacher exclude and replace proposed context without retaining incompatible descendants', () => {
+    const selected = selectContextItems(createContextProposal(ITEMS, 'single-courseware'), ['class-a', 'course-a', 'unit-a', 'learners-a']);
+    const withoutLearners = toggleContextItem(selected, 'learners-a');
+    const replacedClass = toggleContextItem(withoutLearners, 'class-b');
+
+    expect(withoutLearners.items.find(({ id }) => id === 'learners-a')?.included).toBe(false);
+    expect(replacedClass.items.filter(({ included }) => included).map(({ id }) => id)).toEqual(['teacher', 'org', 'class-b']);
   });
 
   it('freezes a stable snapshot and minimizes capability projections', () => {

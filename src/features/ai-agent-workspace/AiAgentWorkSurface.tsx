@@ -42,12 +42,10 @@ function NewTaskSkeleton() {
   const [contextPanelOpen, setContextPanelOpen] = useState(false);
   const navigate = useNavigate();
   const contextButtonRef = useRef<HTMLButtonElement | null>(null);
-  const { contextProposal, contextSnapshot, taskType, setTaskType, createCoursewareTask, createPackageTask } = useWorkBuddyWorkspace();
-  const contextItems = contextSnapshot?.items ?? contextProposal.items.filter(({ included }) => included);
-  const contextLabels = contextSnapshot
-    ? ['org-classin-demo', 'physics-3', 'course-momentum', 'unit-momentum-1', 'physics-3-all']
-      .map((id) => contextSnapshot.items.find((item) => item.id === id)?.label)
-      .filter((label): label is string => Boolean(label))
+  const { contextView, taskType, setTaskType, createCoursewareTask, createPackageTask } = useWorkBuddyWorkspace();
+  const contextItems = contextView.items.filter(({ included }) => included);
+  const contextLabels = contextView.status === 'confirmed'
+    ? contextItems.filter(({ kind }) => ['organization', 'class', 'course', 'unit', 'learner_scope'].includes(kind)).map(({ label }) => label)
     : [contextItems.find(({ kind }) => kind === 'organization')?.label ?? 'ClassIn 教研中心', '需要选择教学范围'];
 
   const closeContextPanel = () => {
@@ -76,7 +74,7 @@ function NewTaskSkeleton() {
               <button type="button" aria-label="添加附件" onClick={() => setFeedback('附件入口为本地 Demo，尚未上传真实文件。')}><Paperclip aria-hidden="true" size={16} /></button>
               <button ref={contextButtonRef} type="button" aria-pressed={contextPanelOpen} onClick={() => setContextPanelOpen(true)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
             </div>
-            <button className={styles.sendButton} type="button" disabled={!goal.trim() || !contextSnapshot} onClick={() => {
+            <button className={styles.sendButton} type="button" disabled={!goal.trim() || contextView.status !== 'confirmed'} onClick={() => {
               const runId = taskType === 'course-package' ? createPackageTask(goal) : createCoursewareTask(goal);
               if (runId) navigate(`/teacher/ai-agent/runs/${runId}`);
             }}>

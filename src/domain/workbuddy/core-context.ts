@@ -95,6 +95,32 @@ export function selectContextItems(proposal: ContextProposal, selectedIds: reado
   return buildProposal(proposal.taskType, items);
 }
 
+export function toggleContextItem(proposal: ContextProposal, itemId: string): ContextProposal {
+  const target = proposal.items.find(({ id }) => id === itemId);
+  if (!target || target.selection === 'locked') return proposal;
+  const selected = new Set(proposal.items.filter(({ included, selection }) => included && selection === 'suggested').map(({ id }) => id));
+  const byId = new Map(proposal.items.map((item) => [item.id, item]));
+  const isDescendantOf = (item: ProposedContextItem, ancestorId: string): boolean => {
+    if (!item.parentId) return false;
+    return item.parentId === ancestorId || Boolean(byId.get(item.parentId) && isDescendantOf(byId.get(item.parentId)!, ancestorId));
+  };
+
+  if (target.included) {
+    selected.delete(target.id);
+    proposal.items.filter((item) => isDescendantOf(item, target.id)).forEach(({ id }) => selected.delete(id));
+  } else {
+    if (target.parentId && !proposal.items.find(({ id }) => id === target.parentId)?.included) return proposal;
+    if (['class', 'course', 'unit'].includes(target.kind)) {
+      proposal.items.filter((item) => item.kind === target.kind && item.id !== target.id).forEach((item) => {
+        selected.delete(item.id);
+        proposal.items.filter((candidate) => isDescendantOf(candidate, item.id)).forEach(({ id }) => selected.delete(id));
+      });
+    }
+    selected.add(target.id);
+  }
+  return selectContextItems(proposal, [...selected]);
+}
+
 export function confirmContext(
   proposal: ContextProposal,
   metadata: Readonly<{ snapshotId: string; confirmedAt: string }>,

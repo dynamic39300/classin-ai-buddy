@@ -27,17 +27,22 @@ describe('ClassIn writeback Adapter contract', () => {
   });
 
   it.each([
-    ['permission_denied', 'permission_denied', 'choose-another-target'],
-    ['version_conflict', 'version_conflict', 'compare-and-reconfirm'],
-  ] as const)('normalizes the %s scenario', (scenario, status, recovery) => {
-    const adapter = new MockClassInWritebackAdapter();
+    ['Mock', () => new MockClassInWritebackAdapter(), 'permission_denied', 'choose-another-target'],
+    ['test', () => new DeterministicTestWritebackAdapter(), 'permission_denied', 'choose-another-target'],
+    ['Mock', () => new MockClassInWritebackAdapter(), 'version_conflict', 'compare-and-reconfirm'],
+    ['test', () => new DeterministicTestWritebackAdapter(), 'version_conflict', 'compare-and-reconfirm'],
+  ] as const)('%s Adapter normalizes the %s scenario', (_name, createAdapter, scenario, recovery) => {
+    const adapter = createAdapter();
     adapter.setScenario(scenario);
     const approved = approvedAction();
-    expect(adapter.execute(approved.action, approved.approval)).toMatchObject({ status, recovery, unexecutedTarget: 'unit-momentum-1' });
+    expect(adapter.execute(approved.action, approved.approval)).toMatchObject({ status: scenario, recovery, unexecutedTarget: 'unit-momentum-1' });
   });
 
-  it('keeps approval and idempotency across a recoverable retry', () => {
-    const adapter = new MockClassInWritebackAdapter();
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter keeps approval and idempotency across a recoverable retry', (_name, createAdapter) => {
+    const adapter = createAdapter();
     adapter.setScenario('recoverable_failure');
     const approved = approvedAction();
     const first = adapter.execute(approved.action, approved.approval);
@@ -49,8 +54,11 @@ describe('ClassIn writeback Adapter contract', () => {
     expect(replay).toBe(retry);
   });
 
-  it('normalizes timeout and allows a safe idempotent retry', () => {
-    const adapter = new MockClassInWritebackAdapter();
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter normalizes timeout and allows a safe idempotent retry', (_name, createAdapter) => {
+    const adapter = createAdapter();
     adapter.setScenario('timeout');
     const approved = approvedAction();
     expect(adapter.execute(approved.action, approved.approval)).toMatchObject({ status: 'timeout', recovery: 'retry' });

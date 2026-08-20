@@ -43,7 +43,7 @@ async function createCoursewareArtifact(page: Page) {
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
   await context.getByRole('button', { name: '应用动量课程建议' }).click();
-  await context.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await context.getByRole('button', { name: '确认上下文版本' }).click();
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '生成单个课件' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
@@ -91,14 +91,14 @@ test('WorkBuddy M4 ExecutionReceipt at 1440x900', async ({ page }) => {
   const approval = page.getByRole('complementary', { name: '保存审批' });
   await approval.getByRole('button', { name: '批准保存' }).click();
   await approval.getByRole('button', { name: '执行已批准动作' }).click();
-  await expect(page.getByRole('complementary', { name: 'ExecutionReceipt' })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: '执行回执' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-courseware-receipt-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy M4 writeback conflict at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
   const artifact = page.getByRole('complementary', { name: '当前任务产物' });
-  await artifact.getByRole('combobox', { name: 'Mock 写回场景' }).selectOption('version_conflict');
+  await artifact.getByRole('combobox', { name: '模拟写回场景' }).selectOption('version_conflict');
   await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
   const approval = page.getByRole('complementary', { name: '保存审批' });
   await approval.getByRole('button', { name: '批准保存' }).click();
@@ -113,10 +113,11 @@ test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) 
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
   await context.getByRole('button', { name: '应用动量课程建议' }).click();
-  await context.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await context.getByRole('button', { name: '确认上下文版本' }).click();
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
-  await page.getByRole('button', { name: '确认产物清单并生成' }).click();
+  await page.getByRole('button', { name: '确认产物清单并开始生成' }).click();
+  await page.getByRole('button', { name: '完成[模拟]生成' }).click();
   const navigator = page.getByRole('complementary', { name: '课程方案包导航' });
   await navigator.getByRole('button', { name: '重试失败项' }).click();
   await navigator.getByRole('button', { name: '生成批量写回提案' }).click();
