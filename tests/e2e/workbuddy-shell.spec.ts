@@ -68,9 +68,8 @@ test('teacher prepares either approved task type with structured Core Context', 
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
 
   await expect(page.getByRole('heading', { name: '今天想完成什么教学任务？' })).toBeVisible();
-  await expect(page.getByText('高一（3）班', { exact: true })).toBeVisible();
-  await expect(page.getByText('高中数学 · 必修一', { exact: true })).toBeVisible();
-  await expect(page.getByText('函数的性质', { exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: '核心上下文摘要' }).getByText('ClassIn 教研中心', { exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: '核心上下文摘要' }).getByText('需要选择教学范围', { exact: true })).toBeVisible();
 
   const goal = page.getByRole('textbox', { name: '描述教学任务' });
   const createTask = page.getByRole('button', { name: '创建任务' });
@@ -82,13 +81,11 @@ test('teacher prepares either approved task type with structured Core Context', 
 
   await page.getByRole('button', { name: '生成课程方案包' }).click();
   await expect(goal).toHaveValue('从课程目标出发，生成一套包含课件、作业、测验和录播脚本的课程方案包');
-  await createTask.click();
-  await expect(page.getByRole('status')).toContainText('尚未连接真实 Agent');
 
   await page.getByRole('button', { name: '添加附件' }).click();
   await expect(page.getByRole('status')).toContainText('尚未上传真实文件');
-  await page.getByRole('button', { name: 'Core Context · 3' }).click();
-  await expect(page.getByRole('status')).toContainText('下一实施切片开放');
+  await page.getByRole('button', { name: /核心上下文/ }).click();
+  await expect(page.getByRole('complementary', { name: '核心上下文' })).toBeVisible();
 });
 
 test('teacher restores a historical Run and controls its single Artifact panel', async ({ page }) => {

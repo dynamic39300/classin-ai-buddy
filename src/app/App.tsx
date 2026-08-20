@@ -11,6 +11,7 @@ import { SpaceWorkspaceProvider } from '@features/space-workspace/SpaceWorkspace
 import { addClassActivity, type ClassCourse } from '@domain/class/class';
 import type { PublishedHomework } from '@domain/homework/homework';
 import { WORKBUDDY_HISTORY } from '@mocks/scenarios/workbuddy';
+import { WORKBUDDY_CONTEXT_ITEMS, WORKBUDDY_MOMENTUM_RECOMMENDATION } from '@mocks/scenarios/workbuddy-context';
 import { OperationGuardProvider } from './shell/operation-guard';
 import { RootRouter } from './router/RootRouter';
 
@@ -60,7 +61,11 @@ export function App() {
             <OpenCourseWorkspaceProvider store={OPEN_COURSE_SESSION}>
               <MessageWorkspaceProvider>
                 <SpaceWorkspaceProvider>
-                  <WorkBuddyWorkspaceProvider initialRuns={WORKBUDDY_HISTORY}>
+                  <WorkBuddyWorkspaceProvider
+                    initialRuns={WORKBUDDY_HISTORY}
+                    initialContextItems={WORKBUDDY_CONTEXT_ITEMS}
+                    recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
+                  >
                     <BrowserRouter>
                       <RootRouter />
                     </BrowserRouter>

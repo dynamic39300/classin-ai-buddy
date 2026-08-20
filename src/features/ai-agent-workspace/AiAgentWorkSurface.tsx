@@ -1,6 +1,5 @@
 import {
   ArrowUp,
-  BookOpenCheck,
   CheckCircle2,
   CircleAlert,
   CircleEllipsis,
@@ -18,6 +17,7 @@ import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace'
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
+import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
 
@@ -34,9 +34,25 @@ export function AiAgentWorkSurface() {
 function NewTaskSkeleton() {
   const [goal, setGoal] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [contextPanelOpen, setContextPanelOpen] = useState(false);
+  const contextButtonRef = useRef<HTMLButtonElement | null>(null);
+  const { contextProposal, contextSnapshot } = useWorkBuddyWorkspace();
+  const contextItems = contextSnapshot?.items ?? contextProposal.items.filter(({ included }) => included);
+  const contextLabels = contextSnapshot
+    ? ['org-classin-demo', 'physics-3', 'course-momentum', 'unit-momentum-1', 'physics-3-all']
+      .map((id) => contextSnapshot.items.find((item) => item.id === id)?.label)
+      .filter((label): label is string => Boolean(label))
+    : [contextItems.find(({ kind }) => kind === 'organization')?.label ?? 'ClassIn 教研中心', '需要选择教学范围'];
+
+  const closeContextPanel = () => {
+    setContextPanelOpen(false);
+    requestAnimationFrame(() => contextButtonRef.current?.focus());
+  };
 
   return (
     <section className={styles.newTaskPage} aria-labelledby="workbuddy-new-task-title">
+      <div className={styles.newTaskLayout} data-panel-open={contextPanelOpen}>
+      <section className={styles.newTaskMain}>
       <section className={styles.composerShell}>
         <span className={styles.eyebrow}><Sparkles aria-hidden="true" size={15} />教师 WorkBuddy</span>
         <h1 id="workbuddy-new-task-title">今天想完成什么教学任务？</h1>
@@ -52,7 +68,7 @@ function NewTaskSkeleton() {
           <div className={styles.composerFooter}>
             <div className={styles.composerTools}>
               <button type="button" aria-label="添加附件" onClick={() => setFeedback('附件入口为本地 Demo，尚未上传真实文件。')}><Paperclip aria-hidden="true" size={16} /></button>
-              <button type="button" onClick={() => setFeedback('Core Context 详情面板将在下一实施切片开放。')}><UsersRound aria-hidden="true" size={15} />Core Context · 3</button>
+              <button ref={contextButtonRef} type="button" aria-pressed={contextPanelOpen} onClick={() => setContextPanelOpen(true)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
             </div>
             <button className={styles.sendButton} type="button" disabled={!goal.trim()} onClick={() => setFeedback('任务已在本地 Demo 中准备创建，尚未连接真实 Agent。')}>
               <ArrowUp aria-hidden="true" size={16} />
@@ -61,10 +77,8 @@ function NewTaskSkeleton() {
           </div>
         </div>
 
-        <div className={styles.contextSummary} aria-label="已选核心上下文">
-          <span><UsersRound aria-hidden="true" size={14} />高一（3）班</span>
-          <span><BookOpenCheck aria-hidden="true" size={14} />高中数学 · 必修一</span>
-          <span><FileText aria-hidden="true" size={14} />函数的性质</span>
+        <div className={styles.contextSummary} role="group" aria-label="核心上下文摘要">
+          {contextLabels.map((label) => <span key={label}><UsersRound aria-hidden="true" size={14} />{label}</span>)}
         </div>
 
         <div className={styles.shortcuts} aria-label="快捷任务">
@@ -74,6 +88,9 @@ function NewTaskSkeleton() {
         </div>
         {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}
       </section>
+      </section>
+      {contextPanelOpen ? <CoreContextPanel onClose={closeContextPanel} /> : null}
+      </div>
     </section>
   );
 }
