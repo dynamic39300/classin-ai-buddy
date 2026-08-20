@@ -20,7 +20,7 @@
 
 .header > div {
   display: grid;
-  gap: 0.1rem;
+  gap: var(--space-3xs);
 }
 
 .header strong {
@@ -100,7 +100,7 @@
 .statusCard code,
 .statusCard small {
   color: inherit;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
 }
 
 .recommendation {
@@ -115,7 +115,7 @@
 
 .recommendation > span {
   display: grid;
-  gap: 0.1rem;
+  gap: var(--space-3xs);
 }
 
 .recommendation strong,
@@ -185,9 +185,9 @@
 
 .contextItem p,
 .permission {
-  margin: 0.1rem 0 0;
+  margin: var(--space-3xs) 0 0;
   color: var(--color-ink-muted);
-  font-size: 0.66rem;
+  font-size: var(--text-xs);
 }
 
 .permission {

@@ -41,7 +41,13 @@ describe('CoreContext Module', () => {
     if (!result.ok) return;
     expect(result.snapshot.version).toBe('workbuddy-m4-context-v1');
     expect(result.snapshot.items.map(({ id }) => id)).toContain('student-a');
-    expect(projectContext(result.snapshot, ['actor_organization', 'teaching_scope', 'learner_scope', 'teaching_evidence']).items.map(({ id }) => id)).not.toContain('student-a');
+    const projection = projectContext(result.snapshot, {
+      capabilityId: 'courseware-renderer',
+      purpose: '组装课件内容',
+      allowedSections: ['actor_organization', 'teaching_scope', 'learner_scope', 'teaching_evidence'],
+    }, '2026-08-20T10:04:00+08:00');
+    expect(projection.items.map(({ id }) => id)).not.toContain('student-a');
+    expect(projection).toMatchObject({ snapshotId: 'snapshot-1', capabilityId: 'courseware-renderer', purpose: '组装课件内容', excludedSensitiveCount: 1 });
     expect(Object.isFrozen(result.snapshot)).toBe(true);
     expect(Object.isFrozen(result.snapshot.items)).toBe(true);
   });

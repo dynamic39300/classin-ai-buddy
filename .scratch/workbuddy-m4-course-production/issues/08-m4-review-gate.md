@@ -14,4 +14,4 @@
 - [ ] Standards/Spec 双轴 Code Review 无剩余 P0–P3 finding。
 - [x] Spec、Decision Ledger、实施清单、Tickets 和 Phase 4 Review 材料回写并提交当前分支。
 
-**Verification so far:** 50 Vitest files / 326 tests；65 E2E；8 WorkBuddy visual；production build；M4 axe serious/critical 0。待双轴 review。
+**Verification so far:** 首轮双轴 review 的 P1/P2/P3 已完成整改；50 Vitest files / 335 tests；65 E2E；8 WorkBuddy visual；production build；M4 axe serious/critical 0。待第二轮双轴 review。

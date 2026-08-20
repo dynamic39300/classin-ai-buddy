@@ -1,4 +1,5 @@
 import { CheckCircle2, FileText, PanelRight, Presentation, ShieldCheck, Sparkles } from 'lucide-react';
+import { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import { CoreContextPanel } from './CoreContextPanel';
@@ -7,18 +8,16 @@ import styles from './CoursewareRunSurface.module.css';
 
 export function CoursewareRunSurface() {
   const {
-    coursewareRun: run,
-    coursewareProjection,
+    coursewareView,
     updateCoursewareTaskBrief,
     confirmCoursewareTaskBrief,
     reviseCoursewareTaskBrief,
     executeCoursewareTaskPlan,
-    coursewareAction,
-    coursewareReceipt,
     proposeCoursewareSave,
     approveCoursewareSave,
     rejectCoursewareSave,
     executeApprovedCoursewareSave,
+    recoverCoursewareSave,
     writebackScenario,
     setWritebackScenario,
     derivePackageFromCourseware,
@@ -27,9 +26,23 @@ export function CoursewareRunSurface() {
     replanCoursewareToWaveContext,
   } = useWorkBuddyWorkspace();
   const navigate = useNavigate();
+  const lastPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const artifactPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
 
-  if (!run) return null;
+  if (!coursewareView) return null;
+  const { run, action: coursewareAction, receipt: coursewareReceipt, projections: coursewareProjections } = coursewareView;
   const artifact = run.artifact;
+  const openPanel = (panel: Parameters<typeof setActivePanel>[0], trigger: HTMLButtonElement) => {
+    lastPanelTriggerRef.current = trigger;
+    setActivePanel(panel);
+  };
+  const closePanel = () => {
+    setActivePanel('none');
+    requestAnimationFrame(() => {
+      const trigger = lastPanelTriggerRef.current?.isConnected ? lastPanelTriggerRef.current : artifactPanelTriggerRef.current;
+      trigger?.focus();
+    });
+  };
 
   return (
     <section className={styles.page} data-panel-open={activePanel !== 'none'} aria-labelledby="m4-courseware-title">
@@ -37,10 +50,10 @@ export function CoursewareRunSurface() {
         <header className={styles.header}>
           <div><h1 id="m4-courseware-title">{run.title}</h1><span>{run.stage === 'needs_information' ? '需要补充' : run.stage === 'awaiting_plan_confirmation' ? '待确认计划' : '完成待复查'} · 固定 Mock</span></div>
           <nav aria-label="任务辅助面板">
-            <button type="button" aria-pressed={activePanel === 'core_context'} onClick={() => setActivePanel('core_context')}>核心上下文</button>
-            <button type="button" aria-pressed={activePanel === 'replan'} onClick={() => setActivePanel('replan')}>调整教学范围</button>
-            <button type="button" aria-pressed={activePanel === 'process_detail'} disabled={!run.events.length} onClick={() => setActivePanel('process_detail')}>执行详情</button>
-            <button type="button" aria-pressed={activePanel === 'artifact'} disabled={!artifact} onClick={() => setActivePanel('artifact')}><PanelRight aria-hidden="true" size={15} />查看产物</button>
+            <button type="button" aria-pressed={activePanel === 'core_context'} onClick={(event) => openPanel('core_context', event.currentTarget)}>核心上下文</button>
+            <button type="button" aria-pressed={activePanel === 'replan'} onClick={(event) => openPanel('replan', event.currentTarget)}>调整教学范围</button>
+            <button type="button" aria-pressed={activePanel === 'process_detail'} disabled={!run.events.length} onClick={(event) => openPanel('process_detail', event.currentTarget)}>执行详情</button>
+            <button ref={artifactPanelTriggerRef} type="button" aria-pressed={activePanel === 'artifact'} disabled={!artifact} onClick={(event) => openPanel('artifact', event.currentTarget)}><PanelRight aria-hidden="true" size={15} />查看产物</button>
           </nav>
         </header>
 
@@ -91,13 +104,13 @@ export function CoursewareRunSurface() {
 
       {activePanel === 'artifact' && artifact ? (
         <aside className={styles.panel} aria-label="当前任务产物">
-          <header><div><Presentation aria-hidden="true" size={17} /><strong>{artifact.title}</strong></div><button type="button" onClick={() => setActivePanel('none')}>关闭</button></header>
+          <header><div><Presentation aria-hidden="true" size={17} /><strong>{artifact.title}</strong></div><button type="button" onClick={closePanel}>关闭</button></header>
           <div className={styles.artifactBody}>
             <div className={styles.metadata}><code>{artifact.id}</code><span>{artifact.version}</span><span>{artifact.pageCount} 页</span><span>{artifact.validationState}</span></div>
             <div className={styles.slide}><small>高二物理 · 动量与碰撞</small><h2>从碰撞实验到动量守恒</h2><p>观察现象 → 选择系统 → 建立模型 → 验证守恒条件</p><div><span /><span /></div></div>
             <p>{artifact.validationSummary}</p>
             <strong className={styles.truthLabel}>{artifact.truthLabel}</strong>
-            <label className={styles.scenarioPicker}>Mock 写回场景<select aria-label="Mock 写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option></select></label>
+            <label className={styles.scenarioPicker}>Mock 写回场景<select aria-label="Mock 写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option><option value="timeout">超时后可重试</option></select></label>
           </div>
           <footer><button type="button" onClick={() => { const runId = derivePackageFromCourseware(); if (runId) navigate(`/teacher/ai-agent/runs/${runId}`); }}>基于此课件生成课程方案包</button><button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button></footer>
         </aside>
@@ -129,14 +142,14 @@ export function CoursewareRunSurface() {
 
       {activePanel === 'replan' ? (
         <aside className={styles.panel} aria-label="重新规划影响">
-          <header><strong>调整教学范围</strong><button type="button" onClick={() => setActivePanel('none')}>取消</button></header>
+          <header><strong>调整教学范围</strong><button type="button" onClick={closePanel}>取消</button></header>
           <div className={styles.approvalBody}>
             <span className={styles.objectType}>Context Change Proposal</span>
             <h2>切换到高二物理 1 班</h2>
             <p>确认前不会修改当前 Run。以下影响会生成新 Snapshot 与计划，旧证据不会被覆盖。</p>
             <dl><div><dt>移除 Context</dt><dd>高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量</dd></div><div><dt>新增 Context</dt><dd>高二物理 1 班 · 机械波基础 · 第一单元 机械波</dd></div><div><dt>受影响步骤</dt><dd>目标理解、教学结构、课件组装、质量检查</dd></div><div><dt>受影响对象</dt><dd>当前 ArtifactDraft、ProposedAction 与 ExecutionReceipt</dd></div></dl>
           </div>
-          <footer><button type="button" onClick={() => setActivePanel('none')}>保留当前范围</button><button className={styles.primaryPanelAction} type="button" onClick={replanCoursewareToWaveContext}>确认并重新规划</button></footer>
+          <footer><button type="button" onClick={closePanel}>保留当前范围</button><button className={styles.primaryPanelAction} type="button" onClick={replanCoursewareToWaveContext}>确认并重新规划</button></footer>
         </aside>
       ) : null}
 
@@ -159,14 +172,15 @@ export function CoursewareRunSurface() {
               <Link className={styles.returnLink} to={coursewareReceipt.object.returnUrl}>返回 ClassIn 课程对象</Link>
             </> : <>
               <span className={styles.failureMark}>!</span>
-              <h2>{coursewareReceipt.status === 'permission_denied' ? '权限拒绝' : coursewareReceipt.status === 'version_conflict' ? '版本冲突' : '临时失败'}</h2>
+              <h2>{coursewareReceipt.status === 'permission_denied' ? '权限拒绝' : coursewareReceipt.status === 'version_conflict' ? '版本冲突' : coursewareReceipt.status === 'timeout' ? '执行超时' : '临时失败'}</h2>
               <p>{coursewareReceipt.result}</p>
               <dl>
                 <div><dt>未执行范围</dt><dd>未执行目标：{coursewareReceipt.unexecutedTarget}</dd></div>
                 {coursewareReceipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>expected：{coursewareReceipt.expectedVersion} · current：{coursewareReceipt.currentVersion}</dd></div> : null}
                 <div><dt>恢复方式</dt><dd>{coursewareReceipt.status === 'permission_denied' ? '选择其他可写入位置' : coursewareReceipt.status === 'version_conflict' ? '比较版本并重新确认，禁止静默覆盖' : '已保留 Approval 与 idempotencyKey'}</dd></div>
               </dl>
-              {coursewareReceipt.status === 'recoverable_failure' ? <button className={styles.retryButton} type="button" onClick={executeApprovedCoursewareSave}>安全重试</button> : null}
+              {coursewareReceipt.status === 'permission_denied' || coursewareReceipt.status === 'version_conflict' ? <button className={styles.retryButton} type="button" onClick={recoverCoursewareSave}>{coursewareReceipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : '采用当前版本并重新确认'}</button> : null}
+              {coursewareReceipt.status === 'recoverable_failure' || coursewareReceipt.status === 'timeout' ? <button className={styles.retryButton} type="button" onClick={executeApprovedCoursewareSave}>安全重试</button> : null}
             </>}
           </div>
         </aside>
@@ -174,18 +188,18 @@ export function CoursewareRunSurface() {
 
       {activePanel === 'process_detail' ? (
         <aside className={styles.panel} aria-label="执行详情">
-          <header><strong>执行详情</strong><button type="button" onClick={() => setActivePanel('none')}>关闭</button></header>
+          <header><strong>执行详情</strong><button type="button" onClick={closePanel}>关闭</button></header>
           <div className={styles.processDetail}>
             <h2>最小 ContextProjection</h2>
             <p>以下字段是固定 Capability Manifest 为本次步骤声明的最小输入；完整 Snapshot 未下发。</p>
-            <ul>{coursewareProjection?.items.map((item) => <li key={item.id}><strong>{item.label}</strong><span>{item.section} · {item.sensitivity}</span></li>)}</ul>
+            {coursewareProjections.map((projection) => <section key={projection.capabilityId} aria-label={`${projection.capabilityId} ContextProjection`}><h3>{projection.capabilityId}</h3><p>{projection.purpose} · {projection.snapshotId} · 生成于 {projection.generatedAt}</p><ul>{projection.items.map((item) => <li key={item.id}><strong>{item.label}</strong><span>{item.section} · {item.sensitivity} · {item.sourceVersion}</span></li>)}</ul><small>敏感项裁剪：{projection.excludedSensitiveCount}</small></section>)}
             <h2>能力追踪</h2>
             <ul>{run.events.filter(({ capability }) => capability).map((event) => <li key={event.id}><strong>{event.capability}</strong><span>{event.title} · 固定 Mock 输出</span></li>)}</ul>
           </div>
         </aside>
       ) : null}
 
-      {activePanel === 'core_context' ? <CoreContextPanel readOnly onClose={() => setActivePanel('none')} /> : null}
+      {activePanel === 'core_context' ? <CoreContextPanel readOnly onClose={closePanel} /> : null}
     </section>
   );
 }

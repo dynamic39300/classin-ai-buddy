@@ -266,7 +266,7 @@
 
 .events code {
   color: var(--color-action-strong);
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
 }
 
 .panel {
@@ -433,7 +433,7 @@
 .approvalBody dt,
 .receiptBody dt {
   color: var(--color-ink-muted);
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
 }
 
 .approvalBody dd,

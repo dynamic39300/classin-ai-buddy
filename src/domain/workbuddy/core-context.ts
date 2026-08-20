@@ -47,7 +47,17 @@ export type ContextSnapshot = Readonly<{
 export type ContextProjection = Readonly<{
   snapshotId: string;
   snapshotVersion: ContextSnapshot['version'];
+  capabilityId: string;
+  purpose: string;
+  generatedAt: string;
+  excludedSensitiveCount: number;
   items: readonly ProposedContextItem[];
+}>;
+
+export type CapabilityContextManifest = Readonly<{
+  capabilityId: string;
+  purpose: string;
+  allowedSections: readonly CoreContextSection[];
 }>;
 
 function proposalStatus(taskType: WorkBuddyTaskType, items: readonly ProposedContextItem[]): ContextProposal['status'] {
@@ -102,8 +112,21 @@ export function confirmContext(
   return Object.freeze({ ok: true, snapshot });
 }
 
-export function projectContext(snapshot: ContextSnapshot, allowedSections: readonly CoreContextSection[]): ContextProjection {
-  const allowed = new Set(allowedSections);
+export function projectContext(
+  snapshot: ContextSnapshot,
+  manifest: CapabilityContextManifest,
+  generatedAt: string,
+): ContextProjection {
+  const allowed = new Set(manifest.allowedSections);
   const items = Object.freeze(snapshot.items.filter((item) => allowed.has(item.section) && item.sensitivity !== 'student_sensitive'));
-  return Object.freeze({ snapshotId: snapshot.id, snapshotVersion: snapshot.version, items });
+  const excludedSensitiveCount = snapshot.items.filter((item) => allowed.has(item.section) && item.sensitivity === 'student_sensitive').length;
+  return Object.freeze({
+    snapshotId: snapshot.id,
+    snapshotVersion: snapshot.version,
+    capabilityId: manifest.capabilityId,
+    purpose: manifest.purpose,
+    generatedAt,
+    excludedSensitiveCount,
+    items,
+  });
 }

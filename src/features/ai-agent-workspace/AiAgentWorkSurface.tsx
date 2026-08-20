@@ -26,10 +26,10 @@ import styles from './AiAgentWorkSurface.module.css';
 export function AiAgentWorkSurface() {
   const location = useLocation();
   const { runId, section } = useParams();
-  const { coursewareRun, packageRun } = useWorkBuddyWorkspace();
+  const { coursewareView, packageView } = useWorkBuddyWorkspace();
 
-  if (runId && coursewareRun?.id === runId) return <CoursewareRunSurface />;
-  if (runId && packageRun?.id === runId) return <PackageRunSurface />;
+  if (runId && coursewareView?.run.id === runId) return <CoursewareRunSurface />;
+  if (runId && packageView?.run.id === runId) return <PackageRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
   if (section && getWorkBuddyCapability(section)) return <CapabilityPlaceholder section={section} />;
   if (location.pathname.endsWith('/new')) return <NewTaskSkeleton />;

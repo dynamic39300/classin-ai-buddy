@@ -12,6 +12,15 @@ import { addClassActivity, type ClassCourse } from '@domain/class/class';
 import type { PublishedHomework } from '@domain/homework/homework';
 import { WORKBUDDY_HISTORY } from '@mocks/scenarios/workbuddy';
 import { WORKBUDDY_CONTEXT_ITEMS, WORKBUDDY_MOMENTUM_RECOMMENDATION } from '@mocks/scenarios/workbuddy-context';
+import {
+  WORKBUDDY_CAPABILITY_MANIFESTS,
+  WORKBUDDY_COURSE_PACKAGE_DEFINITION,
+  WORKBUDDY_COURSEWARE_DEFINITION,
+  WORKBUDDY_COURSEWARE_OUTPUT,
+  WORKBUDDY_COURSEWARE_SAVE_ACTION,
+  WORKBUDDY_PACKAGE_ACTION_INPUT,
+  WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS,
+} from '@mocks/scenarios/workbuddy-course-production';
 import { MockClassInWritebackAdapter } from '@mocks/adapters/workbuddy-classin-writeback';
 import { MockPackageWritebackAdapter } from '@mocks/adapters/workbuddy-package-writeback';
 import { OperationGuardProvider } from './shell/operation-guard';
@@ -69,9 +78,17 @@ export function App() {
                     initialRuns={WORKBUDDY_HISTORY}
                     initialContextItems={WORKBUDDY_CONTEXT_ITEMS}
                     recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
+                    coursewareDefinition={WORKBUDDY_COURSEWARE_DEFINITION}
+                    coursewareOutput={WORKBUDDY_COURSEWARE_OUTPUT}
+                    capabilityManifests={WORKBUDDY_CAPABILITY_MANIFESTS}
+                    coursewareActionInput={WORKBUDDY_COURSEWARE_SAVE_ACTION}
+                    packageDefinition={WORKBUDDY_COURSE_PACKAGE_DEFINITION}
+                    packageActionInput={WORKBUDDY_PACKAGE_ACTION_INPUT}
+                    packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
                     writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
                     writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
                     packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
+                    packageWritebackScenarioController={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
                   >
                     <BrowserRouter>
                       <RootRouter />

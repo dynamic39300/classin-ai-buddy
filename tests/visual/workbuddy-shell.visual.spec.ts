@@ -117,8 +117,12 @@ test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) 
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
   await page.getByRole('button', { name: '确认产物清单并生成' }).click();
-  await page.getByRole('complementary', { name: '课程方案包导航' }).getByRole('button', { name: '批量审批可用项' }).click();
-  await page.getByRole('complementary', { name: '课程方案包审批' }).getByRole('button', { name: '批准并执行' }).click();
+  const navigator = page.getByRole('complementary', { name: '课程方案包导航' });
+  await navigator.getByRole('button', { name: '重试失败项' }).click();
+  await navigator.getByRole('button', { name: '生成批量写回提案' }).click();
+  const approval = page.getByRole('complementary', { name: '课程方案包审批' });
+  await approval.getByRole('button', { name: '批准写回' }).click();
+  await approval.getByRole('button', { name: '执行已批准方案包' }).click();
   await expect(page.getByText('部分成功', { exact: true })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-course-package-partial-1440x900.png', { fullPage: true });
 });

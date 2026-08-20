@@ -52,9 +52,14 @@ export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, Wri
       this.receipts.set(action.idempotencyKey, conflict);
       return conflict;
     }
-    if (this.scenario === 'recoverable_failure' && (this.attempts.get(action.idempotencyKey) ?? 0) === 0) {
+    if ((this.scenario === 'recoverable_failure' || this.scenario === 'timeout') && (this.attempts.get(action.idempotencyKey) ?? 0) === 0) {
       this.attempts.set(action.idempotencyKey, 1);
-      return this.failure(action, approval, { id: 'receipt-courseware-recoverable-failure-1', status: 'recoverable_failure', result: 'Mock ClassIn Adapter 暂时不可用，尚未产生副作用。', recovery: 'retry' });
+      return this.failure(action, approval, {
+        id: `receipt-courseware-${this.scenario}-1`,
+        status: this.scenario,
+        result: this.scenario === 'timeout' ? '请求超时，尚未产生可确认的副作用。' : 'Mock ClassIn Adapter 暂时不可用，尚未产生副作用。',
+        recovery: 'retry',
+      });
     }
 
     const receipt = this.success(action, approval);

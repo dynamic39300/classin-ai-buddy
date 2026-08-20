@@ -1,6 +1,6 @@
 # WorkBuddy M4 Phase 4 Review Checklist
 
-**Status:** READY_FOR_USER_REVIEW  
+**Status:** READY_FOR_INTERNAL_REREVIEW
 **Date:** 2026-08-21  
 **Fixture:** `workbuddy-m4-course-production-v1`
 
@@ -9,8 +9,8 @@
 M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标注为 Mock 的课程生产纵向闭环：
 
 - 单课件：`Goal → Core Context → ContextSnapshot → 补参 → Plan → RunEvent → ArtifactDraft → ProposedAction → Approval → Mock Adapter → ExecutionReceipt`；
-- 课程方案包：独立 `course-package` Task Type → 产物范围确认 → Artifact Graph → 逐项审批/排除 → 对象级部分成功 Receipt → 失败项重试；
-- 衔接：从已审阅课件创建关联但独立的方案包 Run，保留 `parentRunRef` 与 `sourceArtifactRef`；
+- 课程方案包：独立 `course-package` Task Type → 产物范围确认 → Artifact Graph → ProposedAction → 独立 Approval → Adapter → 对象级 Receipt → 失败项重试；
+- 衔接：从已审阅课件创建关联但独立的方案包 Run，保留 `parentRunRef` 与 `sourceArtifactRef`，并在生成前重新确认裁剪后的独立 ContextSnapshot；
 - 恢复：主教学范围变更先展示影响，确认后生成新 Snapshot，旧 Snapshot/Artifact/Action/Receipt 保留为 superseded 证据。
 
 所有生成内容、执行结果和 ClassIn 写回均为固定、脱敏、内存态 Mock，不代表真实模型、文件生成或生产 API 已接入。
@@ -21,7 +21,7 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 2. 打开“核心上下文”，检查七层结构、来源/版本/权限/敏感度；应用动量课程建议并确认 `ContextSnapshot`。
 3. 选择“生成单个课件”，检查补参、计划、稳定过程事件、ArtifactDraft 与最小 ContextProjection。
 4. 在产物面板发起“保存到 ClassIn”，检查 ProposedAction 信息，再分别体验批准、执行和 ExecutionReceipt。
-5. 通过“Mock 写回场景”依次检查权限拒绝、版本冲突、临时失败与安全重试。
+5. 通过“Mock 写回场景”依次检查权限拒绝、版本冲突、临时失败、超时与安全重试；权限和冲突都要求调整后重新确认。
 6. 返回新建任务，选择“生成课程方案包”，检查四类 Artifact Graph、取消单项、部分成功与失败项重试。
 7. 从单课件产物选择“基于此课件生成课程方案包”，检查独立 Run/Snapshot 与双向来源引用。
 8. 在单课件 Run 选择“调整教学范围”，检查影响预览、新 Snapshot 和 superseded 证据。
@@ -37,6 +37,7 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 | `permission_denied` | Mock 写回场景选择权限拒绝 |
 | `version_conflict` | Mock 写回场景选择版本冲突 |
 | `recoverable_failure` | Mock 写回场景选择临时失败后安全重试 |
+| `timeout` | Mock 写回场景选择超时后安全重试 |
 | `partial_success` | 课程方案包首次对象级写回 |
 | `completed` | 成功 ExecutionReceipt 或可用方案包项完成写回 |
 | `superseded` | 调整主教学范围并确认重新规划 |
@@ -45,19 +46,31 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 
 - TypeScript：通过；
 - ESLint：通过；
-- Vitest：50 files / 326 tests 通过；
+- Vitest：50 files / 335 tests 通过；
 - Production build：通过；Vite 仅保留既有大 chunk 提示；
 - Playwright E2E：65/65 通过；
 - WorkBuddy Visual：8/8 通过，覆盖 1440×900 与 1000×768；
 - M4 E2E 内 axe serious/critical：0。
 
-## 5. 明确不属于 M4
+## 5. 首轮双轴审查整改
+
+首轮 Standards/Spec 审查发现的 P1/P2/P3 已全部进入实现整改，并通过上述自动化验证：
+
+- 方案包补齐显式 `ProposedAction → Approval → Adapter → ExecutionReceipt`，Domain 不再伪造对象 ID 或 Receipt；
+- 派生方案包不再复制并自动确认原 Snapshot，只显式建议必要教学范围，并要求教师确认独立 Snapshot；
+- Package Run 写入任务历史，活动面板、Artifact 与 Receipt 可离开页面后恢复；
+- ContextProjection 改为按 Capability Manifest 和步骤用途生成，展示 Snapshot、用途、生成时间、来源版本与敏感项裁剪数量；
+- 单课件和方案包 Adapter 均覆盖权限、冲突、可恢复失败、超时和幂等重试，并使用 Mock 与 deterministic test 两个具体实现执行契约测试；
+- UI 只消费 Feature-owned presentation model，Fixture 文案、ID、时间和对象定义移至 Mock scenarios；
+- 侧栏关闭恢复焦点，CSS 字号与间距回到已锁定 token。
+
+## 6. 明确不属于 M4
 
 - 真实 LLM、流式 Provider、Skill/MCP 执行、真实 PPTX/DOCX/视频文件；
 - ClassIn 生产 API、数据库、跨刷新/跨设备持久化、生产权限与冲突协议；
 - 学生个人证据与学生姓名进入普通课程生产 Projection；
 - 最终品牌视觉和完整文档编辑器。
 
-## 6. 用户 Review 记录
+## 7. 用户 Review 记录
 
-等待用户审阅。本文件在用户确认前保持 `READY_FOR_USER_REVIEW`，不把 M4 自动升级为新的 `LOCKED` 产品决策。
+等待第二轮 Standards/Spec 双轴审查。只有审查无剩余 P0–P3 后才恢复 `READY_FOR_USER_REVIEW`；用户确认前不把 M4 自动升级为新的 `LOCKED` 产品决策。
