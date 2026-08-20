@@ -8,7 +8,7 @@ import {
   type CapabilityContextManifest, type ContextSnapshot, type CoreContextItem, type WorkBuddyTaskType,
 } from '@domain/workbuddy/core-context';
 import {
-  confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
+  approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
   reviseCoursewareBrief, updateCoursewareBrief,
   type CoursewareExecutionOutput, type CoursewareRunDefinition, type SingleCoursewareRun,
 } from '@domain/workbuddy/course-production';
@@ -23,7 +23,16 @@ import {
   type Approval, type CoursewareSaveActionInput, type ExecutionReceipt, type ProposedAction,
 } from '@domain/workbuddy/writeback';
 import { projectCoreContextView, projectCoursewareRunView, projectPackageRunView } from './workbuddy-course-production-view';
-import { WorkBuddyWorkspaceContext, type WorkBuddyWorkspace } from './workbuddy-workspace';
+import {
+  WorkBuddyWorkspaceContext,
+  type CoursewarePanel,
+  type PackagePanel,
+  type WorkBuddyContext,
+  type WorkBuddyCoursePackage,
+  type WorkBuddyCourseware,
+  type WorkBuddyHistory,
+  type WorkBuddyWorkspace,
+} from './workbuddy-workspace';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
   initialRuns: readonly WorkBuddyRunViewModel[];
@@ -43,6 +52,18 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   packageWritebackScenarioController: PackageWritebackScenarioController;
   children: ReactNode;
 }>;
+
+type WorkspaceImplementation = WorkBuddyHistory
+  & WorkBuddyContext
+  & Omit<WorkBuddyCourseware, 'activePanel' | 'setActivePanel' | 'replanToWaveContext'>
+  & Omit<WorkBuddyCoursePackage, 'activePanel' | 'setActivePanel'>
+  & Readonly<{
+    activeCoursewarePanel: CoursewarePanel;
+    setActiveCoursewarePanel: (panel: CoursewarePanel) => void;
+    activePackagePanel: PackagePanel;
+    setActivePackagePanel: (panel: PackagePanel) => void;
+    replanCoursewareToWaveContext: () => void;
+  }>;
 
 function projectCoursewareHistory(current: readonly WorkBuddyRunViewModel[], run: SingleCoursewareRun, fixture: WorkBuddyRuntimeFixture): readonly WorkBuddyRunViewModel[] {
   const existing = current.find(({ id }) => id === run.id);
@@ -94,7 +115,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [runs, setRuns] = useState<readonly WorkBuddyRunViewModel[]>(initialRuns);
   const [contextProposal, setContextProposal] = useState(() => createContextProposal(initialContextItems, 'single-courseware'));
   const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(null);
-  const [runSnapshots, setRunSnapshots] = useState<Readonly<Record<string, ContextSnapshot>>>({});
+  const [snapshotsById, setSnapshotsById] = useState<Readonly<Record<string, ContextSnapshot>>>({});
   const [coursewareRun, setCoursewareRun] = useState<SingleCoursewareRun | null>(null);
   const [coursewareAction, setCoursewareAction] = useState<ProposedAction | null>(null);
   const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(null);
@@ -106,16 +127,19 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [packageApproval, setPackageApproval] = useState<PackageApproval | null>(null);
   const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(null);
   const [packageWritebackScenario, setPackageWritebackScenarioState] = useState<PackageWritebackScenario>(() => packageWritebackScenarioController.getScenario());
-  const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<WorkBuddyWorkspace['activeCoursewarePanel']>('none');
-  const [activePackagePanel, setActivePackagePanel] = useState<WorkBuddyWorkspace['activePackagePanel']>('none');
+  const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<CoursewarePanel>('none');
+  const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>('none');
   const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(null);
 
-  const coursewareSnapshot = coursewareRun ? runSnapshots[coursewareRun.id] ?? null : null;
-  const projections = useMemo(() => coursewareSnapshot
-    ? capabilityManifests.map((manifest) => projectContext(coursewareSnapshot, manifest, runtimeFixture.projectionGeneratedAt))
-    : [], [capabilityManifests, coursewareSnapshot, runtimeFixture.projectionGeneratedAt]);
+  const coursewareSnapshot = coursewareRun ? snapshotsById[coursewareRun.contextSnapshotId] ?? null : null;
+  const projections = useMemo(() => coursewareSnapshot && coursewareRun
+    ? capabilityManifests.map((manifest) => projectContext(coursewareSnapshot, manifest, {
+      generatedAt: runtimeFixture.projectionGeneratedAt,
+      taskGoal: coursewareRun.goal,
+    }))
+    : [], [capabilityManifests, coursewareRun, coursewareSnapshot, runtimeFixture.projectionGeneratedAt]);
 
-  const value = useMemo<WorkBuddyWorkspace>(() => ({
+  const implementation = useMemo<WorkspaceImplementation>(() => ({
     runs,
     getRun: (runId) => runs.find((run) => run.id === runId),
     renameRun: (runId, title) => setRuns((current) => current.map((run) => run.id === runId ? { ...run, title } : run)),
@@ -140,13 +164,13 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       setContextSnapshot(result.snapshot);
       if (packageRun?.stage === 'awaiting_context') {
         const next = attachPackageContext(packageRun, result.snapshot.id);
-        setRunSnapshots((current) => ({ ...current, [next.id]: result.snapshot }));
+        setSnapshotsById((current) => ({ ...current, [result.snapshot.id]: result.snapshot }));
         setPackageRun(next);
         setRuns((current) => projectPackageHistory(current, next, runtimeFixture));
       }
     },
     resetCoreContext: () => {
-      setContextSnapshot(null); setRunSnapshots({}); setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');
+      setContextSnapshot(null); setSnapshotsById({}); setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');
       setCoursewareRun(null); setCoursewareAction(null); setCoursewareApproval(null); setCoursewareReceipt(null);
       setPackageRun(null); setPackageAction(null); setPackageApproval(null); setPackageReceipt(null);
       setActiveCoursewarePanel('none'); setActivePackagePanel('none');
@@ -155,12 +179,12 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       packageWritebackScenarioController.setScenario('partial_success'); setPackageWritebackScenarioState('partial_success');
       setRuns((current) => current.filter(({ fixtureVersion }) => fixtureVersion === 'workbuddy-m3-v1'));
     },
-    coursewareView: projectCoursewareRunView(coursewareRun, projections, coursewareAction, coursewareReceipt),
+    coursewareView: projectCoursewareRunView(coursewareRun, projections, coursewareAction, coursewareReceipt, snapshotsById),
     createCoursewareTask: (goal) => {
       if (!contextSnapshot || !goal.trim()) return null;
       const run = createSingleCoursewareRun(coursewareDefinition, goal, contextSnapshot.id);
       setCoursewareRun(run);
-      setRunSnapshots((current) => ({ ...current, [run.id]: contextSnapshot }));
+      setSnapshotsById((current) => ({ ...current, [contextSnapshot.id]: contextSnapshot }));
       setRuns((current) => projectCoursewareHistory(current, run, runtimeFixture).map((item) => item.id === run.id ? { ...item, contextLabels: contextSnapshot.items.filter(({ kind }) => runtimeFixture.contextSummaryKinds.includes(kind)).map(({ label }) => label) } : item));
       return run.id;
     },
@@ -173,8 +197,9 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       setRuns((history) => projectCoursewareHistory(history, next, runtimeFixture));
       return next;
     }),
+    approveCoursewareArtifact: () => setCoursewareRun((current) => current ? approveCoursewareArtifact(current) : current),
     proposeCoursewareSave: () => {
-      if (!coursewareRun?.artifact) return;
+      if (!coursewareRun?.artifact || coursewareRun.reviewStatus !== 'approved') return;
       setCoursewareAction(createCoursewareSaveAction({ ...coursewareActionInput, artifactId: coursewareRun.artifact.id, artifactVersion: coursewareRun.artifact.version }));
       setCoursewareApproval(null); setCoursewareReceipt(null);
     },
@@ -217,7 +242,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       if (!contextSnapshot || taskType !== 'course-package' || !goal.trim()) return null;
       const run = createCoursePackageRun(packageDefinition, goal, contextSnapshot.id);
       setPackageRun(run); setPackageAction(null); setPackageApproval(null); setPackageReceipt(null);
-      setRunSnapshots((current) => ({ ...current, [run.id]: contextSnapshot }));
+      setSnapshotsById((current) => ({ ...current, [contextSnapshot.id]: contextSnapshot }));
       setRuns((current) => projectPackageHistory(current, run, runtimeFixture).map((item) => item.id === run.id ? { ...item, contextLabels: contextSnapshot.items.filter(({ kind }) => runtimeFixture.contextSummaryKinds.includes(kind)).map(({ label }) => label) } : item));
       return run.id;
     },
@@ -285,9 +310,13 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       const action = createPackageSaveAction(reopened, { ...packageActionInput, id: runtimeFixture.packageRecovery.actionId, idempotencyKey: runtimeFixture.packageRecovery.idempotencyKey, target });
       if (action) { setPackageRun(reopened); setPackageAction(action); setPackageApproval(null); setPackageReceipt(null); setActivePackagePanel('approval'); }
     },
-    retryPackageItem: (artifactId) => setPackageRun((current) => current ? retryPackageArtifact(current, artifactId) : current),
+    retryFailedPackageItems: () => setPackageRun((current) => current
+      ? current.artifacts
+        .filter(({ state, allowedCommands }) => state === 'failed' && allowedCommands.includes('retry'))
+        .reduce((next, artifact) => retryPackageArtifact(next, artifact.id), current)
+      : current),
     derivePackageFromCourseware: () => {
-      if (!coursewareRun?.artifact) return null;
+      if (!coursewareRun?.artifact || coursewareRun.reviewStatus !== 'approved') return null;
       const proposal = selectContextItems(createContextProposal(initialContextItems, 'course-package'), runtimeFixture.derivedPackage.recommendedContextItemIds);
       const run = createCoursePackageRun(packageDefinition, runtimeFixture.derivedPackage.goal, null, {
         parentRunRef: coursewareRun.id, sourceArtifactRef: Object.freeze({ id: coursewareRun.artifact.id, version: coursewareRun.artifact.version }),
@@ -307,7 +336,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       const result = confirmContext(proposal, { snapshotId: runtimeFixture.snapshot.replannedCoursewareId, confirmedAt: runtimeFixture.snapshot.replannedAt });
       if (!result.ok) return;
       const next = replanCoursewareRun(coursewareRun, result.snapshot.id, runtimeFixture.replan.reason, { actionId: coursewareAction?.id, receiptId: coursewareReceipt?.id });
-      setRunSnapshots((current) => ({ ...current, [next.id]: result.snapshot }));
+      setSnapshotsById((current) => ({ ...current, [result.snapshot.id]: result.snapshot }));
       setContextSnapshot(result.snapshot); setContextProposal(proposal); setCoursewareRun(next);
       setCoursewareAction(null); setCoursewareApproval(null); setCoursewareReceipt(null); setActiveCoursewarePanel('none');
       setRuns((history) => projectCoursewareHistory(history, next, runtimeFixture));
@@ -317,9 +346,69 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     coursewareActionInput, coursewareApproval, coursewareDefinition, coursewareOutput, coursewareReceipt, coursewareRun, coursewareSnapshot,
     initialContextItems, packageAction, packageActionInput, packageApproval, packageDefinition, packageFailedArtifactIds,
     packageReceipt, packageRun, packageWritebackAdapter, packageWritebackScenario, packageWritebackScenarioController,
-    projections, recommendedContextItemIds, runs, runtimeFixture, taskType, writebackAdapter, writebackScenario,
+    projections, recommendedContextItemIds, runs, runtimeFixture, snapshotsById, taskType, writebackAdapter, writebackScenario,
     writebackScenarioController,
   ]);
 
-  return <WorkBuddyWorkspaceContext.Provider value={value}>{children}</WorkBuddyWorkspaceContext.Provider>;
+  const workspace = useMemo<WorkBuddyWorkspace>(() => ({
+    history: Object.freeze({
+      runs: implementation.runs,
+      getRun: implementation.getRun,
+      renameRun: implementation.renameRun,
+      togglePinRun: implementation.togglePinRun,
+      removeRun: implementation.removeRun,
+    }),
+    context: Object.freeze({
+      contextView: implementation.contextView,
+      coursewareContextView: implementation.coursewareContextView,
+      applyRecommendedContext: implementation.applyRecommendedContext,
+      toggleCoreContextItem: implementation.toggleCoreContextItem,
+      confirmCoreContext: implementation.confirmCoreContext,
+      resetCoreContext: implementation.resetCoreContext,
+      taskType: implementation.taskType,
+      setTaskType: implementation.setTaskType,
+    }),
+    courseware: Object.freeze({
+      coursewareView: implementation.coursewareView,
+      createCoursewareTask: implementation.createCoursewareTask,
+      updateCoursewareTaskBrief: implementation.updateCoursewareTaskBrief,
+      confirmCoursewareTaskBrief: implementation.confirmCoursewareTaskBrief,
+      reviseCoursewareTaskBrief: implementation.reviseCoursewareTaskBrief,
+      executeCoursewareTaskPlan: implementation.executeCoursewareTaskPlan,
+      approveCoursewareArtifact: implementation.approveCoursewareArtifact,
+      proposeCoursewareSave: implementation.proposeCoursewareSave,
+      approveCoursewareSave: implementation.approveCoursewareSave,
+      rejectCoursewareSave: implementation.rejectCoursewareSave,
+      executeApprovedCoursewareSave: implementation.executeApprovedCoursewareSave,
+      recoverCoursewareSave: implementation.recoverCoursewareSave,
+      writebackScenario: implementation.writebackScenario,
+      setWritebackScenario: implementation.setWritebackScenario,
+      activePanel: implementation.activeCoursewarePanel,
+      setActivePanel: implementation.setActiveCoursewarePanel,
+      replanScope: implementation.replanScope,
+      replanToWaveContext: implementation.replanCoursewareToWaveContext,
+    }),
+    coursePackage: Object.freeze({
+      packageView: implementation.packageView,
+      packageWritebackScenario: implementation.packageWritebackScenario,
+      setPackageWritebackScenario: implementation.setPackageWritebackScenario,
+      createPackageTask: implementation.createPackageTask,
+      beginPackageGeneration: implementation.beginPackageGeneration,
+      completePackageGeneration: implementation.completePackageGeneration,
+      setPackageItemIncluded: implementation.setPackageItemIncluded,
+      proposePackageSave: implementation.proposePackageSave,
+      approvePackageSave: implementation.approvePackageSave,
+      rejectPackageSave: implementation.rejectPackageSave,
+      executeApprovedPackageSave: implementation.executeApprovedPackageSave,
+      recoverPackageSave: implementation.recoverPackageSave,
+      retryFailedPackageItems: implementation.retryFailedPackageItems,
+      derivePackageFromCourseware: implementation.derivePackageFromCourseware,
+      activePanel: implementation.activePackagePanel,
+      setActivePanel: implementation.setActivePackagePanel,
+      activePackageArtifactId: implementation.activePackageArtifactId,
+      setActivePackageArtifactId: implementation.setActivePackageArtifactId,
+    }),
+  }), [implementation]);
+
+  return <WorkBuddyWorkspaceContext.Provider value={workspace}>{children}</WorkBuddyWorkspaceContext.Provider>;
 }

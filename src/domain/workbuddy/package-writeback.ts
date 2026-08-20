@@ -1,4 +1,4 @@
-import type { CoursePackageRun } from './course-package';
+import { getPackageApprovableArtifactIds, type CoursePackageRun } from './course-package';
 
 export type PackageProposedAction = Readonly<{
   id: string;
@@ -25,8 +25,9 @@ export type PackageActionInput = Omit<PackageProposedAction, 'kind' | 'status' |
 
 export function createPackageSaveAction(run: CoursePackageRun, input: PackageActionInput): PackageProposedAction | null {
   if (!run.contextSnapshotId || (run.stage !== 'artifact_ready' && run.stage !== 'partial_success')) return null;
+  const approvableIds = new Set(getPackageApprovableArtifactIds(run));
   const artifactRefs = run.artifacts
-    .filter(({ state }) => state === 'ready')
+    .filter(({ id }) => approvableIds.has(id))
     .map(({ id, version }) => Object.freeze({ id, version }));
   if (!artifactRefs.length) return null;
   return Object.freeze({

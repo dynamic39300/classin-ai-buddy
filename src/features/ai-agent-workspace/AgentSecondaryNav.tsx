@@ -20,7 +20,7 @@ const STATUS_ICONS = {
 export function AgentSecondaryNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { runs, renameRun, togglePinRun, removeRun } = useWorkBuddyWorkspace();
+  const { runs, renameRun, togglePinRun, removeRun } = useWorkBuddyWorkspace().history;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');

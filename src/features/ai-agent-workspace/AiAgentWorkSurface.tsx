@@ -26,7 +26,8 @@ import styles from './AiAgentWorkSurface.module.css';
 export function AiAgentWorkSurface() {
   const location = useLocation();
   const { runId, section } = useParams();
-  const { coursewareView, packageView } = useWorkBuddyWorkspace();
+  const { coursewareView } = useWorkBuddyWorkspace().courseware;
+  const { packageView } = useWorkBuddyWorkspace().coursePackage;
 
   if (runId && coursewareView?.run.id === runId) return <CoursewareRunSurface />;
   if (runId && packageView?.run.id === runId) return <PackageRunSurface />;
@@ -42,7 +43,9 @@ function NewTaskSkeleton() {
   const [contextPanelOpen, setContextPanelOpen] = useState(false);
   const navigate = useNavigate();
   const contextButtonRef = useRef<HTMLButtonElement | null>(null);
-  const { contextView, taskType, setTaskType, createCoursewareTask, createPackageTask } = useWorkBuddyWorkspace();
+  const { contextView, taskType, setTaskType } = useWorkBuddyWorkspace().context;
+  const { createCoursewareTask } = useWorkBuddyWorkspace().courseware;
+  const { createPackageTask } = useWorkBuddyWorkspace().coursePackage;
   const contextItems = contextView.items.filter(({ included }) => included);
   const contextLabels = contextView.status === 'confirmed'
     ? contextItems.filter(({ kind }) => ['organization', 'class', 'course', 'unit', 'learner_scope'].includes(kind)).map(({ label }) => label)
@@ -103,7 +106,7 @@ function NewTaskSkeleton() {
 }
 
 function RunSkeleton({ runId }: { runId: string }) {
-  const { getRun } = useWorkBuddyWorkspace();
+  const { getRun } = useWorkBuddyWorkspace().history;
   const [panelOpen, setPanelOpen] = useState(true);
   const [artifactFocused, setArtifactFocused] = useState(false);
   const [feedback, setFeedback] = useState('');

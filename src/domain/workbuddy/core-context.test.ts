@@ -55,9 +55,9 @@ describe('CoreContext Module', () => {
       capabilityId: 'courseware-renderer',
       purpose: '组装课件内容',
       allowedSections: ['actor_organization', 'teaching_scope', 'learner_scope', 'teaching_evidence'],
-    }, '2026-08-20T10:04:00+08:00');
+    }, { generatedAt: '2026-08-20T10:04:00+08:00', taskGoal: '生成动量守恒课件' });
     expect(projection.items.map(({ id }) => id)).not.toContain('student-a');
-    expect(projection).toMatchObject({ snapshotId: 'snapshot-1', capabilityId: 'courseware-renderer', purpose: '组装课件内容', excludedSensitiveCount: 1 });
+    expect(projection).toMatchObject({ snapshotId: 'snapshot-1', capabilityId: 'courseware-renderer', purpose: '组装课件内容', taskGoal: '生成动量守恒课件', excludedSensitiveCount: 1 });
     expect(Object.isFrozen(result.snapshot)).toBe(true);
     expect(Object.isFrozen(result.snapshot.items)).toBe(true);
   });

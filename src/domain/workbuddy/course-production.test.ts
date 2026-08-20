@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WORKBUDDY_COURSEWARE_DEFINITION, WORKBUDDY_COURSEWARE_OUTPUT } from '@mocks/scenarios/workbuddy-course-production';
 import {
-  confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
+  approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
   reviseCoursewareBrief, updateCoursewareBrief,
 } from './course-production';
 
@@ -13,6 +13,8 @@ describe('single-courseware Course Production Module', () => {
     expect(planned).toMatchObject({ stage: 'awaiting_plan_confirmation', brief: { expectedPages: 16 } });
     expect(completed.events.map(({ title }) => title)).toEqual(['核心上下文已载入', '任务计划已确认', '教学结构已生成', '课件草稿已组装', '质量检查通过']);
     expect(completed.artifact).toMatchObject({ id: 'artifact-courseware-momentum-v1', pageCount: 16, validationState: 'passed' });
+    expect(completed).toMatchObject({ reviewStatus: 'pending', allowedCommands: expect.arrayContaining(['approve-artifact']) });
+    expect(approveCoursewareArtifact(completed)).toMatchObject({ reviewStatus: 'approved', allowedCommands: expect.arrayContaining(['derive-package', 'propose-save']) });
   });
 
   it('preserves the previous plan, events, Snapshot and Artifact when replanning', () => {

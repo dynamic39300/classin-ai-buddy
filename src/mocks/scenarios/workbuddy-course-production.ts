@@ -9,10 +9,10 @@ export const WORKBUDDY_COURSEWARE_DEFINITION: CoursewareRunDefinition = Object.f
   fixtureVersion: 'workbuddy-m4-course-production-v1', id: 'run-m4-courseware', title: '生成动量守恒模型课件',
   initialBrief: Object.freeze({ durationMinutes: 45, teachingApproach: '实验探究', expectedPages: 18 }),
   plan: Object.freeze([
-    Object.freeze({ id: 'step-analyze-goal', title: '理解教学目标', capability: 'goal-interpreter', expectedOutput: '目标与课时约束' }),
-    Object.freeze({ id: 'step-design-structure', title: '设计教学结构', capability: 'lesson-structure', expectedOutput: '导入、建模、例题与练习结构' }),
-    Object.freeze({ id: 'step-generate-courseware', title: '组装课件初稿', capability: 'courseware-renderer', expectedOutput: '可审阅课件草稿' }),
-    Object.freeze({ id: 'step-validate-courseware', title: '检查教学与内容质量', capability: 'courseware-quality-check', expectedOutput: '验证结果与修改建议' }),
+    Object.freeze({ id: 'step-analyze-goal', title: '理解教学目标', capability: 'goal-interpreter', capabilitySummary: '提炼教学目标、课时与边界', expectedOutput: '目标与课时约束' }),
+    Object.freeze({ id: 'step-design-structure', title: '设计教学结构', capability: 'lesson-structure', capabilitySummary: '按课程标准组织课堂结构', expectedOutput: '导入、建模、例题与练习结构' }),
+    Object.freeze({ id: 'step-generate-courseware', title: '组装课件初稿', capability: 'courseware-renderer', capabilitySummary: '把教学结构组织为课件页面', expectedOutput: '可审阅课件草稿' }),
+    Object.freeze({ id: 'step-validate-courseware', title: '检查教学与内容质量', capability: 'courseware-quality-check', capabilitySummary: '检查目标、结构、术语与练习覆盖', expectedOutput: '验证结果与修改建议' }),
   ]),
 });
 

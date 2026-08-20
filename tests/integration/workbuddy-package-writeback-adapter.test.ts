@@ -61,6 +61,19 @@ describe('Package writeback Adapter contract', () => {
   it.each([
     ['Mock', () => new MockPackageWritebackAdapter()],
     ['test', () => new DeterministicTestPackageWritebackAdapter()],
+  ] as const)('%s Adapter safely retries a recoverable package action and then replays its receipt', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    adapter.setScenario('recoverable_failure');
+    const input = approvedPackage();
+    expect(adapter.execute(input.action, input.approval, input.candidates)).toMatchObject({ status: 'recoverable_failure', recovery: 'retry' });
+    const recovered = adapter.execute(input.action, input.approval, input.candidates);
+    expect(recovered.status).toBe('success');
+    expect(adapter.execute(input.action, input.approval, input.candidates)).toBe(recovered);
+  });
+
+  it.each([
+    ['Mock', () => new MockPackageWritebackAdapter()],
+    ['test', () => new DeterministicTestPackageWritebackAdapter()],
   ] as const)('%s Adapter rejects candidates owned by another run', (_name, createAdapter) => {
     const input = approvedPackage();
     const foreignCandidates = input.candidates.map((candidate) => ({ ...candidate, runRef: 'run-other' }));

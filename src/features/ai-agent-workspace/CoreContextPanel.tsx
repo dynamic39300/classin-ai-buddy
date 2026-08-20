@@ -21,7 +21,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
     toggleCoreContextItem,
     confirmCoreContext,
     resetCoreContext,
-  } = useWorkBuddyWorkspace();
+  } = useWorkBuddyWorkspace().context;
   const view = mode === 'courseware' ? coursewareContextView ?? contextView : contextView;
   const status = view.status === 'confirmed' ? '上下文已冻结' : view.status === 'ready_to_confirm' ? '可以确认上下文' : '需要补充教学范围';
 
@@ -63,8 +63,9 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
                     <div>
                       <strong>{item.label}</strong>
                       <p>{item.sourceLabel} · {item.sourceVersion}</p>
+                      <small>{item.permissionLabel} · {item.sensitivity}</small>
                     </div>
-                    {!readOnly && !item.locked ? <button type="button" disabled={!item.selectable && !item.included} onClick={() => toggleCoreContextItem(item.id)}>{item.included ? '排除' : '选择'}</button> : <span className={styles.permission}>{item.permissionLabel} · {item.sensitivity}</span>}
+                    {!readOnly && !item.locked ? <button type="button" disabled={!item.selectable && !item.included} onClick={() => toggleCoreContextItem(item.id)}>{item.included ? '排除' : '选择'}</button> : null}
                   </article>
               ))}
             </div>

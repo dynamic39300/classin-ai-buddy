@@ -16,15 +16,15 @@ const RISK_LABELS = { low: '低', medium: '中', high: '高' } as const;
 export function PackageRunSurface() {
   const {
     packageView, beginPackageGeneration, completePackageGeneration, setPackageItemIncluded, proposePackageSave, approvePackageSave, rejectPackageSave,
-    executeApprovedPackageSave, recoverPackageSave, retryPackageItem, packageWritebackScenario, setPackageWritebackScenario,
-    activePackagePanel: panel, setActivePackagePanel: setPanel,
+    executeApprovedPackageSave, recoverPackageSave, retryFailedPackageItems, packageWritebackScenario, setPackageWritebackScenario,
+    activePanel: panel, setActivePanel: setPanel,
     activePackageArtifactId, setActivePackageArtifactId,
-  } = useWorkBuddyWorkspace();
+  } = useWorkBuddyWorkspace().coursePackage;
   const lastPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const navigatorPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const generatePackageTriggerRef = useRef<HTMLButtonElement | null>(null);
   if (!packageView) return null;
-  const { run, action, receipt, contextConfirmed } = packageView;
+  const { run, action, receipt, contextConfirmed, retryableArtifactIds, canProposeSave } = packageView;
   const activeArtifact = run.artifacts.find(({ id }) => id === activePackageArtifactId) ?? run.artifacts[0];
   const openPanel = (next: Parameters<typeof setPanel>[0], trigger: HTMLButtonElement) => {
     lastPanelTriggerRef.current = trigger;
@@ -71,14 +71,14 @@ export function PackageRunSurface() {
     {panel === 'navigator' ? <aside className={styles.panel} aria-label="课程方案包导航">
       <header><strong>方案包导航</strong><button type="button" onClick={closePanel}>关闭</button></header>
       <div className={styles.panelBody}>{run.artifacts.map((item) => <button className={styles.artifactRow} type="button" aria-pressed={activeArtifact?.id === item.id} key={item.id} onClick={() => setActivePackageArtifactId(item.id)}><span>{item.title}</span><small>{STATE_LABELS[item.state]}</small></button>)}{activeArtifact ? <section aria-label="活动产物预览"><h2>{activeArtifact.title}</h2><p>{KIND_LABELS[activeArtifact.kind]} · {activeArtifact.version} · {STATE_LABELS[activeArtifact.state]}</p><p>[模拟]产物预览；每项保持独立复查和写回状态。</p></section> : null}<label>[模拟]写回场景<select aria-label="课程方案包模拟写回场景" value={packageWritebackScenario} onChange={(event) => setPackageWritebackScenario(event.target.value as PackageWritebackScenario)}><option value="partial_success">部分成功</option><option value="success">全部成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败</option><option value="timeout">超时</option></select></label></div>
-      <footer>{run.artifacts.some(({ state }) => state === 'failed') ? <button type="button" onClick={() => retryPackageItem('package-recording')}><RefreshCw aria-hidden="true" size={14} />重试失败项</button> : null}<button className={styles.primary} type="button" onClick={() => { proposePackageSave(); setPanel('approval'); }}>生成批量写回提案</button></footer>
+      <footer>{retryableArtifactIds.length ? <button type="button" onClick={retryFailedPackageItems}><RefreshCw aria-hidden="true" size={14} />重试失败项</button> : null}<button className={styles.primary} type="button" disabled={!canProposeSave} onClick={() => { proposePackageSave(); setPanel('approval'); }}>生成批量写回提案</button></footer>
     </aside> : null}
 
     {panel === 'approval' && action ? <aside className={styles.panel} aria-label="课程方案包审批">
       <header><div><ShieldCheck aria-hidden="true" size={16} /><strong>课程方案包审批</strong></div><button type="button" onClick={() => setPanel('navigator')}>返回导航</button></header>
       <div className={styles.panelBody}>
         <span>保存提案</span><p>目标：{action.target.label}</p><p>{action.difference}</p>
-        {run.artifacts.map((item) => <label className={styles.approvalItem} key={item.id}><input type="checkbox" checked={item.state === 'ready' || item.state === 'approved'} disabled={action.status !== 'proposed' || item.state === 'failed' || item.state === 'written_back'} onChange={(event) => setPackageItemIncluded(item.id, event.target.checked)} /><span><strong>{item.title}</strong><small>{item.state === 'failed' ? '失败项本次 not_executed' : item.state === 'written_back' ? '已成功，不重复执行' : STATE_LABELS[item.state]}</small></span></label>)}
+        {run.artifacts.map((item) => <label className={styles.approvalItem} key={item.id}><input type="checkbox" checked={item.state === 'ready' || item.state === 'approved'} disabled={action.status !== 'proposed' || item.state === 'failed' || item.state === 'written_back'} onChange={(event) => setPackageItemIncluded(item.id, event.target.checked)} /><span><strong>{item.title}</strong><small>{item.state === 'failed' ? '失败项本次不执行' : item.state === 'written_back' ? '已成功，不重复执行' : STATE_LABELS[item.state]}</small></span></label>)}
         <dl><div><dt>影响</dt><dd>{action.impact}</dd></div><div><dt>目标版本</dt><dd>{action.target.expectedVersion}</dd></div><div><dt>权限</dt><dd>{action.permission === 'allowed' ? '允许写入' : '禁止写入'}</dd></div><div><dt>风险 / 可逆</dt><dd>{RISK_LABELS[action.risk]} / {action.reversible ? '是' : '否'}</dd></div><div><dt>来源产物版本</dt><dd>{action.artifactRefs.map(({ id, version }) => `${run.artifacts.find((item) => item.id === id)?.title ?? '课程产物'} · ${version}`).join('；')}</dd></div><div><dt>审批有效期</dt><dd>{action.expiresAt}</dd></div></dl><details><summary>技术证据</summary><code>{action.id} · {action.idempotencyKey}</code></details>
         {action.status === 'approved' ? <p role="status">已批准 · 尚未执行</p> : null}{action.status === 'rejected' ? <p role="status">已拒绝 · 未执行</p> : null}
       </div>
@@ -88,7 +88,7 @@ export function PackageRunSurface() {
     {panel === 'receipt' && receipt ? <aside className={styles.panel} aria-label="课程方案包执行回执">
       <header><strong>{receipt.status === 'partial_success' ? '部分成功' : receipt.status === 'success' ? '写回完成' : '写回未执行'}</strong><button type="button" onClick={() => setPanel('navigator')}>返回导航</button></header>
       <div className={styles.panelBody}><p>{receipt.result}</p>{receipt.status === 'version_conflict' ? <p>目标版本：{receipt.expectedVersion}；当前版本：{receipt.currentVersion}</p> : null}{receipt.items.map((item) => <article className={styles.resultRow} key={item.artifactId}><strong>{run.artifacts.find(({ id }) => id === item.artifactId)?.title ?? '课程产物'}</strong><span data-result={item.result}>{RESULT_LABELS[item.result]}</span>{item.objectId ? <details><summary>技术证据</summary><code>{item.objectId}</code></details> : null}</article>)}<p>{receipt.truthLabel}</p><details><summary>技术证据</summary><code>{receipt.id}</code></details></div>
-      <footer>{receipt.status === 'partial_success' ? <button className={styles.primary} type="button" onClick={() => { retryPackageItem('package-recording'); setPackageWritebackScenario('success'); setPanel('navigator'); }}>重试失败项</button> : null}{receipt.status === 'permission_denied' || receipt.status === 'version_conflict' ? <button className={styles.primary} type="button" onClick={recoverPackageSave}>{receipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : '采用当前版本并重新确认'}</button> : null}{receipt.status === 'recoverable_failure' || receipt.status === 'timeout' ? <button className={styles.primary} type="button" onClick={executeApprovedPackageSave}>安全重试</button> : null}</footer>
+      <footer>{receipt.status === 'partial_success' ? <button className={styles.primary} type="button" onClick={() => { retryFailedPackageItems(); setPackageWritebackScenario('success'); setPanel('navigator'); }}>重试失败项</button> : null}{receipt.status === 'permission_denied' || receipt.status === 'version_conflict' ? <button className={styles.primary} type="button" onClick={recoverPackageSave}>{receipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : '采用当前版本并重新确认'}</button> : null}{receipt.status === 'recoverable_failure' || receipt.status === 'timeout' ? <button className={styles.primary} type="button" onClick={executeApprovedPackageSave}>安全重试</button> : null}</footer>
     </aside> : null}
   </section>;
 }

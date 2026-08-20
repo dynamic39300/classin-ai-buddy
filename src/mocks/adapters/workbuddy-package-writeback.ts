@@ -44,17 +44,17 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
     }
 
     if (this.scenario === 'permission_denied' || action.permission === 'denied') {
-      return this.failure(action, approval, candidates, 'permission_denied', 'choose-another-target', '当前教师无权写入所选课程单元。');
+      return this.failure(action, approval, candidates, 'permission_denied', '当前教师无权写入所选课程单元。');
     }
     const currentTargetVersion = this.scenario === 'version_conflict' ? 'unit-momentum-1-v2' : 'unit-momentum-1-v1';
     if (action.target.expectedVersion !== currentTargetVersion) {
-      return this.failure(action, approval, candidates, 'version_conflict', 'compare-and-reconfirm', '课程单元版本已变化，需要比较并重新确认。', action.target.expectedVersion, currentTargetVersion);
+      return this.failure(action, approval, candidates, 'version_conflict', '课程单元版本已变化，需要比较并重新确认。', action.target.expectedVersion, currentTargetVersion);
     }
     if (this.scenario === 'recoverable_failure' || this.scenario === 'timeout') {
       const attempt = this.attempts.get(action.idempotencyKey) ?? 0;
       if (attempt === 0) {
         this.attempts.set(action.idempotencyKey, 1);
-        return this.failure(action, approval, candidates, this.scenario, 'retry', this.scenario === 'timeout' ? '请求超时，尚未产生可确认的副作用。' : '[模拟] Adapter 暂时不可用，尚未产生副作用。');
+        return this.failure(action, approval, candidates, this.scenario, this.scenario === 'timeout' ? '请求超时，尚未产生可确认的副作用。' : '[模拟]写回接口暂时不可用，尚未产生副作用。');
       }
     }
 
@@ -85,17 +85,21 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
     approval: PackageApproval,
     candidates: readonly PackageWritebackCandidate[],
     status: Extract<PackageExecutionReceipt['status'], 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout'>,
-    recovery: NonNullable<PackageExecutionReceipt['recovery']>,
     result: string,
     expectedVersion?: string,
     currentVersion?: string,
   ): PackageExecutionReceipt {
-    return Object.freeze({
+    const base = {
       id: `receipt-package-${status}-1`, actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
-      status, recovery, result, expectedVersion, currentVersion,
-      items: Object.freeze(candidates.map(({ id }) => Object.freeze({ artifactId: id, result: 'not_executed' as const }))),
+      result, items: Object.freeze(candidates.map(({ id }) => Object.freeze({ artifactId: id, result: 'not_executed' as const }))),
       truthLabel: '[模拟]课程方案包执行回执',
-    });
+    };
+    if (status === 'permission_denied') return Object.freeze({ ...base, status, recovery: 'choose-another-target' as const });
+    if (status === 'version_conflict') {
+      if (!expectedVersion || !currentVersion) throw new Error('Version conflict receipts require expected and current versions.');
+      return Object.freeze({ ...base, status, recovery: 'compare-and-reconfirm' as const, expectedVersion, currentVersion });
+    }
+    return Object.freeze({ ...base, status, recovery: 'retry' as const });
   }
 
   reset() {

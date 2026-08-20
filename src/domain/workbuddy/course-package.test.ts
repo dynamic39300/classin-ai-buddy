@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { WORKBUDDY_COURSE_PACKAGE_DEFINITION } from '@mocks/scenarios/workbuddy-course-production';
+import { WORKBUDDY_COURSE_PACKAGE_DEFINITION, WORKBUDDY_PACKAGE_ACTION_INPUT } from '@mocks/scenarios/workbuddy-course-production';
+import { createPackageSaveAction } from './package-writeback';
 import {
   applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
   markPackageArtifactsApproved, retryPackageArtifact, setPackageArtifactIncluded,
@@ -10,6 +11,19 @@ describe('course-package Artifact Graph', () => {
     const run = createCoursePackageRun(WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成动量单元课程方案包', null);
     expect(run.stage).toBe('awaiting_context');
     expect(attachPackageContext(run, 'snapshot-package-1')).toMatchObject({ stage: 'configuring', contextSnapshotId: 'snapshot-package-1' });
+  });
+
+  it('guards selection commands and prevents dependent writeback when the root artifact is unavailable', () => {
+    const configuring = createCoursePackageRun(WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成动量单元课程方案包', 'snapshot-package-1');
+    expect(setPackageArtifactIncluded(configuring, 'package-courseware', false)).toBe(configuring);
+
+    const generated = completePackageGeneration(beginPackageGeneration(configuring), []);
+    const excludedRoot = setPackageArtifactIncluded(generated, 'package-courseware', false);
+    expect(excludedRoot.artifacts.every(({ state }) => state === 'excluded')).toBe(true);
+    expect(createPackageSaveAction(excludedRoot, WORKBUDDY_PACKAGE_ACTION_INPUT)).toBeNull();
+
+    const failedRoot = completePackageGeneration(beginPackageGeneration(configuring), ['package-courseware']);
+    expect(createPackageSaveAction(failedRoot, WORKBUDDY_PACKAGE_ACTION_INPUT)).toBeNull();
   });
 
   it('keeps selection, approval and receipt application as pure state transitions', () => {

@@ -49,6 +49,7 @@ export type ContextProjection = Readonly<{
   snapshotVersion: ContextSnapshot['version'];
   capabilityId: string;
   purpose: string;
+  taskGoal: string;
   generatedAt: string;
   excludedSensitiveCount: number;
   items: readonly ProposedContextItem[];
@@ -141,7 +142,7 @@ export function confirmContext(
 export function projectContext(
   snapshot: ContextSnapshot,
   manifest: CapabilityContextManifest,
-  generatedAt: string,
+  input: Readonly<{ generatedAt: string; taskGoal: string }>,
 ): ContextProjection {
   const allowed = new Set(manifest.allowedSections);
   const items = Object.freeze(snapshot.items.filter((item) => allowed.has(item.section) && item.sensitivity !== 'student_sensitive'));
@@ -151,7 +152,8 @@ export function projectContext(
     snapshotVersion: snapshot.version,
     capabilityId: manifest.capabilityId,
     purpose: manifest.purpose,
-    generatedAt,
+    taskGoal: input.taskGoal,
+    generatedAt: input.generatedAt,
     excludedSensitiveCount,
     items,
   });

@@ -13,7 +13,7 @@ export class DeterministicTestWritebackAdapter implements ClassInWritebackAdapte
     const replay = this.receipts.get(action.idempotencyKey);
     if (replay) return replay;
     if (action.status !== 'approved' || approval.decision !== 'approved' || approval.actionId !== action.id) throw new Error('approved action required');
-    const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, executedAt: '2026-08-20T10:06:00+08:00' };
+    const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, executedAt: '2026-08-20T10:06:00+08:00', truthLabel: '[模拟]确定性测试执行回执' };
     if (this.scenario === 'permission_denied') return Object.freeze({ ...base, id: 'receipt-courseware-permission-denied-1', status: 'permission_denied', result: 'denied', recovery: 'choose-another-target', unexecutedTarget: action.target.unitId });
     if (this.scenario === 'version_conflict' && action.target.expectedVersion !== 'unit-momentum-1-v2') return Object.freeze({ ...base, id: 'receipt-courseware-version-conflict-1', status: 'version_conflict', result: 'conflict', recovery: 'compare-and-reconfirm', unexecutedTarget: action.target.unitId, expectedVersion: action.target.expectedVersion, currentVersion: 'unit-momentum-1-v2' });
     if ((this.scenario === 'recoverable_failure' || this.scenario === 'timeout') && !this.attempts.has(action.idempotencyKey)) {

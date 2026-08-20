@@ -29,13 +29,17 @@ export type Approval = Readonly<{
   decidedAt: string;
 }>;
 
-export type SuccessfulExecutionReceipt = Readonly<{
+type ExecutionReceiptBase = Readonly<{
   id: string;
   actionId: ProposedAction['id'];
   approvalId: string;
   idempotencyKey: ProposedAction['idempotencyKey'];
-  status: 'success';
   executedAt: string;
+  truthLabel: string;
+}>;
+
+export type SuccessfulExecutionReceipt = ExecutionReceiptBase & Readonly<{
+  status: 'success';
   object: Readonly<{
     id: string;
     version: string;
@@ -45,19 +49,15 @@ export type SuccessfulExecutionReceipt = Readonly<{
   result: string;
 }>;
 
-export type FailedExecutionReceipt = Readonly<{
-  id: string;
-  actionId: ProposedAction['id'];
-  approvalId: string;
-  idempotencyKey: ProposedAction['idempotencyKey'];
-  executedAt: string;
-  status: 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout';
+type FailedExecutionReceiptBase = ExecutionReceiptBase & Readonly<{
   result: string;
-  recovery: 'choose-another-target' | 'compare-and-reconfirm' | 'retry';
   unexecutedTarget: string;
-  expectedVersion?: string;
-  currentVersion?: string;
 }>;
+
+export type FailedExecutionReceipt =
+  | FailedExecutionReceiptBase & Readonly<{ status: 'permission_denied'; recovery: 'choose-another-target'; expectedVersion?: never; currentVersion?: never }>
+  | FailedExecutionReceiptBase & Readonly<{ status: 'version_conflict'; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
+  | FailedExecutionReceiptBase & Readonly<{ status: 'recoverable_failure' | 'timeout'; recovery: 'retry'; expectedVersion?: never; currentVersion?: never }>;
 
 export type ExecutionReceipt = SuccessfulExecutionReceipt | FailedExecutionReceipt;
 

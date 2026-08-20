@@ -49,6 +49,7 @@ async function createCoursewareArtifact(page: Page) {
   await page.getByRole('button', { name: '创建任务' }).click();
   await page.getByRole('button', { name: '确认任务信息' }).click();
   await page.getByRole('button', { name: '确认计划并执行' }).click();
+  await page.getByRole('complementary', { name: '当前任务产物' }).getByRole('button', { name: '确认课件可用于后续任务' }).click();
 }
 
 test('WorkBuddy new task at 1440x900', async ({ page }) => {

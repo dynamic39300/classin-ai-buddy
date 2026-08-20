@@ -1,13 +1,15 @@
 import type { ContextProjection, ContextProposal, ContextSnapshot, CoreContextSection } from '@domain/workbuddy/core-context';
 import type { SingleCoursewareRun } from '@domain/workbuddy/course-production';
-import type { CoursePackageRun, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
+import { getPackageApprovableArtifactIds, type CoursePackageRun, type PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import type { PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import type { ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 
 type CoursewarePresentation = Readonly<{
   id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string;
   brief: SingleCoursewareRun['brief']; plan: SingleCoursewareRun['plan']; events: SingleCoursewareRun['events'];
-  artifact: SingleCoursewareRun['artifact']; revision: number; supersededEvidence: SingleCoursewareRun['supersededEvidence'];
+  artifact: SingleCoursewareRun['artifact']; revision: number;
+  reviewStatus: SingleCoursewareRun['reviewStatus'];
+  supersededEvidence: readonly Readonly<SingleCoursewareRun['supersededEvidence'][number] & { contextLabels: readonly string[] }>[];
   allowedCommands: SingleCoursewareRun['allowedCommands']; recovery: SingleCoursewareRun['recovery'];
   showBrief: boolean; showPlan: boolean; showArtifact: boolean;
 }>;
@@ -22,11 +24,12 @@ type PackageActionPresentation = Pick<PackageProposedAction, 'id' | 'status' | '
 type CoursewareReceiptPresentation =
   | Readonly<{
     id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string;
-    status: 'success'; result: string; object: Readonly<{ id: string; version: string; label: string; returnUrl: string }>;
+    status: 'success'; result: string; truthLabel: string; object: Readonly<{ id: string; version: string; label: string; returnUrl: string }>;
   }>
   | Readonly<{
     id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string;
     status: 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout'; result: string;
+    truthLabel: string;
     recovery: 'choose-another-target' | 'compare-and-reconfirm' | 'retry'; unexecutedTarget: string;
     expectedVersion?: string; currentVersion?: string;
   }>;
@@ -48,6 +51,8 @@ export type PackageRunView = Readonly<{
   action: PackageActionPresentation | null;
   receipt: PackageReceiptPresentation | null;
   contextConfirmed: boolean;
+  retryableArtifactIds: readonly string[];
+  canProposeSave: boolean;
 }>;
 
 export type CoreContextView = Readonly<{
@@ -87,6 +92,7 @@ export function projectCoursewareRunView(
   projections: readonly ContextProjection[],
   action: ProposedAction | null,
   receipt: ExecutionReceipt | null,
+  snapshotsById: Readonly<Record<string, ContextSnapshot>>,
 ): CoursewareRunView | null {
   if (!run) return null;
   const stageProjection = {
@@ -97,8 +103,12 @@ export function projectCoursewareRunView(
   return Object.freeze({
     run: Object.freeze({
       id: run.id, title: run.title, goal: run.goal, contextSnapshotId: run.contextSnapshotId, ...stageProjection,
-      brief: run.brief, plan: run.plan, events: run.events, artifact: run.artifact, revision: run.revision,
-      supersededEvidence: run.supersededEvidence, allowedCommands: run.allowedCommands, recovery: run.recovery,
+      brief: run.brief, plan: run.plan, events: run.events, artifact: run.artifact, revision: run.revision, reviewStatus: run.reviewStatus,
+      supersededEvidence: Object.freeze(run.supersededEvidence.map((evidence) => Object.freeze({
+        ...evidence,
+        contextLabels: Object.freeze(snapshotsById[evidence.snapshotId]?.items.map(({ label }) => label) ?? []),
+      }))),
+      allowedCommands: run.allowedCommands, recovery: run.recovery,
     }),
     projections,
     action: action ? Object.freeze({
@@ -137,5 +147,7 @@ export function projectPackageRunView(
     }) : null,
     receipt: receipt ? Object.freeze({ ...receipt }) : null,
     contextConfirmed: run.contextSnapshotId !== null,
+    retryableArtifactIds: Object.freeze(run.artifacts.filter(({ state, allowedCommands }) => state === 'failed' && allowedCommands.includes('retry')).map(({ id }) => id)),
+    canProposeSave: getPackageApprovableArtifactIds(run).length > 0,
   });
 }

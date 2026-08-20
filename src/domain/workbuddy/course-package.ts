@@ -31,10 +31,9 @@ type PackageReceiptBase = Readonly<{
 }>;
 export type PackageExecutionReceipt =
   | PackageReceiptBase & Readonly<{ status: 'partial_success' | 'success'; recovery?: never; expectedVersion?: never; currentVersion?: never }>
-  | PackageReceiptBase & Readonly<{
-    status: 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout';
-    recovery: 'choose-another-target' | 'compare-and-reconfirm' | 'retry'; expectedVersion?: string; currentVersion?: string;
-  }>;
+  | PackageReceiptBase & Readonly<{ status: 'permission_denied'; recovery: 'choose-another-target'; expectedVersion?: never; currentVersion?: never }>
+  | PackageReceiptBase & Readonly<{ status: 'version_conflict'; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
+  | PackageReceiptBase & Readonly<{ status: 'recoverable_failure' | 'timeout'; recovery: 'retry'; expectedVersion?: never; currentVersion?: never }>;
 
 function artifactState(state: PackageArtifactState): Pick<PackageArtifact, 'allowedCommands' | 'recovery'> {
   switch (state) {
@@ -87,7 +86,18 @@ export function completePackageGeneration(run: CoursePackageRun, failedArtifactI
 }
 
 export function setPackageArtifactIncluded(run: CoursePackageRun, artifactId: string, included: boolean): CoursePackageRun {
-  return freezeRun({ ...run, artifacts: run.artifacts.map((item) => item.id === artifactId && !['written_back', 'failed'].includes(item.state) ? withArtifactState(item, included ? 'ready' : 'excluded') : item) });
+  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
+  const target = run.artifacts.find(({ id }) => id === artifactId);
+  if (!target || (included ? target.state !== 'excluded' : target.state !== 'ready')) return run;
+  const byId = new Map(run.artifacts.map((item) => [item.id, item]));
+  const dependsOn = (item: PackageArtifact, dependencyId: string): boolean => item.dependsOn.some((id) => id === dependencyId || Boolean(byId.get(id) && dependsOn(byId.get(id)!, dependencyId)));
+  if (included && target.dependsOn.some((id) => !['ready', 'written_back'].includes(byId.get(id)?.state ?? 'failed'))) return run;
+  return freezeRun({
+    ...run,
+    artifacts: run.artifacts.map((item) => item.id === artifactId || (!included && dependsOn(item, artifactId))
+      ? withArtifactState(item, included ? 'ready' : 'excluded')
+      : item),
+  });
 }
 
 export function retryPackageArtifact(run: CoursePackageRun, artifactId: string): CoursePackageRun {
@@ -102,6 +112,20 @@ export function markPackageArtifactsApproved(run: CoursePackageRun, selectedArti
 
 export function reopenPackageArtifacts(run: CoursePackageRun): CoursePackageRun {
   return freezeRun({ ...run, artifacts: run.artifacts.map((item) => item.state === 'approved' ? withArtifactState(item, 'ready') : item) });
+}
+
+export function getPackageApprovableArtifactIds(run: CoursePackageRun): readonly string[] {
+  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return Object.freeze([]);
+  const byId = new Map(run.artifacts.map((item) => [item.id, item]));
+  const canApprove = (item: PackageArtifact, visited = new Set<string>()): boolean => {
+    if (visited.has(item.id)) return false;
+    const nextVisited = new Set(visited).add(item.id);
+    return item.state === 'ready' && item.dependsOn.every((dependencyId) => {
+      const dependency = byId.get(dependencyId);
+      return Boolean(dependency && (dependency.state === 'written_back' || canApprove(dependency, nextVisited)));
+    });
+  };
+  return Object.freeze(run.artifacts.filter((item) => canApprove(item)).map(({ id }) => id));
 }
 
 export function applyPackageExecutionReceipt(run: CoursePackageRun, receipt: PackageExecutionReceipt): CoursePackageRun {

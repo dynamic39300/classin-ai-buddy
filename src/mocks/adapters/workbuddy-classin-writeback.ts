@@ -1,6 +1,11 @@
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import type { Approval, ExecutionReceipt, FailedExecutionReceipt, ProposedAction, SuccessfulExecutionReceipt } from '@domain/workbuddy/writeback';
 
+type FailureInput =
+  | Readonly<{ id: string; status: 'permission_denied'; result: string; recovery: 'choose-another-target' }>
+  | Readonly<{ id: string; status: 'version_conflict'; result: string; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
+  | Readonly<{ id: string; status: 'recoverable_failure' | 'timeout'; result: string; recovery: 'retry' }>;
+
 export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, WritebackScenarioController {
   private readonly receipts = new Map<string, ExecutionReceipt>();
   private readonly attempts = new Map<string, number>();
@@ -15,21 +20,32 @@ export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, Wri
     return this.scenario;
   }
 
-  private failure(action: ProposedAction, approval: Approval, receipt: Omit<FailedExecutionReceipt, 'actionId' | 'approvalId' | 'idempotencyKey' | 'executedAt' | 'unexecutedTarget'>): FailedExecutionReceipt {
-    return Object.freeze({
-      ...receipt,
+  private failure(action: ProposedAction, approval: Approval, receipt: FailureInput): FailedExecutionReceipt {
+    const common = {
+      id: receipt.id,
       actionId: action.id,
       approvalId: approval.id,
       idempotencyKey: action.idempotencyKey,
       executedAt: '2026-08-20T10:06:00+08:00',
       unexecutedTarget: action.target.unitId,
-    });
+      truthLabel: '[模拟]单课件执行回执',
+      result: receipt.result,
+    } as const;
+
+    if (receipt.status === 'version_conflict') {
+      return Object.freeze({ ...common, status: receipt.status, recovery: receipt.recovery, expectedVersion: receipt.expectedVersion, currentVersion: receipt.currentVersion });
+    }
+    if (receipt.status === 'permission_denied') {
+      return Object.freeze({ ...common, status: receipt.status, recovery: receipt.recovery });
+    }
+    return Object.freeze({ ...common, status: receipt.status, recovery: receipt.recovery });
   }
 
   private success(action: ProposedAction, approval: Approval): SuccessfulExecutionReceipt {
     return Object.freeze({
       id: 'receipt-courseware-save-1', actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
       status: 'success', executedAt: '2026-08-20T10:06:00+08:00',
+      truthLabel: '[模拟]单课件执行回执',
       object: Object.freeze({ id: 'classin-courseware-momentum-v1', version: 'v1', label: '动量守恒模型课件', returnUrl: '/teacher/classes/physics-3?course=course-momentum&unit=unit-momentum-1&activity=classin-courseware-momentum-v1&source=workbuddy' }),
       result: '课件已保存到 ClassIn 单元资料',
     });
