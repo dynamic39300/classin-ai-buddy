@@ -76,7 +76,14 @@ test('teacher prepares either approved task type with structured Core Context', 
   await expect(createTask).toBeDisabled();
 
   await page.getByRole('button', { name: '生成单个课件' }).click();
-  await expect(goal).toHaveValue('生成一份函数单调性课件，包含概念讲解、例题和课堂练习');
+  await expect(goal).toHaveValue('为高二物理 3 班设计一份动量守恒模型课件，从碰撞实验进入守恒定律');
+  await expect(createTask).toBeDisabled();
+
+  await page.getByRole('button', { name: /核心上下文/ }).click();
+  const contextPanel = page.getByRole('complementary', { name: '核心上下文' });
+  await contextPanel.getByRole('button', { name: '应用动量课程建议' }).click();
+  await contextPanel.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await contextPanel.getByRole('button', { name: '关闭核心上下文' }).click();
   await expect(createTask).toBeEnabled();
 
   await page.getByRole('button', { name: '生成课程方案包' }).click();

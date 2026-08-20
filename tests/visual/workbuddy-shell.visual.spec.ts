@@ -38,6 +38,19 @@ async function expectWorkbenchGeometry(page: Page) {
   expect(geometry.workspaceScrollWidth).toBeLessThanOrEqual(geometry.workspaceClientWidth);
 }
 
+async function createCoursewareArtifact(page: Page) {
+  await openTeacherAgent(page);
+  await page.getByRole('button', { name: /核心上下文/ }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '应用动量课程建议' }).click();
+  await context.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await context.getByRole('button', { name: '关闭核心上下文' }).click();
+  await page.getByRole('button', { name: '生成单个课件' }).click();
+  await page.getByRole('button', { name: '创建任务' }).click();
+  await page.getByRole('button', { name: '确认任务信息' }).click();
+  await page.getByRole('button', { name: '确认计划并执行' }).click();
+}
+
 test('WorkBuddy new task at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
   await expectWorkbenchGeometry(page);
@@ -63,6 +76,13 @@ test('WorkBuddy Run with one Artifact panel at 1440x900', async ({ page }) => {
   await expectWorkbenchGeometry(page);
   await expect(page.getByRole('complementary', { name: '当前任务产物' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-run-artifact-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy M4 courseware ArtifactDraft at 1440x900', async ({ page }) => {
+  await createCoursewareArtifact(page);
+  await expectWorkbenchGeometry(page);
+  await expect(page.getByRole('complementary', { name: '当前任务产物' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-m4-courseware-artifact-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy keeps embedded navigation reachable at compact desktop width', async ({ page }) => {

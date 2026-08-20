@@ -1,6 +1,8 @@
 import { createContext, useContext } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { ContextProposal, ContextSnapshot } from '@domain/workbuddy/core-context';
+import type { ContextProjection } from '@domain/workbuddy/core-context';
+import type { CoursewareBrief, SingleCoursewareRun } from '@domain/workbuddy/course-production';
 
 export type WorkBuddyWorkspace = {
   runs: readonly WorkBuddyRunViewModel[];
@@ -13,6 +15,13 @@ export type WorkBuddyWorkspace = {
   applyRecommendedContext: () => void;
   confirmCoreContext: () => void;
   resetCoreContext: () => void;
+  coursewareRun: SingleCoursewareRun | null;
+  coursewareProjection: ContextProjection | null;
+  createCoursewareTask: (goal: string) => string | null;
+  updateCoursewareTaskBrief: (patch: Partial<CoursewareBrief>) => void;
+  confirmCoursewareTaskBrief: () => void;
+  reviseCoursewareTaskBrief: () => void;
+  executeCoursewareTaskPlan: () => void;
 };
 
 export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);

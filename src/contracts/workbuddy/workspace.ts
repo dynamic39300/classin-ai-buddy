@@ -18,7 +18,7 @@ export type WorkBuddyArtifactViewModel = {
 };
 
 export type WorkBuddyRunViewModel = {
-  fixtureVersion: 'workbuddy-m3-v1';
+  fixtureVersion: 'workbuddy-m3-v1' | 'workbuddy-m4-course-production-v1';
   id: string;
   title: string;
   relativeTime: string;

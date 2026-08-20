@@ -12,19 +12,22 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
+import { CoursewareRunSurface } from './CoursewareRunSurface';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
 
 export function AiAgentWorkSurface() {
   const location = useLocation();
   const { runId, section } = useParams();
+  const { coursewareRun } = useWorkBuddyWorkspace();
 
+  if (runId && coursewareRun?.id === runId) return <CoursewareRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
   if (section && getWorkBuddyCapability(section)) return <CapabilityPlaceholder section={section} />;
   if (location.pathname.endsWith('/new')) return <NewTaskSkeleton />;
@@ -35,8 +38,9 @@ function NewTaskSkeleton() {
   const [goal, setGoal] = useState('');
   const [feedback, setFeedback] = useState('');
   const [contextPanelOpen, setContextPanelOpen] = useState(false);
+  const navigate = useNavigate();
   const contextButtonRef = useRef<HTMLButtonElement | null>(null);
-  const { contextProposal, contextSnapshot } = useWorkBuddyWorkspace();
+  const { contextProposal, contextSnapshot, createCoursewareTask } = useWorkBuddyWorkspace();
   const contextItems = contextSnapshot?.items ?? contextProposal.items.filter(({ included }) => included);
   const contextLabels = contextSnapshot
     ? ['org-classin-demo', 'physics-3', 'course-momentum', 'unit-momentum-1', 'physics-3-all']
@@ -70,7 +74,10 @@ function NewTaskSkeleton() {
               <button type="button" aria-label="添加附件" onClick={() => setFeedback('附件入口为本地 Demo，尚未上传真实文件。')}><Paperclip aria-hidden="true" size={16} /></button>
               <button ref={contextButtonRef} type="button" aria-pressed={contextPanelOpen} onClick={() => setContextPanelOpen(true)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
             </div>
-            <button className={styles.sendButton} type="button" disabled={!goal.trim()} onClick={() => setFeedback('任务已在本地 Demo 中准备创建，尚未连接真实 Agent。')}>
+            <button className={styles.sendButton} type="button" disabled={!goal.trim() || !contextSnapshot} onClick={() => {
+              const runId = createCoursewareTask(goal);
+              if (runId) navigate(`/teacher/ai-agent/runs/${runId}`);
+            }}>
               <ArrowUp aria-hidden="true" size={16} />
               <span className={styles.srOnly}>创建任务</span>
             </button>
@@ -82,7 +89,7 @@ function NewTaskSkeleton() {
         </div>
 
         <div className={styles.shortcuts} aria-label="快捷任务">
-          <button type="button" onClick={() => setGoal('生成一份函数单调性课件，包含概念讲解、例题和课堂练习')}>生成单个课件</button>
+          <button type="button" onClick={() => setGoal('为高二物理 3 班设计一份动量守恒模型课件，从碰撞实验进入守恒定律')}>生成单个课件</button>
           <button type="button" onClick={() => setGoal('从课程目标出发，生成一套包含课件、作业、测验和录播脚本的课程方案包')}>生成课程方案包</button>
           <button type="button" onClick={() => setGoal('分析高一（3）班最近一次作业，归纳共性问题并给出教学建议')}>分析班级学情</button>
         </div>

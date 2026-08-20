@@ -20,7 +20,7 @@ const SOURCE_LABELS = {
   'domain-knowledge': '受版本治理的知识',
 } as const;
 
-export function CoreContextPanel({ onClose }: { onClose: () => void }) {
+export function CoreContextPanel({ onClose, readOnly = false }: { onClose: () => void; readOnly?: boolean }) {
   const {
     contextProposal,
     contextSnapshot,
@@ -54,10 +54,10 @@ export function CoreContextPanel({ onClose }: { onClose: () => void }) {
           {contextSnapshot ? <code>{contextSnapshot.version}</code> : <small>选择建议不会自动创建任务</small>}
         </div>
 
-        <button className={styles.recommendation} type="button" onClick={applyRecommendedContext}>
+        {!readOnly ? <button className={styles.recommendation} type="button" onClick={applyRecommendedContext}>
           <Database aria-hidden="true" size={16} />
           <span><strong>应用动量课程建议</strong><small>高二物理 3 班 · 动量与碰撞 · 第一单元</small></span>
-        </button>
+        </button> : null}
 
         {CORE_CONTEXT_SECTIONS.map((section) => (
           <section className={styles.contextSection} key={section}>
@@ -83,10 +83,10 @@ export function CoreContextPanel({ onClose }: { onClose: () => void }) {
         <p className={styles.sensitiveNote}>学生姓名默认不进入普通课程生产任务；能力调用只取得最小必要的 Context Projection。</p>
       </div>
 
-      <footer className={styles.footer}>
+      {!readOnly ? <footer className={styles.footer}>
         <button type="button" onClick={resetCoreContext}><RotateCcw aria-hidden="true" size={14} />重置 M4 场景</button>
         <button className={styles.confirmButton} type="button" disabled={contextProposal.status !== 'ready_to_confirm' || Boolean(contextSnapshot)} onClick={confirmCoreContext}>确认 ContextSnapshot</button>
-      </footer>
+      </footer> : null}
     </aside>
   );
 }
