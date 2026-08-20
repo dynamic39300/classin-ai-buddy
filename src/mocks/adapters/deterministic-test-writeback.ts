@@ -4,7 +4,7 @@ import type { PackageExecutionReceipt, PackageReceiptItem } from '@domain/workbu
 import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 import {
-  assertCoursewareWritebackRequest, assertPackageWritebackRequest, cacheIdempotentReceipt,
+  assertCoursewareWritebackRequest, assertPackageWritebackRequest, bindIdempotencyKey, cacheIdempotentReceipt,
   coursewareWritebackFingerprint, packageWritebackFingerprint, readIdempotentReceipt, type IdempotencyEntry,
 } from './writeback-idempotency';
 
@@ -18,6 +18,7 @@ export class DeterministicTestWritebackAdapter implements ClassInWritebackAdapte
     const fingerprint = coursewareWritebackFingerprint(action, approval);
     const replay = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (replay) return replay;
+    bindIdempotencyKey(this.receipts, action.idempotencyKey, fingerprint);
     const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, executedAt: '2026-08-20T10:06:00+08:00', truthLabel: '[模拟]确定性测试执行回执' };
     if (this.scenario === 'permission_denied') return Object.freeze({ ...base, id: 'receipt-courseware-permission-denied-1', status: 'permission_denied', result: 'denied', recovery: 'choose-another-target', unexecutedTarget: action.target.unitId });
     const currentVersion = this.scenario === 'version_conflict'
@@ -59,6 +60,7 @@ export class DeterministicTestPackageWritebackAdapter implements PackageWritebac
     const fingerprint = packageWritebackFingerprint(action, approval, candidates);
     const replay = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (replay) return replay;
+    bindIdempotencyKey(this.receipts, action.idempotencyKey, fingerprint);
     const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, truthLabel: '[模拟]确定性测试执行回执' };
     const notExecuted = candidates.map(({ id, approvalState }) => Object.freeze({ artifactId: id, result: approvalState === 'waiting' ? 'waiting' as const : 'not_executed' as const }));
     if (this.scenario === 'permission_denied') return Object.freeze({ ...base, id: 'receipt-package-permission_denied-1', status: 'permission_denied', recovery: 'choose-another-target', result: 'denied', items: Object.freeze(notExecuted) });

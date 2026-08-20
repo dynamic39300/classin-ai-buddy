@@ -77,6 +77,36 @@ describe('Package writeback Adapter contract', () => {
   it.each([
     ['Mock', () => new MockPackageWritebackAdapter()],
     ['test', () => new DeterministicTestPackageWritebackAdapter()],
+  ] as const)('%s Adapter binds the package idempotency key on the first recoverable attempt', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    adapter.setScenario('recoverable_failure');
+    const input = approvedPackage();
+    expect(adapter.execute(input.action, input.approval, input.candidates)).toMatchObject({ status: 'recoverable_failure' });
+    const conflictingAction = {
+      ...input.action,
+      target: { ...input.action.target, unitId: 'unit-other', label: '另一个课程包目标' },
+    } as const;
+
+    expect(() => adapter.execute(conflictingAction, input.approval, input.candidates)).toThrow(/Idempotency key/);
+  });
+
+  it.each([
+    ['Mock', () => new MockPackageWritebackAdapter()],
+    ['test', () => new DeterministicTestPackageWritebackAdapter()],
+  ] as const)('%s Adapter replays a semantically identical package request regardless of collection order', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    adapter.setScenario('success');
+    const input = approvedPackage();
+    const first = adapter.execute(input.action, input.approval, input.candidates);
+    const reorderedAction = { ...input.action, artifactRefs: [...input.action.artifactRefs].reverse() } as const;
+    const reorderedCandidates = [...input.candidates].reverse();
+
+    expect(adapter.execute(reorderedAction, input.approval, reorderedCandidates)).toBe(first);
+  });
+
+  it.each([
+    ['Mock', () => new MockPackageWritebackAdapter()],
+    ['test', () => new DeterministicTestPackageWritebackAdapter()],
   ] as const)('%s Adapter validates approval before replaying a cached package receipt', (_name, createAdapter) => {
     const adapter = createAdapter();
     adapter.setScenario('success');

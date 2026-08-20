@@ -44,6 +44,35 @@ describe('ClassIn writeback Adapter contract', () => {
   it.each([
     ['Mock', () => new MockClassInWritebackAdapter()],
     ['deterministic test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter binds the idempotency key on the first recoverable attempt', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    adapter.setScenario('recoverable_failure');
+    const approved = approvedAction();
+    expect(adapter.execute(approved.action, approved.approval)).toMatchObject({ status: 'recoverable_failure' });
+    const conflictingAction = {
+      ...approved.action,
+      target: { ...approved.action.target, unitId: 'unit-other', label: '另一个写回目标' },
+    } as const;
+
+    expect(() => adapter.execute(conflictingAction, approved.approval)).toThrow(/Idempotency key/);
+  });
+
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['deterministic test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter replays a semantically identical request regardless of object insertion order', (_name, createAdapter) => {
+    const adapter = createAdapter();
+    const approved = approvedAction();
+    const first = adapter.execute(approved.action, approved.approval);
+    const reorderedAction = Object.fromEntries(Object.entries(approved.action).reverse()) as typeof approved.action;
+    const reorderedApproval = Object.fromEntries(Object.entries(approved.approval).reverse()) as typeof approved.approval;
+
+    expect(adapter.execute(reorderedAction, reorderedApproval)).toBe(first);
+  });
+
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['deterministic test', () => new DeterministicTestWritebackAdapter()],
   ] as const)('%s Adapter validates approval before replaying a cached receipt', (_name, createAdapter) => {
     const adapter = createAdapter();
     const approved = approvedAction();

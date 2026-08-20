@@ -1,7 +1,7 @@
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import type { Approval, ExecutionReceipt, FailedExecutionReceipt, ProposedAction, SuccessfulExecutionReceipt } from '@domain/workbuddy/writeback';
 import {
-  assertCoursewareWritebackRequest, cacheIdempotentReceipt, coursewareWritebackFingerprint, readIdempotentReceipt,
+  assertCoursewareWritebackRequest, bindIdempotencyKey, cacheIdempotentReceipt, coursewareWritebackFingerprint, readIdempotentReceipt,
   type IdempotencyEntry,
 } from './writeback-idempotency';
 
@@ -67,6 +67,7 @@ export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, Wri
     const fingerprint = coursewareWritebackFingerprint(action, approval);
     const existing = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (existing) return existing;
+    bindIdempotencyKey(this.receipts, action.idempotencyKey, fingerprint);
     if (action.permission !== 'allowed' || this.scenario === 'permission_denied') {
       const denied = this.failure(action, approval, { id: 'receipt-courseware-permission-denied-1', status: 'permission_denied', result: '当前教师无权写入所选位置；隐藏对象详情不会显示。', recovery: 'choose-another-target' });
       return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, denied);

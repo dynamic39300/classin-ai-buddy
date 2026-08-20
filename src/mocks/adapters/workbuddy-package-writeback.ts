@@ -7,7 +7,7 @@ import type {
 import type { PackageExecutionReceipt, PackageReceiptItem } from '@domain/workbuddy/course-package';
 import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import {
-  assertPackageWritebackRequest, cacheIdempotentReceipt, packageWritebackFingerprint, readIdempotentReceipt,
+  assertPackageWritebackRequest, bindIdempotencyKey, cacheIdempotentReceipt, packageWritebackFingerprint, readIdempotentReceipt,
   type IdempotencyEntry,
 } from './writeback-idempotency';
 
@@ -30,6 +30,7 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
     const fingerprint = packageWritebackFingerprint(action, approval, candidates);
     const existing = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (existing) return existing;
+    bindIdempotencyKey(this.receipts, action.idempotencyKey, fingerprint);
 
     if (this.scenario === 'permission_denied' || action.permission === 'denied') {
       return this.failure(action, approval, candidates, 'permission_denied', '当前教师无权写入所选课程单元。');
