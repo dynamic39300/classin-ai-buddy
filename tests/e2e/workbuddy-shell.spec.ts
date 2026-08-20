@@ -87,7 +87,7 @@ test('teacher prepares either approved task type with structured Core Context', 
   await expect(createTask).toBeEnabled();
 
   await page.getByRole('button', { name: '生成课程方案包' }).click();
-  await expect(goal).toHaveValue('从课程目标出发，生成一套包含课件、作业、测验和录播脚本的课程方案包');
+  await expect(goal).toHaveValue('从动量单元课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包');
 
   await page.getByRole('button', { name: '添加附件' }).click();
   await expect(page.getByRole('status')).toContainText('尚未上传真实文件');

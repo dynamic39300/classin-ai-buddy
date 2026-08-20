@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
+import type { PackageWritebackAdapter } from '@contracts/workbuddy/package-writeback';
 import {
   confirmContext,
   createContextProposal,
@@ -8,6 +9,7 @@ import {
   projectContext,
   type ContextSnapshot,
   type CoreContextItem,
+  type WorkBuddyTaskType,
 } from '@domain/workbuddy/core-context';
 import {
   confirmCoursewareBrief,
@@ -18,6 +20,7 @@ import {
   type SingleCoursewareRun,
 } from '@domain/workbuddy/course-production';
 import { approveAction, createCoursewareSaveAction, rejectAction, type Approval, type ExecutionReceipt, type ProposedAction } from '@domain/workbuddy/writeback';
+import { createCoursePackageRun, generatePackageArtifacts, retryPackageArtifact, setPackageArtifactIncluded, type CoursePackageRun, type PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import { WorkBuddyWorkspaceContext, type WorkBuddyWorkspace } from './workbuddy-workspace';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
@@ -26,6 +29,7 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   recommendedContextItemIds: readonly string[];
   writebackAdapter: ClassInWritebackAdapter;
   writebackScenarioController: WritebackScenarioController;
+  packageWritebackAdapter: PackageWritebackAdapter;
   children: ReactNode;
 }>;
 
@@ -48,7 +52,7 @@ function projectCoursewareRunIntoHistory(current: readonly WorkBuddyRunViewModel
   } : item);
 }
 
-export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, recommendedContextItemIds, writebackAdapter, writebackScenarioController, children }: WorkBuddyWorkspaceProviderProps) {
+export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, recommendedContextItemIds, writebackAdapter, writebackScenarioController, packageWritebackAdapter, children }: WorkBuddyWorkspaceProviderProps) {
   const [runs, setRuns] = useState<readonly WorkBuddyRunViewModel[]>(initialRuns);
   const [contextProposal, setContextProposal] = useState(() => createContextProposal(initialContextItems, 'single-courseware'));
   const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(null);
@@ -57,6 +61,9 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
   const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(null);
   const [coursewareReceipt, setCoursewareReceipt] = useState<ExecutionReceipt | null>(null);
   const [writebackScenario, setWritebackScenarioState] = useState<WritebackScenario>(() => writebackScenarioController.getScenario());
+  const [taskType, setTaskTypeState] = useState<WorkBuddyTaskType>('single-courseware');
+  const [packageRun, setPackageRun] = useState<CoursePackageRun | null>(null);
+  const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(null);
 
   const value = useMemo<WorkBuddyWorkspace>(() => ({
     runs,
@@ -72,7 +79,7 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
     },
     confirmCoreContext: () => {
       const result = confirmContext(contextProposal, {
-        snapshotId: 'context-snapshot-courseware-1',
+        snapshotId: contextProposal.taskType === 'course-package' ? 'context-snapshot-package-1' : 'context-snapshot-courseware-1',
         confirmedAt: '2026-08-20T10:00:00+08:00',
       });
       if (result.ok) setContextSnapshot(result.snapshot);
@@ -143,7 +150,51 @@ export function WorkBuddyWorkspaceProvider({ initialRuns, initialContextItems, r
       setWritebackScenarioState(scenario);
       setCoursewareReceipt(null);
     },
-  }), [contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, recommendedContextItemIds, runs, writebackAdapter, writebackScenario, writebackScenarioController]);
+    taskType,
+    setTaskType: (nextTaskType) => {
+      if (nextTaskType === taskType) return;
+      setTaskTypeState(nextTaskType);
+      setContextSnapshot(null);
+      setContextProposal(createContextProposal(initialContextItems, nextTaskType));
+    },
+    packageRun,
+    packageReceipt,
+    createPackageTask: (goal) => {
+      if (!contextSnapshot || taskType !== 'course-package' || !goal.trim()) return null;
+      const run = createCoursePackageRun(goal.trim(), contextSnapshot.id);
+      setPackageRun(run);
+      setPackageReceipt(null);
+      return run.id;
+    },
+    generatePackage: () => setPackageRun((current) => current ? generatePackageArtifacts(current) : current),
+    setPackageItemIncluded: (artifactId, included) => setPackageRun((current) => current ? setPackageArtifactIncluded(current, artifactId, included) : current),
+    executePackageSave: () => setPackageRun((current) => {
+      if (!current) return current;
+      const result = packageWritebackAdapter.execute(current);
+      setPackageReceipt(result.receipt);
+      return result.run;
+    }),
+    retryPackageItem: (artifactId) => setPackageRun((current) => current ? retryPackageArtifact(current, artifactId) : current),
+    derivePackageFromCourseware: () => {
+      if (!coursewareRun?.artifact || !contextSnapshot) return null;
+      const derivedSnapshot = Object.freeze({
+        ...contextSnapshot,
+        id: 'context-snapshot-derived-package-1',
+        taskType: 'course-package' as const,
+        confirmedAt: '2026-08-20T10:10:00+08:00',
+        items: Object.freeze(contextSnapshot.items.map((item) => Object.freeze({ ...item }))),
+      });
+      const run = createCoursePackageRun('基于已审阅课件生成配套作业、测验和录播脚本', derivedSnapshot.id, {
+        parentRunRef: coursewareRun.id,
+        sourceArtifactRef: Object.freeze({ id: coursewareRun.artifact.id, version: coursewareRun.artifact.version }),
+      });
+      setTaskTypeState('course-package');
+      setContextSnapshot(derivedSnapshot);
+      setPackageRun(run);
+      setPackageReceipt(null);
+      return run.id;
+    },
+  }), [contextProposal, contextSnapshot, coursewareAction, coursewareApproval, coursewareReceipt, coursewareRun, initialContextItems, packageReceipt, packageRun, packageWritebackAdapter, recommendedContextItemIds, runs, taskType, writebackAdapter, writebackScenario, writebackScenarioController]);
 
   return <WorkBuddyWorkspaceContext.Provider value={value}>{children}</WorkBuddyWorkspaceContext.Provider>;
 }

@@ -1,6 +1,6 @@
 import { CheckCircle2, FileText, PanelRight, Presentation, ShieldCheck, Sparkles } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
@@ -24,7 +24,9 @@ export function CoursewareRunSurface() {
     executeApprovedCoursewareSave,
     writebackScenario,
     setWritebackScenario,
+    derivePackageFromCourseware,
   } = useWorkBuddyWorkspace();
+  const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<ActivePanel>('none');
 
   if (!run) return null;
@@ -96,7 +98,7 @@ export function CoursewareRunSurface() {
             <strong className={styles.truthLabel}>{artifact.truthLabel}</strong>
             <label className={styles.scenarioPicker}>Mock 写回场景<select aria-label="Mock 写回场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">成功</option><option value="permission_denied">权限拒绝</option><option value="version_conflict">版本冲突</option><option value="recoverable_failure">临时失败后可重试</option></select></label>
           </div>
-          <footer><button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button></footer>
+          <footer><button type="button" onClick={() => { const runId = derivePackageFromCourseware(); if (runId) navigate(`/teacher/ai-agent/runs/${runId}`); }}>基于此课件生成课程方案包</button><button type="button" onClick={() => { proposeCoursewareSave(); setActivePanel('action'); }}>保存到 ClassIn</button></footer>
         </aside>
       ) : null}
 

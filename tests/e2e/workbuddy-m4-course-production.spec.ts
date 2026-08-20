@@ -161,3 +161,62 @@ test('teacher can inspect writeback failures and safely retry a recoverable acti
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
 });
+
+test('teacher writes a course package with object-level partial results', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /老师视角/ }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
+  await page.getByRole('button', { name: '生成课程方案包' }).click();
+  await page.getByRole('button', { name: /核心上下文/ }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '应用动量课程建议' }).click();
+  await context.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await context.getByRole('button', { name: '关闭核心上下文' }).click();
+  await page.getByRole('button', { name: '创建任务' }).click();
+  await expect(page).toHaveURL(/run-m4-course-package/);
+
+  await expect(page.getByRole('heading', { name: '确认课程方案包范围' })).toBeVisible();
+  for (const item of ['动量守恒模型课件', '动量守恒分层作业', '动量与碰撞随堂测验', '碰撞实验录播脚本']) await expect(page.getByText(item, { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '确认产物清单并生成' }).click();
+  await expect(page.getByRole('heading', { name: 'Artifact Graph' })).toBeVisible();
+  await expect(page.getByText('生成失败', { exact: true })).toBeVisible();
+
+  const navigator = page.getByRole('complementary', { name: '课程方案包导航' });
+  await navigator.getByRole('button', { name: '批量审批可用项' }).click();
+  const approval = page.getByRole('complementary', { name: '课程方案包审批' });
+  await approval.getByRole('checkbox', { name: /动量与碰撞随堂测验/ }).uncheck();
+  await approval.getByRole('button', { name: '批准并执行' }).click();
+  let receipt = page.getByRole('complementary', { name: '课程方案包 ExecutionReceipt' });
+  await expect(receipt.getByText('部分成功', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('succeeded', { exact: true })).toHaveCount(2);
+  await expect(receipt.getByText('not_executed', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('failed', { exact: true })).toBeVisible();
+
+  await receipt.getByRole('button', { name: '重试失败项' }).click();
+  await page.getByRole('complementary', { name: '课程方案包导航' }).getByRole('button', { name: '批量审批可用项' }).click();
+  await page.getByRole('complementary', { name: '课程方案包审批' }).getByRole('button', { name: '批准并执行' }).click();
+  receipt = page.getByRole('complementary', { name: '课程方案包 ExecutionReceipt' });
+  await expect(receipt.getByText('package-recording', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('waiting', { exact: true })).toHaveCount(2);
+  await expect(receipt.getByText('succeeded', { exact: true })).toHaveCount(1);
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
+});
+
+test('teacher derives an independent package Run from the reviewed courseware', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createCoursewareArtifact(page);
+  await page.getByRole('complementary', { name: '当前任务产物' }).getByRole('button', { name: '基于此课件生成课程方案包' }).click();
+  await expect(page).toHaveURL(/run-m4-course-package/);
+  await expect(page.getByText('parentRunRef · run-m4-courseware', { exact: true })).toBeVisible();
+  await expect(page.getByText('sourceArtifactRef · artifact-courseware-momentum-v1 · v1', { exact: true })).toBeVisible();
+  await expect(page.getByText('独立 Task Type · course-package · context-snapshot-derived-package-1', { exact: true })).toBeVisible();
+  await expect(page.getByText('不会继承原任务未使用的隐式 Context')).toBeVisible();
+  await page.getByRole('button', { name: '确认派生 Context 与产物清单' }).click();
+  await page.getByRole('link', { name: '返回源课件 Run' }).click();
+  await expect(page).toHaveURL(/run-m4-courseware/);
+  await expect(page.getByRole('heading', { name: '课件初稿已生成' })).toBeVisible();
+  await page.getByRole('button', { name: '查看产物' }).click();
+  await expect(page.getByText('artifact-courseware-momentum-v1', { exact: true })).toBeVisible();
+});

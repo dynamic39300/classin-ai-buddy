@@ -2,8 +2,9 @@ import { createContext, useContext } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { ContextProposal, ContextSnapshot } from '@domain/workbuddy/core-context';
-import type { ContextProjection } from '@domain/workbuddy/core-context';
+import type { ContextProjection, WorkBuddyTaskType } from '@domain/workbuddy/core-context';
 import type { CoursewareBrief, SingleCoursewareRun } from '@domain/workbuddy/course-production';
+import type { CoursePackageRun, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 
 export type WorkBuddyWorkspace = {
@@ -33,6 +34,16 @@ export type WorkBuddyWorkspace = {
   executeApprovedCoursewareSave: () => void;
   writebackScenario: WritebackScenario;
   setWritebackScenario: (scenario: WritebackScenario) => void;
+  taskType: WorkBuddyTaskType;
+  setTaskType: (taskType: WorkBuddyTaskType) => void;
+  packageRun: CoursePackageRun | null;
+  packageReceipt: PackageExecutionReceipt | null;
+  createPackageTask: (goal: string) => string | null;
+  generatePackage: () => void;
+  setPackageItemIncluded: (artifactId: string, included: boolean) => void;
+  executePackageSave: () => void;
+  retryPackageItem: (artifactId: string) => void;
+  derivePackageFromCourseware: () => string | null;
 };
 
 export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);

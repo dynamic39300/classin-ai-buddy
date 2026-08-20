@@ -107,6 +107,22 @@ test('WorkBuddy M4 writeback conflict at 1440x900', async ({ page }) => {
   await expect(page).toHaveScreenshot('workbuddy-m4-writeback-conflict-1440x900.png', { fullPage: true });
 });
 
+test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) => {
+  await openTeacherAgent(page);
+  await page.getByRole('button', { name: '生成课程方案包' }).click();
+  await page.getByRole('button', { name: /核心上下文/ }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '应用动量课程建议' }).click();
+  await context.getByRole('button', { name: '确认 ContextSnapshot' }).click();
+  await context.getByRole('button', { name: '关闭核心上下文' }).click();
+  await page.getByRole('button', { name: '创建任务' }).click();
+  await page.getByRole('button', { name: '确认产物清单并生成' }).click();
+  await page.getByRole('complementary', { name: '课程方案包导航' }).getByRole('button', { name: '批量审批可用项' }).click();
+  await page.getByRole('complementary', { name: '课程方案包审批' }).getByRole('button', { name: '批准并执行' }).click();
+  await expect(page.getByText('部分成功', { exact: true })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-m4-course-package-partial-1440x900.png', { fullPage: true });
+});
+
 test('WorkBuddy keeps embedded navigation reachable at compact desktop width', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 768 });
   await page.goto('/');
