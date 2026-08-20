@@ -15,7 +15,7 @@ function approvedPackage() {
   const approvedRun = markPackageArtifactsApproved(run, approved.action.artifactRefs.map(({ id }) => id));
   const candidates = approvedRun.artifacts.map(({ id, kind, version, state }) => ({
     id, kind, version, runRef: approved.action.runRef, contextSnapshotId: approved.action.contextSnapshotId,
-    approvalState: state === 'approved' || state === 'written_back' ? state : 'not_selected' as const,
+    approvalState: state === 'approved' || state === 'written_back' || state === 'waiting' ? state : 'not_selected' as const,
   }));
   return { run: approvedRun, candidates, ...approved };
 }
@@ -69,6 +69,26 @@ describe('Package writeback Adapter contract', () => {
     const recovered = adapter.execute(input.action, input.approval, input.candidates);
     expect(recovered.status).toBe('success');
     expect(adapter.execute(input.action, input.approval, input.candidates)).toBe(recovered);
+  });
+
+  it.each([
+    ['Mock', () => new MockPackageWritebackAdapter()],
+    ['test', () => new DeterministicTestPackageWritebackAdapter()],
+  ] as const)('%s Adapter preserves dependency waiting as an object-level not-executed result', (_name, createAdapter) => {
+    const input = approvedPackage();
+    const waitingId = 'package-recording';
+    const action = {
+      ...input.action,
+      id: 'action-package-with-waiting-1',
+      idempotencyKey: 'workbuddy-package-with-waiting-1',
+      artifactRefs: input.action.artifactRefs.filter(({ id }) => id !== waitingId),
+    } as const;
+    const approval = { ...input.approval, actionId: action.id } as const;
+    const candidates = input.candidates.map((candidate) => candidate.id === waitingId ? { ...candidate, approvalState: 'waiting' as const } : candidate);
+
+    const receipt = createAdapter().execute(action, approval, candidates);
+    expect(receipt).toMatchObject({ status: 'partial_success' });
+    expect(receipt.items.find(({ artifactId }) => artifactId === waitingId)).toEqual({ artifactId: waitingId, result: 'waiting' });
   });
 
   it.each([

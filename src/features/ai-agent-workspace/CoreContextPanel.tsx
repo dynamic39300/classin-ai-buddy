@@ -72,7 +72,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
           </section>
         ))}
 
-        <p className={styles.sensitiveNote}>学生姓名默认不进入普通课程生产任务；能力调用只取得最小必要的 Context Projection。</p>
+        <p className={styles.sensitiveNote}>学生姓名默认不进入普通课程生产任务；每项能力只取得完成当前步骤所需的最小上下文。</p>
       </div>
 
       {!readOnly ? <footer className={styles.footer}>

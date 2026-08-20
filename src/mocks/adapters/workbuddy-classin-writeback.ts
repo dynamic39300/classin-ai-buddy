@@ -42,11 +42,18 @@ export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, Wri
   }
 
   private success(action: ProposedAction, approval: Approval): SuccessfulExecutionReceipt {
+    const objectId = action.artifactRef.id.replace(/^artifact-/, 'classin-');
+    const courseLabel = action.target.label.split(' / ')[1] ?? '课程';
     return Object.freeze({
-      id: 'receipt-courseware-save-1', actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
+      id: action.id.replace(/^action-/, 'receipt-'), actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
       status: 'success', executedAt: '2026-08-20T10:06:00+08:00',
       truthLabel: '[模拟]单课件执行回执',
-      object: Object.freeze({ id: 'classin-courseware-momentum-v1', version: 'v1', label: '动量守恒模型课件', returnUrl: '/teacher/classes/physics-3?course=course-momentum&unit=unit-momentum-1&activity=classin-courseware-momentum-v1&source=workbuddy' }),
+      object: Object.freeze({
+        id: objectId,
+        version: action.artifactRef.version,
+        label: `${courseLabel}课件`,
+        returnUrl: `/teacher/classes/${action.target.classId}?course=${action.target.courseId}&unit=${action.target.unitId}&activity=${objectId}&source=workbuddy`,
+      }),
       result: '课件已保存到 ClassIn 单元资料',
     });
   }
@@ -62,7 +69,9 @@ export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, Wri
       this.receipts.set(action.idempotencyKey, denied);
       return denied;
     }
-    const currentTargetVersion = this.scenario === 'version_conflict' ? 'unit-momentum-1-v2' : 'unit-momentum-1-v1';
+    const currentTargetVersion = this.scenario === 'version_conflict'
+      ? action.target.expectedVersion.replace(/-v\d+$/, '-v2')
+      : action.target.expectedVersion;
     if (action.target.expectedVersion !== currentTargetVersion) {
       const conflict = this.failure(action, approval, { id: 'receipt-courseware-version-conflict-1', status: 'version_conflict', result: `目标版本已从 ${action.target.expectedVersion} 更新为 ${currentTargetVersion}`, recovery: 'compare-and-reconfirm', expectedVersion: action.target.expectedVersion, currentVersion: currentTargetVersion });
       this.receipts.set(action.idempotencyKey, conflict);

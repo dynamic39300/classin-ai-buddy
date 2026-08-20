@@ -24,18 +24,20 @@ export type CoursePackageRun = CoursePackageRunBase & (
 export type CoursePackageDefinition = Readonly<{
   id: string; fixtureVersion: 'workbuddy-m4-course-production-v1'; title: string; artifacts: readonly PackageArtifactDefinition[];
 }>;
-export type PackageReceiptItem = Readonly<{
-  artifactId: string; result: 'succeeded' | 'failed' | 'not_executed' | 'already_executed'; objectId?: string;
-}>;
+type PackageSucceededReceiptItem = Readonly<{ artifactId: string; result: 'succeeded'; objectId: string }>;
+type PackageFailedReceiptItem = Readonly<{ artifactId: string; result: 'failed'; objectId?: never }>;
+type PackageNotExecutedReceiptItem = Readonly<{ artifactId: string; result: 'not_executed'; objectId?: never }>;
+type PackageWaitingReceiptItem = Readonly<{ artifactId: string; result: 'waiting'; objectId?: never }>;
+export type PackageReceiptItem = PackageSucceededReceiptItem | PackageFailedReceiptItem | PackageNotExecutedReceiptItem | PackageWaitingReceiptItem;
 type PackageReceiptBase = Readonly<{
-  id: string; actionId: string; approvalId: string; idempotencyKey: string; items: readonly PackageReceiptItem[];
-  truthLabel: string; result: string;
+  id: string; actionId: string; approvalId: string; idempotencyKey: string; truthLabel: string; result: string;
 }>;
 export type PackageExecutionReceipt =
-  | PackageReceiptBase & Readonly<{ status: 'partial_success' | 'success'; recovery?: never; expectedVersion?: never; currentVersion?: never }>
-  | PackageReceiptBase & Readonly<{ status: 'permission_denied'; recovery: 'choose-another-target'; expectedVersion?: never; currentVersion?: never }>
-  | PackageReceiptBase & Readonly<{ status: 'version_conflict'; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
-  | PackageReceiptBase & Readonly<{ status: 'recoverable_failure' | 'timeout'; recovery: 'retry'; expectedVersion?: never; currentVersion?: never }>;
+  | PackageReceiptBase & Readonly<{ status: 'success'; items: readonly (PackageSucceededReceiptItem | PackageNotExecutedReceiptItem)[]; recovery?: never; expectedVersion?: never; currentVersion?: never }>
+  | PackageReceiptBase & Readonly<{ status: 'partial_success'; items: readonly PackageReceiptItem[]; recovery?: never; expectedVersion?: never; currentVersion?: never }>
+  | PackageReceiptBase & Readonly<{ status: 'permission_denied'; items: readonly (PackageNotExecutedReceiptItem | PackageWaitingReceiptItem)[]; recovery: 'choose-another-target'; expectedVersion?: never; currentVersion?: never }>
+  | PackageReceiptBase & Readonly<{ status: 'version_conflict'; items: readonly (PackageNotExecutedReceiptItem | PackageWaitingReceiptItem)[]; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
+  | PackageReceiptBase & Readonly<{ status: 'recoverable_failure' | 'timeout'; items: readonly (PackageNotExecutedReceiptItem | PackageWaitingReceiptItem)[]; recovery: 'retry'; expectedVersion?: never; currentVersion?: never }>;
 
 function artifactState(state: PackageArtifactState): Pick<PackageArtifact, 'allowedCommands' | 'recovery'> {
   switch (state) {
@@ -168,7 +170,22 @@ export function applyPackageExecutionReceipt(
     || receipt.actionId !== action.id || receipt.approvalId !== approval.id || receipt.idempotencyKey !== action.idempotencyKey) return run;
   const approvedRefs = new Map(action.artifactRefs.map(({ id, version }) => [id, version]));
   if (run.artifacts.some((item) => item.state === 'approved' && approvedRefs.get(item.id) !== item.version)) return run;
+  if (receipt.items.length !== run.artifacts.length || new Set(receipt.items.map(({ artifactId }) => artifactId)).size !== run.artifacts.length) return run;
   const results = new Map(receipt.items.map((item) => [item.artifactId, item.result]));
+  const itemsMatchRun = run.artifacts.every((item) => {
+    const result = results.get(item.id);
+    if (!result) return false;
+    if (item.state === 'approved') return result === 'succeeded' || result === 'failed' || result === 'not_executed';
+    if (item.state === 'waiting') return result === 'waiting';
+    return result === 'not_executed';
+  });
+  if (!itemsMatchRun) return run;
+  const hasSucceeded = receipt.items.some(({ result }) => result === 'succeeded');
+  const hasIncomplete = receipt.items.some(({ result }) => result === 'failed' || result === 'waiting');
+  const selectedResultsSucceeded = action.artifactRefs.every(({ id }) => results.get(id) === 'succeeded');
+  if (receipt.status === 'success' && (!selectedResultsSucceeded || hasIncomplete)) return run;
+  if (receipt.status === 'partial_success' && (!hasSucceeded || !hasIncomplete)) return run;
+  if (!['success', 'partial_success'].includes(receipt.status) && receipt.items.some(({ result }) => result === 'succeeded' || result === 'failed')) return run;
   const artifacts = run.artifacts.map((item) => {
     const result = results.get(item.id);
     if (result === 'succeeded' && item.state === 'approved' && approvedRefs.get(item.id) === item.version) return withArtifactState(item, 'written_back');

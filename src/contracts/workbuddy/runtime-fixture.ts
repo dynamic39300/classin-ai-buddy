@@ -27,6 +27,9 @@ export type WorkBuddyRuntimeFixture = Readonly<{
     selectedContextItemIds: readonly string[];
     reason: string;
     goal: string;
+    actionId: string;
+    approvalId: string;
+    idempotencyKey: string;
     artifact: Readonly<{ id: string; version: string; title: string }>;
     target: Readonly<{ classId: string; courseId: string; unitId: string; expectedVersion: string; label: string }>;
     previousScopeLabel: string;

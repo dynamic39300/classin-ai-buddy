@@ -39,11 +39,7 @@ type CoursewareReceiptPresentation =
     id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string;
     status: 'recoverable_failure' | 'timeout'; result: string; truthLabel: string; recovery: 'retry'; unexecutedTarget: string;
   }>;
-type PackageReceiptPresentation = Readonly<{
-  id: string; actionId: string; approvalId: string; idempotencyKey: string; status: PackageExecutionReceipt['status'];
-  items: PackageExecutionReceipt['items']; truthLabel: string; recovery?: PackageExecutionReceipt['recovery']; result: string;
-  expectedVersion?: string; currentVersion?: string;
-}>;
+type PackageReceiptPresentation = PackageExecutionReceipt;
 
 export type CoursewareRunView = Readonly<{
   run: CoursewarePresentation;

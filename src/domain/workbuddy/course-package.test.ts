@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WORKBUDDY_COURSE_PACKAGE_DEFINITION, WORKBUDDY_PACKAGE_ACTION_INPUT } from '@mocks/scenarios/workbuddy-course-production';
 import { createPackageSaveAction, decidePackageAction } from './package-writeback';
+import type { PackageExecutionReceipt } from './course-package';
 import {
   applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
   markPackageArtifactsApproved, retryPackageArtifact, setPackageArtifactIncluded,
@@ -54,5 +55,8 @@ describe('course-package Artifact Graph', () => {
     expect(applied.artifacts.map(({ state }) => state)).toEqual(['written_back', 'failed', 'excluded', 'failed']);
     expect(retryPackageArtifact(applied, 'package-homework').artifacts[1]?.state).toBe('ready');
     expect(applyPackageExecutionReceipt(approved, { ...decision.action, runRef: 'foreign-run' }, decision.approval, receipt)).toBe(approved);
+
+    const contradictorySuccess = { ...receipt, status: 'success', items: receipt.items } as unknown as PackageExecutionReceipt;
+    expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, contradictorySuccess)).toBe(approved);
   });
 });

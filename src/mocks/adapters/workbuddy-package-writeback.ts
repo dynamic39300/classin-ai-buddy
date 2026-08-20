@@ -60,22 +60,21 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
 
     const selected = new Set(action.artifactRefs.map(({ id }) => id));
     const items: PackageReceiptItem[] = candidates.map((item) => {
-      if (item.approvalState === 'written_back') return Object.freeze({ artifactId: item.id, result: 'already_executed', objectId: `classin-${item.id}` });
+      if (item.approvalState === 'waiting') return Object.freeze({ artifactId: item.id, result: 'waiting' });
+      if (item.approvalState === 'written_back') return Object.freeze({ artifactId: item.id, result: 'not_executed' });
       if (item.approvalState === 'not_selected' || !selected.has(item.id)) return Object.freeze({ artifactId: item.id, result: 'not_executed' });
       if (this.scenario === 'partial_success' && item.kind === 'recording-script') return Object.freeze({ artifactId: item.id, result: 'failed' });
       return Object.freeze({ artifactId: item.id, result: 'succeeded', objectId: `classin-${item.id}` });
     });
-    const status = items.every(({ result }) => result === 'succeeded' || result === 'already_executed' || result === 'not_executed') ? 'success' : 'partial_success';
-    const receipt = Object.freeze({
-      id: status === 'success' ? 'receipt-package-success-1' : 'receipt-package-partial-1',
+    const common = {
       actionId: action.id,
       approvalId: approval.id,
       idempotencyKey: action.idempotencyKey,
-      status,
-      items: Object.freeze(items),
-      result: status === 'success' ? '已执行所有获批对象' : '部分对象执行失败，成功对象不会重复执行',
       truthLabel: '[模拟]课程方案包执行回执',
-    } satisfies PackageExecutionReceipt);
+    } as const;
+    const receipt: PackageExecutionReceipt = items.every((item): item is Extract<PackageReceiptItem, { result: 'succeeded' | 'not_executed' }> => item.result === 'succeeded' || item.result === 'not_executed')
+      ? Object.freeze({ ...common, id: 'receipt-package-success-1', status: 'success', items: Object.freeze(items), result: '已执行所有获批对象' })
+      : Object.freeze({ ...common, id: 'receipt-package-partial-1', status: 'partial_success', items: Object.freeze(items), result: '部分对象执行失败或等待依赖，成功对象不会重复执行' });
     this.receipts.set(action.idempotencyKey, receipt);
     return receipt;
   }
@@ -91,7 +90,7 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
   ): PackageExecutionReceipt {
     const base = {
       id: `receipt-package-${status}-1`, actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
-      result, items: Object.freeze(candidates.map(({ id }) => Object.freeze({ artifactId: id, result: 'not_executed' as const }))),
+      result, items: Object.freeze(candidates.map(({ id, approvalState }) => Object.freeze({ artifactId: id, result: approvalState === 'waiting' ? 'waiting' as const : 'not_executed' as const }))),
       truthLabel: '[模拟]课程方案包执行回执',
     };
     if (status === 'permission_denied') return Object.freeze({ ...base, status, recovery: 'choose-another-target' as const });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { approveAction, createCoursewareSaveAction } from '@domain/workbuddy/writeback';
 import { MockClassInWritebackAdapter } from '@mocks/adapters/workbuddy-classin-writeback';
 import { DeterministicTestWritebackAdapter } from '@mocks/adapters/deterministic-test-writeback';
-import { WORKBUDDY_COURSEWARE_SAVE_ACTION } from '@mocks/scenarios/workbuddy-course-production';
+import { WORKBUDDY_COURSEWARE_SAVE_ACTION, WORKBUDDY_RUNTIME_FIXTURE } from '@mocks/scenarios/workbuddy-course-production';
 
 describe('ClassIn writeback Adapter contract', () => {
   function approvedAction() {
@@ -24,6 +24,32 @@ describe('ClassIn writeback Adapter contract', () => {
 
     expect(first).toBe(replay);
     expect(first).toMatchObject({ status: 'success', id: 'receipt-courseware-save-1', object: { id: 'classin-courseware-momentum-v1', version: 'v1' } });
+  });
+
+  it.each([
+    ['Mock', () => new MockClassInWritebackAdapter()],
+    ['deterministic test', () => new DeterministicTestWritebackAdapter()],
+  ] as const)('%s Adapter returns the replanned target object instead of the superseded momentum object', (_name, createAdapter) => {
+    const proposed = createCoursewareSaveAction({
+      ...WORKBUDDY_COURSEWARE_SAVE_ACTION,
+      id: 'action-courseware-wave-save-1',
+      contextSnapshotId: WORKBUDDY_RUNTIME_FIXTURE.snapshot.replannedCoursewareId,
+      artifactId: WORKBUDDY_RUNTIME_FIXTURE.replan.artifact.id,
+      artifactVersion: WORKBUDDY_RUNTIME_FIXTURE.replan.artifact.version,
+      target: WORKBUDDY_RUNTIME_FIXTURE.replan.target,
+      idempotencyKey: 'workbuddy-courseware-wave-save-1',
+    });
+    const approved = approveAction(proposed, 'approval-courseware-wave-save-1', '2026-08-20T10:25:00+08:00', 'teacher-wang');
+    if (!approved) throw new Error('Expected approved replanned action');
+
+    expect(createAdapter().execute(approved.action, approved.approval)).toMatchObject({
+      status: 'success',
+      object: {
+        id: 'classin-courseware-wave-v2',
+        version: 'v2',
+        returnUrl: expect.stringContaining('/teacher/classes/physics-1?course=course-physics-1&unit=unit-wave-1'),
+      },
+    });
   });
 
   it.each([

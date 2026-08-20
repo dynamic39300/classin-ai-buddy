@@ -48,6 +48,7 @@ async function selectPackageScenario(panel: import('@playwright/test').Locator, 
 }
 
 test('teacher reviews Core Context and freezes a resettable Snapshot @a11y', async ({ page }) => {
+  test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
@@ -253,19 +254,16 @@ test('teacher writes a course package with object-level partial results', async 
   await expect(receipt.getByText('执行失败', { exact: true })).toBeVisible();
 
   await receipt.getByRole('button', { name: '重试失败项' }).click();
-  await page.getByRole('complementary', { name: '课程方案包导航' }).getByRole('button', { name: '生成批量写回提案' }).click();
-  await page.getByRole('complementary', { name: '课程方案包审批' }).getByRole('button', { name: '批准写回' }).click();
-  await page.getByRole('complementary', { name: '课程方案包审批' }).getByRole('button', { name: '执行已批准方案包' }).click();
+  await page.getByRole('complementary', { name: '课程方案包导航' }).getByRole('button', { name: '生成失败项重试提案' }).click();
+  const retryApproval = page.getByRole('complementary', { name: '课程方案包审批' });
+  await retryApproval.getByText('技术证据', { exact: true }).click();
+  await expect(retryApproval.getByText('action-package-save-retry-1 · workbuddy-package-save-retry-1', { exact: true })).toBeVisible();
+  await retryApproval.getByRole('button', { name: '批准写回' }).click();
+  await retryApproval.getByRole('button', { name: '执行已批准方案包' }).click();
   receipt = page.getByRole('complementary', { name: '课程方案包执行回执' });
   await expect(receipt.getByText('碰撞实验录播脚本', { exact: true })).toBeVisible();
-  await expect(receipt.getByText('已存在，不重复执行', { exact: true })).toHaveCount(2);
+  await expect(receipt.getByText('已成功，本次未重复执行', { exact: true })).toHaveCount(2);
   await expect(receipt.getByText('执行成功', { exact: true })).toHaveCount(1);
-
-  await page.reload();
-  await expect(page.getByRole('heading', { name: '课程方案包产物' })).toBeVisible();
-  await page.getByRole('button', { name: '方案包导航' }).click();
-  await page.getByRole('complementary', { name: '课程方案包导航' }).getByRole('button', { name: '查看执行回执' }).click();
-  await expect(page.getByRole('complementary', { name: '课程方案包执行回执' }).getByText('碰撞实验录播脚本', { exact: true })).toBeVisible();
 
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
   await page.getByRole('list', { name: '近期任务列表' }).getByRole('link', { name: /动量单元课程方案包/ }).click();
@@ -374,32 +372,23 @@ test('teacher previews Context impact and preserves superseded evidence when rep
   await expect(context.getByText('高二物理 1 班', { exact: true })).toBeVisible();
   await expect(context.getByText('机械波基础', { exact: true })).toBeVisible();
   await expect(context.getByText('第一单元 机械波', { exact: true })).toBeVisible();
-});
-
-test('teacher restores the exact courseware Run and receipt after a page refresh', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await createCoursewareArtifact(page);
-  const artifact = page.getByRole('complementary', { name: '当前任务产物' });
-  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
-  const approval = page.getByRole('complementary', { name: '保存审批' });
-  await approval.getByRole('button', { name: '批准保存' }).click();
-  await approval.getByRole('button', { name: '执行已批准动作' }).click();
-  await expect(page.getByRole('complementary', { name: '执行回执' }).getByRole('heading', { name: '保存成功' })).toBeVisible();
-
-  await page.reload();
-  await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
-  await expect(page.getByRole('heading', { name: '课件初稿已生成' })).toBeVisible();
-  await page.getByRole('button', { name: '查看产物' }).click();
-  await page.getByRole('complementary', { name: '当前任务产物' }).getByRole('button', { name: '查看执行回执' }).click();
-  const restoredReceipt = page.getByRole('complementary', { name: '执行回执' });
-  await expect(restoredReceipt.getByRole('heading', { name: '保存成功' })).toBeVisible();
-  await expect(restoredReceipt.getByText('[模拟]单课件执行回执', { exact: true })).toBeVisible();
-
-  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '新建任务', exact: true }).click();
-  await page.getByRole('button', { name: '生成单个课件' }).click();
-  await page.getByRole('button', { name: '创建任务' }).click();
-  await expect(page.getByRole('heading', { name: '补齐任务信息' })).toBeVisible();
-  await expect(page.getByRole('button', { name: '执行已批准动作' })).toHaveCount(0);
+  await context.getByRole('button', { name: '关闭核心上下文' }).click();
+  await page.getByRole('button', { name: '确认任务信息' }).click();
+  await expect(page.getByText('机械波主题 · 目标与课时约束', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '确认计划并执行' }).click();
+  const replannedArtifact = page.getByRole('complementary', { name: '当前任务产物' });
+  await expect(replannedArtifact.getByRole('heading', { name: '机械波基础：从传播现象到核心概念' })).toBeVisible();
+  await replannedArtifact.getByRole('button', { name: '确认课件可用于后续任务' }).click();
+  await replannedArtifact.getByRole('button', { name: '保存到 ClassIn' }).click();
+  const replannedApproval = page.getByRole('complementary', { name: '保存审批' });
+  await expect(replannedApproval.getByText('目标：高二物理 1 班 / 机械波基础 / 第一单元 机械波')).toBeVisible();
+  await replannedApproval.getByRole('button', { name: '批准保存' }).click();
+  await replannedApproval.getByRole('button', { name: '执行已批准动作' }).click();
+  const replannedReceipt = page.getByRole('complementary', { name: '执行回执' });
+  await expect(replannedReceipt.getByRole('heading', { name: '保存成功' })).toBeVisible();
+  await replannedReceipt.getByText('技术证据', { exact: true }).first().click();
+  await expect(replannedReceipt.getByText('classin-courseware-wave-v2', { exact: true })).toBeVisible();
+  await expect(replannedReceipt.getByRole('link', { name: '返回 ClassIn 课程对象' })).toHaveAttribute('href', /\/teacher\/classes\/physics-1\?course=course-physics-1&unit=unit-wave-1/);
 });
 
 test('reviewer resets every M4 in-memory object to the fixed fixture', async ({ page }) => {

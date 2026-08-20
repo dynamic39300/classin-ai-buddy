@@ -8,7 +8,7 @@ export type PackageWritebackCandidate = Readonly<{
   version: string;
   runRef: string;
   contextSnapshotId: string;
-  approvalState: 'approved' | 'written_back' | 'not_selected';
+  approvalState: 'approved' | 'written_back' | 'waiting' | 'not_selected';
 }>;
 
 export interface PackageWritebackAdapter {
