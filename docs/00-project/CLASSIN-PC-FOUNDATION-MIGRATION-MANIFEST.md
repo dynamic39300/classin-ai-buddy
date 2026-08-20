@@ -1,7 +1,7 @@
 ---
 title: ClassIn PC 产品基座迁移清单
-status: M3_COMPLETE
-version: v0.3
+status: M3_LAYOUT_REVISION_COMPLETE
+version: v0.4
 date: 2026-08-20
 source_repository: /Users/eeo/Documents/claudecode/classin-pc-optimizer
 source_branch: main
@@ -110,7 +110,7 @@ source_commit: ff5dfa0f332f4a937aa6faa8b2b88a0313858a8c
 - 实施规格：`docs/04-specs/features/workbuddy-v1-workspace/IMPLEMENTATION-SPEC.md`；
 - 本地 Tickets：`.scratch/workbuddy-v1-shell/issues/`；
 - 最高测试 Seam：角色选择 → 教师 AppShell → AI Agent 一级入口 → 扁平二级导航与 Work Surface；
-- 六个 M3 Tickets 均已完成；最终证据见下一节。
+- 八个 M3 Tickets 均已完成；Tickets 07/08 实施用户验收后的左栏布局修订，最终证据见下一节。
 
 ## 9. M3 最终验收
 
@@ -122,8 +122,8 @@ source_commit: ff5dfa0f332f4a937aa6faa8b2b88a0313858a8c
 | `npm run build` | `PASS`；仅有主 JS chunk 大于 500kB 的既有非阻塞警告 |
 | 全量 `tests/e2e` 单线程 | `57/57 PASS` |
 | 最终 WorkBuddy E2E | `6/6 PASS` |
-| WorkBuddy 1440×900 Visual | `2/2 PASS` |
+| WorkBuddy Visual | `3/3 PASS`；1440×900 新任务、Run + Artifact，1000×768 紧凑导航 |
 | Spec Review | `PASS`；无剩余 P0–P3 finding |
 | Standards Review | `PASS`；无剩余 P0–P3 finding |
 
-M3 已交付 ClassIn 教师一级 `AI Agent` 入口、扁平二级导航、新建任务、带显式状态/命令/恢复路径的历史 Run、单一 Artifact 面板与 Focus、会话级历史管理及真值标签。所有数据仍为固定版本 `workbuddy-m3-v1` 的脱敏 Mock；没有真实 Agent、ClassIn API、文件生成或业务写回。
+M3 已交付 ClassIn 教师一级 `AI Agent` 入口、嵌入该入口下方的扁平二级导航、新建任务、带显式状态/命令/恢复路径的历史 Run、单一 Artifact 面板与 Focus、会话级历史管理及真值标签。D-024 已释放右侧独立导航列，Stage 完整用于 Run、Artifact、Core Context 与执行详情；紧凑 Agent 路由保持 220px 左栏以确保全部入口可达，离开后恢复 64px icon-only。所有数据仍为固定版本 `workbuddy-m3-v1` 的脱敏 Mock；没有真实 Agent、ClassIn API、文件生成或业务写回。

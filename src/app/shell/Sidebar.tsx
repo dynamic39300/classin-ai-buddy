@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import type { AppRole } from '@domain/account/role';
 import { ROLE_LABELS } from '@domain/account/role';
@@ -12,6 +12,10 @@ import styles from './Sidebar.module.css';
 
 type SidebarProps = {
   role: AppRole;
+  navigationExtension?: {
+    afterItemId: string;
+    content: ReactNode;
+  };
   onOpenSettings: () => void;
   onOpenHelp: () => void;
 };
@@ -22,7 +26,7 @@ const GROUP_LABELS: Record<NavigationGroup, string> = {
   'instant-tool': '即时工具',
 };
 
-export function Sidebar({ role, onOpenSettings, onOpenHelp }: SidebarProps) {
+export function Sidebar({ role, navigationExtension, onOpenSettings, onOpenHelp }: SidebarProps) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [classManagementManualOpen, setClassManagementManualOpen] = useState(false);
   const accountButtonRef = useRef<HTMLButtonElement>(null);
@@ -44,7 +48,10 @@ export function Sidebar({ role, onOpenSettings, onOpenHelp }: SidebarProps) {
   );
 
   return (
-    <aside className={styles.sidebar}>
+    <aside
+      className={styles.sidebar}
+      data-contextual-navigation={navigationExtension ? 'true' : undefined}
+    >
       <div className={styles.brand}>
         <span className={styles.brandMark} aria-hidden="true">C</span>
         <span className={styles.wordmark}>ClassIn</span>
@@ -104,16 +111,18 @@ export function Sidebar({ role, onOpenSettings, onOpenHelp }: SidebarProps) {
         {groups.map((group) => (
           <section className={styles.navGroup} key={group} aria-label={GROUP_LABELS[group]}>
             {navigation.filter((node) => node.group === group).map((node) => (
-              <NavigationNodeView
-                key={node.id}
-                node={node}
-                open={node.kind === 'collapsible' && node.id === classManagementGroup?.id ? classManagementOpen : false}
-                disableCollapse={node.kind === 'collapsible' && node.id === classManagementGroup?.id && classManagementRouteActive}
-                onNavigate={() => {
-                  if (classManagementRouteActive) setClassManagementManualOpen(true);
-                }}
-                onToggle={() => setClassManagementManualOpen((current) => !current)}
-              />
+              <Fragment key={node.id}>
+                <NavigationNodeView
+                  node={node}
+                  open={node.kind === 'collapsible' && node.id === classManagementGroup?.id ? classManagementOpen : false}
+                  disableCollapse={node.kind === 'collapsible' && node.id === classManagementGroup?.id && classManagementRouteActive}
+                  onNavigate={() => {
+                    if (classManagementRouteActive) setClassManagementManualOpen(true);
+                  }}
+                  onToggle={() => setClassManagementManualOpen((current) => !current)}
+                />
+                {navigationExtension?.afterItemId === node.id ? navigationExtension.content : null}
+              </Fragment>
             ))}
           </section>
         ))}

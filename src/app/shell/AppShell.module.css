@@ -43,4 +43,8 @@
   .shell {
     grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr);
   }
+
+  .shell[data-contextual-navigation='true'] {
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  }
 }

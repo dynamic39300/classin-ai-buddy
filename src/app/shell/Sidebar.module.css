@@ -333,4 +333,43 @@
     padding: var(--space-xs) 0;
   }
 
+  .sidebar[data-contextual-navigation='true'] .brand {
+    justify-content: flex-start;
+    padding: 0 var(--space-md);
+  }
+
+  .sidebar[data-contextual-navigation='true'] .wordmark,
+  .sidebar[data-contextual-navigation='true'] .navLabel,
+  .sidebar[data-contextual-navigation='true'] .accountButton > svg {
+    display: initial;
+  }
+
+  .sidebar[data-contextual-navigation='true'] .accountCopy {
+    display: grid;
+  }
+
+  .sidebar[data-contextual-navigation='true'] .badge {
+    display: inline-grid;
+  }
+
+  .sidebar[data-contextual-navigation='true'] .navigation {
+    overflow-y: auto;
+    padding: 0 var(--space-sm) var(--space-md);
+  }
+
+  .sidebar[data-contextual-navigation='true'] .navItem {
+    display: grid;
+    width: 100%;
+    height: auto;
+    min-height: 2.5rem;
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: stretch;
+    padding: 0 var(--space-sm);
+  }
+
+  .sidebar[data-contextual-navigation='true'] .navItem[data-label]::after {
+    display: none;
+  }
+
 }

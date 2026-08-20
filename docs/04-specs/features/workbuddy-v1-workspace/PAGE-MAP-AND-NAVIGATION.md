@@ -26,7 +26,7 @@ page_count: 43
 | WB-G-P01 | ClassIn 共享应用壳 | 固定壳 | 应用启动 | 所有一级模块 | G-P01 |
 | WB-G-O01 | 全局侧栏收起态 | 壳状态 | 收起按钮/快捷键 | 展开恢复 | G-O01 |
 | WB-G-O02 | 账户与组织菜单 | Popover | 头像/组织名 | 账户、切换组织、退出 | G-O02 |
-| WB-N-P01 | AI Agent 二级导航面板 | 独立 Shell Surface | ClassIn 一级主导航的 AI Agent 入口 | 新任务、近期任务、Skills、Tools、内容、定时、文件、设置 | G-P01 + ClassIn 适配 |
+| WB-N-P01 | AI Agent 二级导航扩展 | ClassIn 左侧栏内嵌 Surface | ClassIn 一级主导航的 AI Agent 入口 | 新任务、近期任务、Skills、Tools、内容、定时、文件、设置 | G-P01 + ClassIn 适配 |
 | WB-N-O01 | 历史任务操作菜单 | Popover | 任务条目 `…` | 重命名、置顶、删除 | G-O03 |
 | WB-T-P01 | 新建任务 | 主 Surface | 二级菜单/业务对象入口 | 创建 Run | T-P01 |
 | WB-T-P02 | Agent Run 工作区 | 主 Surface | 新任务提交/历史/关联任务 | Artifact、Context、执行详情、Focus | T-P02/T-P03 |
@@ -108,7 +108,7 @@ flowchart LR
   R -->|派生| NR["新的 WB-T-P02 Run"]
 ```
 
-## 6. AI Agent 二级导航面板顺序
+## 6. AI Agent 二级导航扩展顺序
 
 1. 新建任务；
 2. 近期任务标题、搜索/全部；
@@ -117,7 +117,7 @@ flowchart LR
 5. 定时任务；
 6. AI Agent 设置。
 
-以上均位于同一扁平二级导航面板；“近期任务”“能力与资源”等 Section 标题只分组，不产生第三级菜单。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置。
+以上均位于 AI Agent 一级入口下方的同一扁平二级导航扩展；“近期任务”“能力与资源”等 Section 标题只分组，不产生第三级菜单。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置。右侧 Stage 不为导航预留独立列。
 
 ## 7. Deep Link 与返回现场
 

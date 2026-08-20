@@ -1,7 +1,7 @@
 ---
 title: WorkBuddy V1 Phase 3 Review 清单
 status: REVIEWED_APPROVED
-version: v0.1
+version: v0.2
 date: 2026-08-20
 ---
 
@@ -11,7 +11,7 @@ date: 2026-08-20
 
 | ID | 检查项 | 当前目标规格 | 您需要判断 |
 |---|---|---|---|
-| P3-01 | 全局 IA | ClassIn 一级主导航 + NineClaw 式 AI Agent 二级导航面板；面板内新建、6 条历史、Skills、Tools、内容、定时、文件和设置保持扁平，无第三级菜单 | 用户已确认并要求按两级结构修正 |
+| P3-01 | 全局 IA | ClassIn 一级主导航 + 嵌入 AI Agent 入口下的 NineClaw 式二级导航；新建、6 条历史、Skills、Tools、内容、定时、文件和设置保持扁平，无第三级菜单；右侧完整保留给 Work Surface | 用户完成 M3 验收后确认布局修订 |
 | P3-02 | 我的文件 | AI Agent 保留快捷入口，但复用 ClassIn Space 的 WorkBuddy 筛选视图，不复制文件系统 | 是否确认复用 Space |
 | P3-03 | Run 布局 | Run 主轴 + 一个活动辅助区；Artifact/Core Context/执行详情同位切换 | 是否符合预期工作方式 |
 | P3-04 | 复杂编辑 | 轻预览在右侧；课件复杂编辑和多 Artifact 审阅进入 Focus Surface，并能返回现场 | 是否确认容器升级方式 |
@@ -24,7 +24,7 @@ date: 2026-08-20
 
 | ID | 检查项 | 当前默认设计 |
 |---|---|---|
-| P3-09 | 布局尺寸 | 1440×900；224px 侧栏；48px Topbar；400px 默认活动区；中央 Run 不小于 560px |
+| P3-09 | 布局尺寸 | 1440×900；220px 唯一左侧栏；48px Topbar；360-400px 默认活动区；中央 Run 不小于 560px |
 | P3-10 | 近期任务 | 默认共可见 6 条，置顶优先，其余内部滚动；相对时间与 `…` 菜单 |
 | P3-11 | Skill/Tool | 能力与资源区默认可折叠；普通教师不必手工选择；高级用户仍可管理和追踪 |
 | P3-12 | 内容 | 内容广场完整保留；一键改编先进入任务草稿确认 Context，不立即执行 |

@@ -1,7 +1,7 @@
 ---
 title: WorkBuddy V1 Work Surface 布局规格
 status: REVIEWED_APPROVED
-version: v0.1
+version: v0.2
 date: 2026-08-20
 target_viewport: 1440x900
 ---
@@ -10,7 +10,7 @@ target_viewport: 1440x900
 
 ## 1. 目标
 
-布局需要同时保留 ClassIn 一级主导航、AI Agent 二级导航、Agent Run 主轴和一个当前最重要的辅助对象。二级导航对标 NineClaw 并直接包含历史条目；不能再增加第三级菜单或第三根历史栏，也不能让 Context 与 Artifact 同时常驻。
+布局需要同时保留 ClassIn 一级主导航、嵌入其下的 AI Agent 二级导航、Agent Run 主轴和一个当前最重要的辅助对象。二级导航对标 NineClaw 并直接包含历史条目；右侧 Stage 不再为导航保留独立列，不能增加第三级菜单或第三根历史栏，也不能让 Context 与 Artifact 同时常驻。
 
 ## 2. 1440×900 基准画布
 
@@ -19,12 +19,11 @@ target_viewport: 1440x900
 | 区域 | 基准值 | 允许范围/行为 |
 |---|---:|---|
 | Viewport | `1440×900` | Phase 3/4 主验收尺寸 |
-| ClassIn 一级主导航 | `216px` | 锁定范围 `216-224px`；收起态目标 `64px` |
-| AI Agent 二级导航面板 | `232px` | 锁定范围 `224-240px`；NineClaw 式扁平导航 |
+| ClassIn 一级主导航 + Agent 二级扩展 | `220px` | 锁定范围 `216-224px`；Agent 路由内保持展开，其他路由收起态目标 `64px` |
 | 全局顶部栏 | `48px` | 锁定范围 `44-56px` |
-| Agent 主工作区 | `992×852px` | 位于两级导航右侧、顶部栏下方 |
+| Agent 主工作区 | `1204×852px` | 位于唯一左侧栏右侧、顶部栏下方 |
 | Work Surface 外边距 | `12px` | 四边一致，遵循 4px 网格 |
-| Work Surface | `968×828px` | 白色连续表面，外层 `16px` 圆角 |
+| Work Surface | `1180×828px` | 白色连续表面，外层 `16px` 圆角 |
 | Run Header | `48px` | 固定，不随时间线滚动 |
 | Composer 区 | `auto`，最小 `72px` | 固定底部，最多约 6 行后内部滚动 |
 | 右侧活动区 | 默认 `360px` | `344-400px` 可并列；更宽进入 Overlay/Focus |
@@ -35,14 +34,14 @@ target_viewport: 1440x900
 ### L1：New Task
 
 ```text
-┌─ ClassIn L1 216 ─┬─ AI Agent L2 232 ─┬──────── Main 992 ────────────────┐
-│ 首页 / 班级 / …  │ 新建任务            │ Topbar 48                          │
-│ AI Agent         │ 近期任务 × 6        ├────────────────────────────────────┤
-│ 消息 / 工具      │ Skills / Tools      │  Work Surface                     │
-│                  │ 内容 / 定时 / 文件   │       Goal Composer                │
-│                  │ 设置                │       Core Context Summary         │
-│                  │                     │       Task Type Shortcuts          │
-└──────────────────┴─────────────────────┴────────────────────────────────────┘
+┌─ ClassIn Sidebar 220 ─┬──────────────── Main 1204 ──────────────────────┐
+│ 首页                   │ Topbar 48                                      │
+│ AI Agent               ├────────────────────────────────────────────────┤
+│  ├ 新建任务            │ Work Surface                                   │
+│  ├ 近期任务 × 6        │        Goal Composer                           │
+│  ├ Skills / Tools      │        Core Context Summary                    │
+│  └ 内容/定时/文件/设置 │        Task Type Shortcuts                     │
+└────────────────────────┴────────────────────────────────────────────────┘
 ```
 
 - 主输入区域视觉中心位于 Work Surface 中上部，不用营销 Hero 挤占任务输入；
@@ -52,14 +51,14 @@ target_viewport: 1440x900
 ### L2：Run，仅主轴
 
 ```text
-┌ ClassIn L1 ┬ Agent L2 ┬──────────────── Work Surface ─────────────────┐
-│ Primary    │ History  │ Run Header                                    │
-│ navigation │ + tools  ├───────────────────────────────────────────────┤
-│            │          │ Goal / Context Summary                        │
-│            │          │ Timeline / Plan / Process / Artifact refs     │
-│            │          ├───────────────────────────────────────────────┤
-│            │          │ Composer / Stop / Waiting action              │
-└────────────┴──────────┴────────────────────────────────────────────────┘
+┌ ClassIn Sidebar ┬──────────────────── Work Surface ───────────────────┐
+│ Primary         │ Run Header                                          │
+│ AI Agent        ├─────────────────────────────────────────────────────┤
+│  History/tools  │ Goal / Context Summary                              │
+│                 │ Timeline / Plan / Process / Artifact refs           │
+│                 ├─────────────────────────────────────────────────────┤
+│                 │ Composer / Stop / Waiting action                    │
+└─────────────────┴─────────────────────────────────────────────────────┘
 ```
 
 - 时间线正文舒适阅读宽度为 `640-760px`，不让长文本横贯全部屏幕；
@@ -69,12 +68,12 @@ target_viewport: 1440x900
 ### L3：Run + 活动辅助区
 
 ```text
-┌ ClassIn L1 ┬ Agent L2 ┬──── Run Main ≥560 ─────┬ Active Panel 360 ──┐
-│ Primary    │ History  │ Run Header              │ Panel Header         │
-│ navigation │ + tools  │ Timeline                │ Artifact / Context / │
-│            │          │                         │ Process Detail       │
-│            │          │ Composer                │ Footer/Actions       │
-└────────────┴──────────┴─────────────────────────┴──────────────────────┘
+┌ ClassIn Sidebar ┬────── Run Main ≥560 ─────────┬ Active Panel 360 ──┐
+│ Primary         │ Run Header                    │ Panel Header         │
+│ AI Agent        │ Timeline                      │ Artifact / Context / │
+│  History/tools  │                               │ Process Detail       │
+│                 │ Composer                      │ Footer/Actions       │
+└─────────────────┴───────────────────────────────┴──────────────────────┘
 ```
 
 - 活动区只能有一个 `activePanelMode`：`artifact | core_context | process_detail | none`；
@@ -138,9 +137,8 @@ Footer：按状态显示停止、重试、换策略、复制诊断、返回最�
 
 | 区域 | 滚动所有者 | 禁止行为 |
 |---|---|---|
-| ClassIn 一级主导航 | 一级栏内部 | 页面正文推动导航离开视口 |
-| AI Agent 二级导航 | 二级面板内部 | Section 展开产生第三级菜单 |
-| 近期任务 | 二级面板任务 Section 内部 | 新事件强制跳到列表顶部 |
+| ClassIn 一级主导航 + Agent 二级扩展 | 左侧栏内部 | 页面正文推动导航离开视口；Section 展开产生第三级菜单 |
+| 近期任务 | 二级扩展的任务 Section 内部 | 新事件强制跳到列表顶部 |
 | Run Timeline | 主内容区 | Composer 随正文滚走 |
 | Active Panel | Panel Body | Header/Footer 双重嵌套滚动 |
 | Focus Editor | Artifact Canvas | 页面与编辑器同时争夺垂直滚动 |
@@ -164,8 +162,8 @@ Footer：按状态显示停止、重试、换策略、复制诊断、返回最�
 
 ## 9. 原型验收点
 
-1. 1440×900 首屏可见 ClassIn 一级主导航、AI Agent 扁平二级导航、6 条任务、新/当前 Run 与唯一主行动；
-2. AI Agent 二级面板内部没有第三级菜单，历史不形成第三根栏；
+1. 1440×900 首屏可见 ClassIn 一级主导航、其下的 AI Agent 扁平二级导航、6 条任务、新/当前 Run 与唯一主行动；
+2. AI Agent 二级扩展位于同一左侧栏且没有第三级菜单，右侧无独立导航列，历史不形成第三根栏；
 3. 打开任一右侧模式后只新增一个活动辅助区；
 4. 360-400px Artifact 与 Core Context 切换不造成 Run 状态丢失；
 5. 更宽面板或复杂编辑会转入 Overlay/Focus，而不是把 Run 压到 560px 以下；

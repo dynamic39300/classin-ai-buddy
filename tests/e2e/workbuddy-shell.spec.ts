@@ -12,7 +12,7 @@ test('teacher enters the flat AI Agent workspace and returns to ClassIn @a11y', 
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
   await expect(agentEntry).toHaveAttribute('aria-current', 'page');
-  const secondaryNavigation = page.getByRole('complementary', { name: 'AI Agent 二级导航' });
+  const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'AI Agent 二级导航' });
   await expect(secondaryNavigation.getByRole('link', { name: '新建任务' })).toHaveAttribute('aria-current', 'page');
   await expect(secondaryNavigation.getByText('近期任务', { exact: true })).toBeVisible();
 
@@ -42,11 +42,11 @@ test('teacher enters the flat AI Agent workspace and returns to ClassIn @a11y', 
 
   await primaryNavigation.getByRole('link', { name: '课程表' }).click();
   await expect(page.getByRole('heading', { level: 1, name: '课程表' })).toBeVisible();
-  await expect(page.getByRole('complementary', { name: 'AI Agent 二级导航' })).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'AI Agent 二级导航' })).toHaveCount(0);
 
   await agentEntry.click();
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
-  await expect(page.getByRole('complementary', { name: 'AI Agent 二级导航' })).toBeVisible();
+  await expect(primaryNavigation.getByRole('group', { name: 'AI Agent 二级导航' })).toBeVisible();
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
@@ -58,7 +58,7 @@ test('student navigation does not expose the teacher AI Agent', async ({ page })
 
   const primaryNavigation = page.getByRole('navigation', { name: '学生视角主导航' });
   await expect(primaryNavigation.getByRole('link', { name: 'AI Agent' })).toHaveCount(0);
-  await expect(page.getByRole('complementary', { name: 'AI Agent 二级导航' })).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'AI Agent 二级导航' })).toHaveCount(0);
 });
 
 test('teacher prepares either approved task type with structured Core Context', async ({ page }) => {
@@ -96,7 +96,7 @@ test('teacher restores a historical Run and controls its single Artifact panel',
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
-  await page.getByRole('complementary', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '生成函数单调性课件' }).click();
+  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '生成函数单调性课件' }).click();
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-courseware$/);
   await expect(page.getByRole('heading', { level: 1, name: '生成函数单调性课件' })).toBeVisible();
@@ -125,7 +125,7 @@ test('teacher restores a historical Run and controls its single Artifact panel',
   await expect(page.getByRole('status')).toContainText('Artifact Focus');
   await expect(page.getByRole('button', { name: '退出聚焦' })).toHaveAttribute('aria-pressed', 'true');
 
-  await page.getByRole('complementary', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '函数单元课程方案包' }).click();
+  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '函数单元课程方案包' }).click();
   await expect(page.getByText('待确认 · 本地模拟')).toBeVisible();
   await expect(page.getByRole('textbox', { name: '向 Agent 补充要求' })).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: '修改任务要求' })).toBeVisible();
@@ -134,13 +134,13 @@ test('teacher restores a historical Run and controls its single Artifact panel',
   await page.getByRole('button', { name: '确认并继续（本地 Demo）' }).click();
   await expect(page.getByRole('status')).toContainText('任务仍保持待确认');
 
-  await page.getByRole('complementary', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '整理本周学情沟通要点' }).click();
+  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '整理本周学情沟通要点' }).click();
   await expect(page.getByText('可重试 · 本地模拟')).toBeVisible();
   await expect(page.getByRole('textbox', { name: '修改任务要求' })).toBeVisible();
   await page.getByRole('button', { name: '重试任务（本地 Demo）' }).click();
   await expect(page.getByRole('status')).toContainText('失败状态未改变');
 
-  await page.getByRole('complementary', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '分析三班作业共性问题' }).click();
+  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '分析三班作业共性问题' }).click();
   await expect(page.getByText('已完成 · 本地模拟')).toBeVisible();
   await expect(page.getByRole('textbox', { name: /Agent 补充要求|修改任务要求/ })).toHaveCount(0);
 
@@ -155,7 +155,7 @@ test('teacher manages recent tasks from the flat history section', async ({ page
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
 
-  const secondaryNavigation = page.getByRole('complementary', { name: 'AI Agent 二级导航' });
+  const secondaryNavigation = page.getByRole('group', { name: 'AI Agent 二级导航' });
   await secondaryNavigation.getByRole('link', { name: '函数单元课程方案包' }).click();
   const moreActions = secondaryNavigation.getByRole('button', { name: '函数单元课程方案包更多操作' });
   await expect(moreActions).toBeVisible();
@@ -201,7 +201,7 @@ test('WorkBuddy keeps history scrolling, focus and reduced motion explicit', asy
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
 
-  const secondaryNavigation = page.getByRole('complementary', { name: 'AI Agent 二级导航' });
+  const secondaryNavigation = page.getByRole('group', { name: 'AI Agent 二级导航' });
   const historyList = secondaryNavigation.getByRole('list', { name: '近期任务列表' });
   const initialScroll = await historyList.evaluate((element) => ({ clientHeight: element.clientHeight, scrollHeight: element.scrollHeight, scrollTop: element.scrollTop }));
   expect(initialScroll.scrollHeight).toBeGreaterThan(initialScroll.clientHeight);

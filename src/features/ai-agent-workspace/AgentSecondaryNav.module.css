@@ -1,41 +1,22 @@
 .panel {
   display: grid;
+  width: calc(100% - var(--space-sm));
   min-width: 0;
   min-height: 0;
   grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
   gap: var(--space-xs);
-  padding: var(--space-sm);
-  border-right: var(--rule-thin) solid var(--color-line-faint);
-  background: var(--color-surface-raised);
+  margin-left: var(--space-sm);
+  padding: var(--space-2xs) 0 var(--space-sm) var(--space-sm);
+  border-left: var(--rule-thin) solid var(--color-line-faint);
   color: var(--color-ink-secondary);
 }
 
-.panelHeader {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-xs);
-  min-height: 2rem;
-}
-
-.panelHeader strong {
-  color: var(--color-ink);
-  font-size: var(--text-sm);
-}
-
-.agentMark {
-  display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
-  place-items: center;
-  border-radius: var(--radius-object);
-  background: var(--color-brand-soft);
-  color: var(--color-action-strong);
-}
-
 .prototypeTag {
+  min-height: 1rem;
+  padding: 0 var(--space-xs);
   color: var(--color-ink-muted);
   font-size: 0.6875rem;
+  text-align: right;
 }
 
 .newTask,

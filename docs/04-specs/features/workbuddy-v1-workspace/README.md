@@ -63,4 +63,4 @@ review_gate: PHASE_3_PASSED
 
 ## 7. Review 结果
 
-2026-08-20，用户完成全部八份文档 Review：除目标信息架构的导航层级外，其余均确认无问题。导航已按用户要求修正为“ClassIn 一级主导航 + NineClaw 式 AI Agent 扁平二级导航面板”，面板内不再建立第三级菜单；Phase 3 Review 通过。
+2026-08-20，用户完成全部八份文档 Review：除目标信息架构的导航层级外，其余均确认无问题。导航已按用户要求修正为“ClassIn 一级主导航 + NineClaw 式 AI Agent 扁平二级导航”，内部不再建立第三级菜单；Phase 3 Review 通过。M3 功能框架验收后，用户进一步锁定二级导航嵌入同一 ClassIn 左侧栏的 AI Agent 入口下方，右侧 Stage 完整用于 Run、Artifact、Core Context 与执行详情。

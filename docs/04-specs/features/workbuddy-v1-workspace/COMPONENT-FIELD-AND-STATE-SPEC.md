@@ -31,7 +31,7 @@ date: 2026-08-20
 
 ### 2.2 `AgentSecondaryNav`
 
-这是对标 NineClaw 的独立二级导航面板。字段：新建任务、历史 Section、Skills、Tools、内容、定时任务、文件、设置、内部滚动位置。Section 标题只分组，所有目的地保持同一导航层级，不渲染第三级菜单。
+这是对标 NineClaw、嵌入 ClassIn 左侧栏 AI Agent 入口下方的二级导航扩展。字段：新建任务、历史 Section、Skills、Tools、内容、定时任务、文件、设置、内部滚动位置。Section 标题只分组，所有目的地保持同一导航层级，不渲染第三级菜单；右侧 Work Surface 不为导航预留宽度。
 
 ### 2.3 `TaskHistoryRow`
 

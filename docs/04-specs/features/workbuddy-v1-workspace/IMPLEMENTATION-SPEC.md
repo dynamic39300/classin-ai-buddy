@@ -1,10 +1,10 @@
 ---
 title: ClassIn PC 基座中的教师 WorkBuddy V1 实施规格
 status: IMPLEMENTED_REVIEWED
-version: v0.2
+version: v0.3
 date: 2026-08-20
 source_prd: PAGE-LEVEL-PRD.md
-implementation_gate: M3_COMPLETE
+implementation_gate: M3_LAYOUT_REVISION_COMPLETE
 ---
 
 # ClassIn PC 基座中的教师 WorkBuddy V1 实施规格
@@ -17,7 +17,7 @@ implementation_gate: M3_COMPLETE
 
 ## Solution
 
-完整继承已验证的 ClassIn PC 单应用产品基座和教师/学生页面树，把 WorkBuddy 作为教师端纵向 Feature 接入。教师端一级导航增加 `AI Agent`；进入后使用一列 NineClaw 风格的扁平二级导航承载新建任务、近期任务、Skills、Tools、内容、我的文件、定时任务和设置，不增加第三级菜单或独立历史栏。
+完整继承已验证的 ClassIn PC 单应用产品基座和教师/学生页面树，把 WorkBuddy 作为教师端纵向 Feature 接入。教师端一级导航增加 `AI Agent`；进入后在该入口下展开 NineClaw 风格的扁平二级导航，承载新建任务、近期任务、Skills、Tools、内容、我的文件、定时任务和设置，不增加第三级菜单、独立历史栏或右侧导航列。
 
 首个实施切片提供可操作的新建任务页、可打开的历史 Run 骨架和单一 Artifact 活动面板。Core Context 使用结构化班级、课程、单元等摘要进行表达，但只使用固定、脱敏、可重置 Mock。其余能力页保留可进入的真值占位，以便验证完整信息架构而不伪装功能已实现。
 
@@ -59,7 +59,7 @@ implementation_gate: M3_COMPLETE
 - The current runtime is one npm, React, Vite, and strict TypeScript application. A monorepo, API/BFF, or durable Agent runtime is introduced only when a second real deployable or runtime exists.
 - The complete teacher and student ClassIn page trees remain available. WorkBuddy is added only to the teacher tree; role-specific pages do not import one another's private implementations.
 - The existing AppShell continues to own identity, organization, primary navigation, Topbar, account behavior, and the main content slot.
-- WorkBuddy uses one nested teacher-route layout as its UI composition Seam. That layout owns the flat secondary navigation and current Work Surface while keeping WorkBuddy state out of AppShell.
+- AppShell is the UI composition Seam: it owns only a contextual-navigation slot beneath the active primary item; the WorkBuddy Feature owns the flat secondary navigation, while the nested teacher-route layout owns only the current Work Surface.
 - `AI Agent` is a teacher primary navigation destination. The WorkBuddy panel is the only secondary navigation level; Section labels may group items visually but do not create third-level navigation.
 - Recent history shows six rows in the locked review viewport and scrolls for more. Pinned tasks sort ahead of ordinary tasks without live status updates forcing scroll jumps.
 - History overflow actions are rename, pin/unpin, and delete. In the shell slice these mutations are memory-only and explicitly labelled as Demo behavior; persistence, undo, cross-session restore, and deletion policy are later vertical slices.
@@ -105,3 +105,50 @@ implementation_gate: M3_COMPLETE
 - Confirmed highest test Seam: one browser-level teacher AI Agent journey rooted at the existing role selector and AppShell, with only a small pure-navigation unit test below it。2026-08-20，用户确认该 Seam 与当前实现方向一致，并授权继续实施流程。
 - 2026-08-20，用户确认六个 tracer-bullet Tickets 的粒度与阻塞关系；本地 Tracker 位于 `.scratch/workbuddy-v1-shell/issues/`，按 frontier 从 Ticket 01 开始。
 - 2026-08-20，M3 六个 Tickets 全部完成。最终门禁为 Typecheck/Lint PASS、Vitest 44 files/312 tests PASS、全量 E2E 57/57 PASS、WorkBuddy 定向 E2E 6/6 PASS、WorkBuddy Visual 2/2 PASS、Build PASS；Spec 与 Standards 双轴 Review 均 PASS，无剩余 P0–P3 finding。
+
+## M3 Review 布局修订（2026-08-20）
+
+### Problem Statement
+
+M3 的功能框架已通过用户验收，但独立的 AI Agent 二级导航列占用了 Work Surface 的横向空间。任务执行过程、Artifact 预览与编辑，以及后续 Core Context 结构化选项需要共享更完整的连续工作区；若继续保留独立导航列，后续辅助面板会过早形成拥挤的多栏布局。
+
+### Solution
+
+保留既有两级信息架构和全部二级导航能力，把二级导航作为 AI Agent 一级入口的上下文扩展，直接展开在 ClassIn 左侧栏的 AI Agent 条目下方。AI Agent 路由之外不显示该扩展；进入 Agent 路由后，右侧 Stage 只承载 Work Surface，不再为导航预留独立列。
+
+### User Stories
+
+29. As a ClassIn teacher, I want Agent tasks and capabilities to expand directly below the AI Agent entry, so that the navigation belongs to the ClassIn workspace rather than consuming task-canvas width.
+30. As a ClassIn teacher, I want the entire right-hand Stage available to the current Run, Artifact, and Core Context, so that later editing and comparison surfaces have enough room.
+31. As a ClassIn teacher, I want recent-task management and capability routes to behave exactly as before after relocation, so that the layout revision does not break the approved M3 loop.
+32. As a ClassIn user outside AI Agent, I want the contextual Agent navigation to disappear, so that other ClassIn modules retain their established sidebar density.
+33. As a keyboard user, I want the embedded secondary navigation to preserve visible focus, scroll access, menu focus return, and route selection, so that relocation does not reduce operability.
+34. As a reviewer, I want the Agent work surface to begin immediately after the ClassIn sidebar, so that no empty or duplicate navigation column remains.
+
+### Implementation Decisions
+
+- The information architecture remains two levels: `AI Agent` is the primary destination; new task, Runs, capabilities, schedules, files, and settings remain one flat secondary level.
+- AppShell remains the composition root and exposes one contextual-navigation slot beneath a matching primary item. WorkBuddy supplies the content through its existing navigation Module; AppShell does not absorb Run history logic.
+- The nested WorkBuddy route layout owns only the right-hand Work Surface after this revision. It no longer renders or sizes a navigation column.
+- The embedded secondary navigation omits a duplicate `AI Agent` heading because the primary item immediately above already names the context.
+- At compact desktop widths, an active Agent route keeps the ClassIn sidebar expanded so embedded destinations remain reachable; other routes retain the existing icon-only compact sidebar.
+- Run state, history mutations, route contracts, Artifact behavior, Core Context data, capability truth labels, and teacher-only role boundary are unchanged.
+
+### Testing Decisions
+
+- The confirmed Seam remains the browser journey. Tests observe that the secondary navigation is contained by the teacher primary navigation, disappears outside Agent routes, and preserves all approved interactions.
+- Visual geometry verifies that the contextual navigation stays inside the ClassIn sidebar and that the Work Surface begins at the Stage boundary without a second navigation column.
+- Existing history scroll, focus return, reduced-motion, accessibility, route, Run, and Artifact checks remain mandatory regression evidence.
+
+### Out of Scope
+
+- Redesigning the task execution, Artifact, or Core Context content itself.
+- Adding new Agent capabilities, persistence, backend interfaces, mobile navigation, or production ClassIn integration.
+- Changing the already approved M3 Run state model or truth-label semantics.
+
+### Completion Evidence
+
+- Tickets 07/08 completed through the approved `to-spec → to-tickets → implement` workflow.
+- Typecheck, ESLint, 44 Vitest files/312 tests, production build, WorkBuddy E2E 6/6, full E2E 57/57, and WorkBuddy Visual 3/3 passed.
+- Visual evidence covers 1440×900 New Task, 1440×900 Run + Artifact, and 1000×768 compact embedded navigation; compact coverage verifies every secondary destination is scroll-reachable and non-Agent routes return to the 64px icon-only sidebar.
+- Standards Review and Spec Review passed with no remaining P0–P3 finding.

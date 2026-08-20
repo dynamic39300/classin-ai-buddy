@@ -1,4 +1,4 @@
-import { Bot, CheckCircle2, CircleAlert, CircleEllipsis, LoaderCircle, MoreHorizontal, Plus, Search } from 'lucide-react';
+import { CheckCircle2, CircleAlert, CircleEllipsis, LoaderCircle, MoreHorizontal, Plus, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS, type WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
@@ -87,12 +87,8 @@ export function AgentSecondaryNav() {
   const systemCapabilities = WORKBUDDY_CAPABILITIES.filter(({ placement }) => placement === 'system');
 
   return (
-    <aside className={styles.panel} aria-label="AI Agent 二级导航">
-      <div className={styles.panelHeader}>
-        <span className={styles.agentMark}><Bot aria-hidden="true" size={16} /></span>
-        <strong>AI Agent</strong>
-        <span className={styles.prototypeTag}>本地 Demo</span>
-      </div>
+    <div className={styles.panel} role="group" aria-label="AI Agent 二级导航">
+      <div className={styles.prototypeTag} aria-label="当前为本地 Demo">本地 Demo</div>
 
       <NavLink className={styles.newTask} to="/teacher/ai-agent/new"><Plus aria-hidden="true" size={16} />新建任务</NavLink>
 
@@ -149,6 +145,6 @@ export function AgentSecondaryNav() {
         {systemCapabilities.map(({ id, label, icon: Icon }) => <NavLink key={id} to={`/teacher/ai-agent/${id}`}><Icon aria-hidden="true" size={16} /><span>{label}</span></NavLink>)}
       </nav>
       {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}
-    </aside>
+    </div>
   );
 }
