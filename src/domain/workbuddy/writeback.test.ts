@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { approveAction, createCoursewareSaveAction, expireAction, rejectAction } from './writeback';
+import { approveAction, createCoursewareSaveAction, expireAction, rejectAction, renewCoursewareSaveAction } from './writeback';
 
 const ACTION_INPUT = {
   id: 'action-1', runRef: 'run-1', contextSnapshotId: 'snapshot-1', artifactId: 'artifact-1', artifactVersion: 'v1',
@@ -33,5 +33,27 @@ describe('WorkBuddy writeback policy', () => {
     const approved = approveAction(proposed, 'approval-1', '2026-08-20T10:05:00+08:00', 'teacher-1');
     if (!approved) throw new Error('Expected approved action');
     expect(expireAction(approved.action, '2026-08-22T10:05:00+08:00')).toMatchObject({ status: 'expired' });
+  });
+
+  it('fails closed when an action expiry or policy-check time is invalid', () => {
+    const proposed = createCoursewareSaveAction(ACTION_INPUT);
+    expect(expireAction({ ...proposed, expiresAt: 'invalid' }, '2026-08-20T10:05:00+08:00')).toMatchObject({ status: 'expired' });
+    expect(expireAction(proposed, 'invalid')).toMatchObject({ status: 'expired' });
+  });
+
+  it('renews the reviewed target and policy instead of restoring fixture defaults', () => {
+    const recovered = createCoursewareSaveAction({
+      ...ACTION_INPUT,
+      target: { ...ACTION_INPUT.target, unitId: 'unit-fallback', expectedVersion: 'v3', label: '已确认替代位置' },
+      difference: '保存到替代位置',
+    });
+    const renewed = renewCoursewareSaveAction(expireAction(recovered, recovered.expiresAt), {
+      id: 'action-renewed', expiresAt: '2026-08-21T11:05:00+08:00', idempotencyKey: 'key-renewed',
+    });
+    expect(renewed).toMatchObject({
+      id: 'action-renewed', status: 'proposed', idempotencyKey: 'key-renewed',
+      target: { unitId: 'unit-fallback', expectedVersion: 'v3', label: '已确认替代位置' },
+      difference: '保存到替代位置',
+    });
   });
 });

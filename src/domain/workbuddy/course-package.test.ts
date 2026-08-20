@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WORKBUDDY_COURSE_PACKAGE_DEFINITION, WORKBUDDY_PACKAGE_ACTION_INPUT } from '@mocks/scenarios/workbuddy-course-production';
-import { createPackageSaveAction, decidePackageAction, expirePackageAction } from './package-writeback';
+import { createPackageSaveAction, decidePackageAction, expirePackageAction, renewPackageSaveAction } from './package-writeback';
 import type { PackageExecutionReceipt } from './course-package';
 import {
   applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
@@ -70,5 +70,48 @@ describe('course-package Artifact Graph', () => {
       items: approved.artifacts.map(({ id, state }) => ({ artifactId: id, result: state === 'waiting' ? 'waiting' : 'not_executed' })),
     } as unknown as PackageExecutionReceipt;
     expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, recoverable)).toEqual({ accepted: true, run: approved });
+  });
+
+  it('validates the Artifact DAG and resolves legal out-of-order dependencies', () => {
+    const outOfOrderDefinition = {
+      ...WORKBUDDY_COURSE_PACKAGE_DEFINITION,
+      artifacts: Object.freeze([...WORKBUDDY_COURSE_PACKAGE_DEFINITION.artifacts].reverse()),
+    };
+    const generated = completePackageGeneration(
+      beginPackageGeneration(createCoursePackageRun(outOfOrderDefinition, '乱序但合法的课程方案包', 'snapshot-package-1')),
+      [],
+    );
+    expect(generated.artifacts.every(({ state }) => state === 'ready')).toBe(true);
+
+    const root = WORKBUDDY_COURSE_PACKAGE_DEFINITION.artifacts[0]!;
+    expect(() => createCoursePackageRun({
+      ...WORKBUDDY_COURSE_PACKAGE_DEFINITION,
+      artifacts: [{ ...root, dependsOn: ['missing-artifact'] }],
+    }, '缺失依赖', 'snapshot-package-1')).toThrow(/Unknown dependency/);
+    expect(() => createCoursePackageRun({
+      ...WORKBUDDY_COURSE_PACKAGE_DEFINITION,
+      artifacts: [
+        { ...root, id: 'artifact-a', dependsOn: ['artifact-b'] },
+        { ...root, id: 'artifact-b', dependsOn: ['artifact-a'] },
+      ],
+    }, '循环依赖', 'snapshot-package-1')).toThrow(/Cyclic/);
+  });
+
+  it('fails closed on invalid expiry and preserves a recovered target during renewal', () => {
+    const created = createCoursePackageRun(WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成动量单元课程方案包', 'snapshot-package-1');
+    const generated = completePackageGeneration(beginPackageGeneration(created), []);
+    const action = createPackageSaveAction(generated, {
+      ...WORKBUDDY_PACKAGE_ACTION_INPUT,
+      target: { ...WORKBUDDY_PACKAGE_ACTION_INPUT.target, unitId: 'unit-fallback', expectedVersion: 'v4', label: '已确认替代位置' },
+    });
+    if (!action) throw new Error('Expected action');
+    expect(expirePackageAction({ ...action, expiresAt: 'invalid' }, '2026-08-20T10:05:00+08:00')).toMatchObject({ status: 'expired' });
+    const renewed = renewPackageSaveAction(generated, expirePackageAction(action, action.expiresAt), {
+      id: 'package-action-renewed', expiresAt: '2026-08-21T11:05:00+08:00', idempotencyKey: 'package-key-renewed',
+    });
+    expect(renewed).toMatchObject({
+      id: 'package-action-renewed', status: 'proposed', idempotencyKey: 'package-key-renewed',
+      target: { unitId: 'unit-fallback', expectedVersion: 'v4', label: '已确认替代位置' },
+    });
   });
 });

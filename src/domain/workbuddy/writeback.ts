@@ -79,6 +79,12 @@ export type CoursewareSaveActionInput = Readonly<{
   idempotencyKey: string;
 }>;
 
+export type ActionRenewal = Readonly<{
+  id: string;
+  expiresAt: string;
+  idempotencyKey: string;
+}>;
+
 export function createCoursewareSaveAction(input: CoursewareSaveActionInput): ProposedAction {
   return Object.freeze({
     id: input.id,
@@ -98,6 +104,22 @@ export function createCoursewareSaveAction(input: CoursewareSaveActionInput): Pr
   });
 }
 
+export function renewCoursewareSaveAction(action: ProposedAction, renewal: ActionRenewal): ProposedAction {
+  return createCoursewareSaveAction({
+    ...renewal,
+    runRef: action.runRef,
+    contextSnapshotId: action.contextSnapshotId,
+    artifactId: action.artifactRef.id,
+    artifactVersion: action.artifactRef.version,
+    target: action.target,
+    difference: action.difference,
+    impact: action.impact,
+    permission: action.permission,
+    risk: action.risk,
+    reversible: action.reversible,
+  });
+}
+
 function decideAction(action: ProposedAction, approvalId: string, decidedAt: string, decidedBy: string, decision: Approval['decision']) {
   const current = expireAction(action, decidedAt);
   if (current.status !== 'proposed') return null;
@@ -111,8 +133,9 @@ export function expireAction(action: ProposedAction, at: string): ProposedAction
   if (action.status === 'rejected' || action.status === 'expired') return action;
   const expiresAt = Date.parse(action.expiresAt);
   const checkedAt = Date.parse(at);
-  if (!Number.isFinite(expiresAt) || !Number.isFinite(checkedAt) || checkedAt < expiresAt) return action;
-  return Object.freeze({ ...action, status: 'expired' });
+  return Number.isFinite(expiresAt) && Number.isFinite(checkedAt) && checkedAt < expiresAt
+    ? action
+    : Object.freeze({ ...action, status: 'expired' });
 }
 
 export function approveAction(action: ProposedAction, approvalId: string, decidedAt: string, decidedBy: string) {

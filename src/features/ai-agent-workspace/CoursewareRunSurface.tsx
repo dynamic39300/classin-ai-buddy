@@ -56,7 +56,7 @@ export function CoursewareRunSurface() {
           <div><h1 id="m4-courseware-title">{run.title}</h1><span>{run.statusLabel} · [模拟]</span></div>
           <nav aria-label="任务辅助面板">
             <button type="button" aria-pressed={activePanel === 'core_context'} onClick={(event) => openPanel('core_context', event.currentTarget)}>核心上下文</button>
-            <button type="button" aria-pressed={activePanel === 'replan'} onClick={(event) => openPanel('replan', event.currentTarget)}>调整教学范围</button>
+            <button type="button" aria-pressed={activePanel === 'replan'} disabled={run.revision > 1} title={run.revision > 1 ? '本次任务已完成教学范围调整' : undefined} onClick={(event) => openPanel('replan', event.currentTarget)}>调整教学范围</button>
             <button type="button" aria-pressed={activePanel === 'process_detail'} disabled={!run.events.length} onClick={(event) => openPanel('process_detail', event.currentTarget)}>执行详情</button>
             <button ref={artifactPanelTriggerRef} type="button" aria-pressed={activePanel === 'artifact'} disabled={!artifact} onClick={(event) => openPanel('artifact', event.currentTarget)}><PanelRight aria-hidden="true" size={15} />查看产物</button>
           </nav>

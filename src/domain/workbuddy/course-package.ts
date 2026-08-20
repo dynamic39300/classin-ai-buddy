@@ -63,12 +63,37 @@ function freezeRun(run: CoursePackageRun): CoursePackageRun {
   return Object.freeze({ ...run, artifacts: Object.freeze(run.artifacts.map((item) => withArtifactState(item, item.state))) });
 }
 
+function validateArtifactGraph(definition: CoursePackageDefinition): void {
+  const byId = new Map<string, PackageArtifactDefinition>();
+  for (const artifact of definition.artifacts) {
+    if (byId.has(artifact.id)) throw new Error(`Duplicate course-package artifact id: ${artifact.id}`);
+    byId.set(artifact.id, artifact);
+  }
+  for (const artifact of definition.artifacts) {
+    for (const dependencyId of artifact.dependsOn) {
+      if (!byId.has(dependencyId)) throw new Error(`Unknown dependency ${dependencyId} for artifact ${artifact.id}`);
+    }
+  }
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (artifactId: string): void => {
+    if (visiting.has(artifactId)) throw new Error(`Cyclic course-package artifact dependency at: ${artifactId}`);
+    if (visited.has(artifactId)) return;
+    visiting.add(artifactId);
+    for (const dependencyId of byId.get(artifactId)?.dependsOn ?? []) visit(dependencyId);
+    visiting.delete(artifactId);
+    visited.add(artifactId);
+  };
+  for (const artifact of definition.artifacts) visit(artifact.id);
+}
+
 export function createCoursePackageRun(
   definition: CoursePackageDefinition,
   goal: string,
   contextSnapshotId: string | null,
   links?: Pick<CoursePackageRunBase, 'parentRunRef' | 'sourceArtifactRef'>,
 ): CoursePackageRun {
+  validateArtifactGraph(definition);
   const artifacts = Object.freeze(definition.artifacts.map((item) => withArtifactState(item, item.state)));
   const common = { id: definition.id, fixtureVersion: definition.fixtureVersion, taskType: 'course-package' as const, title: definition.title, goal: goal.trim(), artifacts, ...links };
   return contextSnapshotId
@@ -90,14 +115,25 @@ export function beginPackageGeneration(run: CoursePackageRun): CoursePackageRun 
 export function completePackageGeneration(run: CoursePackageRun, failedArtifactIds: readonly string[]): CoursePackageRun {
   if (run.stage !== 'generating') return run;
   const failures = new Set(failedArtifactIds);
+  const byId = new Map(run.artifacts.map((item) => [item.id, item]));
   const resolved = new Map<string, PackageArtifactState>();
-  const artifacts = run.artifacts.map((item) => {
-    const state = failures.has(item.id)
+  const resolving = new Set<string>();
+  const resolve = (item: PackageArtifact): PackageArtifactState => {
+    const existing = resolved.get(item.id);
+    if (existing) return existing;
+    if (resolving.has(item.id)) return 'waiting';
+    resolving.add(item.id);
+    const state: PackageArtifactState = failures.has(item.id)
       ? 'failed'
-      : item.dependsOn.every((dependencyId) => resolved.get(dependencyId) === 'ready') ? 'ready' : 'waiting';
+      : item.dependsOn.every((dependencyId) => {
+        const dependency = byId.get(dependencyId);
+        return dependency ? resolve(dependency) === 'ready' : false;
+      }) ? 'ready' : 'waiting';
+    resolving.delete(item.id);
     resolved.set(item.id, state);
-    return withArtifactState(item, state);
-  });
+    return state;
+  };
+  const artifacts = run.artifacts.map((item) => withArtifactState(item, resolve(item)));
   return freezeRun({ ...run, stage: 'artifact_ready', artifacts, allowedCommands: Object.freeze(['review-artifacts', 'propose-save']), recovery: null });
 }
 
@@ -106,7 +142,11 @@ export function setPackageArtifactIncluded(run: CoursePackageRun, artifactId: st
   const target = run.artifacts.find(({ id }) => id === artifactId);
   if (!target || (included ? target.state !== 'excluded' : !['ready', 'failed', 'waiting'].includes(target.state))) return run;
   const byId = new Map(run.artifacts.map((item) => [item.id, item]));
-  const dependsOn = (item: PackageArtifact, dependencyId: string): boolean => item.dependsOn.some((id) => id === dependencyId || Boolean(byId.get(id) && dependsOn(byId.get(id)!, dependencyId)));
+  const dependsOn = (item: PackageArtifact, dependencyId: string, visited = new Set<string>()): boolean => {
+    if (visited.has(item.id)) return false;
+    const nextVisited = new Set(visited).add(item.id);
+    return item.dependsOn.some((id) => id === dependencyId || Boolean(byId.get(id) && dependsOn(byId.get(id)!, dependencyId, nextVisited)));
+  };
   if (included && target.dependsOn.some((id) => !['ready', 'written_back'].includes(byId.get(id)?.state ?? 'failed'))) return run;
   return freezeRun({
     ...run,

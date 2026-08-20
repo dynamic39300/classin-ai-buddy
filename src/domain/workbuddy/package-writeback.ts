@@ -22,6 +22,7 @@ export type PackageApproval = Readonly<{
 }>;
 
 export type PackageActionInput = Omit<PackageProposedAction, 'kind' | 'status' | 'artifactRefs' | 'runRef' | 'contextSnapshotId'>;
+export type PackageActionRenewal = Readonly<{ id: string; expiresAt: string; idempotencyKey: string }>;
 
 export function createPackageSaveAction(run: CoursePackageRun, input: PackageActionInput): PackageProposedAction | null {
   if (!run.contextSnapshotId || (run.stage !== 'artifact_ready' && run.stage !== 'partial_success')) return null;
@@ -37,6 +38,22 @@ export function createPackageSaveAction(run: CoursePackageRun, input: PackageAct
     runRef: run.id,
     contextSnapshotId: run.contextSnapshotId,
     artifactRefs: Object.freeze(artifactRefs),
+  });
+}
+
+export function renewPackageSaveAction(
+  run: CoursePackageRun,
+  action: PackageProposedAction,
+  renewal: PackageActionRenewal,
+): PackageProposedAction | null {
+  return createPackageSaveAction(run, {
+    ...renewal,
+    target: action.target,
+    difference: action.difference,
+    impact: action.impact,
+    permission: action.permission,
+    risk: action.risk,
+    reversible: action.reversible,
   });
 }
 
@@ -57,6 +74,7 @@ export function expirePackageAction(action: PackageProposedAction, at: string): 
   if (action.status === 'rejected' || action.status === 'expired') return action;
   const expiresAt = Date.parse(action.expiresAt);
   const checkedAt = Date.parse(at);
-  if (!Number.isFinite(expiresAt) || !Number.isFinite(checkedAt) || checkedAt < expiresAt) return action;
-  return Object.freeze({ ...action, status: 'expired' });
+  return Number.isFinite(expiresAt) && Number.isFinite(checkedAt) && checkedAt < expiresAt
+    ? action
+    : Object.freeze({ ...action, status: 'expired' });
 }

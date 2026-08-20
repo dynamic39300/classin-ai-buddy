@@ -368,6 +368,15 @@ test('teacher derives an independent package Run from the reviewed courseware', 
   const processDetail = page.getByRole('complementary', { name: '执行详情' });
   await processDetail.getByLabel('解释教学目标与边界上下文').getByText('技术证据', { exact: true }).click();
   await expect(processDetail.getByText(/context-snapshot-courseware-1/).first()).toBeVisible();
+
+  await page.getByRole('button', { name: '调整教学范围' }).click();
+  await page.getByRole('complementary', { name: '重新规划影响' }).getByRole('button', { name: '确认并重新规划' }).click();
+  await page.getByRole('button', { name: '确认任务信息' }).click();
+  await page.getByRole('button', { name: '确认计划并执行' }).click();
+  const replannedArtifact = page.getByRole('complementary', { name: '当前任务产物' });
+  await replannedArtifact.getByRole('button', { name: '确认课件可用于后续任务' }).click();
+  await expect(replannedArtifact.getByRole('button', { name: '打开已派生课程方案包' })).toHaveCount(0);
+  await expect(replannedArtifact.getByRole('button', { name: '基于此课件生成课程方案包' })).toBeVisible();
 });
 
 test('teacher previews Context impact and preserves superseded evidence when replanning', async ({ page }) => {
@@ -418,6 +427,7 @@ test('teacher previews Context impact and preserves superseded evidence when rep
   await replannedReceipt.getByText('技术证据', { exact: true }).first().click();
   await expect(replannedReceipt.getByText('classin-courseware-wave-v2', { exact: true })).toBeVisible();
   await expect(replannedReceipt.getByRole('link', { name: '返回 ClassIn 课程对象' })).toHaveAttribute('href', /\/teacher\/classes\/physics-1\?course=course-physics-1&unit=unit-wave-1/);
+  await expect(page.getByRole('button', { name: '调整教学范围' })).toBeDisabled();
 });
 
 test('reviewer resets every M4 in-memory object to the fixed fixture', async ({ page }) => {
