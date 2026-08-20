@@ -149,7 +149,7 @@ export function CoursewareRunSurface() {
             <p>确认前不会修改当前 Run。以下影响会生成新 Snapshot 与计划，旧证据不会被覆盖。</p>
             <dl><div><dt>移除 Context</dt><dd>高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量</dd></div><div><dt>新增 Context</dt><dd>高二物理 1 班 · 机械波基础 · 第一单元 机械波</dd></div><div><dt>受影响步骤</dt><dd>目标理解、教学结构、课件组装、质量检查</dd></div><div><dt>受影响对象</dt><dd>当前 ArtifactDraft、ProposedAction 与 ExecutionReceipt</dd></div></dl>
           </div>
-          <footer><button type="button" onClick={closePanel}>保留当前范围</button><button className={styles.primaryPanelAction} type="button" onClick={replanCoursewareToWaveContext}>确认并重新规划</button></footer>
+          <footer><button type="button" onClick={closePanel}>保留当前范围</button><button className={styles.primaryPanelAction} type="button" onClick={() => { replanCoursewareToWaveContext(); requestAnimationFrame(() => lastPanelTriggerRef.current?.focus()); }}>确认并重新规划</button></footer>
         </aside>
       ) : null}
 

@@ -233,6 +233,7 @@ test('teacher derives an independent package Run from the reviewed courseware', 
   await derivedContext.getByRole('button', { name: '确认 ContextSnapshot' }).click();
   await derivedContext.getByRole('button', { name: '关闭核心上下文' }).click();
   await expect(page.getByText('独立 Task Type · course-package · context-snapshot-package-1', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '确认产物清单并生成' })).toBeFocused();
   await page.getByRole('button', { name: '确认产物清单并生成' }).click();
   await page.getByRole('link', { name: '返回源课件 Run' }).click();
   await expect(page).toHaveURL(/run-m4-courseware/);

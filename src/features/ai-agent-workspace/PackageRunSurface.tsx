@@ -19,6 +19,7 @@ export function PackageRunSurface() {
   } = useWorkBuddyWorkspace();
   const lastPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const navigatorPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const generatePackageTriggerRef = useRef<HTMLButtonElement | null>(null);
   if (!packageView) return null;
   const { run, action, receipt, contextConfirmed } = packageView;
   const openPanel = (next: Parameters<typeof setPanel>[0], trigger: HTMLButtonElement) => {
@@ -28,7 +29,9 @@ export function PackageRunSurface() {
   const closePanel = () => {
     setPanel('none');
     requestAnimationFrame(() => {
-      const trigger = lastPanelTriggerRef.current?.isConnected ? lastPanelTriggerRef.current : navigatorPanelTriggerRef.current;
+      const trigger = lastPanelTriggerRef.current?.isConnected
+        ? lastPanelTriggerRef.current
+        : navigatorPanelTriggerRef.current ?? generatePackageTriggerRef.current;
       trigger?.focus();
     });
   };
@@ -50,7 +53,7 @@ export function PackageRunSurface() {
         </section> : null}
 
         {run.stage === 'configuring' ? <section className={styles.configure}>
-          <Boxes aria-hidden="true" size={22} /><div><h2>确认课程方案包范围</h2><p>{run.sourceArtifactRef ? '独立 ContextSnapshot 已确认；源课件只作为显式 sourceArtifactRef。' : '四类课程对象共享课程目标，但保持独立产物状态和写回结果。'}</p><ul>{run.artifacts.map((item) => <li key={item.id}><CheckCircle2 aria-hidden="true" size={15} /><span><strong>{item.title}</strong><small>{item.kind} · {item.dependsOn.length ? `依赖 ${item.dependsOn.join(', ')}` : '根产物'}</small></span></li>)}</ul><button type="button" disabled={!contextConfirmed} onClick={(event) => { generatePackage(); openPanel('navigator', event.currentTarget); }}>确认产物清单并生成</button></div>
+          <Boxes aria-hidden="true" size={22} /><div><h2>确认课程方案包范围</h2><p>{run.sourceArtifactRef ? '独立 ContextSnapshot 已确认；源课件只作为显式 sourceArtifactRef。' : '四类课程对象共享课程目标，但保持独立产物状态和写回结果。'}</p><ul>{run.artifacts.map((item) => <li key={item.id}><CheckCircle2 aria-hidden="true" size={15} /><span><strong>{item.title}</strong><small>{item.kind} · {item.dependsOn.length ? `依赖 ${item.dependsOn.join(', ')}` : '根产物'}</small></span></li>)}</ul><button ref={generatePackageTriggerRef} type="button" disabled={!contextConfirmed} onClick={(event) => { generatePackage(); openPanel('navigator', event.currentTarget); }}>确认产物清单并生成</button></div>
         </section> : null}
 
         {!['awaiting_context', 'configuring'].includes(run.stage) ? <section className={styles.graph}><h2>Artifact Graph</h2><p>课件是根产物；作业、测验和录播脚本引用课件结构。单项失败不会抹掉其他产物。</p>{run.artifacts.map((item) => <article data-state={item.state} key={item.id}><span>{item.state === 'failed' ? <CircleAlert aria-hidden="true" size={16} /> : <FileText aria-hidden="true" size={16} />}</span><div><strong>{item.title}</strong><p>{item.kind} · {item.version} · {STATE_LABELS[item.state]}</p></div>{item.dependsOn.length ? <code>← {item.dependsOn[0]}</code> : <code>root</code>}</article>)}</section> : null}
