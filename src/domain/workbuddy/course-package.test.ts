@@ -58,5 +58,13 @@ describe('course-package Artifact Graph', () => {
 
     const contradictorySuccess = { ...receipt, status: 'success', items: receipt.items } as unknown as PackageExecutionReceipt;
     expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, contradictorySuccess)).toBe(approved);
+
+    const recoverable = {
+      ...receipt,
+      status: 'recoverable_failure',
+      recovery: 'retry',
+      items: approved.artifacts.map(({ id, state }) => ({ artifactId: id, result: state === 'waiting' ? 'waiting' : 'not_executed' })),
+    } as unknown as PackageExecutionReceipt;
+    expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, recoverable)).toBe(approved);
   });
 });

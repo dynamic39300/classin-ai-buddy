@@ -315,6 +315,25 @@ test('teacher changes the package target or version and re-approves after govern
   await expect(page.getByRole('complementary', { name: '课程方案包执行回执' }).getByText('已执行所有获批对象')).toBeVisible();
 });
 
+test('teacher safely retries the same approved package action after a temporary failure', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createPackageArtifacts(page);
+  const navigator = page.getByRole('complementary', { name: '课程方案包导航' });
+  await navigator.getByRole('button', { name: '重试失败项' }).click();
+  await selectPackageScenario(navigator, 'recoverable_failure');
+  await navigator.getByRole('button', { name: '生成批量写回提案' }).click();
+  const approval = page.getByRole('complementary', { name: '课程方案包审批' });
+  await approval.getByText('技术证据', { exact: true }).click();
+  await expect(approval.getByText('action-package-save-1 · workbuddy-package-save-1', { exact: true })).toBeVisible();
+  await approval.getByRole('button', { name: '批准写回' }).click();
+  await approval.getByRole('button', { name: '执行已批准方案包' }).click();
+  const receipt = page.getByRole('complementary', { name: '课程方案包执行回执' });
+  await expect(receipt.getByText('写回接口暂时不可用', { exact: false })).toBeVisible();
+  await receipt.getByRole('button', { name: '安全重试' }).click();
+  await expect(receipt.getByText('已执行所有获批对象', { exact: true })).toBeVisible();
+  await expect(receipt.getByText('执行成功', { exact: true })).toHaveCount(4);
+});
+
 test('teacher derives an independent package Run from the reviewed courseware', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await createCoursewareArtifact(page);

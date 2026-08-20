@@ -186,6 +186,7 @@ export function applyPackageExecutionReceipt(
   if (receipt.status === 'success' && (!selectedResultsSucceeded || hasIncomplete)) return run;
   if (receipt.status === 'partial_success' && (!hasSucceeded || !hasIncomplete)) return run;
   if (!['success', 'partial_success'].includes(receipt.status) && receipt.items.some(({ result }) => result === 'succeeded' || result === 'failed')) return run;
+  if (receipt.status !== 'success' && receipt.status !== 'partial_success') return run;
   const artifacts = run.artifacts.map((item) => {
     const result = results.get(item.id);
     if (result === 'succeeded' && item.state === 'approved' && approvedRefs.get(item.id) === item.version) return withArtifactState(item, 'written_back');
@@ -194,6 +195,5 @@ export function applyPackageExecutionReceipt(
     return item;
   });
   if (receipt.status === 'success') return freezeRun({ ...run, stage: 'completed', artifacts, allowedCommands: Object.freeze(['review-receipt']), recovery: null });
-  if (receipt.status === 'partial_success') return freezeRun({ ...run, stage: 'partial_success', artifacts, allowedCommands: Object.freeze(['review-receipt', 'retry-failed']), recovery: 'retry-failed-items' });
-  return freezeRun({ ...run, artifacts });
+  return freezeRun({ ...run, stage: 'partial_success', artifacts, allowedCommands: Object.freeze(['review-receipt', 'retry-failed']), recovery: 'retry-failed-items' });
 }
