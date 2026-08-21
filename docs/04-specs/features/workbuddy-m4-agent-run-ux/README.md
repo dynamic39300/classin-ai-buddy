@@ -36,6 +36,7 @@ M4.1 只重做**体验表达与页面编排**：把完整任务闭环放回一�
 | [NineClaw 逐帧还原矩阵](./NINECLAW-FRAME-PARITY-MATRIX.md) | V04/V05/V06 的可见交互如何统一映射为同一智能课件任务 | `TO_SPEC_EVIDENCE` |
 | [M4.1 Feature Spec](./FEATURE-SPEC.md) | 把已批准产品设计转换为 ConversationRun Interface、实施决策、测试 Seam 与验收边界 | `READY_FOR_AGENT` |
 | [Ticket 拆分提案](./TICKET-BREAKDOWN-PROPOSAL.md) | 10 个 tracer-bullet 纵向票及其阻塞关系 | `REVIEWED_APPROVED` |
+| [M4.1 实施验收记录](./M4-1-IMPLEMENTATION-REVIEW.md) | 当前可操作闭环、自动化事实、明确边界与用户 Review 顺序 | `READY_FOR_USER_REVIEW` |
 
 ## 4. 本轮 Write Set
 

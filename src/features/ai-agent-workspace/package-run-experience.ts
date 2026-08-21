@@ -1,7 +1,7 @@
 import type { PackageArtifact } from '@domain/workbuddy/course-package';
 
 export type PackageExperienceState = Readonly<{
-  status: 'idle' | 'running' | 'completed';
+  status: 'idle' | 'running' | 'stopped' | 'completed';
   phase: 0 | 1 | 2 | 3;
 }>;
 
@@ -25,6 +25,14 @@ export function advancePackageExperience(state: PackageExperienceState): Package
   if (state.status !== 'running') return state;
   if (state.phase === 2) return Object.freeze({ status: 'completed', phase: 3 });
   return Object.freeze({ status: 'running', phase: (state.phase + 1) as 1 | 2 });
+}
+
+export function stopPackageExperience(state: PackageExperienceState): PackageExperienceState {
+  return state.status === 'running' ? Object.freeze({ ...state, status: 'stopped' }) : state;
+}
+
+export function resumePackageExperience(state: PackageExperienceState): PackageExperienceState {
+  return state.status === 'stopped' ? Object.freeze({ ...state, status: 'running' }) : state;
 }
 
 export function projectPackageExperienceArtifacts(

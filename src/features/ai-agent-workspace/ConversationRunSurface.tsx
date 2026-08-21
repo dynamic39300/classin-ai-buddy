@@ -104,6 +104,9 @@ export function ConversationRunSurface() {
   if (!coursewareView || !projection) return null;
 
   const renderExperienceEvents = experience.status !== 'idle';
+  const runStatusLabel = experience.status === 'running'
+    ? '执行中'
+    : experience.status === 'stopped' ? '已停止' : coursewareView.run.statusLabel;
   const closeApprovalDialog = () => {
     setApprovalDialogOpen(false);
     requestAnimationFrame(() => approvalTriggerRef.current?.isConnected && approvalTriggerRef.current.focus());
@@ -124,7 +127,7 @@ export function ConversationRunSurface() {
     <section className={styles.page} data-inspector-open={inspectorOpen} aria-labelledby="conversation-run-title">
       <section className={styles.main}>
         <header className={styles.header}>
-          <div><h1 id="conversation-run-title">{projection.title}</h1><span>{coursewareView.run.statusLabel}</span></div>
+          <div><h1 id="conversation-run-title">{projection.title}</h1><span>{runStatusLabel}</span><small className={styles.truthMarker} aria-label="当前为固定体验数据">体验环境</small></div>
           <div className={styles.headerActions}>{recoveryReviewMode ? <label className={styles.recoveryHarness}>恢复路径验收<select aria-label="恢复路径验收场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">正常保存</option><option value="permission_denied">无写入权限</option><option value="version_conflict">目标版本已更新</option><option value="recoverable_failure">服务暂时不可用</option><option value="timeout">执行等待超时</option></select></label> : null}<button type="button" aria-pressed={inspectorOpen} onClick={() => setInspectorOpen((open) => !open)}>
             <PanelRight aria-hidden="true" size={16} />{inspectorOpen ? '收起辅助区' : '展开辅助区'}
           </button></div>
@@ -344,7 +347,7 @@ function CoursewareActionCard({ action, executing, blockedByReceipt, onOpenAppro
   const expiryLabel = `${action.expiresAt.slice(5, 7)}月${action.expiresAt.slice(8, 10)}日 ${action.expiresAt.slice(11, 16)} 前`;
   return <section className={styles.actionCard} aria-label="ClassIn 保存提案">
     <dl><div><dt>目标位置</dt><dd>{action.target.label}</dd></div><div><dt>变更内容</dt><dd>{action.difference}</dd></div><div><dt>写入判断</dt><dd>{action.risk === 'low' ? '低风险' : action.risk === 'medium' ? '中风险' : '高风险'} · {action.permission === 'allowed' ? '允许写入' : '无写入权限'} · {action.reversible ? '可撤销' : '不可撤销'}</dd></div><div><dt>目标版本</dt><dd>{action.target.expectedVersion}</dd></div><div><dt>确认有效期</dt><dd>{expiryLabel}</dd></div></dl>
-    {executing ? <p className={styles.executionStatus} role="status"><LoaderCircle className={styles.spinner} aria-hidden="true" size={14} />正在执行</p> : action.status === 'approved' ? <p className={styles.executionStatus}>已批准 · 尚未执行</p> : null}
+    {executing ? <p className={styles.executionStatus} role="status"><LoaderCircle className={styles.spinner} aria-hidden="true" size={14} />正在执行</p> : blockedByReceipt ? <p className={styles.executionStatus}>已执行 · 结果见下方回执</p> : action.status === 'approved' ? <p className={styles.executionStatus}>已批准 · 尚未执行</p> : null}
     <div className={styles.cardActions}>{action.status === 'proposed' ? <><button type="button" onClick={onReject}>取消保存</button><button className={styles.primary} type="button" onClick={(event) => onOpenApproval(event.currentTarget)}>确认执行</button></> : action.status === 'approved' && !executing && !blockedByReceipt ? <button className={styles.primary} type="button" onClick={onExecute}>执行已批准动作</button> : null}</div>
   </section>;
 }

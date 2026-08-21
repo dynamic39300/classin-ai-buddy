@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 async function openWorkBuddy(page: import('@playwright/test').Page) {
@@ -64,6 +65,7 @@ test('teacher creates one dynamic smart-courseware run from the default Context 
   await page.getByRole('button', { name: '创建任务' }).click();
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
+  await expect(page.getByLabel('当前为固定体验数据')).toHaveText('体验环境');
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   await expect(timeline.getByText('教学目标', { exact: true })).toBeVisible();
   await expect(timeline.getByText('已理解你的目标', { exact: true })).toBeVisible();
@@ -241,6 +243,7 @@ test('teacher configures and generates a four-artifact course package inside one
   await page.setViewportSize({ width: 1440, height: 900 });
   await createPackageRun(page);
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-course-package$/);
+  await expect(page.getByLabel('当前为固定体验数据')).toHaveText('体验环境');
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   const plan = timeline.getByRole('article').filter({ hasText: '课程方案包执行计划' });
   await expect(plan.getByRole('combobox', { name: '课程课时' })).toHaveValue('2');
@@ -259,6 +262,13 @@ test('teacher configures and generates a four-artifact course package inside one
   const progress = timeline.getByRole('article').filter({ hasText: '课程方案包生成进度' });
   await expect(progress.getByText('动量守恒模型课件', { exact: true })).toBeVisible();
   await expect(progress.getByText('生成中', { exact: true }).first()).toBeVisible();
+  const composer = page.getByRole('group', { name: '任务补充输入' });
+  await composer.getByRole('button', { name: '停止执行' }).click();
+  await expect(progress).toContainText('已停止');
+  await composer.getByRole('textbox', { name: '向 Agent 补充要求' }).fill('录播脚本结尾增加两道课堂反思问题。');
+  await composer.getByRole('button', { name: '发送补充要求' }).click();
+  await expect(timeline.getByText('录播脚本结尾增加两道课堂反思问题。', { exact: true })).toBeVisible();
+  await composer.getByRole('button', { name: '继续执行' }).click();
   const output = page.getByRole('region', { name: '课程方案包产出' });
   await expect(output).toBeVisible();
   await expect(output.getByText('4 项产出', { exact: true })).toBeVisible();
@@ -341,4 +351,20 @@ test('approved courseware derives an independently contextualized package with b
   await timeline.getByRole('link', { name: '返回源课件任务' }).click();
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
   await expect(page.getByRole('region', { name: '智能课件产出' }).getByRole('link', { name: '打开已派生课程方案包' })).toBeVisible();
+});
+
+test('compact reduced-motion Run keeps the Timeline, Inspector and primary commands accessible @a11y', async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 768 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const plan = await confirmCoursewarePlan(page);
+  await plan.getByRole('button', { name: '开始执行计划' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
+  await page.getByRole('tab', { name: '上下文' }).click();
+  await expect(page.getByRole('complementary', { name: '核心上下文' })).toBeVisible();
+  await page.getByRole('tab', { name: '产出' }).click();
+  await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(accessibility.violations).toEqual([]);
 });

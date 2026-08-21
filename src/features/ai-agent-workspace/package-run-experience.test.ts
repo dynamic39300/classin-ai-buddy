@@ -5,7 +5,9 @@ import {
   advancePackageExperience,
   createPackageExperience,
   projectPackageExperienceArtifacts,
+  resumePackageExperience,
   startPackageExperience,
+  stopPackageExperience,
 } from './package-run-experience';
 
 describe('deterministic package conversation experience', () => {
@@ -27,5 +29,13 @@ describe('deterministic package conversation experience', () => {
     state = advancePackageExperience(state);
     expect(state.status).toBe('completed');
     expect(projectPackageExperienceArtifacts(state, run.artifacts).every(({ state: itemState }) => itemState === 'completed')).toBe(true);
+  });
+
+  it('stops and resumes from the same dependency phase', () => {
+    const running = advancePackageExperience(startPackageExperience(createPackageExperience()));
+    const stopped = stopPackageExperience(running);
+    expect(stopped).toMatchObject({ status: 'stopped', phase: 1 });
+    expect(advancePackageExperience(stopped)).toBe(stopped);
+    expect(resumePackageExperience(stopped)).toMatchObject({ status: 'running', phase: 1 });
   });
 });
