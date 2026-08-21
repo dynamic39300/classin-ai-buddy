@@ -8,9 +8,9 @@ import {
   type ContextProposal, type ContextSnapshot, type CoreContextItem,
 } from '@domain/workbuddy/core-context';
 import {
-  approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
+  approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun, reviseCoursewareArtifact,
   reviseCoursewareBrief, updateCoursewareBrief,
-  type CoursewareBrief, type CoursewareExecutionOutput, type CoursewareRunDefinition, type SingleCoursewareRun,
+  type CoursewareArtifactRevisionInput, type CoursewareBrief, type CoursewareExecutionOutput, type CoursewareRunDefinition, type SingleCoursewareRun,
 } from '@domain/workbuddy/course-production';
 import {
   approveAction, createCoursewareSaveAction, expireAction, rejectAction, renewCoursewareSaveAction,
@@ -85,6 +85,10 @@ export function createWorkBuddyCoursewareController(params: CoursewareController
         ? executeCoursewarePlan(current, current.revision > 1 ? replannedCoursewareOutput : coursewareOutput)
         : current),
       approveCoursewareArtifact: () => setRun((current) => current ? approveCoursewareArtifact(current) : current),
+      reviseCoursewareArtifact: (input: CoursewareArtifactRevisionInput) => {
+        setRun((current) => current ? reviseCoursewareArtifact(current, input) : current);
+        clearWriteback();
+      },
       proposeCoursewareSave: () => {
         if (!run?.artifact || run.reviewStatus !== 'approved') return;
         const next = action?.status === 'expired'

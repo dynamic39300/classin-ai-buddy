@@ -79,18 +79,19 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       id: event.id,
       kind: event.capability ? 'capability_call' : 'process',
       title: event.title,
-      summary: event.summary,
+      summary: event.summary.replace('[模拟]', ''),
       objectRefs: event.capability ? [{ type: 'capability', id: event.capability }] : [],
     });
   }
 
-  if (run.artifact) {
+  const artifacts = run.artifactHistory.length ? run.artifactHistory : run.artifact ? [run.artifact] : [];
+  for (const artifact of artifacts) {
     inputs.push({
-      id: run.artifact.id,
+      id: `${artifact.id}:${artifact.version}`,
       kind: 'artifact',
-      title: run.artifact.title,
-      summary: `${run.artifact.pageCount} 页 · ${run.artifact.validationSummary}`,
-      objectRefs: [{ type: 'artifact', id: run.artifact.id, version: run.artifact.version }],
+      title: artifact.changeSummary ? `课件已更新为 ${artifact.version}` : artifact.title,
+      summary: artifact.changeSummary?.join(' · ') ?? `${artifact.pageCount} 页 · ${artifact.validationSummary}`,
+      objectRefs: [{ type: 'artifact', id: artifact.id, version: artifact.version }],
     });
   }
 

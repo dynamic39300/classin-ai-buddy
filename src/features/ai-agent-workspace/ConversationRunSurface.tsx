@@ -1,5 +1,7 @@
-import { CheckCircle2, ChevronDown, FileText, LoaderCircle, PanelRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Download, Expand, FileText, LoaderCircle, PanelRight, Pencil, Save, ShieldCheck, Sparkles, WandSparkles, X } from 'lucide-react';
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import { CoreContextPanel } from './CoreContextPanel';
 import {
   advanceCoursewareExperience,
@@ -9,6 +11,7 @@ import {
   type CoursewareExperienceEvent,
 } from './conversation-run-experience';
 import { projectCoursewareConversationRun } from './conversation-run-projection';
+import type { CoursewareRunView } from './workbuddy-course-production-view';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './ConversationRunSurface.module.css';
 
@@ -21,9 +24,15 @@ export function ConversationRunSurface() {
     confirmCoursewareTaskBrief,
     reviseCoursewareTaskBrief,
     executeCoursewareTaskPlan,
+    approveCoursewareArtifact,
+    reviseCoursewareArtifact,
+    proposeCoursewareSave,
+    approveCoursewareSave,
+    rejectCoursewareSave,
+    executeApprovedCoursewareSave,
   } = useWorkBuddyWorkspace().courseware;
   const [inspectorOpen, setInspectorOpen] = useState(true);
-  const [inspectorMode, setInspectorMode] = useState<InspectorMode>('context');
+  const [inspectorMode, setInspectorMode] = useState<InspectorMode>(() => coursewareView?.run.artifact ? 'output' : 'context');
   const [lesson, setLesson] = useState('lesson-1');
   const [otherLesson, setOtherLesson] = useState('');
   const [duration, setDuration] = useState('45');
@@ -31,10 +40,13 @@ export function ConversationRunSurface() {
   const [style, setStyle] = useState('简约探究');
   const [experience, setExperience] = useState(() => createCoursewareExperience([]));
   const [newEventCount, setNewEventCount] = useState(0);
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [executingAction, setExecutingAction] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
   const followingRef = useRef(true);
   const previousEventCountRef = useRef(0);
   const executionCommittedRef = useRef(false);
+  const approvalTriggerRef = useRef<HTMLButtonElement | null>(null);
   const projection = useMemo(
     () => coursewareView ? projectCoursewareConversationRun(coursewareView) : null,
     [coursewareView],
@@ -75,12 +87,16 @@ export function ConversationRunSurface() {
   if (!coursewareView || !projection) return null;
 
   const renderExperienceEvents = experience.status !== 'idle';
+  const closeApprovalDialog = () => {
+    setApprovalDialogOpen(false);
+    requestAnimationFrame(() => approvalTriggerRef.current?.isConnected && approvalTriggerRef.current.focus());
+  };
 
   return (
     <section className={styles.page} data-inspector-open={inspectorOpen} aria-labelledby="conversation-run-title">
       <section className={styles.main}>
         <header className={styles.header}>
-          <div><h1 id="conversation-run-title">{projection.title}</h1><span>{coursewareView.run.statusLabel} · 体验运行</span></div>
+          <div><h1 id="conversation-run-title">{projection.title}</h1><span>{coursewareView.run.statusLabel}</span></div>
           <button type="button" aria-pressed={inspectorOpen} onClick={() => setInspectorOpen((open) => !open)}>
             <PanelRight aria-hidden="true" size={16} />{inspectorOpen ? '收起辅助区' : '展开辅助区'}
           </button>
@@ -131,6 +147,20 @@ export function ConversationRunSurface() {
                   </section>
                 ) : null}
                 {event.kind === 'artifact' ? <button className={styles.artifactLink} type="button" onClick={() => { setInspectorOpen(true); setInspectorMode('output'); }}><FileText aria-hidden="true" size={15} />打开智能课件产出</button> : null}
+                {event.kind === 'proposed_action' && coursewareView.action ? <CoursewareActionCard
+                  action={coursewareView.action}
+                  executing={executingAction}
+                  onOpenApproval={(trigger) => { approvalTriggerRef.current = trigger; setApprovalDialogOpen(true); }}
+                  onReject={rejectCoursewareSave}
+                  onExecute={() => {
+                    setExecutingAction(true);
+                    window.setTimeout(() => {
+                      executeApprovedCoursewareSave();
+                      setExecutingAction(false);
+                    }, 500);
+                  }}
+                /> : null}
+                {event.kind === 'receipt' && coursewareView.receipt ? <CoursewareReceiptCard receipt={coursewareView.receipt} /> : null}
               </div>
             </article>
             {event.kind === 'plan' ? experienceEvents.map((experienceEvent) => <CapabilityCallCard event={experienceEvent} key={experienceEvent.id} />) : null}
@@ -151,10 +181,29 @@ export function ConversationRunSurface() {
             <button type="button" role="tab" aria-selected={inspectorMode === 'output'} disabled={!coursewareView.run.artifact} onClick={() => setInspectorMode('output')}>产出</button>
           </div>
           {inspectorMode === 'context' ? <CoreContextPanel readOnly mode="courseware" onClose={() => setInspectorOpen(false)} /> : coursewareView.run.artifact ? (
-            <CoursewareOutput artifact={coursewareView.run.artifact} />
+            <CoursewareOutput
+              artifact={coursewareView.run.artifact}
+              artifactHistory={coursewareView.run.artifactHistory}
+              reviewStatus={coursewareView.run.reviewStatus}
+              hasAction={Boolean(coursewareView.action)}
+              hasReceipt={Boolean(coursewareView.receipt)}
+              onRevise={reviseCoursewareArtifact}
+              onApproveArtifact={approveCoursewareArtifact}
+              onProposeSave={proposeCoursewareSave}
+            />
           ) : <section className={styles.emptyOutput}><strong>产出将在生成后显示</strong><p>任务过程继续保留在左侧时间线。</p></section>}
         </aside>
       ) : null}
+      {approvalDialogOpen && coursewareView.action ? <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeApprovalDialog();
+      }}><section className={styles.approvalDialog} role="dialog" aria-modal="true" aria-labelledby="approval-dialog-title" onKeyDown={(event) => {
+        if (event.key === 'Escape') { event.preventDefault(); closeApprovalDialog(); }
+      }}>
+        <header><ShieldCheck aria-hidden="true" size={18} /><div><span>教师确认</span><h2 id="approval-dialog-title">确认保存到 ClassIn</h2></div></header>
+        <p>{coursewareView.action.target.label}</p>
+        <dl><div><dt>来源</dt><dd>来源课件 {coursewareView.action.artifactRef.version}</dd></div><div><dt>变更</dt><dd>{coursewareView.action.difference}</dd></div><div><dt>影响</dt><dd>{coursewareView.action.impact}</dd></div><div><dt>版本</dt><dd>{coursewareView.action.target.expectedVersion}</dd></div></dl>
+        <footer><button type="button" autoFocus onClick={closeApprovalDialog}>返回检查</button><button className={styles.primary} type="button" onClick={() => { approveCoursewareSave(); setApprovalDialogOpen(false); }}>批准保存</button></footer>
+      </section></div> : null}
     </section>
   );
 }
@@ -180,16 +229,66 @@ function CapabilityCallCard({ event }: Readonly<{ event: CoursewareExperienceEve
   );
 }
 
-function CoursewareOutput({ artifact }: Readonly<{ artifact: NonNullable<ReturnType<typeof useWorkBuddyWorkspace>['courseware']['coursewareView']>['run']['artifact'] }>) {
-  if (!artifact) return null;
+function CoursewareOutput({
+  artifact, artifactHistory, reviewStatus, hasAction, hasReceipt, onRevise, onApproveArtifact, onProposeSave,
+}: Readonly<{
+  artifact: CoursewareArtifactDraft;
+  artifactHistory: readonly CoursewareArtifactDraft[];
+  reviewStatus: 'pending' | 'approved' | 'not_available';
+  hasAction: boolean;
+  hasReceipt: boolean;
+  onRevise: (input: Readonly<{ instruction: string; changes: readonly string[] }>) => void;
+  onApproveArtifact: () => void;
+  onProposeSave: () => void;
+}>) {
+  const [editing, setEditing] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState('第 6 页 · 碰撞案例');
+  const [instruction, setInstruction] = useState('把第 6 页案例改成更贴近生活的冰壶碰撞，并增加一页易错点辨析。');
+  const [toolStatus, setToolStatus] = useState('');
   return (
-    <section className={styles.output} role="region" aria-label="智能课件产出">
-      <header><div><span>智能课件</span><h2>{artifact.title}</h2></div><div className={styles.outputMeta}><span>{artifact.version}</span><span>{artifact.pageCount} 页</span></div></header>
+    <section className={styles.output} role="region" aria-label="智能课件产出" data-focus={focused}>
+      <header><div><span>{editing ? '编辑中' : '智能课件'}</span><h2>{artifact.title}</h2></div><div className={styles.outputTools}>
+        {editing ? <><button type="button" onClick={() => { setEditing(false); setToolStatus(`课件 ${artifact.version} 草稿已保存；未写入 ClassIn。`); }}><Save aria-hidden="true" size={14} />保存草稿</button><button type="button" onClick={() => setEditing(false)}><X aria-hidden="true" size={14} />退出编辑</button></> : <>
+          <button type="button" aria-pressed={focused} onClick={() => setFocused((current) => !current)}><Expand aria-hidden="true" size={14} />{focused ? '退出聚焦' : '聚焦预览'}</button>
+          <button type="button" onClick={() => setToolStatus('当前课件草稿将在完成 ClassIn 保存后提供下载。')}><Download aria-hidden="true" size={14} />下载</button>
+          <button type="button" onClick={() => { setEditing(true); setToolStatus(''); }}><Pencil aria-hidden="true" size={14} />编辑课件</button>
+        </>}
+      </div><div className={styles.outputMeta}>{artifactHistory.map(({ version }) => <span data-current={version === artifact.version} key={version}>{version}</span>)}<span>{artifact.pageCount} 页</span></div></header>
       <div className={styles.slidePreview} aria-label="课件页面预览">
         <span>01 / {artifact.pageCount}</span>
-        <div className={styles.slideCanvas}><small>高中物理 · 动量与碰撞</small><h3>从碰撞实验理解动量守恒</h3><p>观察现象 · 建立模型 · 验证规律</p><div className={styles.collisionDiagram}><i /><b>m₁v₁ + m₂v₂</b><i /></div></div>
+        <div className={styles.slideCanvas} data-editing={editing}><small>高中物理 · 动量与碰撞</small><h3>从碰撞实验理解动量守恒</h3><p>观察现象 · 建立模型 · 验证规律</p><div className={styles.collisionDiagram}><i /><b>m₁v₁ + m₂v₂</b><i /></div>{editing ? <button className={styles.selectedBlock} type="button" aria-pressed={selectedBlock === '第 6 页 · 碰撞案例'} onClick={() => setSelectedBlock('第 6 页 · 碰撞案例')}>第 6 页 · 碰撞案例</button> : null}</div>
       </div>
+      {editing ? <section className={styles.aiEditor} aria-label="AI 修改课件"><div><WandSparkles aria-hidden="true" size={16} /><strong>AI 修改</strong><span>已选择：{selectedBlock}</span></div><label>修改要求<textarea aria-label="AI 修改要求" value={instruction} onChange={(event) => setInstruction(event.target.value)} /></label><button type="button" disabled={!instruction.trim()} onClick={() => {
+        onRevise({ instruction, changes: ['替换第 6 页案例', '新增易错点辨析页', '其他页面保持不变'] });
+        setToolStatus('AI 修改已生成新的课件版本；请保存草稿并重新复查。');
+      }}>应用 AI 修改</button></section> : null}
+      {artifact.changeSummary ? <section className={styles.changeSummary} aria-label={`${artifact.version} 修改摘要`}><strong>{artifact.version} 修改摘要</strong><ul>{artifact.changeSummary.map((change) => <li key={change}>{change}</li>)}</ul></section> : null}
       <dl className={styles.outputFacts}><div><dt>来源步骤</dt><dd>{artifact.sourceStepId}</dd></div><div><dt>质量检查</dt><dd>{artifact.validationSummary}</dd></div><div><dt>当前状态</dt><dd>课件草稿 · 未写入 ClassIn</dd></div></dl>
+      {toolStatus ? <p className={styles.toolStatus} role="status">{toolStatus}</p> : null}
+      <footer className={styles.outputActions}>{reviewStatus === 'pending' ? <button className={styles.primary} type="button" onClick={onApproveArtifact}>确认课件可用于后续任务</button> : reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : hasReceipt ? <span>执行回执已返回任务时间线</span> : hasAction ? <span>保存流程已进入任务时间线</span> : null}</footer>
     </section>
   );
+}
+
+function CoursewareActionCard({ action, executing, onOpenApproval, onReject, onExecute }: Readonly<{
+  action: NonNullable<CoursewareRunView['action']>;
+  executing: boolean;
+  onOpenApproval: (trigger: HTMLButtonElement) => void;
+  onReject: () => void;
+  onExecute: () => void;
+}>) {
+  const expiryLabel = `${action.expiresAt.slice(5, 7)}月${action.expiresAt.slice(8, 10)}日 ${action.expiresAt.slice(11, 16)} 前`;
+  return <section className={styles.actionCard} aria-label="ClassIn 保存提案">
+    <dl><div><dt>目标位置</dt><dd>{action.target.label}</dd></div><div><dt>变更内容</dt><dd>{action.difference}</dd></div><div><dt>写入判断</dt><dd>{action.risk === 'low' ? '低风险' : action.risk === 'medium' ? '中风险' : '高风险'} · {action.permission === 'allowed' ? '允许写入' : '无写入权限'} · {action.reversible ? '可撤销' : '不可撤销'}</dd></div><div><dt>目标版本</dt><dd>{action.target.expectedVersion}</dd></div><div><dt>确认有效期</dt><dd>{expiryLabel}</dd></div></dl>
+    {executing ? <p className={styles.executionStatus} role="status"><LoaderCircle className={styles.spinner} aria-hidden="true" size={14} />正在执行</p> : action.status === 'approved' ? <p className={styles.executionStatus}>已批准 · 尚未执行</p> : null}
+    <div className={styles.cardActions}>{action.status === 'proposed' ? <><button type="button" onClick={onReject}>取消保存</button><button className={styles.primary} type="button" onClick={(event) => onOpenApproval(event.currentTarget)}>确认执行</button></> : action.status === 'approved' && !executing ? <button className={styles.primary} type="button" onClick={onExecute}>执行已批准动作</button> : null}</div>
+  </section>;
+}
+
+function CoursewareReceiptCard({ receipt }: Readonly<{
+  receipt: NonNullable<CoursewareRunView['receipt']>;
+}>) {
+  if (receipt.status !== 'success') return <section className={styles.receiptCard}><strong>保存动作需要处理</strong><p>{receipt.result}</p></section>;
+  return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
 }

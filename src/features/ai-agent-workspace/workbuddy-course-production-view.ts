@@ -7,7 +7,7 @@ import type { ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeba
 type CoursewarePresentation = Readonly<{
   id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string; stage: SingleCoursewareRun['stage'];
   brief: SingleCoursewareRun['brief']; plan: SingleCoursewareRun['plan']; events: SingleCoursewareRun['events'];
-  artifact: SingleCoursewareRun['artifact']; revision: number;
+  artifact: SingleCoursewareRun['artifact']; artifactHistory: SingleCoursewareRun['artifactHistory']; revision: number;
   derivedPackageRunRef: string | null;
   reviewStatus: SingleCoursewareRun['reviewStatus'];
   supersededEvidence: readonly Readonly<SingleCoursewareRun['supersededEvidence'][number] & { contextLabels: readonly string[] }>[];
@@ -111,7 +111,7 @@ export function projectCoursewareRunView(
   return Object.freeze({
     run: Object.freeze({
       id: run.id, title: run.title, goal: run.goal, contextSnapshotId: run.contextSnapshotId, stage: run.stage, ...stageProjection,
-      brief: run.brief, plan: run.plan, events: run.events, artifact: run.artifact, revision: run.revision, reviewStatus: run.reviewStatus,
+      brief: run.brief, plan: run.plan, events: run.events, artifact: run.artifact, artifactHistory: run.artifactHistory, revision: run.revision, reviewStatus: run.reviewStatus,
       derivedPackageRunRef,
       supersededEvidence: Object.freeze(run.supersededEvidence.map((evidence) => Object.freeze({
         ...evidence,

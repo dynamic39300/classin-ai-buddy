@@ -3,7 +3,7 @@ import { WORKBUDDY_COURSEWARE_DEFINITION, WORKBUDDY_COURSEWARE_OUTPUT, WORKBUDDY
 import { createCoursewareSaveAction } from './writeback';
 import {
   approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun,
-  reviseCoursewareBrief, updateCoursewareBrief,
+  reviseCoursewareArtifact, reviseCoursewareBrief, updateCoursewareBrief,
 } from './course-production';
 
 describe('single-courseware Course Production Module', () => {
@@ -33,6 +33,29 @@ describe('single-courseware Course Production Module', () => {
     expect(replanned.supersededEvidence[0]?.receipt).toMatchObject({ id: 'receipt-1', status: 'success', result: '原课件已保存' });
     expect(replanned.supersededEvidence[0]?.plan).toHaveLength(4);
     expect(replanned.supersededEvidence[0]?.events).toHaveLength(5);
+  });
+
+  it('creates a stable Artifact version chain and requires review again after an AI modification', () => {
+    const completed = executeCoursewarePlan(confirmCoursewareBrief(createSingleCoursewareRun(
+      WORKBUDDY_COURSEWARE_DEFINITION, '设计动量守恒模型课件', 'snapshot-1',
+    )), WORKBUDDY_COURSEWARE_OUTPUT);
+    const approved = approveCoursewareArtifact(completed);
+
+    const revised = reviseCoursewareArtifact(approved, {
+      instruction: '把第 6 页案例改成冰壶碰撞，并增加一页易错点辨析。',
+      changes: ['替换第 6 页案例', '新增易错点辨析页', '其他页面保持不变'],
+    });
+
+    expect(revised.artifact).toMatchObject({
+      id: completed.artifact?.id,
+      version: 'v2',
+      pageCount: 19,
+      revisionInstruction: '把第 6 页案例改成冰壶碰撞，并增加一页易错点辨析。',
+      changeSummary: ['替换第 6 页案例', '新增易错点辨析页', '其他页面保持不变'],
+    });
+    expect(revised.artifactHistory.map(({ version }) => version)).toEqual(['v1', 'v2']);
+    expect(revised.reviewStatus).toBe('pending');
+    expect(revised.allowedCommands).not.toContain('propose-save');
   });
 
   it('only accepts commands allowed by the current stage', () => {

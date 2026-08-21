@@ -3,7 +3,7 @@ import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
-import type { CoursewareBrief } from '@domain/workbuddy/course-production';
+import type { CoursewareArtifactRevisionInput, CoursewareBrief } from '@domain/workbuddy/course-production';
 import type { CoreContextView, CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
 
 export type CoursewarePanel = 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'replan' | 'none';
@@ -42,6 +42,7 @@ export type WorkBuddyCourseware = Readonly<{
   reviseCoursewareTaskBrief: () => void;
   executeCoursewareTaskPlan: () => void;
   approveCoursewareArtifact: () => void;
+  reviseCoursewareArtifact: (input: CoursewareArtifactRevisionInput) => void;
   proposeCoursewareSave: () => void;
   approveCoursewareSave: () => void;
   rejectCoursewareSave: () => void;
