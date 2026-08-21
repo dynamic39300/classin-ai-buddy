@@ -15,6 +15,7 @@ import styles from './ConversationRunSurface.module.css';
 function projectExperience(progress: ConversationRunProgress): CoursewareExperienceState {
   if (progress.status === 'running') return Object.freeze({ status: 'running', activeIndex: progress.activeIndex, completedCount: progress.completedCount });
   if (progress.status === 'stopped') return Object.freeze({ status: 'stopped', completedCount: progress.completedCount });
+  if (progress.status === 'cancelled') return Object.freeze({ status: 'cancelled', completedCount: progress.completedCount });
   if (progress.status === 'completed') return Object.freeze({ status: 'completed', completedCount: progress.completedCount });
   return Object.freeze({ status: 'idle' });
 }
@@ -48,7 +49,7 @@ export function ConversationRunSurface() {
   const followingRef = useRef(true);
   const previousEventCountRef = useRef(0);
   const experience = projection ? projectExperience(projection.presentation.progress) : Object.freeze({ status: 'idle' as const });
-  const visibleEventCount = (projection?.events.length ?? 0) + Number(projection?.presentation.replanPending);
+  const visibleEventCount = projection?.events.length ?? 0;
   useLayoutEffect(() => {
     const addedCount = Math.max(0, visibleEventCount - previousEventCountRef.current);
     previousEventCountRef.current = visibleEventCount;
@@ -66,9 +67,12 @@ export function ConversationRunSurface() {
 
   const runStatusLabel = experience.status === 'running'
     ? '执行中'
-    : experience.status === 'stopped' ? '已停止' : coursewareView.run.statusLabel;
+    : experience.status === 'stopped' ? '已停止'
+      : experience.status === 'cancelled' ? '已取消' : coursewareView.run.statusLabel;
   const closeApprovalDialog = () => setApprovalDialogOpen(false);
-  const { inspectorOpen, inspectorMode, composerDraft, executingAction, replanPending } = projection.presentation;
+  const { inspectorOpen, inspectorMode, composerDraft, executingAction } = projection.presentation;
+  const canStop = projection.events.some(({ allowedCommands }) => allowedCommands.includes('stop'));
+  const canResume = projection.events.some(({ allowedCommands }) => allowedCommands.includes('resume'));
   const executeAction = () => dispatch({ type: 'execute_action' });
 
   return (
@@ -136,6 +140,7 @@ export function ConversationRunSurface() {
                   onExecute={executeAction}
                 /> : null}
                 {event.kind === 'receipt' && coursewareView.receipt?.id === event.id ? <CoursewareReceiptCard receipt={coursewareView.receipt} allowedCommands={event.allowedCommands} onRecover={() => dispatch({ type: 'recover_action' })} onRetry={executeAction} /> : null}
+                {event.allowedCommands.includes('confirm_replan') || event.allowedCommands.includes('dismiss_replan') ? <><dl className={styles.impactList}><div><dt>当前范围</dt><dd>{replanScope.previousLabel}</dd></div><div><dt>新范围</dt><dd>{replanScope.nextLabel}</dd></div><div><dt>受影响步骤</dt><dd>目标理解、教学结构、课件组装、质量检查</dd></div><div><dt>保留内容</dt><dd>旧 ContextSnapshot、Plan、过程、Artifact、Action 与 Receipt</dd></div></dl><div className={styles.cardActions}>{event.allowedCommands.includes('dismiss_replan') ? <button type="button" onClick={() => dispatch({ type: 'dismiss_replan' })}>保留当前范围</button> : null}{event.allowedCommands.includes('confirm_replan') ? <button className={styles.primary} type="button" onClick={() => dispatch({ type: 'confirm_replan' })}>确认并重新规划</button> : null}</div></> : null}
               </div>
             </article>
             );
@@ -145,17 +150,13 @@ export function ConversationRunSurface() {
             setNewEventCount(0);
             timelineRef.current?.scrollTo({ top: timelineRef.current.scrollHeight, behavior: 'smooth' });
           }}>新增 {newEventCount} 条</button> : null}
-          {replanPending ? <article className={styles.event} data-kind="system" data-state="requires_teacher_input">
-            <span className={styles.eventMark}><ShieldCheck aria-hidden="true" size={15} /></span>
-            <div className={styles.eventBody}><strong>教学范围变化需要重新规划</strong><p>这会生成新的核心上下文快照与执行计划，旧计划、过程和产物会保留为历史证据。</p><dl className={styles.impactList}><div><dt>当前范围</dt><dd>{replanScope.previousLabel}</dd></div><div><dt>新范围</dt><dd>{replanScope.nextLabel}</dd></div><div><dt>受影响步骤</dt><dd>目标理解、教学结构、课件组装、质量检查</dd></div><div><dt>保留内容</dt><dd>旧 ContextSnapshot、Plan、过程、Artifact、Action 与 Receipt</dd></div></dl><div className={styles.cardActions}><button type="button" onClick={() => dispatch({ type: 'dismiss_replan' })}>保留当前范围</button><button className={styles.primary} type="button" onClick={() => dispatch({ type: 'confirm_replan' })}>确认并重新规划</button></div></div>
-          </article> : null}
         </div>
         <div className={styles.runComposer} role="group" aria-label="任务补充输入">
-          <textarea aria-label="向 Agent 补充要求" value={composerDraft} placeholder="补充要求、调整任务或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
-          <div><span>{experience.status === 'running' ? '任务执行中，可补充未开始步骤' : experience.status === 'stopped' ? '任务已停止，可继续执行' : '补充内容会记录在当前任务中'}</span>
-            {experience.status === 'running' ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
-            {experience.status === 'stopped' ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
-            <button className={styles.primary} type="button" aria-label="发送补充要求" disabled={!composerDraft.trim()} onClick={() => {
+          <textarea aria-label="向 Agent 补充要求" value={composerDraft} disabled={experience.status === 'cancelled'} placeholder="补充要求、调整任务或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
+          <div><span>{canStop ? '任务执行中，可补充未开始步骤' : canResume ? '任务已停止，可继续执行' : experience.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}</span>
+            {canStop ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
+            {canResume ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
+            <button className={styles.primary} type="button" aria-label="发送补充要求" disabled={experience.status === 'cancelled' || !composerDraft.trim()} onClick={() => {
               const message = composerDraft.trim();
               dispatch({ type: 'supplement', text: message, materialScopeChange: /主教学范围|二次函数|改为高一（2）班/.test(message) });
             }}>发送</button>

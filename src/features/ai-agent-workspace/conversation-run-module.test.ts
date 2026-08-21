@@ -150,6 +150,31 @@ describe('ConversationRun Deep Module', () => {
     expect(restored.dispatch('run-1', { id: 'supplement-stable-1', type: 'supplement', text: '增加课堂讨论' })).toMatchObject({ status: 'duplicate' });
   });
 
+  it('publishes stop, resume and replanning recovery through event-level commands', () => {
+    const clock = manualScheduler();
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: baseProjection(), progressStepCount: 2 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const module = createConversationRunModule(host, clock.scheduler);
+    clock.advance();
+    module.dispatch('run-1', { id: 'start-event-contract', type: 'start_plan' });
+    module.dispatch('run-1', { id: 'stop-event-contract', type: 'stop' });
+    expect(module.open('run-1')?.events.find(({ id }) => id === 'stop-event-contract'))
+      .toMatchObject({ state: 'stopped', allowedCommands: ['resume'] });
+
+    module.dispatch('run-1', { id: 'resume-event-contract', type: 'resume' });
+    expect(module.open('run-1')?.events.find(({ id }) => id === 'stop-event-contract'))
+      .toMatchObject({ state: 'completed', allowedCommands: [] });
+
+    module.dispatch('run-1', { id: 'scope-change', type: 'supplement', text: '改为高一（2）班', materialScopeChange: true });
+    const replanning = module.open('run-1')?.events.find(({ id }) => id === 'scope-change:replanning-required');
+    expect(replanning).toMatchObject({ state: 'requires_teacher_input', allowedCommands: ['confirm_replan', 'dismiss_replan'] });
+    module.dispatch('run-1', { id: 'confirm-scope-change', type: 'confirm_replan' });
+    expect(module.open('run-1')?.events.find(({ id }) => id === 'scope-change:replanning-required'))
+      .toMatchObject({ state: 'completed', allowedCommands: [] });
+  });
+
   it('keeps published event sequence stable when later domain events arrive', () => {
     const clock = manualScheduler();
     let projection = baseProjection();
@@ -229,7 +254,7 @@ describe('ConversationRun Deep Module', () => {
     expect(restored.dispatch('run-1', { id: 'run-1:execute-action-1', type: 'execute_action' })).toMatchObject({ status: 'accepted' });
   });
 
-  it('cancels a pre-execution Run and publishes a recoverable terminal event', () => {
+  it('cancels a pre-execution Run without exposing resume or generation commands', () => {
     const clock = manualScheduler();
     const cancellable = Object.freeze({ ...baseProjection(), allowedCommands: Object.freeze(['start_plan', 'supplement', 'cancel'] as const) });
     const host: ConversationRunHost = Object.freeze({
@@ -238,7 +263,8 @@ describe('ConversationRun Deep Module', () => {
     });
     const module = createConversationRunModule(host, clock.scheduler);
     expect(module.dispatch('run-1', { id: 'cancel-1', type: 'cancel' })).toMatchObject({ status: 'accepted' });
-    expect(module.open('run-1')).toMatchObject({ status: 'stopped', presentation: { progress: { status: 'stopped' } } });
-    expect(module.open('run-1')?.events.at(-1)).toMatchObject({ id: 'cancel-1', state: 'cancelled', title: '任务已取消' });
+    expect(module.open('run-1')).toMatchObject({ status: 'cancelled', allowedCommands: [], presentation: { progress: { status: 'cancelled' } } });
+    expect(module.open('run-1')?.events.at(-1)).toMatchObject({ id: 'cancel-1', state: 'cancelled', title: '任务已取消', allowedCommands: [] });
+    expect(module.dispatch('run-1', { id: 'resume-cancelled', type: 'resume' })).toMatchObject({ status: 'rejected', reason: 'command-not-allowed' });
   });
 });

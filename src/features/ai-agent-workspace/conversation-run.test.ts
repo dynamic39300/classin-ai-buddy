@@ -74,6 +74,7 @@ describe('ConversationRun public seam', () => {
     });
     expect(projection?.cursor).toBe('13');
     expect(projection?.events.find(({ kind }) => kind === 'receipt')?.allowedCommands).toEqual(['derive_package']);
+    expect(projection?.events.filter(({ kind }) => kind === 'capability_call').every(({ actor }) => actor === 'skill')).toBe(true);
   });
 
   it('projects actionable commands on waiting events and supersedes every prior revision object', () => {

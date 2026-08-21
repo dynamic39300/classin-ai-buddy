@@ -50,7 +50,9 @@ export function PackageConversationRunSurface() {
     ? packageView.receiptHistory
     : packageView.receipt ? [packageView.receipt] : [];
   const executeAction = () => dispatch({ type: 'execute_action' });
-  const statusLabel = progress.status === 'running' ? '生成中' : progress.status === 'stopped' ? '已停止' : run.statusLabel;
+  const canStop = projection.events.some(({ allowedCommands }) => allowedCommands.includes('stop'));
+  const canResume = projection.events.some(({ allowedCommands }) => allowedCommands.includes('resume'));
+  const statusLabel = progress.status === 'running' ? '生成中' : progress.status === 'stopped' ? '已停止' : progress.status === 'cancelled' ? '已取消' : run.statusLabel;
 
   return <section className={conversationStyles.page} data-inspector-open={inspectorOpen} aria-labelledby="package-conversation-title">
     <section className={conversationStyles.main}>
@@ -75,11 +77,11 @@ export function PackageConversationRunSurface() {
         })}
       </div>
       <div className={conversationStyles.runComposer} role="group" aria-label="任务补充输入">
-        <textarea aria-label="向 Agent 补充要求" value={composerDraft} placeholder="补充要求、调整方案包或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
-        <div><span>{progress.status === 'running' ? '方案包生成中，可补充未开始产物' : progress.status === 'stopped' ? '任务已停止，可从当前位置继续' : '补充内容会记录在当前任务中'}</span>
-          {progress.status === 'running' ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
-          {progress.status === 'stopped' ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
-          <button className={conversationStyles.primary} type="button" aria-label="发送补充要求" disabled={!composerDraft.trim()} onClick={() => dispatch({ type: 'supplement', text: composerDraft.trim() })}>发送</button>
+        <textarea aria-label="向 Agent 补充要求" value={composerDraft} disabled={progress.status === 'cancelled'} placeholder="补充要求、调整方案包或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
+        <div><span>{canStop ? '方案包生成中，可补充未开始产物' : canResume ? '任务已停止，可从当前位置继续' : progress.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}</span>
+          {canStop ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
+          {canResume ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
+          <button className={conversationStyles.primary} type="button" aria-label="发送补充要求" disabled={progress.status === 'cancelled' || !composerDraft.trim()} onClick={() => dispatch({ type: 'supplement', text: composerDraft.trim() })}>发送</button>
         </div>
       </div>
     </section>
@@ -144,12 +146,12 @@ function TimelineEvent({ title, summary, icon, state = 'completed', children }: 
 
 function PackageProgressEvent({ event, progressStatus, artifacts, experienceArtifacts }: Readonly<{
   event: ConversationRunEvent;
-  progressStatus: 'organizing' | 'idle' | 'running' | 'stopped' | 'completed';
+  progressStatus: 'organizing' | 'idle' | 'running' | 'stopped' | 'cancelled' | 'completed';
   artifacts: readonly PackageArtifact[];
   experienceArtifacts: readonly Readonly<{ id: string; state: 'waiting' | 'running' | 'completed' | 'excluded' }>[];
 }>) {
   const stateById = new Map(experienceArtifacts.map(({ id, state }) => [id, state]));
-  return <article className={conversationStyles.event} data-kind={event.kind} data-state={event.state}><span className={conversationStyles.eventMark}>{event.state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} /> : event.state === 'cancelled' ? <CircleEllipsis aria-hidden="true" size={15} /> : <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={15} />}</span><div className={conversationStyles.eventBody}><strong>{event.title}</strong><p>{experienceArtifacts.filter(({ state }) => state === 'completed').length}/{experienceArtifacts.filter(({ state }) => state !== 'excluded').length} 项完成{progressStatus === 'stopped' ? ' · 已停止' : ''}</p><div className={styles.progressList}>{artifacts.map((artifact) => { const state = stateById.get(artifact.id) ?? 'waiting'; return <div data-state={state} key={artifact.id}>{state === 'completed' ? <CheckCircle2 aria-hidden="true" size={14} /> : state === 'running' && progressStatus !== 'stopped' ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <CircleEllipsis aria-hidden="true" size={14} />}<span>{artifact.title}</span><small>{state === 'completed' ? '已完成，可预览' : state === 'running' && progressStatus === 'stopped' ? '已停止' : state === 'running' ? '生成中' : state === 'excluded' ? '已排除' : '等待依赖'}</small></div>; })}</div></div></article>;
+  return <article className={conversationStyles.event} data-kind={event.kind} data-state={event.state}><span className={conversationStyles.eventMark}>{event.state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} /> : event.state === 'stopped' ? <CircleEllipsis aria-hidden="true" size={15} /> : <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={15} />}</span><div className={conversationStyles.eventBody}><strong>{event.title}</strong><p>{experienceArtifacts.filter(({ state }) => state === 'completed').length}/{experienceArtifacts.filter(({ state }) => state !== 'excluded').length} 项完成{progressStatus === 'stopped' ? ' · 已停止' : ''}</p><div className={styles.progressList}>{artifacts.map((artifact) => { const state = stateById.get(artifact.id) ?? 'waiting'; return <div data-state={state} key={artifact.id}>{state === 'completed' ? <CheckCircle2 aria-hidden="true" size={14} /> : state === 'running' && progressStatus !== 'stopped' ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <CircleEllipsis aria-hidden="true" size={14} />}<span>{artifact.title}</span><small>{state === 'completed' ? '已完成，可预览' : state === 'running' && progressStatus === 'stopped' ? '已停止' : state === 'running' ? '生成中' : state === 'excluded' ? '已排除' : '等待依赖'}</small></div>; })}</div></div></article>;
 }
 
 function PackageOutputDirectory({ artifacts, experienceArtifacts, activeArtifact, action, receipt, retryPrepared, canProposeSave, configuration, outputCount, inspectorState, onSelect, onSetIncluded, onPropose, onRevise, onInspectorStateChange }: Readonly<{

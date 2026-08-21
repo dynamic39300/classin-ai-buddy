@@ -46,7 +46,10 @@ function freezeEvent(runRef: string, sequence: number, input: EventInput): Conve
     sequence,
     occurredAt: `deterministic:${String(sequence).padStart(3, '0')}`,
     updatedAt: `deterministic:${String(sequence).padStart(3, '0')}`,
-    actor: input.actor ?? (input.kind === 'teacher_message' || input.kind === 'clarification_submitted' ? 'teacher' : input.kind === 'system' ? 'system' : 'agent'),
+    actor: input.actor ?? (input.kind === 'teacher_message' || input.kind === 'clarification_submitted'
+      ? 'teacher'
+      : input.kind === 'capability_call' ? 'skill'
+        : input.kind === 'system' ? 'system' : 'agent'),
     kind: input.kind,
     state: input.state ?? 'completed',
     title: input.title,

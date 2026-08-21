@@ -141,7 +141,8 @@ test('teacher submits a custom lesson arrangement and can cancel the proposed pl
   const plan = timeline.getByRole('article').filter({ hasText: '智能课件执行计划' });
   await plan.getByRole('button', { name: '取消任务' }).click();
   await expect(timeline.getByRole('article').filter({ hasText: '任务已取消' })).toBeVisible();
-  await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('button', { name: '继续执行' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '生成函数单调性智能课件' }).locator('..').getByText('已取消', { exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('button', { name: '继续执行' })).toHaveCount(0);
 });
 
 test('approved plan runs capabilities in place before the smart courseware Artifact arrives', async ({ page }) => {
@@ -364,6 +365,7 @@ test('teacher configures and generates a four-artifact course package inside one
   const progress = timeline.getByRole('article').filter({ hasText: '课程方案包生成进度' });
   await expect(progress.getByText('函数单调性智能课件', { exact: true })).toBeVisible();
   await expect(progress.getByText('生成中', { exact: true }).first()).toBeVisible();
+  await expect(timeline.getByText(/v1 · 可预览/)).toHaveCount(0);
   await expect(page.getByRole('button', { name: '产出 · 0' }).first()).toBeDisabled();
   const composer = page.getByRole('group', { name: '任务补充输入' });
   await composer.getByRole('button', { name: '停止执行' }).click();

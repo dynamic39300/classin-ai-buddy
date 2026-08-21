@@ -14,10 +14,10 @@ export type ConversationRunEventKind =
   | 'error'
   | 'system';
 
-export type ConversationRunActor = 'teacher' | 'agent' | 'system';
+export type ConversationRunActor = 'teacher' | 'agent' | 'skill' | 'tool' | 'system';
 
-export type ConversationRunEventState = 'queued' | 'running' | 'requires_teacher_input' | 'completed' | 'failed' | 'cancelled' | 'superseded';
-export type ConversationRunStatus = 'organizing' | 'needs_information' | 'awaiting_plan_confirmation' | 'running' | 'stopped' | 'completed_pending_review' | 'waiting_approval' | 'completed' | 'failed';
+export type ConversationRunEventState = 'queued' | 'running' | 'requires_teacher_input' | 'completed' | 'failed' | 'stopped' | 'cancelled' | 'superseded';
+export type ConversationRunStatus = 'organizing' | 'needs_information' | 'awaiting_plan_confirmation' | 'running' | 'stopped' | 'cancelled' | 'completed_pending_review' | 'waiting_approval' | 'completed' | 'failed';
 export type ConversationRunObjectType = 'context_snapshot' | 'artifact' | 'action' | 'approval' | 'receipt' | 'capability';
 
 export type ConversationRunObjectRef = Readonly<{ type: ConversationRunObjectType; id: string; version?: string }>;
@@ -63,6 +63,7 @@ export type ConversationRunProgress =
   | Readonly<{ status: 'idle' }>
   | Readonly<{ status: 'running'; activeIndex: number; completedCount: number; totalCount: number }>
   | Readonly<{ status: 'stopped'; completedCount: number; totalCount: number }>
+  | Readonly<{ status: 'cancelled'; completedCount: number; totalCount: number }>
   | Readonly<{ status: 'completed'; completedCount: number; totalCount: number }>;
 
 export type ConversationRunPresentation = Readonly<{

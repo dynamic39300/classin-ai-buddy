@@ -67,10 +67,10 @@ type StoredState = Readonly<{
   runtimes: Readonly<Record<string, RuntimeState>>;
   commands: Readonly<Record<string, ConversationRunCommandReceipt>>;
 }>;
-const STORAGE_KEY = 'workbuddy:conversation-run:v5';
-const EVENT_ACTORS = new Set(['teacher', 'agent', 'system']);
+const STORAGE_KEY = 'workbuddy:conversation-run:v6';
+const EVENT_ACTORS = new Set(['teacher', 'agent', 'skill', 'tool', 'system']);
 const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'error', 'system']);
-const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'cancelled', 'superseded']);
+const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'stopped', 'cancelled', 'superseded']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -79,7 +79,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isProgress(value: unknown): value is ConversationRunProgress {
   if (!isRecord(value) || typeof value.status !== 'string') return false;
   if (value.status === 'organizing' || value.status === 'idle') return true;
-  if (value.status === 'completed' || value.status === 'stopped') {
+  if (value.status === 'completed' || value.status === 'stopped' || value.status === 'cancelled') {
     return typeof value.completedCount === 'number' && typeof value.totalCount === 'number';
   }
   return value.status === 'running'
@@ -153,7 +153,7 @@ function loadStoredState(): StoredState {
   if (typeof window === 'undefined') return empty();
   try {
     const parsed: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
-    if (!isRecord(parsed) || parsed.version !== 5 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
+    if (!isRecord(parsed) || parsed.version !== 6 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
     return Object.freeze({
       runtimes: Object.freeze(Object.fromEntries(Object.entries(parsed.runtimes).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1])))),
       commands: Object.freeze(Object.fromEntries(Object.entries(parsed.commands).filter((entry): entry is [string, ConversationRunCommandReceipt] => isCommandReceipt(entry[1])))),
@@ -167,7 +167,16 @@ function actorForCommand(command: ConversationRunCommand): ConversationRunEvent[
   return command.type === 'supplement' ? 'teacher' : 'system';
 }
 
-function localEvent(runRef: string, id: string, sequence: number, actor: ConversationRunEvent['actor'], title: string, summary: string, state: ConversationRunEvent['state'] = 'completed'): LocalEvent {
+function localEvent(
+  runRef: string,
+  id: string,
+  sequence: number,
+  actor: ConversationRunEvent['actor'],
+  title: string,
+  summary: string,
+  state: ConversationRunEvent['state'] = 'completed',
+  allowedCommands: readonly ConversationRunCommandType[] = Object.freeze([]),
+): LocalEvent {
   const occurredAt = `deterministic:command:${String(sequence).padStart(3, '0')}`;
   return Object.freeze({
     id,
@@ -180,7 +189,7 @@ function localEvent(runRef: string, id: string, sequence: number, actor: Convers
     title,
     summary,
     objectRefs: Object.freeze([]),
-    allowedCommands: Object.freeze([]),
+    allowedCommands: Object.freeze([...allowedCommands]),
   });
 }
 
@@ -193,7 +202,19 @@ function commandEvents(runRef: string, command: ConversationRunCommand, sequence
     runRef, command.id, sequence, actorForCommand(command),
     command.materialScopeChange ? '教师提出范围调整' : '教师补充要求', command.text.trim(),
   );
-  if (command.materialScopeChange) return Object.freeze([teacherEvent]);
+  if (command.materialScopeChange) return Object.freeze([
+    teacherEvent,
+    localEvent(
+      runRef,
+      `${command.id}:replanning-required`,
+      sequence + 1,
+      'system',
+      '教学范围变化需要重新规划',
+      '确认后会生成新的核心上下文快照与执行计划，旧计划、过程和产物保留为历史证据。',
+      'requires_teacher_input',
+      ['confirm_replan', 'dismiss_replan'],
+    ),
+  ]);
   return Object.freeze([
     teacherEvent,
     localEvent(runRef, `${command.id}:applied`, sequence + 1, 'agent', '已应用到尚未开始的步骤', '已完成步骤和既有产物不会被静默覆盖。'),
@@ -272,7 +293,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   const persist = () => {
     if (typeof window === 'undefined') return;
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-      version: 5,
+      version: 6,
       runtimes: Object.fromEntries(runtimes),
       commands: Object.fromEntries(processedCommands),
     }));
@@ -326,6 +347,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
     const organizing = Object.freeze({
       ...organizingEvent(runRef),
       state: runtime.progress.status === 'organizing' ? 'running' as const : 'completed' as const,
+      allowedCommands: runtime.progress.status === 'organizing' ? Object.freeze(['stop'] as const) : Object.freeze([]),
     });
     const capabilityEvents = base.events.filter(({ kind }) => kind === 'capability_call');
     const packageProcessEvents = base.events.filter((event) => event.kind === 'process' && event.objectRefs.some(({ type }) => type === 'artifact'));
@@ -340,13 +362,18 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         return [Object.freeze({
           ...event,
           state,
+          allowedCommands: state === 'running' ? Object.freeze(['stop'] as const) : Object.freeze([]),
           detail: event.detail ? Object.freeze({ ...event.detail, elapsedLabel: state === 'running' ? '计算中' : state === 'queued' ? '等待执行' : event.detail.elapsedLabel }) : undefined,
         })];
       }
       if (event.kind === 'process' && base.taskKind === 'course_package' && packageProcessEvents.length) {
+        const packageProgressState = runtime.progress.status === 'completed'
+          ? 'completed' as const
+          : runtime.progress.status === 'stopped' ? 'stopped' as const : 'running' as const;
         if (event.id.endsWith(':package-progress')) return [Object.freeze({
           ...event,
-          state: runtime.progress.status === 'completed' ? 'completed' as const : runtime.progress.status === 'stopped' ? 'cancelled' as const : 'running' as const,
+          state: packageProgressState,
+          allowedCommands: packageProgressState === 'running' ? Object.freeze(['stop'] as const) : Object.freeze([]),
         })];
         if (event.summary.includes('已排除')) return [event];
         const index = packageProcessEvents.findIndex(({ id }) => id === event.id);
@@ -358,7 +385,9 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
           : index === 0 ? phase === 0 ? 'running' as const : 'completed' as const
             : index === lastIndex ? phase === 2 ? 'running' as const : 'queued' as const
               : phase === 0 ? 'queued' as const : phase === 1 ? 'running' as const : 'completed' as const;
-        return [Object.freeze({ ...event, state })];
+        const version = event.objectRefs.find(({ type }) => type === 'artifact')?.version ?? '当前版本';
+        const summary = `${version} · ${state === 'completed' ? '可预览' : state === 'running' ? '生成中' : '等待依赖'}`;
+        return [Object.freeze({ ...event, state, summary, allowedCommands: Object.freeze([]) })];
       }
       return [event];
     });
@@ -391,11 +420,14 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       ? 'organizing'
       : runtime.progress.status === 'running'
         ? 'running'
-        : runtime.progress.status === 'stopped' ? 'stopped' : base.status;
+        : runtime.progress.status === 'stopped' ? 'stopped'
+          : runtime.progress.status === 'cancelled' ? 'cancelled' : base.status;
     const allowedCommands = runtime.progress.status === 'running'
       ? Object.freeze(['supplement', 'stop'] as const)
       : runtime.progress.status === 'stopped'
         ? Object.freeze(['supplement', 'resume'] as const)
+        : runtime.progress.status === 'cancelled'
+          ? Object.freeze([])
         : base.allowedCommands;
     return Object.freeze({
       ...base,
@@ -634,7 +666,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
             localEvents: [...current.localEvents, localEvent(
               runRef, command.id, current.localEvents.length + 1, 'system',
               snapshot.projection.taskKind === 'courseware' ? '任务执行已停止' : '课程方案包生成已停止',
-              '已完成内容保持不变，当前和未开始步骤没有继续执行。', 'cancelled',
+              '已完成内容保持不变，当前和未开始步骤没有继续执行。', 'stopped', ['resume'],
             )],
           }
           : current);
@@ -643,11 +675,16 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
           ? {
             ...current,
             progress: { status: 'running', activeIndex: current.progress.completedCount, completedCount: current.progress.completedCount, totalCount: current.progress.totalCount },
-            localEvents: [...current.localEvents, localEvent(
-              runRef, command.id, current.localEvents.length + 1, 'system',
-              snapshot.projection.taskKind === 'courseware' ? '任务已从停止位置继续' : '课程方案包已继续生成',
-              '已完成内容不会重复执行。',
-            )],
+            localEvents: [
+              ...current.localEvents.map((event) => event.state === 'stopped' && event.allowedCommands.includes('resume')
+                ? Object.freeze({ ...event, state: 'completed' as const, allowedCommands: Object.freeze([]) })
+                : event),
+              localEvent(
+                runRef, command.id, current.localEvents.length + 1, 'system',
+                snapshot.projection.taskKind === 'courseware' ? '任务已从停止位置继续' : '课程方案包已继续生成',
+                '已完成内容不会重复执行。',
+              ),
+            ],
           }
           : current);
         scheduleProgress(runRef);
@@ -655,7 +692,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         cancelScheduled(runRef);
         replaceRuntime(runRef, (current) => ({
           ...current,
-          progress: { status: 'stopped', completedCount: 0, totalCount: snapshot.progressStepCount },
+          progress: { status: 'cancelled', completedCount: 0, totalCount: snapshot.progressStepCount },
           localEvents: [...current.localEvents, localEvent(runRef, command.id, current.localEvents.length + 1, 'system', '任务已取消', '当前任务没有继续执行，可重新开始一个任务。', 'cancelled')],
         }));
       } else if (command.type === 'execute_action') {
@@ -676,8 +713,14 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
           replanPending: command.type === 'supplement' && Boolean(command.materialScopeChange) ? true : current.replanPending,
         }));
         resultRef = hostResult.resultRef;
-        if (command.type === 'confirm_replan') replaceRuntime(runRef, (current) => ({ ...current, progress: { status: 'idle' }, replanPending: false }));
-        if (command.type === 'dismiss_replan') replaceRuntime(runRef, (current) => ({ ...current, replanPending: false }));
+        if (command.type === 'confirm_replan' || command.type === 'dismiss_replan') replaceRuntime(runRef, (current) => ({
+          ...current,
+          progress: command.type === 'confirm_replan' ? { status: 'idle' } : current.progress,
+          replanPending: false,
+          localEvents: current.localEvents.map((event) => event.allowedCommands.includes('confirm_replan') || event.allowedCommands.includes('dismiss_replan')
+            ? Object.freeze({ ...event, state: 'completed' as const, allowedCommands: Object.freeze([]) })
+            : event),
+        }));
       }
       const next = project(runRef);
       const receipt = Object.freeze({ commandId: command.id, status: 'accepted' as const, cursor: next?.cursor ?? projection.cursor, resultRef: resultRef ?? undefined });

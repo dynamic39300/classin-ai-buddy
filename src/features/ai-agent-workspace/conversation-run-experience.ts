@@ -6,6 +6,7 @@ export type CoursewareExperienceState =
   | Readonly<{ status: 'idle' }>
   | Readonly<{ status: 'running'; activeIndex: number; completedCount: number }>
   | Readonly<{ status: 'stopped'; completedCount: number }>
+  | Readonly<{ status: 'cancelled'; completedCount: number }>
   | Readonly<{ status: 'completed'; completedCount: number }>;
 
 export type CoursewareExperienceEvent = Readonly<{
