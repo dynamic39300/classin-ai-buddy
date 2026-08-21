@@ -5,7 +5,7 @@ import type { PackageProposedAction } from '@domain/workbuddy/package-writeback'
 import type { ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 
 type CoursewarePresentation = Readonly<{
-  id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string;
+  id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string; stage: SingleCoursewareRun['stage'];
   brief: SingleCoursewareRun['brief']; plan: SingleCoursewareRun['plan']; events: SingleCoursewareRun['events'];
   artifact: SingleCoursewareRun['artifact']; revision: number;
   derivedPackageRunRef: string | null;
@@ -110,7 +110,7 @@ export function projectCoursewareRunView(
   }[run.stage];
   return Object.freeze({
     run: Object.freeze({
-      id: run.id, title: run.title, goal: run.goal, contextSnapshotId: run.contextSnapshotId, ...stageProjection,
+      id: run.id, title: run.title, goal: run.goal, contextSnapshotId: run.contextSnapshotId, stage: run.stage, ...stageProjection,
       brief: run.brief, plan: run.plan, events: run.events, artifact: run.artifact, revision: run.revision, reviewStatus: run.reviewStatus,
       derivedPackageRunRef,
       supersededEvidence: Object.freeze(run.supersededEvidence.map((evidence) => Object.freeze({

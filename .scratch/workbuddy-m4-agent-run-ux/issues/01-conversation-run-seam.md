@@ -4,10 +4,12 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] `open / dispatch / subscribe` 与 cursor replay 的公开契约可测试。
-- [ ] 事件拥有稳定 ID、sequence、状态、Run/Object 引用和允许命令。
-- [ ] 重复命令不会产生重复事件或业务动作。
-- [ ] 一个已完成单课件 Run 可恢复 Goal、Plan、Process、Artifact、Action 与 Receipt。
-- [ ] 旧 Surface 与现有 M4 测试保持绿色。
+- [x] `open / dispatch / subscribe` 与 cursor replay 的公开契约可测试。
+- [x] 事件拥有稳定 ID、sequence、状态、Run/Object 引用和允许命令。
+- [x] 重复命令不会产生重复事件或业务动作。
+- [x] 一个已完成单课件 Run 可恢复 Goal、Plan、Process、Artifact、Action 与 Receipt。
+- [x] 旧 Surface 与现有 M4 测试保持绿色。
+
+**Verification:** ConversationRun public Seam 2/2；课程生产、写回 Domain 与 Adapter 聚焦回归共 30/30；TypeScript 通过。
