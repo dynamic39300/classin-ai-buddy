@@ -70,6 +70,7 @@ describe('ConversationRun Deep Module', () => {
 
     expect(module.open('run-1')?.events.map(({ id }) => id)).toEqual(['goal', 'run-1:organizing']);
     expect(module.open('run-1')).toMatchObject({ status: 'organizing' });
+    expect(module.open('run-1')?.events.find(({ id }) => id === 'run-1:organizing')?.allowedCommands).toEqual([]);
     expect(clock.pendingCount()).toBe(1);
     clock.advance();
     expect(module.open('run-1')?.events.map(({ id }) => id)).toEqual(['goal', 'run-1:organizing', 'understanding']);
@@ -265,6 +266,7 @@ describe('ConversationRun Deep Module', () => {
     expect(module.dispatch('run-1', { id: 'cancel-1', type: 'cancel' })).toMatchObject({ status: 'accepted' });
     expect(module.open('run-1')).toMatchObject({ status: 'cancelled', allowedCommands: [], presentation: { progress: { status: 'cancelled' } } });
     expect(module.open('run-1')?.events.at(-1)).toMatchObject({ id: 'cancel-1', state: 'cancelled', title: '任务已取消', allowedCommands: [] });
+    expect(module.open('run-1')?.events.every(({ allowedCommands }) => allowedCommands.length === 0)).toBe(true);
     expect(module.dispatch('run-1', { id: 'resume-cancelled', type: 'resume' })).toMatchObject({ status: 'rejected', reason: 'command-not-allowed' });
   });
 });

@@ -21,6 +21,7 @@ async function createCoursewareRun(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: '生成单个课件' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
   await expect(page.getByText('正在整理任务与上下文', { exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('button', { name: '停止执行' })).toHaveCount(0);
   await page.clock.runFor(360);
 }
 
@@ -143,6 +144,8 @@ test('teacher submits a custom lesson arrangement and can cancel the proposed pl
   await expect(timeline.getByRole('article').filter({ hasText: '任务已取消' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '生成函数单调性智能课件' }).locator('..').getByText('已取消', { exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('button', { name: '继续执行' })).toHaveCount(0);
+  await expect(plan.getByRole('button', { name: '开始执行计划' })).toHaveCount(0);
+  await expect(plan.getByRole('button', { name: '取消任务' })).toHaveCount(0);
 });
 
 test('approved plan runs capabilities in place before the smart courseware Artifact arrives', async ({ page }) => {

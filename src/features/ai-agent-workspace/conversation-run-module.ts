@@ -245,7 +245,7 @@ function organizingEvent(runRef: string): ConversationRunEvent {
     summary: '正在核对教学目标、已选择的课程对象和仍需补充的信息。',
     stepRef: `${runRef}:goal-understanding`,
     objectRefs: Object.freeze([]),
-    allowedCommands: Object.freeze(['stop'] as const),
+    allowedCommands: Object.freeze([]),
   });
 }
 
@@ -347,7 +347,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
     const organizing = Object.freeze({
       ...organizingEvent(runRef),
       state: runtime.progress.status === 'organizing' ? 'running' as const : 'completed' as const,
-      allowedCommands: runtime.progress.status === 'organizing' ? Object.freeze(['stop'] as const) : Object.freeze([]),
+      allowedCommands: Object.freeze([]),
     });
     const capabilityEvents = base.events.filter(({ kind }) => kind === 'capability_call');
     const packageProcessEvents = base.events.filter((event) => event.kind === 'process' && event.objectRefs.some(({ type }) => type === 'artifact'));
@@ -415,7 +415,14 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       runtimes.set(runRef, runtime);
       persist();
     }
-    const events = Object.freeze(eventJournal.map((event, index) => Object.freeze({ ...event, sequence: index + 1 })));
+    const events = Object.freeze(eventJournal.map((event, index) => Object.freeze({
+      ...event,
+      sequence: index + 1,
+      state: runtime.progress.status === 'cancelled' && ['queued', 'running', 'requires_teacher_input'].includes(event.state)
+        ? 'cancelled' as const
+        : event.state,
+      allowedCommands: runtime.progress.status === 'cancelled' ? Object.freeze([]) : event.allowedCommands,
+    })));
     const status = runtime.progress.status === 'organizing'
       ? 'organizing'
       : runtime.progress.status === 'running'
