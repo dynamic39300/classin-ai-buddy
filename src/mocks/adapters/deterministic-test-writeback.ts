@@ -74,8 +74,10 @@ export class DeterministicTestPackageWritebackAdapter implements PackageWritebac
       ? Object.freeze({ artifactId: candidate.id, result: 'waiting' as const })
       : candidate.approvalState === 'written_back' || candidate.approvalState === 'not_selected' || !selected.has(candidate.id)
         ? Object.freeze({ artifactId: candidate.id, result: 'not_executed' as const })
-        : this.scenario === 'partial_success' && candidate.kind === 'recording-script'
+        : this.scenario === 'partial_success' && candidate.kind === 'quiz'
           ? Object.freeze({ artifactId: candidate.id, result: 'failed' as const })
+          : this.scenario === 'partial_success' && candidate.kind === 'recording-script'
+            ? Object.freeze({ artifactId: candidate.id, result: 'waiting' as const })
           : Object.freeze({ artifactId: candidate.id, result: 'succeeded' as const, objectId: `classin-${candidate.id}` }));
     const receipt: PackageExecutionReceipt = items.every((item): item is Extract<PackageReceiptItem, { result: 'succeeded' | 'not_executed' }> => item.result === 'succeeded' || item.result === 'not_executed')
       ? Object.freeze({ ...base, id: 'receipt-package-success-1', status: 'success', result: 'success', items: Object.freeze(items) })

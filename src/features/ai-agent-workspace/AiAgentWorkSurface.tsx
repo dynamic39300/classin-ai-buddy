@@ -19,7 +19,7 @@ import { getWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
 import { ConversationRunSurface } from './ConversationRunSurface';
-import { PackageRunSurface } from './PackageRunSurface';
+import { PackageConversationRunSurface } from './PackageConversationRunSurface';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
 
@@ -30,7 +30,7 @@ export function AiAgentWorkSurface() {
   const { packageView } = useWorkBuddyWorkspace().coursePackage;
 
   if (runId && coursewareView?.run.id === runId) return <ConversationRunSurface />;
-  if (runId && packageView?.run.id === runId) return <PackageRunSurface />;
+  if (runId && packageView?.run.id === runId) return <PackageConversationRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
   if (section && getWorkBuddyCapability(section)) return <CapabilityPlaceholder section={section} />;
   if (location.pathname.endsWith('/new')) return <NewTaskSkeleton />;

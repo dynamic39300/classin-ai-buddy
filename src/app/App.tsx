@@ -32,6 +32,7 @@ import { RootRouter } from './router/RootRouter';
 const OPEN_COURSE_SESSION = createOpenCourseSessionStore(['open-reading']);
 const WORKBUDDY_WRITEBACK_ADAPTER = new MockClassInWritebackAdapter();
 const WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER = new MockPackageWritebackAdapter();
+WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER.setScenario('success');
 
 function removeHomeworkProjection(courses: ReadonlyArray<ClassCourse>, activityId: string): ClassCourse[] {
   return courses.map((course) => ({

@@ -29,6 +29,23 @@ async function generateCoursewareArtifact(page: import('@playwright/test').Page)
   await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
 }
 
+async function createPackageRun(page: import('@playwright/test').Page) {
+  await openWorkBuddy(page);
+  await page.getByRole('button', { name: '生成课程方案包' }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '应用动量课程建议' }).click();
+  await context.getByRole('button', { name: '确认上下文版本' }).click();
+  await page.getByRole('button', { name: '创建任务' }).click();
+}
+
+async function generatePackageArtifacts(page: import('@playwright/test').Page) {
+  await createPackageRun(page);
+  const plan = page.getByRole('article').filter({ hasText: '课程方案包执行计划' });
+  await plan.getByRole('button', { name: '确认范围并开始生成' }).click();
+  await expect(page.getByRole('region', { name: '课程方案包产出' })).toBeVisible();
+  return page.getByRole('feed', { name: 'Agent 任务时间线' });
+}
+
 test('teacher creates one dynamic smart-courseware run from the default Context tree', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openWorkBuddy(page);
@@ -218,4 +235,110 @@ test('governed recovery keeps a denied save inside the same Run and requires a n
   await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
   await action.getByRole('button', { name: '执行已批准动作' }).click();
   await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
+});
+
+test('teacher configures and generates a four-artifact course package inside one Run', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createPackageRun(page);
+  await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-course-package$/);
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  const plan = timeline.getByRole('article').filter({ hasText: '课程方案包执行计划' });
+  await expect(plan.getByRole('combobox', { name: '课程课时' })).toHaveValue('2');
+  await expect(plan.getByRole('spinbutton', { name: '作业题量' })).toHaveValue('12');
+  await expect(plan.getByRole('combobox', { name: '测验时长' })).toHaveValue('15');
+  await expect(plan.getByRole('combobox', { name: '录播时长' })).toHaveValue('8');
+  const scope = plan.getByRole('group', { name: '课程方案包产物范围' });
+  await expect(scope.getByRole('checkbox')).toHaveCount(4);
+  await scope.getByRole('checkbox', { name: /动量与碰撞随堂测验/ }).uncheck();
+  await expect(scope.getByRole('checkbox', { name: /碰撞实验录播脚本/ })).not.toBeChecked();
+  await scope.getByRole('checkbox', { name: /动量与碰撞随堂测验/ }).check();
+  await scope.getByRole('checkbox', { name: /碰撞实验录播脚本/ }).check();
+  await expect(scope.getByRole('checkbox', { name: /碰撞实验录播脚本/ })).toBeChecked();
+
+  await plan.getByRole('button', { name: '确认范围并开始生成' }).click();
+  const progress = timeline.getByRole('article').filter({ hasText: '课程方案包生成进度' });
+  await expect(progress.getByText('动量守恒模型课件', { exact: true })).toBeVisible();
+  await expect(progress.getByText('生成中', { exact: true }).first()).toBeVisible();
+  const output = page.getByRole('region', { name: '课程方案包产出' });
+  await expect(output).toBeVisible();
+  await expect(output.getByText('4 项产出', { exact: true })).toBeVisible();
+  await expect(output.getByRole('button', { name: /动量守恒模型课件/ })).toBeVisible();
+  await expect(output.getByRole('button', { name: /动量守恒分层作业/ })).toBeVisible();
+  await expect(output.getByRole('button', { name: /动量与碰撞随堂测验/ })).toBeVisible();
+  await expect(output.getByRole('button', { name: /碰撞实验录播脚本/ })).toBeVisible();
+});
+
+test('teacher approves the package once and receives object-level execution results', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const timeline = await generatePackageArtifacts(page);
+  const output = page.getByRole('region', { name: '课程方案包产出' });
+  await output.getByRole('button', { name: '保存所选产物到 ClassIn' }).click();
+  const action = timeline.getByRole('article').filter({ hasText: '保存课程方案包到 ClassIn' });
+  await expect(action.getByRole('checkbox', { checked: true })).toHaveCount(4);
+  await action.getByRole('button', { name: '确认执行' }).click();
+  const approval = page.getByRole('dialog', { name: '确认保存课程方案包' });
+  await expect(approval.getByText('4 项', { exact: true })).toBeVisible();
+  await approval.getByRole('button', { name: '批准保存' }).click();
+  await expect(action.getByText('已批准 · 尚未执行', { exact: true })).toBeVisible();
+  await action.getByRole('button', { name: '执行已批准方案包' }).click();
+
+  const receipt = timeline.getByRole('article').filter({ hasText: '课程方案包执行完成' });
+  await expect(receipt).toBeVisible();
+  await expect(receipt.getByText('已执行', { exact: true })).toHaveCount(4);
+  await expect(receipt).not.toContainText('[模拟]');
+});
+
+test('partial package writeback retries only failed and waiting items while retaining both receipts', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const timeline = await generatePackageArtifacts(page);
+  await page.evaluate(() => {
+    window.history.replaceState({}, '', `${window.location.pathname}?review=package-partial`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await page.getByRole('combobox', { name: '课程方案包恢复场景' }).selectOption('partial_success');
+  const output = page.getByRole('region', { name: '课程方案包产出' });
+  await output.getByRole('button', { name: '保存所选产物到 ClassIn' }).click();
+  let action = timeline.getByRole('article').filter({ hasText: '保存课程方案包到 ClassIn' });
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存课程方案包' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准方案包' }).click();
+
+  const partialReceipt = timeline.getByRole('article').filter({ hasText: '课程方案包部分成功' });
+  await expect(partialReceipt.getByText('执行失败', { exact: true })).toBeVisible();
+  await expect(partialReceipt.getByText('等待依赖', { exact: true })).toBeVisible();
+  await partialReceipt.getByRole('button', { name: '修改并重试失败项' }).click();
+  await output.getByRole('button', { name: '生成失败项重试提案' }).click();
+
+  action = timeline.getByRole('article').filter({ hasText: '重试失败项保存提案' });
+  await expect(action.getByRole('checkbox', { checked: true })).toHaveCount(2);
+  await expect(action.getByText('已成功，不重复执行', { exact: true })).toHaveCount(2);
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存课程方案包' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准方案包' }).click();
+
+  await expect(partialReceipt).toBeVisible();
+  const receipts = timeline.getByRole('article').filter({ hasText: /课程方案包(部分成功|执行完成)/ });
+  await expect(receipts).toHaveCount(2);
+  await expect(receipts.last().getByText('已成功，本次未重复执行', { exact: true })).toHaveCount(2);
+});
+
+test('approved courseware derives an independently contextualized package with bidirectional links', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await generateCoursewareArtifact(page);
+  const output = page.getByRole('region', { name: '智能课件产出' });
+  await output.getByRole('button', { name: '确认课件可用于后续任务' }).click();
+  await output.getByRole('button', { name: '基于此课件生成课程方案包' }).click();
+
+  await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-course-package$/);
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  await expect(timeline.getByText('来源课件 · v1', { exact: true })).toBeVisible();
+  await expect(timeline.getByRole('link', { name: '返回源课件任务' })).toBeVisible();
+  await expect(timeline.getByText('需要确认独立核心上下文', { exact: true })).toBeVisible();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '确认上下文版本' }).click();
+  await expect(timeline.getByText('课程方案包执行计划', { exact: true })).toBeVisible();
+
+  await timeline.getByRole('link', { name: '返回源课件任务' }).click();
+  await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
+  await expect(page.getByRole('region', { name: '智能课件产出' }).getByRole('link', { name: '打开已派生课程方案包' })).toBeVisible();
 });

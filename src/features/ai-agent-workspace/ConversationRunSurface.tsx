@@ -1,6 +1,6 @@
 import { CheckCircle2, ChevronDown, Download, Expand, FileText, LoaderCircle, PanelRight, Pencil, Save, ShieldCheck, Sparkles, WandSparkles, X } from 'lucide-react';
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import { CoreContextPanel } from './CoreContextPanel';
@@ -21,6 +21,7 @@ import styles from './ConversationRunSurface.module.css';
 type InspectorMode = 'context' | 'output';
 
 export function ConversationRunSurface() {
+  const workspace = useWorkBuddyWorkspace();
   const {
     coursewareView,
     updateCoursewareTaskBrief,
@@ -38,7 +39,9 @@ export function ConversationRunSurface() {
     replanToWaveContext,
     writebackScenario,
     setWritebackScenario,
-  } = useWorkBuddyWorkspace().courseware;
+  } = workspace.courseware;
+  const { derivePackageFromCourseware } = workspace.coursePackage;
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const recoveryReviewMode = searchParams.get('review') === 'recovery';
   const [inspectorOpen, setInspectorOpen] = useState(true);
@@ -232,9 +235,14 @@ export function ConversationRunSurface() {
               reviewStatus={coursewareView.run.reviewStatus}
               hasAction={Boolean(coursewareView.action)}
               hasReceipt={Boolean(coursewareView.receipt)}
+              derivedPackageRunRef={coursewareView.run.derivedPackageRunRef}
               onRevise={reviseCoursewareArtifact}
               onApproveArtifact={approveCoursewareArtifact}
               onProposeSave={proposeCoursewareSave}
+              onDerivePackage={() => {
+                const runId = derivePackageFromCourseware();
+                if (runId) navigate(`/teacher/ai-agent/runs/${runId}`);
+              }}
             />
           ) : <section className={styles.emptyOutput}><strong>产出将在生成后显示</strong><p>任务过程继续保留在左侧时间线。</p></section>}
         </aside>
@@ -275,16 +283,19 @@ function CapabilityCallCard({ event }: Readonly<{ event: CoursewareExperienceEve
 }
 
 function CoursewareOutput({
-  artifact, artifactHistory, reviewStatus, hasAction, hasReceipt, onRevise, onApproveArtifact, onProposeSave,
+  artifact, artifactHistory, reviewStatus, hasAction, hasReceipt, derivedPackageRunRef,
+  onRevise, onApproveArtifact, onProposeSave, onDerivePackage,
 }: Readonly<{
   artifact: CoursewareArtifactDraft;
   artifactHistory: readonly CoursewareArtifactDraft[];
   reviewStatus: 'pending' | 'approved' | 'not_available';
   hasAction: boolean;
   hasReceipt: boolean;
+  derivedPackageRunRef: string | null;
   onRevise: (input: Readonly<{ instruction: string; changes: readonly string[] }>) => void;
   onApproveArtifact: () => void;
   onProposeSave: () => void;
+  onDerivePackage: () => void;
 }>) {
   const [editing, setEditing] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -311,7 +322,13 @@ function CoursewareOutput({
       {artifact.changeSummary ? <section className={styles.changeSummary} aria-label={`${artifact.version} 修改摘要`}><strong>{artifact.version} 修改摘要</strong><ul>{artifact.changeSummary.map((change) => <li key={change}>{change}</li>)}</ul></section> : null}
       <dl className={styles.outputFacts}><div><dt>来源步骤</dt><dd>{artifact.sourceStepId}</dd></div><div><dt>质量检查</dt><dd>{artifact.validationSummary}</dd></div><div><dt>当前状态</dt><dd>课件草稿 · 未写入 ClassIn</dd></div></dl>
       {toolStatus ? <p className={styles.toolStatus} role="status">{toolStatus}</p> : null}
-      <footer className={styles.outputActions}>{reviewStatus === 'pending' ? <button className={styles.primary} type="button" onClick={onApproveArtifact}>确认课件可用于后续任务</button> : reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : hasReceipt ? <span>执行回执已返回任务时间线</span> : hasAction ? <span>保存流程已进入任务时间线</span> : null}</footer>
+      <footer className={styles.outputActions}>
+        {reviewStatus === 'pending' ? <button className={styles.primary} type="button" onClick={onApproveArtifact}>确认课件可用于后续任务</button> : null}
+        {reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
+        {reviewStatus === 'approved' && derivedPackageRunRef ? <Link to={`/teacher/ai-agent/runs/${derivedPackageRunRef}`}>打开已派生课程方案包</Link> : null}
+        {reviewStatus === 'approved' && !derivedPackageRunRef ? <button type="button" onClick={onDerivePackage}>基于此课件生成课程方案包</button> : null}
+        {hasReceipt ? <span>执行回执已返回任务时间线</span> : hasAction ? <span>保存流程已进入任务时间线</span> : null}
+      </footer>
     </section>
   );
 }

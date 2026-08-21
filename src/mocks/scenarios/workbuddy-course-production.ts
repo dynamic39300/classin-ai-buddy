@@ -69,7 +69,7 @@ export const WORKBUDDY_COURSE_PACKAGE_DEFINITION: CoursePackageDefinition = Obje
     Object.freeze({ id: 'package-courseware', kind: 'courseware', title: '动量守恒模型课件', dependsOn: Object.freeze([]), state: 'planned', version: 'v1' }),
     Object.freeze({ id: 'package-homework', kind: 'homework', title: '动量守恒分层作业', dependsOn: Object.freeze(['package-courseware']), state: 'planned', version: 'v1' }),
     Object.freeze({ id: 'package-quiz', kind: 'quiz', title: '动量与碰撞随堂测验', dependsOn: Object.freeze(['package-courseware']), state: 'planned', version: 'v1' }),
-    Object.freeze({ id: 'package-recording', kind: 'recording-script', title: '碰撞实验录播脚本', dependsOn: Object.freeze(['package-courseware']), state: 'planned', version: 'v1' }),
+    Object.freeze({ id: 'package-recording', kind: 'recording-script', title: '碰撞实验录播脚本', dependsOn: Object.freeze(['package-courseware', 'package-quiz']), state: 'planned', version: 'v1' }),
   ]),
 });
 
@@ -80,7 +80,7 @@ export const WORKBUDDY_PACKAGE_ACTION_INPUT: PackageActionInput = Object.freeze(
   permission: 'allowed', risk: 'medium', reversible: true, expiresAt: '2026-08-21T10:15:00+08:00', idempotencyKey: 'workbuddy-package-save-1',
 });
 
-export const WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS = Object.freeze(['package-recording']);
+export const WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS = Object.freeze([]);
 
 export const WORKBUDDY_RUNTIME_FIXTURE: WorkBuddyRuntimeFixture = Object.freeze({
   projectionGeneratedAt: '2026-08-20T10:04:00+08:00',

@@ -16,7 +16,10 @@ describe('course-package Artifact Graph', () => {
 
   it('guards selection commands and prevents dependent writeback when the root artifact is unavailable', () => {
     const configuring = createCoursePackageRun(WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成动量单元课程方案包', 'snapshot-package-1');
-    expect(setPackageArtifactIncluded(configuring, 'package-courseware', false)).toBe(configuring);
+    const withoutQuiz = setPackageArtifactIncluded(configuring, 'package-quiz', false);
+    expect(withoutQuiz.artifacts.find(({ id }) => id === 'package-quiz')?.state).toBe('excluded');
+    expect(beginPackageGeneration(withoutQuiz).artifacts.find(({ id }) => id === 'package-quiz')?.state).toBe('excluded');
+    expect(setPackageArtifactIncluded(withoutQuiz, 'package-quiz', true).artifacts.find(({ id }) => id === 'package-quiz')?.state).toBe('planned');
 
     const generated = completePackageGeneration(beginPackageGeneration(configuring), []);
     const excludedRoot = setPackageArtifactIncluded(generated, 'package-courseware', false);
@@ -56,7 +59,7 @@ describe('course-package Artifact Graph', () => {
     const applied = applyPackageExecutionReceipt(approved, decision.action, decision.approval, receipt);
     expect(applied.accepted).toBe(true);
     if (!applied.accepted) throw new Error('Expected accepted receipt');
-    expect(applied.run.artifacts.map(({ state }) => state)).toEqual(['written_back', 'failed', 'excluded', 'failed']);
+    expect(applied.run.artifacts.map(({ state }) => state)).toEqual(['written_back', 'failed', 'excluded', 'excluded']);
     expect(retryPackageArtifact(applied.run, 'package-homework').artifacts[1]?.state).toBe('ready');
     expect(applyPackageExecutionReceipt(approved, { ...decision.action, runRef: 'foreign-run' }, decision.approval, receipt)).toMatchObject({ accepted: false, run: approved });
 

@@ -59,6 +59,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [packageAction, setPackageAction] = useState<PackageProposedAction | null>(null);
   const [packageApproval, setPackageApproval] = useState<PackageApproval | null>(null);
   const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(null);
+  const [packageReceiptHistory, setPackageReceiptHistory] = useState<readonly PackageExecutionReceipt[]>([]);
   const [packageWritebackScenario, setPackageWritebackScenario] = useState<PackageWritebackScenario>(() => packageWritebackScenarioController.getScenario());
   const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>('none');
   const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     runtimeFixture, clock, writebackAdapter: packageWritebackAdapter, writebackScenarioController: packageWritebackScenarioController,
     sourceCoursewareRun: coursewareRun, run: packageRun, action: packageAction, approval: packageApproval, receipt: packageReceipt,
     writebackScenario: packageWritebackScenario, activePanel: activePackagePanel, activeArtifactId: activePackageArtifactId,
-    setRun: setPackageRun, setAction: setPackageAction, setApproval: setPackageApproval, setReceipt: setPackageReceipt,
+    setRun: setPackageRun, setAction: setPackageAction, setApproval: setPackageApproval, setReceipt: setPackageReceipt, setReceiptHistory: setPackageReceiptHistory,
     setWritebackScenario: setPackageWritebackScenario, setActivePanel: setActivePackagePanel, setActiveArtifactId: setActivePackageArtifactId,
     setTaskType: setTaskTypeState, setContextSnapshot, setContextProposal, setSnapshotsById,
   });
@@ -145,7 +146,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       ...coursewareController.commands,
     }),
     coursePackage: Object.freeze({
-      packageView: projectPackageRunView(packageRun, packageAction, packageReceipt),
+      packageView: projectPackageRunView(packageRun, packageAction, packageReceipt, packageReceiptHistory),
       ...packageController.commands,
     }),
   });

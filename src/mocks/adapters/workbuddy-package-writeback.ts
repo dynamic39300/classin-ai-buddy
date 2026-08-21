@@ -52,7 +52,8 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
       if (item.approvalState === 'waiting') return Object.freeze({ artifactId: item.id, result: 'waiting' });
       if (item.approvalState === 'written_back') return Object.freeze({ artifactId: item.id, result: 'not_executed' });
       if (item.approvalState === 'not_selected' || !selected.has(item.id)) return Object.freeze({ artifactId: item.id, result: 'not_executed' });
-      if (this.scenario === 'partial_success' && item.kind === 'recording-script') return Object.freeze({ artifactId: item.id, result: 'failed' });
+      if (this.scenario === 'partial_success' && item.kind === 'quiz') return Object.freeze({ artifactId: item.id, result: 'failed' });
+      if (this.scenario === 'partial_success' && item.kind === 'recording-script') return Object.freeze({ artifactId: item.id, result: 'waiting' });
       return Object.freeze({ artifactId: item.id, result: 'succeeded', objectId: `classin-${item.id}` });
     });
     const common = {

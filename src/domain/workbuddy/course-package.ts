@@ -109,7 +109,7 @@ export function attachPackageContext(run: CoursePackageRun, contextSnapshotId: s
 
 export function beginPackageGeneration(run: CoursePackageRun): CoursePackageRun {
   if (run.stage !== 'configuring') return run;
-  return freezeRun({ ...run, stage: 'generating', artifacts: run.artifacts.map((item) => withArtifactState(item, 'generating')), allowedCommands: Object.freeze(['complete-generation']), recovery: 'wait-or-complete-fixture' });
+  return freezeRun({ ...run, stage: 'generating', artifacts: run.artifacts.map((item) => withArtifactState(item, item.state === 'excluded' ? 'excluded' : 'generating')), allowedCommands: Object.freeze(['complete-generation']), recovery: 'wait-or-complete-fixture' });
 }
 
 export function completePackageGeneration(run: CoursePackageRun, failedArtifactIds: readonly string[]): CoursePackageRun {
@@ -122,6 +122,7 @@ export function completePackageGeneration(run: CoursePackageRun, failedArtifactI
     const existing = resolved.get(item.id);
     if (existing) return existing;
     if (resolving.has(item.id)) return 'waiting';
+    if (item.state === 'excluded') return 'excluded';
     resolving.add(item.id);
     const state: PackageArtifactState = failures.has(item.id)
       ? 'failed'
@@ -138,20 +139,23 @@ export function completePackageGeneration(run: CoursePackageRun, failedArtifactI
 }
 
 export function setPackageArtifactIncluded(run: CoursePackageRun, artifactId: string, included: boolean): CoursePackageRun {
-  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
+  if (run.stage !== 'configuring' && run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
   const target = run.artifacts.find(({ id }) => id === artifactId);
-  if (!target || (included ? target.state !== 'excluded' : !['ready', 'failed', 'waiting'].includes(target.state))) return run;
+  const configurable = run.stage === 'configuring';
+  if (!target || (included ? target.state !== 'excluded' : configurable ? target.state !== 'planned' : !['ready', 'failed', 'waiting'].includes(target.state))) return run;
   const byId = new Map(run.artifacts.map((item) => [item.id, item]));
   const dependsOn = (item: PackageArtifact, dependencyId: string, visited = new Set<string>()): boolean => {
     if (visited.has(item.id)) return false;
     const nextVisited = new Set(visited).add(item.id);
     return item.dependsOn.some((id) => id === dependencyId || Boolean(byId.get(id) && dependsOn(byId.get(id)!, dependencyId, nextVisited)));
   };
-  if (included && target.dependsOn.some((id) => !['ready', 'written_back'].includes(byId.get(id)?.state ?? 'failed'))) return run;
+  if (included && target.dependsOn.some((id) => configurable
+    ? byId.get(id)?.state === 'excluded'
+    : !['ready', 'written_back'].includes(byId.get(id)?.state ?? 'failed'))) return run;
   return freezeRun({
     ...run,
     artifacts: run.artifacts.map((item) => item.id === artifactId || (!included && dependsOn(item, artifactId))
-      ? withArtifactState(item, included ? 'ready' : 'excluded')
+      ? withArtifactState(item, included ? configurable ? 'planned' : 'ready' : 'excluded')
       : item),
   });
 }
@@ -220,7 +224,7 @@ export function applyPackageExecutionReceipt(
   const itemsMatchRun = run.artifacts.every((item) => {
     const result = results.get(item.id);
     if (!result) return false;
-    if (item.state === 'approved') return result === 'succeeded' || result === 'failed' || result === 'not_executed';
+    if (item.state === 'approved') return result === 'succeeded' || result === 'failed' || result === 'not_executed' || result === 'waiting';
     if (item.state === 'waiting') return result === 'waiting';
     return result === 'not_executed';
   });
@@ -236,6 +240,7 @@ export function applyPackageExecutionReceipt(
     const result = results.get(item.id);
     if (result === 'succeeded' && item.state === 'approved' && approvedRefs.get(item.id) === item.version) return withArtifactState(item, 'written_back');
     if (result === 'failed' && item.state === 'approved') return withArtifactState(item, 'failed');
+    if (result === 'waiting' && item.state === 'approved') return withArtifactState(item, 'waiting');
     if (result === 'not_executed' && item.state === 'approved') return withArtifactState(item, 'ready');
     return item;
   });

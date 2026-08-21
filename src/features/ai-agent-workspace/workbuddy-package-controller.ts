@@ -42,6 +42,7 @@ type PackageControllerParams = Readonly<{
   setAction: Dispatch<SetStateAction<PackageProposedAction | null>>;
   setApproval: Dispatch<SetStateAction<PackageApproval | null>>;
   setReceipt: Dispatch<SetStateAction<PackageExecutionReceipt | null>>;
+  setReceiptHistory: Dispatch<SetStateAction<readonly PackageExecutionReceipt[]>>;
   setWritebackScenario: Dispatch<SetStateAction<PackageWritebackScenario>>;
   setActivePanel: Dispatch<SetStateAction<PackagePanel>>;
   setActiveArtifactId: Dispatch<SetStateAction<string | null>>;
@@ -64,7 +65,7 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
   const {
     contextSnapshot, taskType, initialContextItems, packageDefinition, packageActionInput, failedArtifactIds, runtimeFixture, clock,
     writebackAdapter, writebackScenarioController, sourceCoursewareRun, run, action, approval, receipt, writebackScenario,
-    activePanel, activeArtifactId, setRun, setAction, setApproval, setReceipt, setWritebackScenario, setActivePanel,
+    activePanel, activeArtifactId, setRun, setAction, setApproval, setReceipt, setReceiptHistory, setWritebackScenario, setActivePanel,
     setActiveArtifactId, setTaskType, setContextSnapshot, setContextProposal, setSnapshotsById,
   } = params;
   const clearWriteback = () => { setAction(null); setApproval(null); setReceipt(null); };
@@ -79,8 +80,8 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
       setRun(attachPackageContext(run, snapshot.id));
     },
     reset: () => {
-      setRun(null); clearWriteback(); setActivePanel('none'); setActiveArtifactId(null);
-      writebackScenarioController.setScenario('partial_success'); setWritebackScenario('partial_success');
+      setRun(null); clearWriteback(); setReceiptHistory([]); setActivePanel('none'); setActiveArtifactId(null);
+      writebackScenarioController.setScenario('success'); setWritebackScenario('success');
     },
     commands: Object.freeze({
       packageWritebackScenario: writebackScenario,
@@ -90,7 +91,8 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
       createPackageTask: (goal: string) => {
         if (!contextSnapshot || taskType !== 'course-package' || !goal.trim()) return null;
         const next = createCoursePackageRun(packageDefinition, goal, contextSnapshot.id);
-        setRun(next); clearWriteback();
+        setRun(next); clearWriteback(); setReceiptHistory([]);
+        writebackScenarioController.setScenario('success'); setWritebackScenario('success');
         setSnapshotsById((current) => ({ ...current, [contextSnapshot.id]: contextSnapshot }));
         return next.id;
       },
@@ -155,7 +157,11 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
         const nextReceipt = writebackAdapter.execute(checkedAction, approval, candidates);
         const application = applyPackageExecutionReceipt(run, checkedAction, approval, nextReceipt);
         if (!application.accepted) return;
-        setReceipt(nextReceipt); setRun(application.run);
+        setReceipt(nextReceipt);
+        setReceiptHistory((current) => current.some(({ id, actionId }) => id === nextReceipt.id && actionId === nextReceipt.actionId)
+          ? current
+          : Object.freeze([...current, nextReceipt]));
+        setRun(application.run);
       },
       recoverPackageSave: () => {
         if (!run || !receipt || (receipt.status !== 'permission_denied' && receipt.status !== 'version_conflict')) return;
@@ -194,7 +200,8 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
           sourceArtifactRef: Object.freeze({ id: sourceCoursewareRun.artifact.id, version: sourceCoursewareRun.artifact.version }),
         });
         setTaskType('course-package'); setContextSnapshot(null); setContextProposal(proposal);
-        setRun(next); clearWriteback(); setActivePanel('none');
+        setRun(next); clearWriteback(); setReceiptHistory([]); setActivePanel('none');
+        writebackScenarioController.setScenario('success'); setWritebackScenario('success');
         return next.id;
       },
       activePanel,

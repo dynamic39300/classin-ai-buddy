@@ -4,10 +4,10 @@
 
 **Blocked by:** 05 — 完成课件编辑、AI 修改、审批与成功 Receipt；07 — 在 Conversation Run 中完成课程方案包成功主链。
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] 派生操作创建新 Run、独立 Snapshot、`parentRunRef` 和 `sourceArtifactRef`。
-- [ ] 原课件 Run、Artifact、Action 和 Receipt 不被修改。
-- [ ] 新旧 Run 可以往返并恢复各自 Timeline 和 Inspector。
-- [ ] Replanning 后旧版本的派生关系只留在 superseded 证据，不误链当前 Artifact。
-- [ ] 不创建隐藏的 Context 继承或重复业务副作用。
+- [x] 派生操作创建新 Run、独立 Snapshot、`parentRunRef` 和 `sourceArtifactRef`。
+- [x] 原课件 Run、Artifact、Action 和 Receipt 不被修改。
+- [x] 新旧 Run 可以往返并恢复各自 Timeline 和 Inspector。
+- [x] Replanning 后旧版本的派生关系只留在 superseded 证据，不误链当前 Artifact。
+- [x] 不创建隐藏的 Context 继承或重复业务副作用。

@@ -28,7 +28,7 @@ describe('Package writeback Adapter contract', () => {
     const input = approvedPackage();
     const receipt = createAdapter().execute(input.action, input.approval, input.candidates);
     expect(receipt.status).toBe('partial_success');
-    expect(receipt.items.map(({ result }) => result)).toEqual(['succeeded', 'succeeded', 'succeeded', 'failed']);
+    expect(receipt.items.map(({ result }) => result)).toEqual(['succeeded', 'succeeded', 'failed', 'waiting']);
   });
 
   it.each([

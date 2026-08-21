@@ -4,10 +4,10 @@
 
 **Blocked by:** 07 — 在 Conversation Run 中完成课程方案包成功主链。
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] 部分成功、waiting dependency、not executed 和 failed 可复现。
-- [ ] 失败项保留原因、允许命令与修改入口。
-- [ ] retry Action、Approval、idempotency key 和 Receipt 使用独立且正确的身份。
-- [ ] 首次 Receipt 保留，恢复 Receipt 追加而非改写历史。
-- [ ] 已成功对象在重试中保持 stable replay，不产生第二次副作用。
+- [x] 部分成功、waiting dependency、not executed 和 failed 可复现。
+- [x] 失败项保留原因、允许命令与修改入口。
+- [x] retry Action、Approval、idempotency key 和 Receipt 使用独立且正确的身份。
+- [x] 首次 Receipt 保留，恢复 Receipt 追加而非改写历史。
+- [x] 已成功对象在重试中保持 stable replay，不产生第二次副作用。

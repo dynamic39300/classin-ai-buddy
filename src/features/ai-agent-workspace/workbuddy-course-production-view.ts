@@ -53,6 +53,7 @@ export type PackageRunView = Readonly<{
   run: PackagePresentation;
   action: PackageActionPresentation | null;
   receipt: PackageReceiptPresentation | null;
+  receiptHistory: readonly PackageReceiptPresentation[];
   contextConfirmed: boolean;
   retryableArtifactIds: readonly string[];
   canProposeSave: boolean;
@@ -133,6 +134,7 @@ export function projectPackageRunView(
   run: CoursePackageRun | null,
   action: PackageProposedAction | null,
   receipt: PackageExecutionReceipt | null,
+  receiptHistory: readonly PackageExecutionReceipt[],
 ): PackageRunView | null {
   if (!run) return null;
   const stageProjection = {
@@ -155,6 +157,7 @@ export function projectPackageRunView(
       expiresAt: action.expiresAt, idempotencyKey: action.idempotencyKey,
     }) : null,
     receipt: receipt ? Object.freeze({ ...receipt }) : null,
+    receiptHistory: Object.freeze(receiptHistory.map((item) => Object.freeze({ ...item }))),
     contextConfirmed: run.contextSnapshotId !== null,
     retryableArtifactIds: Object.freeze(run.artifacts.filter(({ state, allowedCommands }) => state === 'failed' && allowedCommands.includes('retry')).map(({ id }) => id)),
     canProposeSave: getPackageApprovableArtifactIds(run).length > 0,
