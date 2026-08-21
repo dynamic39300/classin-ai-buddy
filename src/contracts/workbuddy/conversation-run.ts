@@ -51,6 +51,13 @@ export type ConversationRunEvent = Readonly<{
 
 export type ConversationRunInspectorMode = 'context' | 'output';
 
+export type ConversationRunPackageConfiguration = Readonly<{
+  lessonCount: number;
+  homeworkCount: number;
+  quizMinutes: number;
+  recordingMinutes: number;
+}>;
+
 export type ConversationRunProgress =
   | Readonly<{ status: 'organizing' }>
   | Readonly<{ status: 'idle' }>
@@ -78,6 +85,7 @@ export type ConversationRunPresentation = Readonly<{
   artifactScrollTop: number;
   packageEditingArtifactId: string | null;
   packageEditDraft: string;
+  packageConfiguration: ConversationRunPackageConfiguration;
 }>;
 
 export type ConversationRunCommandInput =
@@ -100,7 +108,8 @@ export type ConversationRunCommandInput =
   | Readonly<{ type: 'execute_action' }>
   | Readonly<{ type: 'recover_action' }>
   | Readonly<{ type: 'derive_package' }>
-  | Readonly<{ type: 'begin_package' }>
+  | Readonly<{ type: 'begin_package'; configuration: ConversationRunPackageConfiguration }>
+  | Readonly<{ type: 'set_package_configuration'; configuration: ConversationRunPackageConfiguration }>
   | Readonly<{ type: 'set_package_item_included'; artifactId: string; included: boolean }>
   | Readonly<{ type: 'revise_package_artifact'; artifactId: string; instruction: string }>
   | Readonly<{ type: 'select_package_artifact'; artifactId: string }>

@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { beginPackageGeneration, completePackageGeneration, createCoursePackageRun } from '@domain/workbuddy/course-package';
+import { WORKBUDDY_COURSE_PACKAGE_DEFINITION } from '@mocks/scenarios/workbuddy-course-production';
 import { loadWorkBuddyWorkspaceSession } from './workbuddy-workspace-session';
 
 const STORAGE_KEY = 'workbuddy:workspace-session:v2';
@@ -66,6 +68,25 @@ describe('WorkBuddy workspace session boundary', () => {
       items: session.contextProposal.items,
     };
     Object.assign(session, { contextSnapshot: snapshot, snapshotsById: { 'wrong-snapshot-key': snapshot } });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()).toBeNull();
+  });
+
+  it('fails closed when a historical package Receipt references an artifact outside its Run', () => {
+    const session = validSession();
+    const snapshot = {
+      id: 'context-package-1', version: 'workbuddy-m4-context-v1', taskType: 'course-package',
+      confirmedAt: '2026-08-21T10:00:00+08:00', items: session.contextProposal.items,
+    };
+    const packageRun = completePackageGeneration(beginPackageGeneration(createCoursePackageRun(
+      WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成函数单调性课程方案包', snapshot.id,
+    )), []);
+    const unrelatedReceipt = {
+      id: 'receipt-package-foreign', actionId: 'action-package-old', approvalId: 'approval-package-old',
+      idempotencyKey: 'package-old-key', truthLabel: '[模拟]课程方案包执行回执', result: '历史执行成功', status: 'success',
+      items: [{ artifactId: 'foreign-artifact', result: 'succeeded', objectId: 'foreign-object' }],
+    };
+    Object.assign(session, { snapshotsById: { [snapshot.id]: snapshot }, packageRun, packageReceiptHistory: [unrelatedReceipt] });
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     expect(loadWorkBuddyWorkspaceSession()).toBeNull();
   });

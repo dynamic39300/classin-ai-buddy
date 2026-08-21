@@ -82,7 +82,54 @@ function getCoursewareAllowedCommands(view: CoursewareRunView): readonly Convers
 export function projectCoursewareConversationRun(view: CoursewareRunView): ConversationRunProjection {
   const { run } = view;
   const inputs: EventInput[] = [];
-  for (const evidence of run.supersededEvidence) {
+  for (const [index, evidence] of run.supersededEvidence.entries()) {
+    const revision = index + 1;
+    const revisionRef = `${run.id}:r${revision}`;
+    const superseded = { state: 'superseded' as const, allowedCommands: Object.freeze([]) };
+    inputs.push(
+      {
+        id: `${revisionRef}:goal`, kind: 'teacher_message', title: '调整前教学目标',
+        summary: evidence.reason, ...superseded,
+      },
+      {
+        id: `${revisionRef}:understanding`, kind: 'goal_understood', title: '调整前目标理解',
+        summary: '该目标理解已由新的教学范围和计划替代。', ...superseded,
+      },
+      {
+        id: `${revisionRef}:clarification`, kind: 'clarification_submitted', title: '调整前课件要求',
+        summary: '原课件要求已冻结为历史证据。', ...superseded,
+      },
+      {
+        id: `${revisionRef}:context`, kind: 'context_confirmed', title: '调整前核心上下文',
+        summary: evidence.contextLabels.join(' · ') || evidence.snapshotId, objectRefs: [{ type: 'context_snapshot', id: evidence.snapshotId }], ...superseded,
+      },
+      {
+        id: `${revisionRef}:plan`, kind: 'plan', title: '调整前智能课件执行计划',
+        summary: `${evidence.plan.length} 个步骤 · 已被新计划替代`, ...superseded,
+      },
+    );
+    for (const step of evidence.plan) inputs.push({
+      id: `experience:r${revision}:${step.id}`, kind: 'capability_call', title: step.title,
+      summary: step.capabilitySummary, stepRef: step.id, objectRefs: [{ type: 'capability', id: step.capability }], ...superseded,
+    });
+    for (const artifact of evidence.artifactHistory) inputs.push({
+      id: `${artifact.id}:${artifact.version}`, kind: 'artifact', title: artifact.title,
+      summary: `${artifact.version} · 已被新教学范围替代`, objectRefs: [{ type: 'artifact', id: artifact.id, version: artifact.version }], ...superseded,
+    });
+    if (evidence.action) {
+      inputs.push({
+        id: evidence.action.id, kind: 'proposed_action', title: '调整前 ClassIn 保存提案',
+        summary: '该提案属于旧上下文，已停止继续执行。', objectRefs: [{ type: 'action', id: evidence.action.id }], ...superseded,
+      });
+      if (evidence.action.status === 'approved' || evidence.receipt) inputs.push({
+        id: `${evidence.action.id}:approval`, kind: 'approval', title: '调整前教师审批',
+        summary: '该审批随旧提案一并归档。', objectRefs: [{ type: 'action', id: evidence.action.id }], ...superseded,
+      });
+    }
+    if (evidence.receipt) inputs.push({
+      id: evidence.receipt.id, kind: 'receipt', title: '调整前执行回执', summary: evidence.receipt.result,
+      objectRefs: [{ type: 'receipt', id: evidence.receipt.id }], ...superseded,
+    });
     inputs.push({
       id: `${run.id}:superseded:${evidence.snapshotId}`,
       kind: 'system',
@@ -92,42 +139,45 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       objectRefs: evidence.artifact ? [{ type: 'artifact', id: evidence.artifact.id, version: evidence.artifact.version }] : [],
     });
   }
+  const revisionRef = `${run.id}:r${run.revision}`;
   inputs.push(
     {
-      id: `${run.id}:goal`, kind: 'teacher_message', title: '教学目标', summary: run.goal,
+      id: `${revisionRef}:goal`, kind: 'teacher_message', title: '教学目标', summary: run.goal,
     },
     {
-      id: `${run.id}:understanding`, kind: 'goal_understood', title: '已理解你的目标',
+      id: `${revisionRef}:understanding`, kind: 'goal_understood', title: '已理解你的目标',
       summary: `我会基于已确认的教学范围，生成“${run.title}”并保留可复查的过程。`,
     },
   );
 
   if (run.stage === 'needs_information') {
     inputs.push({
-      id: `${run.id}:clarification`, kind: 'clarification_request', state: 'requires_teacher_input',
+      id: `${revisionRef}:clarification`, kind: 'clarification_request', state: 'requires_teacher_input',
       title: '还需要确认课件要求', summary: '请确认课时、时长、教材版本和课件风格。',
+      allowedCommands: ['submit_clarification', 'confirm_clarification', 'cancel'],
     });
   } else {
     inputs.push(
       {
-        id: `${run.id}:clarification`, kind: 'clarification_submitted', title: '课件要求已补充',
+        id: `${revisionRef}:clarification`, kind: 'clarification_submitted', title: '课件要求已补充',
         summary: `${run.brief.durationMinutes} 分钟 · ${run.brief.teachingApproach} · ${run.brief.expectedPages} 页`,
       },
       {
-        id: `${run.id}:context`, kind: 'context_confirmed', title: '核心上下文已确认',
+        id: `${revisionRef}:context`, kind: 'context_confirmed', title: '核心上下文已确认',
         summary: '本次任务将使用冻结的教学范围与资源引用。',
         objectRefs: [{ type: 'context_snapshot', id: run.contextSnapshotId }],
       },
       {
-        id: `${run.id}:plan`, kind: 'plan', state: run.stage === 'awaiting_plan_confirmation' ? 'requires_teacher_input' : 'completed',
+        id: `${revisionRef}:plan`, kind: 'plan', state: run.stage === 'awaiting_plan_confirmation' ? 'requires_teacher_input' : 'completed',
         title: '智能课件执行计划', summary: `${run.plan.length} 个步骤 · 等待教师确认后执行`,
+        allowedCommands: run.stage === 'awaiting_plan_confirmation' ? ['revise_plan', 'start_plan', 'cancel'] : [],
       },
     );
     const projectionByCapability = new Map(view.projections.map((projection) => [projection.capabilityId, projection]));
     for (const step of run.plan) {
       const context = projectionByCapability.get(step.capability);
       inputs.push({
-        id: `experience:${step.id}`, kind: 'capability_call', state: 'queued', title: step.title, summary: step.capabilitySummary,
+        id: `experience:r${run.revision}:${step.id}`, kind: 'capability_call', state: 'queued', title: step.title, summary: step.capabilitySummary,
         stepRef: step.id,
         objectRefs: [{ type: 'capability', id: step.capability }],
         detail: {
@@ -145,12 +195,15 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
 
   const artifacts = run.artifactHistory.length ? run.artifactHistory : run.artifact ? [run.artifact] : [];
   for (const artifact of artifacts) {
+    const isCurrent = run.artifact?.id === artifact.id && run.artifact.version === artifact.version;
     inputs.push({
       id: `${artifact.id}:${artifact.version}`,
       kind: 'artifact',
       title: artifact.changeSummary ? `课件已更新为 ${artifact.version}` : artifact.title,
       summary: artifact.changeSummary?.join(' · ') ?? `${artifact.pageCount} 页 · ${artifact.validationSummary}`,
       objectRefs: [{ type: 'artifact', id: artifact.id, version: artifact.version }],
+      allowedCommands: isCurrent && run.reviewStatus === 'pending' ? ['revise_artifact', 'approve_artifact']
+        : isCurrent && run.reviewStatus === 'approved' && !view.action && !view.receipt ? ['propose_action', 'derive_package'] : [],
     });
   }
 
@@ -162,6 +215,8 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       title: '保存到 ClassIn',
       summary: `${view.action.target.label} · ${view.action.difference}`,
       objectRefs: [{ type: 'action', id: view.action.id }],
+      allowedCommands: view.receipt ? [] : view.action.status === 'proposed' ? ['approve_action', 'reject_action']
+        : view.action.status === 'approved' ? ['execute_action'] : [],
     });
     if (view.action.status === 'approved' || view.receipt) {
       const approvalId = `${view.action.id}:approval`;
@@ -183,6 +238,8 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       title: view.receipt.status === 'success' ? '课件草稿已保存到 ClassIn' : '保存动作需要处理',
       summary: view.receipt.result,
       objectRefs: [{ type: 'receipt', id: view.receipt.id }],
+      allowedCommands: view.receipt.status === 'success' ? ['derive_package']
+        : view.receipt.status === 'permission_denied' || view.receipt.status === 'version_conflict' ? ['recover_action'] : ['execute_action'],
     });
   }
 
@@ -216,6 +273,7 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       artifactScrollTop: 0,
       packageEditingArtifactId: null,
       packageEditDraft: '',
+      packageConfiguration: Object.freeze({ lessonCount: 2, homeworkCount: 12, quizMinutes: 15, recordingMinutes: 8 }),
     }),
   });
 }
@@ -246,6 +304,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
   if (run.showPackageConfiguration || run.showGeneration || run.showArtifacts) inputs.push({
     id: `${run.id}:plan`, kind: 'plan', state: run.showPackageConfiguration ? 'requires_teacher_input' : 'completed',
     title: '课程方案包执行计划', summary: '先形成共享课程目标和课件结构，再并行生成配套产物。',
+    allowedCommands: run.showPackageConfiguration ? ['begin_package', 'set_package_item_included', 'cancel'] : [],
   });
   if (run.showGeneration) inputs.push({
     id: `${run.id}:package-progress`, kind: 'process', state: 'running', title: '课程方案包生成进度',
@@ -260,6 +319,8 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       title: artifact.title,
       summary: `${artifact.version} · ${artifact.state === 'written_back' ? '已写回' : artifact.state === 'excluded' ? '已排除' : artifact.state === 'failed' ? '生成失败' : artifact.state === 'waiting' ? '等待依赖' : '可预览'}`,
       objectRefs: [{ type: 'artifact', id: artifact.id, version: artifact.version }],
+      allowedCommands: run.showArtifacts && !view.action && !view.receipt && ['ready', 'excluded'].includes(artifact.state)
+        ? ['revise_package_artifact', 'set_package_item_included', 'propose_action'] : [],
     });
   }
   if (run.showArtifacts) inputs.push({
@@ -271,6 +332,8 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       id: view.action.id, kind: 'proposed_action', title: '保存课程方案包到 ClassIn',
       summary: `${view.action.artifactRefs.length} 项对象 · ${view.action.difference}`,
       objectRefs: [{ type: 'action', id: view.action.id }],
+      allowedCommands: view.receipt ? [] : view.action.status === 'proposed' ? ['approve_action', 'reject_action', 'set_package_item_included']
+        : view.action.status === 'approved' ? ['execute_action'] : [],
     });
     if (view.action.status === 'approved' || view.receipt) inputs.push({
       id: `${view.action.id}:approval`, kind: 'approval', title: '教师已批准方案包写回',
@@ -282,6 +345,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
     id: receipt.id, kind: 'receipt', state: receipt.status === 'success' ? 'completed' : 'failed',
     title: receipt.status === 'success' ? '课程方案包已写回 ClassIn' : '课程方案包写回结果', summary: receipt.result,
     objectRefs: [{ type: 'receipt', id: receipt.id }],
+    allowedCommands: receipt.status === 'partial_success' && view.retryableArtifactIds.length ? ['retry_failed'] : [],
   });
   const events = Object.freeze(inputs.map((input, index) => freezeEvent(run.id, index + 1, input)));
   const status: ConversationRunStatus = view.receipt?.status === 'success' ? 'completed'
@@ -317,7 +381,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
     presentation: Object.freeze({
       inspectorOpen: true,
       inspectorMode: run.showArtifacts ? 'output' : 'context',
-      outputCount: run.showGeneration || run.showArtifacts ? run.artifacts.filter(({ state }) => state !== 'excluded').length : 0,
+      outputCount: run.showArtifacts ? run.artifacts.filter(({ state }) => state !== 'excluded').length : 0,
       unreadOutputCount: 0,
       composerDraft: '',
       progress: Object.freeze({ status: 'idle' as const }),
@@ -334,6 +398,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       artifactScrollTop: 0,
       packageEditingArtifactId: null,
       packageEditDraft: '',
+      packageConfiguration: Object.freeze({ lessonCount: 2, homeworkCount: 12, quizMinutes: 15, recordingMinutes: 8 }),
     }),
   });
 }

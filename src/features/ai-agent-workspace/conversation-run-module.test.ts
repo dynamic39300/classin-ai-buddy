@@ -31,6 +31,7 @@ function baseProjection(): ConversationRunProjection {
       contextExpandedIds: null, contextQuery: '', contextScrollTop: 0,
       artifactFocused: false, artifactEditing: false, artifactEditDraft: '', artifactSelectedBlock: '', artifactPreviewPage: 1, artifactScrollTop: 0,
       packageEditingArtifactId: null, packageEditDraft: '',
+      packageConfiguration: Object.freeze({ lessonCount: 2, homeworkCount: 12, quizMinutes: 15, recordingMinutes: 8 }),
     }),
   });
 }
@@ -111,6 +112,28 @@ describe('ConversationRun Deep Module', () => {
     });
     expect(restored?.events.map(({ id }) => id)).toContain('supplement-1');
     expect(restored?.events.every(({ actor, updatedAt, allowedCommands }) => Boolean(actor && updatedAt && allowedCommands))).toBe(true);
+  });
+
+  it('persists package configuration and publishes the confirmed values into the Run journal', () => {
+    const clock = manualScheduler();
+    const packageProjection = Object.freeze({
+      ...baseProjection(), taskKind: 'course_package' as const,
+      allowedCommands: Object.freeze(['begin_package'] as const),
+    });
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: packageProjection, progressStepCount: 3 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const configuration = Object.freeze({ lessonCount: 3, homeworkCount: 16, quizMinutes: 20, recordingMinutes: 12 });
+    const first = createConversationRunModule(host, clock.scheduler);
+    first.dispatch('run-1', { id: 'package-config-draft', type: 'set_package_configuration', configuration });
+    expect(createConversationRunModule(host, clock.scheduler).open('run-1')?.presentation.packageConfiguration).toEqual(configuration);
+
+    first.dispatch('run-1', { id: 'package-begin-1', type: 'begin_package', configuration });
+    const projection = first.open('run-1');
+    expect(projection?.presentation.packageConfiguration).toEqual(configuration);
+    expect(projection?.events.find(({ id }) => id === 'package-begin-1:configuration')?.summary)
+      .toBe('3 课时 · 作业 16 题 · 测验 20 分钟 · 录播 12 分钟');
   });
 
   it('rejects forbidden commands and persists duplicate command receipts', () => {

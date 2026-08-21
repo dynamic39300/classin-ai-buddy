@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { approveAction, createCoursewareSaveAction, type ExecutionReceipt } from '@domain/workbuddy/writeback';
-import { approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan } from '@domain/workbuddy/course-production';
+import { approveCoursewareArtifact, confirmCoursewareBrief, createSingleCoursewareRun, executeCoursewarePlan, replanCoursewareRun } from '@domain/workbuddy/course-production';
 import {
   WORKBUDDY_COURSEWARE_DEFINITION,
   WORKBUDDY_COURSEWARE_OUTPUT,
@@ -73,6 +73,34 @@ describe('ConversationRun public seam', () => {
       objectRefs: [{ type: 'receipt', id: 'receipt-courseware-save-1' }],
     });
     expect(projection?.cursor).toBe('13');
+    expect(projection?.events.find(({ kind }) => kind === 'receipt')?.allowedCommands).toEqual(['derive_package']);
+  });
+
+  it('projects actionable commands on waiting events and supersedes every prior revision object', () => {
+    let run = createSingleCoursewareRun(
+      WORKBUDDY_COURSEWARE_DEFINITION,
+      '为高一（3）班生成一份函数单调性智能课件',
+      'context-snapshot-courseware-1',
+    );
+    let view = projectCoursewareRunView(run, [], null, null, {}, null)!;
+    expect(projectCoursewareConversationRun(view).events.find(({ kind }) => kind === 'clarification_request')?.allowedCommands)
+      .toEqual(['submit_clarification', 'confirm_clarification', 'cancel']);
+
+    run = confirmCoursewareBrief(run);
+    view = projectCoursewareRunView(run, [], null, null, {}, null)!;
+    expect(projectCoursewareConversationRun(view).events.find(({ kind }) => kind === 'plan')?.allowedCommands)
+      .toEqual(['revise_plan', 'start_plan', 'cancel']);
+
+    run = executeCoursewarePlan(run, WORKBUDDY_COURSEWARE_OUTPUT);
+    run = replanCoursewareRun(run, 'context-snapshot-courseware-2', '教学范围已调整', {
+      title: '生成二次函数智能课件', goal: '为高一（2）班生成二次函数智能课件',
+      plan: run.plan.map((step) => Object.freeze({ ...step, id: `${step.id}-r2` })),
+    });
+    view = projectCoursewareRunView(run, [], null, null, {}, null)!;
+    const replanned = projectCoursewareConversationRun(view);
+    expect(replanned.events.find(({ id }) => id === `${run.id}:r1:plan`)?.state).toBe('superseded');
+    expect(replanned.events.find(({ id }) => id === 'artifact-courseware-momentum-v1:v1')?.state).toBe('superseded');
+    expect(replanned.events.find(({ id }) => id === `${run.id}:r2:goal`)?.state).toBe('completed');
   });
 
   it('replays from a cursor and rejects duplicate teacher commands', () => {

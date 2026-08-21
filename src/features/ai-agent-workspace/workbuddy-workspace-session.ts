@@ -229,12 +229,19 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
   const packageAction = isRecord(value.packageAction) ? value.packageAction : null;
   const packageApproval = isRecord(value.packageApproval) ? value.packageApproval : null;
   const packageReceipt = isRecord(value.packageReceipt) ? value.packageReceipt : null;
+  const packageReceiptHistory = Array.isArray(value.packageReceiptHistory) ? value.packageReceiptHistory : [];
   if (packageRun && typeof packageRun.contextSnapshotId === 'string' && !isRecord(snapshots[packageRun.contextSnapshotId])) return false;
   if (packageAction && (!packageRun || packageAction.runRef !== packageRun.id || packageAction.contextSnapshotId !== packageRun.contextSnapshotId
     || !Array.isArray(packageAction.artifactRefs) || !Array.isArray(packageRun.artifacts)
     || !packageAction.artifactRefs.every((ref) => isRecord(ref) && (packageRun.artifacts as unknown[]).some((artifact: unknown) => isRecord(artifact) && artifact.id === ref.id && artifact.version === ref.version)))) return false;
   if (packageApproval && (!packageAction || packageApproval.actionId !== packageAction.id)) return false;
   if (packageReceipt && (!packageAction || !packageApproval || packageReceipt.actionId !== packageAction.id || packageReceipt.approvalId !== packageApproval.id)) return false;
+  if (packageReceiptHistory.length && (!packageRun || !Array.isArray(packageRun.artifacts))) return false;
+  const packageArtifactIds = new Set(packageRun && Array.isArray(packageRun.artifacts)
+    ? packageRun.artifacts.filter(isRecord).map((artifact) => String(artifact.id))
+    : []);
+  if (packageReceiptHistory.some((receipt) => !isRecord(receipt) || !Array.isArray(receipt.items)
+    || receipt.items.some((item) => !isRecord(item) || !packageArtifactIds.has(String(item.artifactId))))) return false;
   if (typeof value.activePackageArtifactId === 'string' && (!packageRun || !Array.isArray(packageRun.artifacts) || !packageRun.artifacts.some((artifact) => isRecord(artifact) && artifact.id === value.activePackageArtifactId))) return false;
   return true;
 }

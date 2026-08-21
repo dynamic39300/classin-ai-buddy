@@ -115,26 +115,27 @@ export function ConversationRunSurface() {
                       <label>教材版本<select aria-label="教材版本" value={textbook} onChange={(changeEvent) => setTextbook(changeEvent.target.value)}><option>人教版</option><option>北师大版</option><option>校本教材</option></select></label>
                       <label>课件风格<select aria-label="课件风格" value={style} onChange={(changeEvent) => setStyle(changeEvent.target.value)}><option>简约探究</option><option>图像引导</option><option>板书演绎</option></select></label>
                     </div>
-                    <div className={styles.cardActions}><button type="button" onClick={() => dispatch({ type: 'confirm_clarification' })}>跳过</button><button className={styles.primary} type="submit">提交确认</button></div>
+                    <div className={styles.cardActions}>{event.allowedCommands.includes('cancel') ? <button type="button" onClick={() => dispatch({ type: 'cancel' })}>取消任务</button> : null}{event.allowedCommands.includes('confirm_clarification') ? <button type="button" onClick={() => dispatch({ type: 'confirm_clarification' })}>跳过</button> : null}{event.allowedCommands.includes('submit_clarification') ? <button className={styles.primary} type="submit">提交确认</button> : null}</div>
                   </form>
                 ) : null}
-                {event.kind === 'plan' ? (
+                {event.kind === 'plan' && event.state !== 'superseded' ? (
                   <section className={styles.plan} aria-label="智能课件执行计划">
                     <ol>{coursewareView.run.plan.map((step) => <li key={step.id}><span>{step.title}</span><small>{step.capabilitySummary}</small><em>预期：{step.expectedOutput}</em></li>)}</ol>
                     <p>等待点：教师确认计划</p>
-                    {coursewareView.run.stage === 'awaiting_plan_confirmation' && experience.status === 'idle' ? <div className={styles.cardActions}><button type="button" onClick={() => dispatch({ type: 'cancel' })}>取消任务</button><button type="button" onClick={() => dispatch({ type: 'revise_plan' })}>返回修改</button><button className={styles.primary} type="button" onClick={() => dispatch({ type: 'start_plan' })}>开始执行计划</button></div> : null}
+                    {event.allowedCommands.length && experience.status === 'idle' ? <div className={styles.cardActions}>{event.allowedCommands.includes('cancel') ? <button type="button" onClick={() => dispatch({ type: 'cancel' })}>取消任务</button> : null}{event.allowedCommands.includes('revise_plan') ? <button type="button" onClick={() => dispatch({ type: 'revise_plan' })}>返回修改</button> : null}{event.allowedCommands.includes('start_plan') ? <button className={styles.primary} type="button" onClick={() => dispatch({ type: 'start_plan' })}>开始执行计划</button> : null}</div> : null}
                   </section>
                 ) : null}
-                {event.kind === 'artifact' ? <button className={styles.artifactLink} type="button" onClick={() => dispatch({ type: 'set_inspector', open: true, mode: 'output' })}><FileText aria-hidden="true" size={15} />打开智能课件产出</button> : null}
+                {event.kind === 'artifact' && event.state !== 'superseded' ? <button className={styles.artifactLink} type="button" onClick={() => dispatch({ type: 'set_inspector', open: true, mode: 'output' })}><FileText aria-hidden="true" size={15} />打开智能课件产出</button> : null}
                 {event.kind === 'proposed_action' && coursewareView.action?.id === event.id ? <CoursewareActionCard
                   action={coursewareView.action}
+                  allowedCommands={event.allowedCommands}
                   executing={executingAction}
                   blockedByReceipt={Boolean(coursewareView.receipt)}
                   onOpenApproval={() => setApprovalDialogOpen(true)}
                   onReject={() => dispatch({ type: 'reject_action' })}
                   onExecute={executeAction}
                 /> : null}
-                {event.kind === 'receipt' && coursewareView.receipt?.id === event.id ? <CoursewareReceiptCard receipt={coursewareView.receipt} onRecover={() => dispatch({ type: 'recover_action' })} onRetry={executeAction} /> : null}
+                {event.kind === 'receipt' && coursewareView.receipt?.id === event.id ? <CoursewareReceiptCard receipt={coursewareView.receipt} allowedCommands={event.allowedCommands} onRecover={() => dispatch({ type: 'recover_action' })} onRetry={executeAction} /> : null}
               </div>
             </article>
             );
@@ -294,8 +295,9 @@ function CoursewareOutput({
   );
 }
 
-function CoursewareActionCard({ action, executing, blockedByReceipt, onOpenApproval, onReject, onExecute }: Readonly<{
+function CoursewareActionCard({ action, allowedCommands, executing, blockedByReceipt, onOpenApproval, onReject, onExecute }: Readonly<{
   action: NonNullable<CoursewareRunView['action']>;
+  allowedCommands: ConversationRunEvent['allowedCommands'];
   executing: boolean;
   blockedByReceipt: boolean;
   onOpenApproval: (trigger: HTMLButtonElement) => void;
@@ -306,19 +308,20 @@ function CoursewareActionCard({ action, executing, blockedByReceipt, onOpenAppro
   return <section className={styles.actionCard} aria-label="ClassIn 保存提案">
     <dl><div><dt>目标位置</dt><dd>{action.target.label}</dd></div><div><dt>变更内容</dt><dd>{action.difference}</dd></div><div><dt>写入判断</dt><dd>{action.risk === 'low' ? '低风险' : action.risk === 'medium' ? '中风险' : '高风险'} · {action.permission === 'allowed' ? '允许写入' : '无写入权限'} · {action.reversible ? '可撤销' : '不可撤销'}</dd></div><div><dt>目标版本</dt><dd>{targetVersionLabel(action.target.label, action.target.expectedVersion)}</dd></div><div><dt>确认有效期</dt><dd>{expiryLabel}</dd></div></dl>
     {executing ? <p className={styles.executionStatus} role="status"><LoaderCircle className={styles.spinner} aria-hidden="true" size={14} />正在执行</p> : blockedByReceipt ? <p className={styles.executionStatus}>已执行 · 结果见下方回执</p> : action.status === 'approved' ? <p className={styles.executionStatus}>已批准 · 尚未执行</p> : null}
-    <div className={styles.cardActions}>{action.status === 'proposed' ? <><button type="button" onClick={onReject}>取消保存</button><button className={styles.primary} type="button" onClick={(event) => onOpenApproval(event.currentTarget)}>确认执行</button></> : action.status === 'approved' && !executing && !blockedByReceipt ? <button className={styles.primary} type="button" onClick={onExecute}>执行已批准动作</button> : null}</div>
+    <div className={styles.cardActions}>{allowedCommands.includes('approve_action') ? <><button type="button" onClick={onReject}>取消保存</button><button className={styles.primary} type="button" onClick={(event) => onOpenApproval(event.currentTarget)}>确认执行</button></> : allowedCommands.includes('execute_action') && !executing && !blockedByReceipt ? <button className={styles.primary} type="button" onClick={onExecute}>执行已批准动作</button> : null}</div>
   </section>;
 }
 
-function CoursewareReceiptCard({ receipt, onRecover, onRetry }: Readonly<{
+function CoursewareReceiptCard({ receipt, allowedCommands, onRecover, onRetry }: Readonly<{
   receipt: NonNullable<CoursewareRunView['receipt']>;
+  allowedCommands: ConversationRunEvent['allowedCommands'];
   onRecover: () => void;
   onRetry: () => void;
 }>) {
   if (receipt.status !== 'success') {
     const title = receipt.status === 'permission_denied' ? '保存位置没有写入权限' : receipt.status === 'version_conflict' ? '目标版本已经更新' : receipt.status === 'timeout' ? '执行等待超时' : '保存服务暂时不可用';
     const recovery = receipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : receipt.status === 'version_conflict' ? '采用当前版本并重新确认' : '使用同一审批安全重试';
-    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>所选课程单元</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{versionLabel(receipt.expectedVersion)} → {versionLabel(receipt.currentVersion)}</dd></div> : null}</dl><button className={styles.recoveryButton} type="button" onClick={receipt.status === 'permission_denied' || receipt.status === 'version_conflict' ? onRecover : onRetry}>{recovery}</button></section>;
+    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>所选课程单元</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{versionLabel(receipt.expectedVersion)} → {versionLabel(receipt.currentVersion)}</dd></div> : null}</dl>{allowedCommands.includes('recover_action') || allowedCommands.includes('execute_action') ? <button className={styles.recoveryButton} type="button" onClick={allowedCommands.includes('recover_action') ? onRecover : onRetry}>{recovery}</button> : null}</section>;
   }
   return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result.replace('[模拟]', '')}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
 }

@@ -5,6 +5,7 @@ import type {
   ConversationRunEvent,
   ConversationRunListener,
   ConversationRunModule,
+  ConversationRunPackageConfiguration,
   ConversationRunProgress,
   ConversationRunProjection,
 } from '@contracts/workbuddy/conversation-run';
@@ -57,6 +58,7 @@ type RuntimeState = Readonly<{
   artifactScrollTop: number;
   packageEditingArtifactId: string | null;
   packageEditDraft: string;
+  packageConfiguration: ConversationRunPackageConfiguration;
   cursorRevision: number;
   commandSequence: number;
 }>;
@@ -65,7 +67,7 @@ type StoredState = Readonly<{
   runtimes: Readonly<Record<string, RuntimeState>>;
   commands: Readonly<Record<string, ConversationRunCommandReceipt>>;
 }>;
-const STORAGE_KEY = 'workbuddy:conversation-run:v4';
+const STORAGE_KEY = 'workbuddy:conversation-run:v5';
 const EVENT_ACTORS = new Set(['teacher', 'agent', 'system']);
 const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'error', 'system']);
 const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'cancelled', 'superseded']);
@@ -128,6 +130,11 @@ function isRuntimeState(value: unknown): value is RuntimeState {
     && typeof value.artifactScrollTop === 'number'
     && (value.packageEditingArtifactId === null || typeof value.packageEditingArtifactId === 'string')
     && typeof value.packageEditDraft === 'string'
+    && isRecord(value.packageConfiguration)
+    && typeof value.packageConfiguration.lessonCount === 'number'
+    && typeof value.packageConfiguration.homeworkCount === 'number'
+    && typeof value.packageConfiguration.quizMinutes === 'number'
+    && typeof value.packageConfiguration.recordingMinutes === 'number'
     && typeof value.cursorRevision === 'number'
     && typeof value.commandSequence === 'number';
 }
@@ -146,7 +153,7 @@ function loadStoredState(): StoredState {
   if (typeof window === 'undefined') return empty();
   try {
     const parsed: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
-    if (!isRecord(parsed) || parsed.version !== 4 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
+    if (!isRecord(parsed) || parsed.version !== 5 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
     return Object.freeze({
       runtimes: Object.freeze(Object.fromEntries(Object.entries(parsed.runtimes).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1])))),
       commands: Object.freeze(Object.fromEntries(Object.entries(parsed.commands).filter((entry): entry is [string, ConversationRunCommandReceipt] => isCommandReceipt(entry[1])))),
@@ -193,6 +200,16 @@ function commandEvents(runRef: string, command: ConversationRunCommand, sequence
   ]);
 }
 
+function normalizePackageConfiguration(configuration: ConversationRunPackageConfiguration): ConversationRunPackageConfiguration {
+  const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, Number.isFinite(value) ? Math.round(value) : minimum));
+  return Object.freeze({
+    lessonCount: clamp(configuration.lessonCount, 1, 3),
+    homeworkCount: clamp(configuration.homeworkCount, 1, 50),
+    quizMinutes: clamp(configuration.quizMinutes, 5, 60),
+    recordingMinutes: clamp(configuration.recordingMinutes, 1, 30),
+  });
+}
+
 function organizingEvent(runRef: string): ConversationRunEvent {
   return Object.freeze({
     id: `${runRef}:organizing`,
@@ -219,6 +236,7 @@ function freezeRuntime(runtime: RuntimeState): RuntimeState {
     eventJournal: Object.freeze([...runtime.eventJournal]),
     contextExpandedIds: runtime.contextExpandedIds ? Object.freeze([...runtime.contextExpandedIds]) : null,
     progress: Object.freeze({ ...runtime.progress }),
+    packageConfiguration: Object.freeze({ ...runtime.packageConfiguration }),
   });
 }
 
@@ -254,7 +272,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   const persist = () => {
     if (typeof window === 'undefined') return;
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-      version: 4,
+      version: 5,
       runtimes: Object.fromEntries(runtimes),
       commands: Object.fromEntries(processedCommands),
     }));
@@ -286,6 +304,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       artifactScrollTop: 0,
       packageEditingArtifactId: null,
       packageEditDraft: '增加一道结合函数图像判断单调区间的探究题。',
+      packageConfiguration: Object.freeze({ lessonCount: 2, homeworkCount: 12, quizMinutes: 15, recordingMinutes: 8 }),
       cursorRevision: 0,
       commandSequence: 0,
     });
@@ -343,6 +362,10 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       }
       return [event];
     });
+    const packageCompletedOutputCount = projectedBaseEvents.filter((event) => event.kind === 'process'
+      && !event.id.endsWith(':package-progress')
+      && event.state === 'completed'
+      && event.objectRefs.some(({ type }) => type === 'artifact')).length;
     const publishedBaseEvents = runtime.progress.status === 'organizing'
       ? []
       : projectedBaseEvents.filter(({ id }) => id !== teacherEvent?.id);
@@ -383,7 +406,9 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       presentation: Object.freeze({
         inspectorOpen: runtime.inspectorOpen,
         inspectorMode: runtime.inspectorMode,
-        outputCount: base.presentation.outputCount,
+        outputCount: base.taskKind === 'course_package'
+          ? Math.max(base.presentation.outputCount, packageCompletedOutputCount)
+          : base.presentation.outputCount,
         unreadOutputCount: runtime.unreadOutputCount,
         composerDraft: runtime.composerDraft,
         progress: runtime.progress,
@@ -400,6 +425,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         artifactScrollTop: runtime.artifactScrollTop,
         packageEditingArtifactId: runtime.packageEditingArtifactId,
         packageEditDraft: runtime.packageEditDraft,
+        packageConfiguration: runtime.packageConfiguration,
       }),
     });
   };
@@ -494,7 +520,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
     persist();
   };
 
-  const ephemeralCommands = new Set<ConversationRunCommandType>(['set_inspector', 'set_context_inspector_state', 'set_artifact_inspector_state', 'set_composer_draft', 'set_scenario', 'select_package_artifact']);
+  const ephemeralCommands = new Set<ConversationRunCommandType>(['set_inspector', 'set_context_inspector_state', 'set_artifact_inspector_state', 'set_composer_draft', 'set_scenario', 'select_package_artifact', 'set_package_configuration']);
   const alwaysAllowed = new Set<ConversationRunCommandType>([...ephemeralCommands, 'reset']);
   const isAllowed = (projection: ConversationRunProjection, runtime: RuntimeState, command: ConversationRunCommand) => alwaysAllowed.has(command.type)
     || projection.allowedCommands.includes(command.type)
@@ -569,7 +595,13 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
           packageEditingArtifactId: command.packageEditingArtifactId === undefined ? current.packageEditingArtifactId : command.packageEditingArtifactId,
           packageEditDraft: command.packageEditDraft ?? current.packageEditDraft,
         }));
+      } else if (command.type === 'set_package_configuration') {
+        replaceRuntime(runRef, (current) => ({ ...current, packageConfiguration: normalizePackageConfiguration(command.configuration) }));
       } else if (command.type === 'start_plan' || command.type === 'begin_package') {
+        const packageConfiguration = command.type === 'begin_package' ? normalizePackageConfiguration(command.configuration) : null;
+        const packageConfigurationSummary = packageConfiguration
+          ? `${packageConfiguration.lessonCount} 课时 · 作业 ${packageConfiguration.homeworkCount} 题 · 测验 ${packageConfiguration.quizMinutes} 分钟 · 录播 ${packageConfiguration.recordingMinutes} 分钟`
+          : '';
         const hostResult = host.execute(runRef, command);
         if (hostResult.status === 'rejected') {
           const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: hostResult.reason });
@@ -579,6 +611,17 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         }
         replaceRuntime(runRef, (current) => ({
           ...current,
+          packageConfiguration: packageConfiguration ?? current.packageConfiguration,
+          localEvents: command.type === 'begin_package'
+            ? [...current.localEvents, localEvent(
+              runRef,
+              `${command.id}:configuration`,
+              current.localEvents.length + 1,
+              'system',
+              '课程方案包范围已确认',
+              packageConfigurationSummary,
+            )]
+            : current.localEvents,
           progress: { status: 'running', activeIndex: 0, completedCount: 0, totalCount: snapshot.progressStepCount },
         }));
         scheduleProgress(runRef);
