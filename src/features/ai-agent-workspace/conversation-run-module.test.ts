@@ -24,10 +24,13 @@ function baseProjection(): ConversationRunProjection {
   const events = Object.freeze([event('goal', 1, 'teacher_message'), event('understanding', 2, 'goal_understood')]);
   return Object.freeze({
     runRef: 'run-1', taskKind: 'courseware', title: '函数单调性智能课件', goal: '生成函数单调性智能课件',
-    status: 'needs_information', events, cursor: '2', allowedCommands: Object.freeze(['supplement'] as const),
+    status: 'needs_information', events, cursor: '2', allowedCommands: Object.freeze(['start_plan', 'supplement'] as const),
     presentation: Object.freeze({
       inspectorOpen: true, inspectorMode: 'context', outputCount: 0, unreadOutputCount: 0,
       composerDraft: '', progress: Object.freeze({ status: 'idle' as const }), executingAction: false, replanPending: false,
+      contextExpandedIds: null, contextQuery: '', contextScrollTop: 0,
+      artifactFocused: false, artifactEditing: false, artifactEditDraft: '', artifactSelectedBlock: '', artifactPreviewPage: 1, artifactScrollTop: 0,
+      packageEditingArtifactId: null, packageEditDraft: '',
     }),
   });
 }
@@ -58,7 +61,7 @@ describe('ConversationRun Deep Module', () => {
     const executed: ConversationRunCommand[] = [];
     const host: ConversationRunHost = Object.freeze({
       open: () => Object.freeze({ projection: baseProjection(), progressStepCount: 2 }),
-      execute: (_runRef, command) => { executed.push(command); },
+      execute: (_runRef, command) => { executed.push(command); return Object.freeze({ status: 'accepted' as const }); },
     });
     const module = createConversationRunModule(host, clock.scheduler);
     const updates: string[] = [];
@@ -68,7 +71,7 @@ describe('ConversationRun Deep Module', () => {
     expect(module.open('run-1')).toMatchObject({ status: 'organizing' });
     expect(clock.pendingCount()).toBe(1);
     clock.advance();
-    expect(module.open('run-1')?.events.map(({ id }) => id)).toEqual(['goal', 'understanding']);
+    expect(module.open('run-1')?.events.map(({ id }) => id)).toEqual(['goal', 'run-1:organizing', 'understanding']);
 
     module.dispatch('run-1', { id: 'start-1', type: 'start_plan' });
     expect(module.open('run-1')).toMatchObject({
@@ -90,16 +93,99 @@ describe('ConversationRun Deep Module', () => {
     const clock = manualScheduler();
     const host: ConversationRunHost = Object.freeze({
       open: () => Object.freeze({ projection: baseProjection(), progressStepCount: 2 }),
-      execute: () => undefined,
+      execute: () => Object.freeze({ status: 'accepted' as const }),
     });
     const first = createConversationRunModule(host, clock.scheduler);
     first.dispatch('run-1', { id: 'inspector-1', type: 'set_inspector', mode: 'output', open: false });
+    first.dispatch('run-1', { id: 'context-inspector-1', type: 'set_context_inspector_state', expandedIds: ['class-1'], query: '函数', scrollTop: 72 });
+    first.dispatch('run-1', { id: 'artifact-inspector-1', type: 'set_artifact_inspector_state', editing: true, editDraft: '保留未提交修改', selectedBlock: '第 6 页', previewPage: 6, scrollTop: 128, packageEditingArtifactId: 'artifact-homework', packageEditDraft: '增加探究题' });
     first.dispatch('run-1', { id: 'draft-1', type: 'set_composer_draft', text: '增加课堂讨论' });
     first.dispatch('run-1', { id: 'supplement-1', type: 'supplement', text: '增加课堂讨论' });
 
     const restored = createConversationRunModule(host, clock.scheduler).open('run-1');
-    expect(restored?.presentation).toMatchObject({ inspectorOpen: false, inspectorMode: 'output', composerDraft: '' });
+    expect(restored?.presentation).toMatchObject({
+      inspectorOpen: false, inspectorMode: 'output', composerDraft: '',
+      contextExpandedIds: ['class-1'], contextQuery: '函数', contextScrollTop: 72,
+      artifactEditing: true, artifactEditDraft: '保留未提交修改', artifactSelectedBlock: '第 6 页', artifactPreviewPage: 6, artifactScrollTop: 128,
+      packageEditingArtifactId: 'artifact-homework', packageEditDraft: '增加探究题',
+    });
     expect(restored?.events.map(({ id }) => id)).toContain('supplement-1');
     expect(restored?.events.every(({ actor, updatedAt, allowedCommands }) => Boolean(actor && updatedAt && allowedCommands))).toBe(true);
+  });
+
+  it('rejects forbidden commands and persists duplicate command receipts', () => {
+    const clock = manualScheduler();
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: baseProjection(), progressStepCount: 2 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const first = createConversationRunModule(host, clock.scheduler);
+    expect(first.dispatch('run-1', { id: 'forbidden-1', type: 'approve_action' })).toMatchObject({ status: 'rejected', reason: 'command-not-allowed' });
+    expect(first.dispatch('run-1', { id: 'supplement-stable-1', type: 'supplement', text: '增加课堂讨论' })).toMatchObject({ status: 'accepted' });
+
+    const restored = createConversationRunModule(host, manualScheduler().scheduler);
+    expect(restored.dispatch('run-1', { id: 'supplement-stable-1', type: 'supplement', text: '增加课堂讨论' })).toMatchObject({ status: 'duplicate' });
+  });
+
+  it('keeps published event sequence stable when later domain events arrive', () => {
+    const clock = manualScheduler();
+    let projection = baseProjection();
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection, progressStepCount: 2 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const module = createConversationRunModule(host, clock.scheduler);
+    module.subscribe('run-1', null, () => undefined);
+    module.dispatch('run-1', { id: 'supplement-order-1', type: 'supplement', text: '增加课堂讨论' });
+    const originalSequence = module.open('run-1')?.events.find(({ id }) => id === 'supplement-order-1')?.sequence;
+    const artifact = Object.freeze({
+      ...projection.events[1]!, id: 'artifact-1', kind: 'artifact' as const, title: '课件已生成', summary: 'v1',
+    });
+    projection = Object.freeze({ ...projection, events: Object.freeze([...projection.events, artifact]), cursor: '3' });
+    clock.advance();
+
+    expect(module.open('run-1')?.events.find(({ id }) => id === 'supplement-order-1')?.sequence).toBe(originalSequence);
+    expect(module.open('run-1')?.events.at(-1)?.id).toBe('artifact-1');
+  });
+
+  it('resumes an in-flight action after reload and reset clears all Run runtime', () => {
+    const firstClock = manualScheduler();
+    const executed: string[] = [];
+    const executableProjection = Object.freeze({ ...baseProjection(), allowedCommands: Object.freeze(['execute_action', 'supplement'] as const) });
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: executableProjection, progressStepCount: 2 }),
+      execute: (_runRef, command) => { executed.push(command.type); return Object.freeze({ status: 'accepted' as const }); },
+    });
+    const first = createConversationRunModule(host, firstClock.scheduler);
+    first.dispatch('run-1', { id: 'run-1:execute-action-1', type: 'execute_action' });
+    expect(first.open('run-1')?.presentation.executingAction).toBe(true);
+
+    const restoredClock = manualScheduler();
+    const restored = createConversationRunModule(host, restoredClock.scheduler);
+    expect(restored.open('run-1')?.presentation.executingAction).toBe(true);
+    restored.subscribe('run-1', null, () => undefined);
+    expect(restoredClock.pendingCount()).toBe(1);
+    restoredClock.advance();
+    expect(executed).toEqual(['execute_action']);
+    expect(restored.open('run-1')?.presentation.executingAction).toBe(false);
+
+    restored.dispatch('run-1', { id: 'run-1:reset', type: 'reset' });
+    const afterReset = restored.open('run-1');
+    expect(afterReset?.status).toBe('organizing');
+    expect(afterReset?.events.map(({ id }) => id)).not.toContain('supplement-order-1');
+    expect(restored.dispatch('run-1', { id: 'run-1:execute-action-1', type: 'execute_action' })).toMatchObject({ status: 'accepted' });
+  });
+
+  it('cancels a pre-execution Run and publishes a recoverable terminal event', () => {
+    const clock = manualScheduler();
+    const cancellable = Object.freeze({ ...baseProjection(), allowedCommands: Object.freeze(['start_plan', 'supplement', 'cancel'] as const) });
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: cancellable, progressStepCount: 2 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const module = createConversationRunModule(host, clock.scheduler);
+    expect(module.dispatch('run-1', { id: 'cancel-1', type: 'cancel' })).toMatchObject({ status: 'accepted' });
+    expect(module.open('run-1')).toMatchObject({ status: 'stopped', presentation: { progress: { status: 'stopped' } } });
+    expect(module.open('run-1')?.events.at(-1)).toMatchObject({ id: 'cancel-1', state: 'cancelled', title: '任务已取消' });
   });
 });

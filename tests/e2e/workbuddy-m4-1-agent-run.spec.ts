@@ -53,9 +53,18 @@ test('teacher creates one dynamic smart-courseware run from the default Context 
 
   const context = page.getByRole('complementary', { name: '核心上下文' });
   await expect(context).toBeVisible();
-  await expect(context.getByLabel('教学上下文对象').getByRole('list').first()).toBeVisible();
+  const contextTree = context.getByRole('tree', { name: '教学上下文对象' });
+  await expect(contextTree).toBeVisible();
   await expect(context.getByRole('textbox', { name: '搜索上下文' })).toBeVisible();
   await expect(context.getByRole('button', { name: '收起高一（3）班' })).toBeVisible();
+  const classItem = contextTree.getByRole('treeitem', { name: /高一（3）班/ });
+  await classItem.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(classItem).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('ArrowRight');
+  await expect(classItem).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('ArrowRight');
+  await expect(contextTree.locator('[role="treeitem"]:focus')).toContainText('高中数学 · 必修一');
   await context.getByRole('button', { name: '应用函数单调性课程建议' }).click();
   await context.getByRole('button', { name: '确认上下文版本' }).click();
 
@@ -134,6 +143,12 @@ test('teacher edits the Artifact and completes Action, Approval, execution and R
   await generateCoursewareArtifact(page);
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   const output = page.getByRole('region', { name: '智能课件产出' });
+
+  const focusPreview = output.getByRole('button', { name: '聚焦预览' });
+  await focusPreview.click();
+  await expect(output).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(focusPreview).toBeFocused();
 
   await output.getByRole('button', { name: '编辑课件' }).click();
   await expect(output.getByText('编辑中', { exact: true })).toBeVisible();
@@ -227,6 +242,12 @@ test('stable Run ID restores Timeline, Artifact, Receipt, Inspector and Composer
   await action.getByRole('button', { name: '执行已批准动作' }).click();
   await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
   await page.getByRole('group', { name: '任务补充输入' }).getByRole('textbox', { name: '向 Agent 补充要求' }).fill('刷新后继续完善例题层次');
+  await output.getByRole('button', { name: '编辑课件' }).click();
+  await output.getByRole('textbox', { name: 'AI 修改要求' }).fill('保留这条未提交的修改要求');
+  await page.getByRole('tab', { name: '上下文' }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('textbox', { name: '搜索上下文' }).fill('高一（3）班');
+  await page.getByRole('tab', { name: /产出/ }).click();
 
   const runUrl = page.url();
   await page.reload();
@@ -236,6 +257,9 @@ test('stable Run ID restores Timeline, Artifact, Receipt, Inspector and Composer
   await expect(page.getByRole('region', { name: '智能课件产出' }).getByText('函数单调性：从图像变化到形式化定义', { exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: /产出/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('textbox', { name: '向 Agent 补充要求' })).toHaveValue('刷新后继续完善例题层次');
+  await expect(page.getByRole('region', { name: '智能课件产出' }).getByRole('textbox', { name: 'AI 修改要求' })).toHaveValue('保留这条未提交的修改要求');
+  await page.getByRole('tab', { name: '上下文' }).click();
+  await expect(page.getByRole('complementary', { name: '核心上下文' }).getByRole('textbox', { name: '搜索上下文' })).toHaveValue('高一（3）班');
 });
 
 test('governed recovery keeps a denied save inside the same Run and requires a new approval', async ({ page }) => {
@@ -258,7 +282,7 @@ test('governed recovery keeps a denied save inside the same Run and requires a n
   const denied = timeline.getByRole('article').filter({ hasText: '保存动作需要处理' });
   await expect(denied.getByText('保存位置没有写入权限', { exact: true })).toBeVisible();
   await denied.getByRole('button', { name: '改用教师草稿区并重新确认' }).click();
-  action = timeline.getByRole('article').filter({ hasText: '保存到 ClassIn' });
+  action = timeline.getByRole('article').filter({ hasText: '保存到 ClassIn' }).last();
   await expect(action.getByText('高一（3）班 / 高中数学 · 必修一 / 教师草稿区', { exact: true })).toBeVisible();
   await action.getByRole('button', { name: '确认执行' }).click();
   await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
@@ -307,6 +331,8 @@ test('teacher configures and generates a four-artifact course package inside one
   await output.getByRole('button', { name: /函数单调性分层作业/ }).click();
   await output.getByRole('button', { name: '修改此产物' }).click();
   await output.getByRole('textbox', { name: '修改函数单调性分层作业' }).fill('增加一道结合函数图像判断单调区间的探究题。');
+  await page.reload();
+  await expect(output.getByRole('textbox', { name: '修改函数单调性分层作业' })).toHaveValue('增加一道结合函数图像判断单调区间的探究题。');
   await output.getByRole('button', { name: '应用修改并生成新版本' }).click();
   await expect(output.getByText('作业 · v2', { exact: true })).toBeVisible();
 });

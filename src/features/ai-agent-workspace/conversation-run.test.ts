@@ -95,7 +95,7 @@ describe('ConversationRun public seam', () => {
     });
     unsubscribe();
 
-    expect(received).toEqual(['approval-courseware-save-1', 'receipt-courseware-save-1', 'command-supplement-1']);
+    expect(received).toEqual(['action-courseware-save-1:approval', 'receipt-courseware-save-1', 'command-supplement-1']);
     expect(first).toMatchObject({ status: 'accepted', cursor: '15' });
     expect(duplicate).toMatchObject({ status: 'duplicate', cursor: '15' });
     expect(module.open('run-m4-courseware')?.events.filter(({ id }) => id === 'command-supplement-1')).toHaveLength(1);

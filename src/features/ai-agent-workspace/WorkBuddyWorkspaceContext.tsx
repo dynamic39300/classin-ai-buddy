@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackAdapter, PackageWritebackScenario, PackageWritebackScenarioController } from '@contracts/workbuddy/package-writeback';
@@ -21,6 +21,7 @@ import {
   createBrowserConversationRunScheduler,
   createConversationRunHostPort,
   createConversationRunModule,
+  type ConversationRunHost,
 } from './conversation-run-module';
 import {
   clearWorkBuddyWorkspaceSession,
@@ -115,7 +116,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   );
   const packageView = projectPackageRunView(packageRun, packageAction, packageReceipt, packageReceiptHistory);
 
-  conversationHostPort.bind(Object.freeze({
+  const conversationHost: ConversationRunHost = Object.freeze({
     open: (runRef) => {
       if (coursewareView?.run.id === runRef) return Object.freeze({
         projection: projectCoursewareConversationRun(coursewareView),
@@ -127,7 +128,9 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       });
       return null;
     },
-    execute: (runRef, command) => {
+    execute: (runRef: string, command: Parameters<typeof conversationModule.dispatch>[1]) => {
+      const accepted = (resultRef?: string | null) => Object.freeze({ status: 'accepted' as const, resultRef: resultRef ?? undefined });
+      const rejected = (reason = 'command-not-supported-by-host') => Object.freeze({ status: 'rejected' as const, reason });
       if (coursewareView?.run.id === runRef) {
         switch (command.type) {
           case 'submit_clarification':
@@ -136,46 +139,53 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
               teachingApproach: command.teachingApproach,
             });
             coursewareController.commands.confirmCoursewareTaskBrief();
-            return;
-          case 'confirm_clarification': coursewareController.commands.confirmCoursewareTaskBrief(); return;
-          case 'revise_plan': coursewareController.commands.reviseCoursewareTaskBrief(); return;
-          case 'complete_generation': coursewareController.commands.executeCoursewareTaskPlan(); return;
-          case 'confirm_replan': coursewareController.commands.replanToWaveContext(); return;
-          case 'approve_artifact': coursewareController.commands.approveCoursewareArtifact(); return;
-          case 'revise_artifact': coursewareController.commands.reviseCoursewareArtifact({ instruction: command.instruction, changes: command.changes }); return;
-          case 'propose_action': coursewareController.commands.proposeCoursewareSave(); return;
-          case 'approve_action': coursewareController.commands.approveCoursewareSave(); return;
-          case 'reject_action': coursewareController.commands.rejectCoursewareSave(); return;
-          case 'execute_action': coursewareController.commands.executeApprovedCoursewareSave(); return;
-          case 'recover_action': coursewareController.commands.recoverCoursewareSave(); return;
-          case 'derive_package': return coursewareController.run ? packageController.commands.derivePackageFromCourseware() : null;
+            return accepted();
+          case 'confirm_clarification': coursewareController.commands.confirmCoursewareTaskBrief(); return accepted();
+          case 'revise_plan': coursewareController.commands.reviseCoursewareTaskBrief(); return accepted();
+          case 'start_plan': return accepted();
+          case 'complete_generation': coursewareController.commands.executeCoursewareTaskPlan(); return accepted();
+          case 'confirm_replan': coursewareController.commands.replanToWaveContext(); return accepted();
+          case 'dismiss_replan': return accepted();
+          case 'supplement': return accepted();
+          case 'approve_artifact': coursewareController.commands.approveCoursewareArtifact(); return accepted();
+          case 'revise_artifact': coursewareController.commands.reviseCoursewareArtifact({ instruction: command.instruction, changes: command.changes }); return accepted();
+          case 'propose_action': coursewareController.commands.proposeCoursewareSave(); return accepted();
+          case 'approve_action': coursewareController.commands.approveCoursewareSave(); return accepted();
+          case 'reject_action': coursewareController.commands.rejectCoursewareSave(); return accepted();
+          case 'execute_action': coursewareController.commands.executeApprovedCoursewareSave(); return accepted();
+          case 'recover_action': coursewareController.commands.recoverCoursewareSave(); return accepted();
+          case 'derive_package': return accepted(coursewareController.run ? packageController.commands.derivePackageFromCourseware() : null);
           case 'set_scenario':
             if (command.scenario !== 'partial_success') coursewareController.commands.setWritebackScenario(command.scenario);
-            return;
-          default: return;
+            return accepted();
+          default: return rejected();
         }
       }
       if (packageView?.run.id === runRef) {
         switch (command.type) {
-          case 'begin_package': packageController.commands.beginPackageGeneration(); return;
-          case 'complete_generation': packageController.commands.completePackageGeneration(); return;
-          case 'set_package_item_included': packageController.commands.setPackageItemIncluded(command.artifactId, command.included); return;
-          case 'revise_package_artifact': packageController.commands.revisePackageArtifact(command.artifactId); return;
-          case 'select_package_artifact': packageController.commands.setActivePackageArtifactId(command.artifactId); return;
-          case 'propose_action': packageController.commands.proposePackageSave(); return;
-          case 'approve_action': packageController.commands.approvePackageSave(); return;
-          case 'reject_action': packageController.commands.rejectPackageSave(); return;
-          case 'execute_action': packageController.commands.executeApprovedPackageSave(); return;
-          case 'recover_action': packageController.commands.recoverPackageSave(); return;
-          case 'retry_failed': packageController.commands.retryFailedPackageItems(); return;
+          case 'begin_package': packageController.commands.beginPackageGeneration(); return accepted();
+          case 'complete_generation': packageController.commands.completePackageGeneration(); return accepted();
+          case 'supplement': return accepted();
+          case 'set_package_item_included': packageController.commands.setPackageItemIncluded(command.artifactId, command.included); return accepted();
+          case 'revise_package_artifact': packageController.commands.revisePackageArtifact(command.artifactId); return accepted();
+          case 'select_package_artifact': packageController.commands.setActivePackageArtifactId(command.artifactId); return accepted();
+          case 'propose_action': packageController.commands.proposePackageSave(); return accepted();
+          case 'approve_action': packageController.commands.approvePackageSave(); return accepted();
+          case 'reject_action': packageController.commands.rejectPackageSave(); return accepted();
+          case 'execute_action': packageController.commands.executeApprovedPackageSave(); return accepted();
+          case 'recover_action': packageController.commands.recoverPackageSave(); return accepted();
+          case 'retry_failed': packageController.commands.retryFailedPackageItems(); return accepted();
           case 'set_scenario':
             packageController.commands.setPackageWritebackScenario(command.scenario === 'partial_success' ? 'partial_success' : 'success');
-            return;
-          default: return;
+            return accepted();
+          default: return rejected();
         }
       }
+      return rejected('run-not-found');
     },
-  }));
+  });
+
+  useLayoutEffect(() => conversationHostPort.bind(conversationHost), [conversationHost, conversationHostPort]);
 
   useEffect(() => {
     writebackScenarioController.setScenario(writebackScenario);
@@ -229,6 +239,8 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
         packageController.attachContext(result.snapshot);
       },
       resetCoreContext: () => {
+        if (coursewareRun) conversationModule.dispatch(coursewareRun.id, { id: `${coursewareRun.id}:reset`, type: 'reset' });
+        if (packageRun) conversationModule.dispatch(packageRun.id, { id: `${packageRun.id}:reset`, type: 'reset' });
         clearWorkBuddyWorkspaceSession();
         setContextSnapshot(null); setSnapshotsById({});
         setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');

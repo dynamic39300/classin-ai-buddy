@@ -56,6 +56,17 @@ export type ConversationRunPresentation = Readonly<{
   progress: ConversationRunProgress;
   executingAction: boolean;
   replanPending: boolean;
+  contextExpandedIds: readonly string[] | null;
+  contextQuery: string;
+  contextScrollTop: number;
+  artifactFocused: boolean;
+  artifactEditing: boolean;
+  artifactEditDraft: string;
+  artifactSelectedBlock: string;
+  artifactPreviewPage: number;
+  artifactScrollTop: number;
+  packageEditingArtifactId: string | null;
+  packageEditDraft: string;
 }>;
 
 export type ConversationRunCommandInput =
@@ -64,6 +75,7 @@ export type ConversationRunCommandInput =
   | Readonly<{ type: 'revise_plan' }>
   | Readonly<{ type: 'start_plan' }>
   | Readonly<{ type: 'complete_generation' }>
+  | Readonly<{ type: 'cancel' }>
   | Readonly<{ type: 'stop' }>
   | Readonly<{ type: 'resume' }>
   | Readonly<{ type: 'supplement'; text: string; materialScopeChange?: boolean }>
@@ -84,7 +96,10 @@ export type ConversationRunCommandInput =
   | Readonly<{ type: 'retry_failed' }>
   | Readonly<{ type: 'set_scenario'; scenario: 'success' | 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout' | 'partial_success' }>
   | Readonly<{ type: 'set_inspector'; open?: boolean; mode?: ConversationRunInspectorMode }>
-  | Readonly<{ type: 'set_composer_draft'; text: string }>;
+  | Readonly<{ type: 'set_context_inspector_state'; expandedIds?: readonly string[]; query?: string; scrollTop?: number }>
+  | Readonly<{ type: 'set_artifact_inspector_state'; focused?: boolean; editing?: boolean; editDraft?: string; selectedBlock?: string; previewPage?: number; scrollTop?: number; packageEditingArtifactId?: string | null; packageEditDraft?: string }>
+  | Readonly<{ type: 'set_composer_draft'; text: string }>
+  | Readonly<{ type: 'reset' }>;
 
 export type ConversationRunCommandType = ConversationRunCommandInput['type'];
 export type ConversationRunCommand = ConversationRunCommandInput & Readonly<{ id: string }>;

@@ -1,6 +1,7 @@
 import type {
   ConversationRunCommand,
   ConversationRunCommandReceipt,
+  ConversationRunCommandType,
   ConversationRunEvent,
   ConversationRunListener,
   ConversationRunModule,
@@ -15,8 +16,13 @@ export type ConversationRunHostSnapshot = Readonly<{
 
 export type ConversationRunHost = Readonly<{
   open: (runRef: string) => ConversationRunHostSnapshot | null;
-  execute: (runRef: string, command: ConversationRunCommand) => string | null | void;
+  execute: (runRef: string, command: ConversationRunCommand) => ConversationRunHostExecutionResult;
+  subscribe?: (listener: () => void) => () => void;
 }>;
+
+export type ConversationRunHostExecutionResult =
+  | Readonly<{ status: 'accepted'; resultRef?: string }>
+  | Readonly<{ status: 'rejected'; reason: string }>;
 
 export type ConversationRunHostPort = Readonly<{
   host: ConversationRunHost;
@@ -31,16 +37,36 @@ type LocalEvent = Omit<ConversationRunEvent, 'sequence'>;
 type RuntimeState = Readonly<{
   progress: ConversationRunProgress;
   localEvents: readonly LocalEvent[];
+  eventOrder: readonly string[];
+  eventJournal: readonly LocalEvent[];
   inspectorOpen: boolean;
   inspectorMode: 'context' | 'output';
   unreadOutputCount: number;
   composerDraft: string;
   executingAction: boolean;
+  pendingActionCommand: ConversationRunCommand | null;
   replanPending: boolean;
+  contextExpandedIds: readonly string[] | null;
+  contextQuery: string;
+  contextScrollTop: number;
+  artifactFocused: boolean;
+  artifactEditing: boolean;
+  artifactEditDraft: string;
+  artifactSelectedBlock: string;
+  artifactPreviewPage: number;
+  artifactScrollTop: number;
+  packageEditingArtifactId: string | null;
+  packageEditDraft: string;
 }>;
 
-type StoredRuntime = Readonly<Record<string, RuntimeState>>;
-const STORAGE_KEY = 'workbuddy:conversation-run:v2';
+type StoredState = Readonly<{
+  runtimes: Readonly<Record<string, RuntimeState>>;
+  commands: Readonly<Record<string, ConversationRunCommandReceipt>>;
+}>;
+const STORAGE_KEY = 'workbuddy:conversation-run:v3';
+const EVENT_ACTORS = new Set(['teacher', 'agent', 'system']);
+const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'error', 'system']);
+const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'cancelled', 'superseded']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -64,9 +90,9 @@ function isLocalEvent(value: unknown): value is LocalEvent {
     && typeof value.runRef === 'string'
     && typeof value.occurredAt === 'string'
     && typeof value.updatedAt === 'string'
-    && typeof value.actor === 'string'
-    && typeof value.kind === 'string'
-    && typeof value.state === 'string'
+    && EVENT_ACTORS.has(String(value.actor))
+    && EVENT_KINDS.has(String(value.kind))
+    && EVENT_STATES.has(String(value.state))
     && typeof value.title === 'string'
     && typeof value.summary === 'string'
     && Array.isArray(value.objectRefs)
@@ -78,22 +104,51 @@ function isRuntimeState(value: unknown): value is RuntimeState {
     && isProgress(value.progress)
     && Array.isArray(value.localEvents)
     && value.localEvents.every(isLocalEvent)
+    && Array.isArray(value.eventOrder)
+    && value.eventOrder.every((item) => typeof item === 'string')
+    && Array.isArray(value.eventJournal)
+    && value.eventJournal.every(isLocalEvent)
     && typeof value.inspectorOpen === 'boolean'
     && (value.inspectorMode === 'context' || value.inspectorMode === 'output')
     && typeof value.unreadOutputCount === 'number'
     && typeof value.composerDraft === 'string'
     && typeof value.executingAction === 'boolean'
-    && typeof value.replanPending === 'boolean';
+    && (value.pendingActionCommand === null || (isRecord(value.pendingActionCommand) && value.pendingActionCommand.type === 'execute_action' && typeof value.pendingActionCommand.id === 'string'))
+    && typeof value.replanPending === 'boolean'
+    && (value.contextExpandedIds === null || (Array.isArray(value.contextExpandedIds) && value.contextExpandedIds.every((item) => typeof item === 'string')))
+    && typeof value.contextQuery === 'string'
+    && typeof value.contextScrollTop === 'number'
+    && typeof value.artifactFocused === 'boolean'
+    && typeof value.artifactEditing === 'boolean'
+    && typeof value.artifactEditDraft === 'string'
+    && typeof value.artifactSelectedBlock === 'string'
+    && typeof value.artifactPreviewPage === 'number'
+    && typeof value.artifactScrollTop === 'number'
+    && (value.packageEditingArtifactId === null || typeof value.packageEditingArtifactId === 'string')
+    && typeof value.packageEditDraft === 'string';
 }
 
-function loadStoredRuntime(): StoredRuntime {
-  if (typeof window === 'undefined') return Object.freeze({});
+function isCommandReceipt(value: unknown): value is ConversationRunCommandReceipt {
+  return isRecord(value)
+    && typeof value.commandId === 'string'
+    && (value.status === 'accepted' || value.status === 'duplicate' || value.status === 'rejected')
+    && typeof value.cursor === 'string'
+    && (value.reason === undefined || typeof value.reason === 'string')
+    && (value.resultRef === undefined || typeof value.resultRef === 'string');
+}
+
+function loadStoredState(): StoredState {
+  const empty = () => Object.freeze({ runtimes: Object.freeze({}), commands: Object.freeze({}) });
+  if (typeof window === 'undefined') return empty();
   try {
     const parsed: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
-    if (!isRecord(parsed) || parsed.version !== 2 || !isRecord(parsed.runs)) return Object.freeze({});
-    return Object.freeze(Object.fromEntries(Object.entries(parsed.runs).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1]))));
+    if (!isRecord(parsed) || parsed.version !== 3 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
+    return Object.freeze({
+      runtimes: Object.freeze(Object.fromEntries(Object.entries(parsed.runtimes).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1])))),
+      commands: Object.freeze(Object.fromEntries(Object.entries(parsed.commands).filter((entry): entry is [string, ConversationRunCommandReceipt] => isCommandReceipt(entry[1])))),
+    });
   } catch {
-    return Object.freeze({});
+    return empty();
   }
 }
 
@@ -153,7 +208,14 @@ function organizingEvent(runRef: string): ConversationRunEvent {
 }
 
 function freezeRuntime(runtime: RuntimeState): RuntimeState {
-  return Object.freeze({ ...runtime, localEvents: Object.freeze([...runtime.localEvents]), progress: Object.freeze({ ...runtime.progress }) });
+  return Object.freeze({
+    ...runtime,
+    localEvents: Object.freeze([...runtime.localEvents]),
+    eventOrder: Object.freeze([...runtime.eventOrder]),
+    eventJournal: Object.freeze([...runtime.eventJournal]),
+    contextExpandedIds: runtime.contextExpandedIds ? Object.freeze([...runtime.contextExpandedIds]) : null,
+    progress: Object.freeze({ ...runtime.progress }),
+  });
 }
 
 export function createBrowserConversationRunScheduler(): ConversationRunScheduler {
@@ -167,25 +229,31 @@ export function createBrowserConversationRunScheduler(): ConversationRunSchedule
 
 export function createConversationRunHostPort(): ConversationRunHostPort {
   let current: ConversationRunHost | null = null;
+  const listeners = new Set<() => void>();
   return Object.freeze({
     host: Object.freeze({
       open: (runRef: string) => current?.open(runRef) ?? null,
-      execute: (runRef: string, command: ConversationRunCommand) => current?.execute(runRef, command),
+      execute: (runRef: string, command: ConversationRunCommand) => current?.execute(runRef, command) ?? Object.freeze({ status: 'rejected', reason: 'host-not-ready' }),
+      subscribe: (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); },
     }),
-    bind: (host) => { current = host; },
+    bind: (host) => { current = host; for (const listener of listeners) listener(); },
   });
 }
 
 export function createConversationRunModule(host: ConversationRunHost, scheduler: ConversationRunScheduler): ConversationRunModule {
-  const restored = loadStoredRuntime();
-  const runtimes = new Map<string, RuntimeState>(Object.entries(restored));
-  const processedCommands = new Map<string, ConversationRunCommandReceipt>();
+  const restored = loadStoredState();
+  const runtimes = new Map<string, RuntimeState>(Object.entries(restored.runtimes));
+  const processedCommands = new Map<string, ConversationRunCommandReceipt>(Object.entries(restored.commands));
   const listeners = new Map<string, Set<ConversationRunListener>>();
   const scheduled = new Map<string, () => void>();
 
   const persist = () => {
     if (typeof window === 'undefined') return;
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, runs: Object.fromEntries(runtimes) }));
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 3,
+      runtimes: Object.fromEntries(runtimes),
+      commands: Object.fromEntries(processedCommands),
+    }));
   };
   const defaultRuntime = (snapshot: ConversationRunHostSnapshot): RuntimeState => {
     const completed = snapshot.projection.events.some(({ kind }) => kind === 'artifact' || kind === 'receipt');
@@ -194,12 +262,26 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         ? { status: 'completed', completedCount: snapshot.progressStepCount, totalCount: snapshot.progressStepCount }
         : { status: 'organizing' },
       localEvents: Object.freeze([]),
+      eventOrder: Object.freeze([]),
+      eventJournal: Object.freeze([]),
       inspectorOpen: true,
       inspectorMode: snapshot.projection.presentation.inspectorMode,
       unreadOutputCount: 0,
       composerDraft: '',
       executingAction: false,
+      pendingActionCommand: null,
       replanPending: false,
+      contextExpandedIds: null,
+      contextQuery: '',
+      contextScrollTop: 0,
+      artifactFocused: false,
+      artifactEditing: false,
+      artifactEditDraft: '把第 6 页案例改成函数图像辨析，并增加一页易错点总结。',
+      artifactSelectedBlock: '第 6 页 · 图像辨析',
+      artifactPreviewPage: 1,
+      artifactScrollTop: 0,
+      packageEditingArtifactId: null,
+      packageEditDraft: '增加一道结合函数图像判断单调区间的探究题。',
     });
   };
   const ensureRuntime = (runRef: string, snapshot: ConversationRunHostSnapshot): RuntimeState => {
@@ -215,10 +297,31 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
     if (!snapshot) return null;
     const runtime = ensureRuntime(runRef, snapshot);
     const base = snapshot.projection;
-    const baseEvents = runtime.progress.status === 'organizing'
-      ? [base.events.find(({ kind }) => kind === 'teacher_message') ?? base.events[0], organizingEvent(runRef)].filter(Boolean) as ConversationRunEvent[]
-      : [...base.events];
-    const events = Object.freeze([...baseEvents, ...runtime.localEvents].map((event, index) => Object.freeze({ ...event, sequence: index + 1 })));
+    const teacherEvent = base.events.find(({ kind }) => kind === 'teacher_message') ?? base.events[0];
+    const organizing = Object.freeze({
+      ...organizingEvent(runRef),
+      state: runtime.progress.status === 'organizing' ? 'running' as const : 'completed' as const,
+    });
+    const publishedBaseEvents = runtime.progress.status === 'organizing'
+      ? []
+      : base.events.filter(({ id }) => id !== teacherEvent?.id);
+    const candidates = [teacherEvent, organizing, ...publishedBaseEvents, ...runtime.localEvents].filter(Boolean) as ConversationRunEvent[];
+    const journalById = new Map(runtime.eventJournal.map((event) => [event.id, event]));
+    for (const candidate of candidates) {
+      journalById.set(candidate.id, Object.freeze({ ...candidate }));
+    }
+    const eventOrder = [...runtime.eventOrder];
+    for (const event of candidates) if (!eventOrder.includes(event.id)) eventOrder.push(event.id);
+    const eventJournal = eventOrder.map((id) => journalById.get(id)!).filter(Boolean);
+    const journalChanged = eventJournal.some((event, index) => {
+      const previous = runtime.eventJournal[index];
+      return !previous || JSON.stringify(previous) !== JSON.stringify(event);
+    });
+    if (eventOrder.length !== runtime.eventOrder.length || eventOrder.some((id, index) => id !== runtime.eventOrder[index]) || journalChanged) {
+      runtimes.set(runRef, freezeRuntime({ ...runtime, eventOrder, eventJournal }));
+      persist();
+    }
+    const events = Object.freeze(eventJournal.map((event, index) => Object.freeze({ ...event, sequence: index + 1 })));
     const status = runtime.progress.status === 'organizing'
       ? 'organizing'
       : runtime.progress.status === 'running'
@@ -244,6 +347,17 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         progress: runtime.progress,
         executingAction: runtime.executingAction,
         replanPending: runtime.replanPending,
+        contextExpandedIds: runtime.contextExpandedIds,
+        contextQuery: runtime.contextQuery,
+        contextScrollTop: runtime.contextScrollTop,
+        artifactFocused: runtime.artifactFocused,
+        artifactEditing: runtime.artifactEditing,
+        artifactEditDraft: runtime.artifactEditDraft,
+        artifactSelectedBlock: runtime.artifactSelectedBlock,
+        artifactPreviewPage: runtime.artifactPreviewPage,
+        artifactScrollTop: runtime.artifactScrollTop,
+        packageEditingArtifactId: runtime.packageEditingArtifactId,
+        packageEditDraft: runtime.packageEditDraft,
       }),
     });
   };
@@ -303,23 +417,64 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   };
   const scheduleActionExecution = (runRef: string, command: ConversationRunCommand) => {
     cancelScheduled(runRef);
-    replaceRuntime(runRef, (current) => ({ ...current, executingAction: true }));
+    replaceRuntime(runRef, (current) => ({ ...current, executingAction: true, pendingActionCommand: command }));
     const cancel = scheduler.schedule(360, () => {
       scheduled.delete(runRef);
-      host.execute(runRef, command);
-      replaceRuntime(runRef, (current) => ({ ...current, executingAction: false }));
+      const result = host.execute(runRef, command);
+      replaceRuntime(runRef, (current) => ({
+        ...current,
+        executingAction: false,
+        pendingActionCommand: null,
+        localEvents: result.status === 'rejected'
+          ? [...current.localEvents, localEvent(runRef, `${command.id}:rejected`, current.localEvents.length + 1, 'system', '执行未开始', result.reason, 'failed')]
+          : current.localEvents,
+      }));
     });
     scheduled.set(runRef, cancel);
   };
 
+  const resetRun = (runRef: string) => {
+    cancelScheduled(runRef);
+    runtimes.delete(runRef);
+    for (const commandId of processedCommands.keys()) if (commandId.startsWith(`${runRef}\u0000`)) processedCommands.delete(commandId);
+    persist();
+  };
+
+  const alwaysAllowed = new Set<ConversationRunCommandType>(['set_inspector', 'set_context_inspector_state', 'set_artifact_inspector_state', 'set_composer_draft', 'set_scenario', 'select_package_artifact', 'reset']);
+  const isAllowed = (projection: ConversationRunProjection, runtime: RuntimeState, command: ConversationRunCommand) => alwaysAllowed.has(command.type)
+    || projection.allowedCommands.includes(command.type)
+    || (runtime.replanPending && (command.type === 'confirm_replan' || command.type === 'dismiss_replan'));
+
+  host.subscribe?.(() => {
+    for (const runRef of listeners.keys()) notify(runRef, project(runRef)?.events.length ?? 0);
+  });
+
   return Object.freeze({
     open: project,
     dispatch: (runRef: string, command: ConversationRunCommand): ConversationRunCommandReceipt => {
-      const duplicate = processedCommands.get(command.id);
+      const processedKey = `${runRef}\u0000${command.id}`;
+      const duplicate = processedCommands.get(processedKey);
       if (duplicate) return Object.freeze({ ...duplicate, status: 'duplicate' });
+      if (command.type === 'reset') {
+        resetRun(runRef);
+        const receipt = Object.freeze({ commandId: command.id, status: 'accepted' as const, cursor: '0' });
+        return receipt;
+      }
       const snapshot = host.open(runRef);
       const projection = project(runRef);
-      if (!snapshot || !projection) return Object.freeze({ commandId: command.id, status: 'rejected', cursor: '0', reason: 'run-not-found' });
+      if (!snapshot || !projection) {
+        const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: '0', reason: 'run-not-found' });
+        processedCommands.set(processedKey, rejected);
+        persist();
+        return rejected;
+      }
+      const runtime = ensureRuntime(runRef, snapshot);
+      if (!isAllowed(projection, runtime, command)) {
+        const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: 'command-not-allowed' });
+        processedCommands.set(processedKey, rejected);
+        persist();
+        return rejected;
+      }
       let resultRef: string | null | void = undefined;
       if (command.type === 'set_inspector') {
         replaceRuntime(runRef, (current) => ({
@@ -330,8 +485,33 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         }));
       } else if (command.type === 'set_composer_draft') {
         replaceRuntime(runRef, (current) => ({ ...current, composerDraft: command.text }));
+      } else if (command.type === 'set_context_inspector_state') {
+        replaceRuntime(runRef, (current) => ({
+          ...current,
+          contextExpandedIds: command.expandedIds ? Object.freeze([...command.expandedIds]) : current.contextExpandedIds,
+          contextQuery: command.query ?? current.contextQuery,
+          contextScrollTop: command.scrollTop ?? current.contextScrollTop,
+        }));
+      } else if (command.type === 'set_artifact_inspector_state') {
+        replaceRuntime(runRef, (current) => ({
+          ...current,
+          artifactFocused: command.focused ?? current.artifactFocused,
+          artifactEditing: command.editing ?? current.artifactEditing,
+          artifactEditDraft: command.editDraft ?? current.artifactEditDraft,
+          artifactSelectedBlock: command.selectedBlock ?? current.artifactSelectedBlock,
+          artifactPreviewPage: command.previewPage ?? current.artifactPreviewPage,
+          artifactScrollTop: command.scrollTop ?? current.artifactScrollTop,
+          packageEditingArtifactId: command.packageEditingArtifactId === undefined ? current.packageEditingArtifactId : command.packageEditingArtifactId,
+          packageEditDraft: command.packageEditDraft ?? current.packageEditDraft,
+        }));
       } else if (command.type === 'start_plan' || command.type === 'begin_package') {
-        host.execute(runRef, command);
+        const hostResult = host.execute(runRef, command);
+        if (hostResult.status === 'rejected') {
+          const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: hostResult.reason });
+          processedCommands.set(processedKey, rejected);
+          persist();
+          return rejected;
+        }
         replaceRuntime(runRef, (current) => ({
           ...current,
           progress: { status: 'running', activeIndex: 0, completedCount: 0, totalCount: snapshot.progressStepCount },
@@ -363,9 +543,23 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
           }
           : current);
         scheduleProgress(runRef);
+      } else if (command.type === 'cancel') {
+        cancelScheduled(runRef);
+        replaceRuntime(runRef, (current) => ({
+          ...current,
+          progress: { status: 'stopped', completedCount: 0, totalCount: snapshot.progressStepCount },
+          localEvents: [...current.localEvents, localEvent(runRef, command.id, current.localEvents.length + 1, 'system', '任务已取消', '当前任务没有继续执行，可重新开始一个任务。', 'cancelled')],
+        }));
       } else if (command.type === 'execute_action') {
         scheduleActionExecution(runRef, command);
       } else {
+        const hostResult = host.execute(runRef, command);
+        if (hostResult.status === 'rejected') {
+          const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: hostResult.reason });
+          processedCommands.set(processedKey, rejected);
+          persist();
+          return rejected;
+        }
         const nextLocalEvents = commandEvents(runRef, command, ensureRuntime(runRef, snapshot).localEvents.length + 1);
         if (nextLocalEvents.length) replaceRuntime(runRef, (current) => ({
           ...current,
@@ -373,13 +567,14 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
           localEvents: [...current.localEvents, ...nextLocalEvents],
           replanPending: command.type === 'supplement' && Boolean(command.materialScopeChange) ? true : current.replanPending,
         }));
-        resultRef = host.execute(runRef, command);
+        resultRef = hostResult.resultRef;
         if (command.type === 'confirm_replan') replaceRuntime(runRef, (current) => ({ ...current, progress: { status: 'idle' }, replanPending: false }));
         if (command.type === 'dismiss_replan') replaceRuntime(runRef, (current) => ({ ...current, replanPending: false }));
       }
       const next = project(runRef);
       const receipt = Object.freeze({ commandId: command.id, status: 'accepted' as const, cursor: next?.cursor ?? projection.cursor, resultRef: resultRef ?? undefined });
-      processedCommands.set(command.id, receipt);
+      processedCommands.set(processedKey, receipt);
+      persist();
       return receipt;
     },
     subscribe: (runRef: string, cursor: string | null, listener: ConversationRunListener) => {
@@ -392,7 +587,9 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         const replay = projection.events.slice(index);
         if (replay.length) listener(replay, projection);
         const progress = projection.presentation.progress;
-        if (progress.status === 'organizing' || progress.status === 'running') scheduleProgress(runRef);
+        const runtime = runtimes.get(runRef);
+        if (runtime?.pendingActionCommand) scheduleActionExecution(runRef, runtime.pendingActionCommand);
+        else if (progress.status === 'organizing' || progress.status === 'running') scheduleProgress(runRef);
       }
       return () => {
         set.delete(listener);

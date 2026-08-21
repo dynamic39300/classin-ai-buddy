@@ -133,7 +133,7 @@ export function ConversationRunSurface() {
                   </section>
                 ) : null}
                 {event.kind === 'artifact' ? <button className={styles.artifactLink} type="button" onClick={() => dispatch({ type: 'set_inspector', open: true, mode: 'output' })}><FileText aria-hidden="true" size={15} />打开智能课件产出</button> : null}
-                {event.kind === 'proposed_action' && coursewareView.action ? <CoursewareActionCard
+                {event.kind === 'proposed_action' && coursewareView.action?.id === event.id ? <CoursewareActionCard
                   action={coursewareView.action}
                   executing={executingAction}
                   blockedByReceipt={Boolean(coursewareView.receipt)}
@@ -141,7 +141,7 @@ export function ConversationRunSurface() {
                   onReject={() => dispatch({ type: 'reject_action' })}
                   onExecute={executeAction}
                 /> : null}
-                {event.kind === 'receipt' && coursewareView.receipt ? <CoursewareReceiptCard receipt={coursewareView.receipt} onRecover={() => dispatch({ type: 'recover_action' })} onRetry={executeAction} /> : null}
+                {event.kind === 'receipt' && coursewareView.receipt?.id === event.id ? <CoursewareReceiptCard receipt={coursewareView.receipt} onRecover={() => dispatch({ type: 'recover_action' })} onRetry={executeAction} /> : null}
               </div>
             </article>
             {event.kind === 'plan' ? experienceEvents.map((experienceEvent) => <CapabilityCallCard event={experienceEvent} key={experienceEvent.id} />) : null}
@@ -175,12 +175,21 @@ export function ConversationRunSurface() {
             <button type="button" role="tab" aria-selected={inspectorMode === 'context'} onClick={() => dispatch({ type: 'set_inspector', mode: 'context' })}>上下文</button>
             <button type="button" role="tab" aria-selected={inspectorMode === 'output'} disabled={!coursewareView.run.artifact} onClick={() => dispatch({ type: 'set_inspector', mode: 'output' })}>产出 · {projection.presentation.outputCount}{projection.presentation.unreadOutputCount ? ` · ${projection.presentation.unreadOutputCount} 新` : ''}</button>
           </div>
-          <div hidden={inspectorMode !== 'context'}><CoreContextPanel readOnly mode="courseware" onClose={() => dispatch({ type: 'set_inspector', open: false })} /></div>
+          <div hidden={inspectorMode !== 'context'}><CoreContextPanel readOnly mode="courseware" inspectorState={{ expandedIds: projection.presentation.contextExpandedIds, query: projection.presentation.contextQuery, scrollTop: projection.presentation.contextScrollTop }} onInspectorStateChange={(patch) => dispatch({ type: 'set_context_inspector_state', ...patch })} onClose={() => dispatch({ type: 'set_inspector', open: false })} /></div>
           <div hidden={inspectorMode !== 'output'}>{coursewareView.run.artifact ? (
             <CoursewareOutput
               artifact={coursewareView.run.artifact}
               artifactHistory={coursewareView.run.artifactHistory}
               sourceStepLabel={coursewareView.run.plan.find(({ id }) => id === coursewareView.run.artifact?.sourceStepId)?.title ?? '组装课件初稿'}
+              inspectorState={{
+                focused: projection.presentation.artifactFocused,
+                editing: projection.presentation.artifactEditing,
+                editDraft: projection.presentation.artifactEditDraft,
+                selectedBlock: projection.presentation.artifactSelectedBlock,
+                previewPage: projection.presentation.artifactPreviewPage,
+                scrollTop: projection.presentation.artifactScrollTop,
+              }}
+              onInspectorStateChange={(patch) => dispatch({ type: 'set_artifact_inspector_state', ...patch })}
               reviewStatus={coursewareView.run.reviewStatus}
               hasAction={Boolean(coursewareView.action)}
               hasReceipt={Boolean(coursewareView.receipt)}
@@ -227,12 +236,13 @@ function CapabilityCallCard({ event }: Readonly<{ event: CoursewareExperienceEve
 }
 
 function CoursewareOutput({
-  artifact, artifactHistory, sourceStepLabel, reviewStatus, hasAction, hasReceipt, derivedPackageRunRef,
-  onRevise, onApproveArtifact, onProposeSave, onDerivePackage,
+  artifact, artifactHistory, sourceStepLabel, inspectorState, reviewStatus, hasAction, hasReceipt, derivedPackageRunRef,
+  onRevise, onApproveArtifact, onProposeSave, onDerivePackage, onInspectorStateChange,
 }: Readonly<{
   artifact: CoursewareArtifactDraft;
   artifactHistory: readonly CoursewareArtifactDraft[];
   sourceStepLabel: string;
+  inspectorState: Readonly<{ focused: boolean; editing: boolean; editDraft: string; selectedBlock: string; previewPage: number; scrollTop: number }>;
   reviewStatus: 'pending' | 'approved' | 'not_available';
   hasAction: boolean;
   hasReceipt: boolean;
@@ -241,26 +251,39 @@ function CoursewareOutput({
   onApproveArtifact: () => void;
   onProposeSave: () => void;
   onDerivePackage: () => void;
+  onInspectorStateChange: (patch: Readonly<{ focused?: boolean; editing?: boolean; editDraft?: string; selectedBlock?: string; previewPage?: number; scrollTop?: number }>) => void;
 }>) {
-  const [editing, setEditing] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState('第 6 页 · 图像辨析');
-  const [instruction, setInstruction] = useState('把第 6 页改成更直观的函数图像对比，并增加一页易错点辨析。');
+  const { editing, focused, selectedBlock, editDraft: instruction, previewPage, scrollTop } = inspectorState;
   const [toolStatus, setToolStatus] = useState('');
+  const outputRef = useRef<HTMLElement>(null);
+  const focusTriggerRef = useRef<HTMLButtonElement>(null);
+  const wasFocusedRef = useRef(false);
+  useLayoutEffect(() => {
+    if (focused) {
+      wasFocusedRef.current = true;
+      outputRef.current?.focus();
+    } else if (wasFocusedRef.current) {
+      wasFocusedRef.current = false;
+      focusTriggerRef.current?.focus();
+    }
+  }, [focused]);
+  useLayoutEffect(() => {
+    if (outputRef.current) outputRef.current.scrollTop = scrollTop;
+  }, [scrollTop]);
   return (
-    <section className={styles.output} role="region" aria-label="智能课件产出" data-focus={focused}>
+    <section ref={outputRef} tabIndex={focused ? -1 : undefined} className={styles.output} role="region" aria-label="智能课件产出" data-focus={focused} onKeyDown={(event) => { if (event.key === 'Escape' && focused) onInspectorStateChange({ focused: false }); }} onScroll={(event) => onInspectorStateChange({ scrollTop: event.currentTarget.scrollTop })}>
       <header><div><span>{editing ? '编辑中' : '智能课件'}</span><h2>{artifact.title}</h2></div><div className={styles.outputTools}>
-        {editing ? <><button type="button" onClick={() => { setEditing(false); setToolStatus(`课件 ${artifact.version} 草稿已保存；未写入 ClassIn。`); }}><Save aria-hidden="true" size={14} />保存草稿</button><button type="button" onClick={() => setEditing(false)}><X aria-hidden="true" size={14} />退出编辑</button></> : <>
-          <button type="button" aria-pressed={focused} onClick={() => setFocused((current) => !current)}><Expand aria-hidden="true" size={14} />{focused ? '退出聚焦' : '聚焦预览'}</button>
+        {editing ? <><button type="button" onClick={() => { onInspectorStateChange({ editing: false }); setToolStatus(`课件 ${artifact.version} 草稿已保存；未写入 ClassIn。`); }}><Save aria-hidden="true" size={14} />保存草稿</button><button type="button" onClick={() => onInspectorStateChange({ editing: false })}><X aria-hidden="true" size={14} />退出编辑</button></> : <>
+          <button ref={focusTriggerRef} type="button" aria-pressed={focused} onClick={() => onInspectorStateChange({ focused: !focused })}><Expand aria-hidden="true" size={14} />{focused ? '退出聚焦' : '聚焦预览'}</button>
           <button type="button" onClick={() => setToolStatus('当前课件草稿将在完成 ClassIn 保存后提供下载。')}><Download aria-hidden="true" size={14} />下载</button>
-          <button type="button" onClick={() => { setEditing(true); setToolStatus(''); }}><Pencil aria-hidden="true" size={14} />编辑课件</button>
+          <button type="button" onClick={() => { onInspectorStateChange({ editing: true }); setToolStatus(''); }}><Pencil aria-hidden="true" size={14} />编辑课件</button>
         </>}
       </div><div className={styles.outputMeta}>{artifactHistory.map(({ version }) => <span data-current={version === artifact.version} key={version}>{version}</span>)}<span>{artifact.pageCount} 页</span></div></header>
       <div className={styles.slidePreview} aria-label="课件页面预览">
-        <span>01 / {artifact.pageCount}</span>
-        <div className={styles.slideCanvas} data-editing={editing}><small>高中数学 · 函数的性质</small><h3>从图像变化理解函数单调性</h3><p>观察图像 · 描述变化 · 形成定义</p><div className={styles.collisionDiagram}><i /><b>x₁ &lt; x₂ ⇒ f(x₁) &lt; f(x₂)</b><i /></div>{editing ? <button className={styles.selectedBlock} type="button" aria-pressed={selectedBlock === '第 6 页 · 图像辨析'} onClick={() => setSelectedBlock('第 6 页 · 图像辨析')}>第 6 页 · 图像辨析</button> : null}</div>
+        <span>{String(previewPage).padStart(2, '0')} / {artifact.pageCount}</span>
+        <div className={styles.slideCanvas} data-editing={editing}><small>高中数学 · 函数的性质</small><h3>从图像变化理解函数单调性</h3><p>观察图像 · 描述变化 · 形成定义</p><div className={styles.collisionDiagram}><i /><b>x₁ &lt; x₂ ⇒ f(x₁) &lt; f(x₂)</b><i /></div>{editing ? <button className={styles.selectedBlock} type="button" aria-pressed={selectedBlock === '第 6 页 · 图像辨析'} onClick={() => onInspectorStateChange({ selectedBlock: '第 6 页 · 图像辨析' })}>第 6 页 · 图像辨析</button> : null}</div>
       </div>
-      {editing ? <section className={styles.aiEditor} aria-label="AI 修改课件"><div><WandSparkles aria-hidden="true" size={16} /><strong>AI 修改</strong><span>已选择：{selectedBlock}</span></div><label>修改要求<textarea aria-label="AI 修改要求" value={instruction} onChange={(event) => setInstruction(event.target.value)} /></label><button type="button" disabled={!instruction.trim()} onClick={() => {
+      {editing ? <section className={styles.aiEditor} aria-label="AI 修改课件"><div><WandSparkles aria-hidden="true" size={16} /><strong>AI 修改</strong><span>已选择：{selectedBlock}</span></div><label>修改要求<textarea aria-label="AI 修改要求" value={instruction} onChange={(event) => onInspectorStateChange({ editDraft: event.target.value })} /></label><button type="button" disabled={!instruction.trim()} onClick={() => {
         onRevise({ instruction, changes: ['替换第 6 页案例', '新增易错点辨析页', '其他页面保持不变'] });
         setToolStatus('AI 修改已生成新的课件版本；请保存草稿并重新复查。');
       }}>应用 AI 修改</button></section> : null}

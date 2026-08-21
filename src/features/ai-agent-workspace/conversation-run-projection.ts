@@ -53,8 +53,8 @@ function getCoursewareAllowedCommands(view: CoursewareRunView): readonly Convers
   if (view.receipt) return Object.freeze(['supplement', 'recover_action']);
   if (view.action?.status === 'approved') return Object.freeze(['supplement', 'execute_action']);
   if (view.action) return Object.freeze(['supplement', 'approve_action', 'reject_action']);
-  if (view.run.stage === 'needs_information') return Object.freeze(['submit_clarification', 'supplement']);
-  if (view.run.stage === 'awaiting_plan_confirmation') return Object.freeze(['revise_plan', 'start_plan', 'supplement']);
+  if (view.run.stage === 'needs_information') return Object.freeze(['submit_clarification', 'confirm_clarification', 'supplement', 'cancel']);
+  if (view.run.stage === 'awaiting_plan_confirmation') return Object.freeze(['revise_plan', 'start_plan', 'supplement', 'cancel']);
   if (view.run.artifact && view.run.reviewStatus === 'pending') return Object.freeze(['revise_artifact', 'approve_artifact', 'supplement']);
   if (view.run.artifact) return Object.freeze(['propose_action', 'derive_package', 'supplement']);
   return Object.freeze(['supplement']);
@@ -137,7 +137,7 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       objectRefs: [{ type: 'action', id: view.action.id }],
     });
     if (view.action.status === 'approved' || view.receipt) {
-      const approvalId = view.receipt?.approvalId ?? `${view.action.id}:approval`;
+      const approvalId = `${view.action.id}:approval`;
       inputs.push({
         id: approvalId,
         kind: 'approval',
@@ -178,6 +178,17 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       progress: Object.freeze({ status: 'idle' as const }),
       executingAction: false,
       replanPending: false,
+      contextExpandedIds: null,
+      contextQuery: '',
+      contextScrollTop: 0,
+      artifactFocused: false,
+      artifactEditing: false,
+      artifactEditDraft: '',
+      artifactSelectedBlock: '',
+      artifactPreviewPage: 1,
+      artifactScrollTop: 0,
+      packageEditingArtifactId: null,
+      packageEditDraft: '',
     }),
   });
 }
@@ -191,7 +202,16 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       summary: '我会围绕同一课程目标生成课件、作业、测验和录播脚本，并保留每项产物的独立状态。',
     },
   ];
-  if (run.contextSnapshotId) inputs.push({
+  if (run.sourceArtifactRef) inputs.push({
+    id: `${run.id}:source-artifact`, kind: 'system', title: `来源课件 · ${run.sourceArtifactRef.version}`,
+    summary: '这是一条独立方案包任务；来源课件只作为锁定引用，不会继承隐藏上下文。',
+    objectRefs: [{ type: 'artifact', id: run.sourceArtifactRef.id, version: run.sourceArtifactRef.version }],
+  });
+  if (!run.contextSnapshotId) inputs.push({
+    id: `${run.id}:context-required`, kind: 'clarification_request', state: 'requires_teacher_input',
+    title: '需要确认独立核心上下文', summary: '请在右侧确认班级、课程、单元和资料；本任务不会隐式复用另一条 Run 的 ContextSnapshot。',
+  });
+  else inputs.push({
     id: `${run.id}:context`, kind: 'context_confirmed', title: '独立核心上下文已确认',
     summary: '本次方案包使用独立 ContextSnapshot；四类产物共享课程目标，但不共享写回状态。',
     objectRefs: [{ type: 'context_snapshot', id: run.contextSnapshotId }],
@@ -211,6 +231,10 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       objectRefs: [{ type: 'artifact', id: artifact.id, version: artifact.version }],
     });
   }
+  if (run.showArtifacts) inputs.push({
+    id: `${run.id}:package-ready`, kind: 'system', title: '课程方案包已生成',
+    summary: `${run.artifacts.filter(({ state }) => state !== 'excluded').length} 项产物已形成，可在右侧逐项预览、排除或选择写回。`,
+  });
   if (view.action) {
     inputs.push({
       id: view.action.id, kind: 'proposed_action', title: '保存课程方案包到 ClassIn',
@@ -218,7 +242,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       objectRefs: [{ type: 'action', id: view.action.id }],
     });
     if (view.action.status === 'approved' || view.receipt) inputs.push({
-      id: view.receipt?.approvalId ?? `${view.action.id}:approval`, kind: 'approval', title: '教师已批准方案包写回',
+      id: `${view.action.id}:approval`, kind: 'approval', title: '教师已批准方案包写回',
       summary: '写回提案已批准，等待对象级执行结果。',
       objectRefs: [{ type: 'action', id: view.action.id }],
     });
@@ -236,15 +260,17 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
           : run.showPackageConfiguration ? 'awaiting_plan_confirmation'
             : run.showGeneration ? 'running' : 'completed_pending_review';
   const allowedCommands: readonly ConversationRunCommandType[] = view.receipt?.status === 'partial_success'
-    ? Object.freeze(['retry_failed', 'supplement'])
+    ? view.retryableArtifactIds.length
+      ? Object.freeze(['retry_failed', 'supplement'])
+      : view.canProposeSave ? Object.freeze(['propose_action', 'supplement']) : Object.freeze(['supplement'])
     : view.receipt
       ? Object.freeze(['supplement'])
       : view.action?.status === 'approved'
         ? Object.freeze(['execute_action', 'supplement'])
         : view.action
-          ? Object.freeze(['approve_action', 'reject_action', 'supplement'])
+          ? Object.freeze(['approve_action', 'reject_action', 'set_package_item_included', 'supplement'])
           : run.showPackageConfiguration
-            ? Object.freeze(['begin_package', 'set_package_item_included', 'supplement'])
+            ? Object.freeze(['begin_package', 'set_package_item_included', 'supplement', 'cancel'])
             : run.showArtifacts
               ? Object.freeze(['revise_package_artifact', 'set_package_item_included', 'propose_action', 'supplement'])
               : Object.freeze(['supplement']);
@@ -266,6 +292,17 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
       progress: Object.freeze({ status: 'idle' as const }),
       executingAction: false,
       replanPending: false,
+      contextExpandedIds: null,
+      contextQuery: '',
+      contextScrollTop: 0,
+      artifactFocused: false,
+      artifactEditing: false,
+      artifactEditDraft: '',
+      artifactSelectedBlock: '',
+      artifactPreviewPage: 1,
+      artifactScrollTop: 0,
+      packageEditingArtifactId: null,
+      packageEditDraft: '',
     }),
   });
 }
