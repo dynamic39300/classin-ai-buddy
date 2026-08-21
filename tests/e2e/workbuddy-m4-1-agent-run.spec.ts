@@ -398,6 +398,19 @@ test('teacher configures and generates a four-artifact course package inside one
   await expect(output.getByText('作业 · v2', { exact: true })).toBeVisible();
 });
 
+test('cancelled course package freezes its scope and exposes no stale plan commands', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await createPackageRun(page);
+  const plan = page.getByRole('article').filter({ hasText: '课程方案包执行计划' });
+  await plan.getByRole('button', { name: '取消任务' }).click();
+
+  await expect(page.getByRole('heading', { name: '函数单调性课程方案包' }).locator('..').getByText('已取消', { exact: true })).toBeVisible();
+  await expect(plan.getByRole('combobox', { name: '课程课时' })).toBeDisabled();
+  await expect(plan.getByRole('spinbutton', { name: '作业题量' })).toBeDisabled();
+  await expect(plan.getByRole('button', { name: '确认范围并开始生成' })).toHaveCount(0);
+  await expect(plan.getByRole('button', { name: '取消任务' })).toHaveCount(0);
+});
+
 test('teacher approves the package once and receives object-level execution results', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const timeline = await generatePackageArtifacts(page);

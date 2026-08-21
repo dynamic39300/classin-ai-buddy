@@ -307,7 +307,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
   if (run.showPackageConfiguration || run.showGeneration || run.showArtifacts) inputs.push({
     id: `${run.id}:plan`, kind: 'plan', state: run.showPackageConfiguration ? 'requires_teacher_input' : 'completed',
     title: '课程方案包执行计划', summary: '先形成共享课程目标和课件结构，再并行生成配套产物。',
-    allowedCommands: run.showPackageConfiguration ? ['begin_package', 'set_package_item_included', 'cancel'] : [],
+    allowedCommands: run.showPackageConfiguration ? ['begin_package', 'set_package_configuration', 'set_package_item_included', 'cancel'] : [],
   });
   if (run.showGeneration) inputs.push({
     id: `${run.id}:package-progress`, kind: 'process', state: 'running', title: '课程方案包生成进度',
@@ -368,7 +368,7 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
         : view.action
           ? Object.freeze(['approve_action', 'reject_action', 'set_package_item_included', 'supplement'])
           : run.showPackageConfiguration
-            ? Object.freeze(['begin_package', 'set_package_item_included', 'supplement', 'cancel'])
+            ? Object.freeze(['begin_package', 'set_package_configuration', 'set_package_item_included', 'supplement', 'cancel'])
             : run.showArtifacts
               ? Object.freeze(['revise_package_artifact', 'set_package_item_included', 'propose_action', 'supplement'])
               : Object.freeze(['supplement']);

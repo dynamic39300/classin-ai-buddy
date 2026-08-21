@@ -119,7 +119,7 @@ describe('ConversationRun Deep Module', () => {
     const clock = manualScheduler();
     const packageProjection = Object.freeze({
       ...baseProjection(), taskKind: 'course_package' as const,
-      allowedCommands: Object.freeze(['begin_package'] as const),
+      allowedCommands: Object.freeze(['begin_package', 'set_package_configuration'] as const),
     });
     const host: ConversationRunHost = Object.freeze({
       open: () => Object.freeze({ projection: packageProjection, progressStepCount: 3 }),
@@ -135,6 +135,26 @@ describe('ConversationRun Deep Module', () => {
     expect(projection?.presentation.packageConfiguration).toEqual(configuration);
     expect(projection?.events.find(({ id }) => id === 'package-begin-1:configuration')?.summary)
       .toBe('3 课时 · 作业 16 题 · 测验 20 分钟 · 录播 12 分钟');
+  });
+
+  it('rejects package configuration changes after the package Run is cancelled', () => {
+    const clock = manualScheduler();
+    const packageProjection = Object.freeze({
+      ...baseProjection(), taskKind: 'course_package' as const,
+      allowedCommands: Object.freeze(['set_package_configuration', 'cancel'] as const),
+    });
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: packageProjection, progressStepCount: 3 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const module = createConversationRunModule(host, clock.scheduler);
+    module.dispatch('run-1', { id: 'cancel-package', type: 'cancel' });
+    const configuration = Object.freeze({ lessonCount: 3, homeworkCount: 20, quizMinutes: 20, recordingMinutes: 12 });
+
+    expect(module.dispatch('run-1', { id: 'change-cancelled-package', type: 'set_package_configuration', configuration }))
+      .toMatchObject({ status: 'rejected', reason: 'command-not-allowed' });
+    expect(module.open('run-1')?.presentation.packageConfiguration)
+      .toEqual({ lessonCount: 2, homeworkCount: 12, quizMinutes: 15, recordingMinutes: 8 });
   });
 
   it('rejects forbidden commands and persists duplicate command receipts', () => {

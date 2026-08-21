@@ -560,7 +560,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   };
 
   const ephemeralCommands = new Set<ConversationRunCommandType>(['set_inspector', 'set_context_inspector_state', 'set_artifact_inspector_state', 'set_composer_draft', 'set_scenario', 'select_package_artifact', 'set_package_configuration']);
-  const alwaysAllowed = new Set<ConversationRunCommandType>([...ephemeralCommands, 'reset']);
+  const alwaysAllowed = new Set<ConversationRunCommandType>([...ephemeralCommands].filter((type) => type !== 'set_package_configuration').concat('reset'));
   const isAllowed = (projection: ConversationRunProjection, runtime: RuntimeState, command: ConversationRunCommand) => alwaysAllowed.has(command.type)
     || projection.allowedCommands.includes(command.type)
     || (runtime.replanPending && (command.type === 'confirm_replan' || command.type === 'dismiss_replan'));
