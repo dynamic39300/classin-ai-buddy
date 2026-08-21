@@ -4,10 +4,12 @@
 
 **Blocked by:** 02 — 从 Core Context 树和 Composer 创建动态智能课件 Run。
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] 固定体验场景覆盖课时、时长、教材版本与风格。
-- [ ] 确认卡具有步骤进度、单选、其他、跳过、提交和键盘行为。
-- [ ] 已知 Context 不重复询问，提交后卡片收起为完成摘要。
-- [ ] Plan 显示步骤、预期输出、Capability 摘要和等待点。
-- [ ] 修改与取消保留 Goal、Context 和已完成证据。
+- [x] 固定体验场景覆盖课时、时长、教材版本与风格。
+- [x] 确认卡具有步骤进度、单选、其他、跳过、提交和键盘行为。
+- [x] 已知 Context 不重复询问，提交后卡片收起为完成摘要。
+- [x] Plan 显示步骤、预期输出、Capability 摘要和等待点。
+- [x] 返回修改保留 Goal、Context 和已完成证据。
+
+**Verification:** M4.1 浏览器旅程 2/2；同一 Run URL；TypeScript 通过。

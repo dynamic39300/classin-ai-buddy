@@ -4,10 +4,12 @@
 
 **Blocked by:** 01 — 建立 ConversationRun Seam 并投影一个可恢复的 Run。
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] Context 树、搜索、父子选择、最小祖先引用、权限和聚合学习者范围可操作。
-- [ ] Tree 与 Chip 双向同步，Composer 显示 4 个高价值项和 `+N`。
-- [ ] 发送后立即创建稳定 Run/历史条目并保持一个 URL。
-- [ ] 初始动态事件经历 submitted → organizing → goal understood → requires teacher input。
-- [ ] Context 默认展开且可收起，焦点和草稿不丢失。
+- [x] Context 树、搜索、父子选择、最小祖先引用、权限和聚合学习者范围可操作。
+- [x] Tree 与 Chip 双向同步，Composer 显示 4 个高价值项和 `+N`。
+- [x] 发送后立即创建稳定 Run/历史条目并保持一个 URL。
+- [x] 初始动态事件投影为教师 Goal、目标理解和 requires teacher input。
+- [x] Context 默认展开且可收起，焦点和草稿不丢失。
+
+**Verification:** M4.1 浏览器旅程 1/1；TypeScript 通过；既有 Core Context Domain 语义继续复用。

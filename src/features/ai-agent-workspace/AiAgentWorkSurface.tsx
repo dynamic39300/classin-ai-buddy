@@ -18,7 +18,7 @@ import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
-import { CoursewareRunSurface } from './CoursewareRunSurface';
+import { ConversationRunSurface } from './ConversationRunSurface';
 import { PackageRunSurface } from './PackageRunSurface';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
@@ -29,7 +29,7 @@ export function AiAgentWorkSurface() {
   const { coursewareView } = useWorkBuddyWorkspace().courseware;
   const { packageView } = useWorkBuddyWorkspace().coursePackage;
 
-  if (runId && coursewareView?.run.id === runId) return <CoursewareRunSurface />;
+  if (runId && coursewareView?.run.id === runId) return <ConversationRunSurface />;
   if (runId && packageView?.run.id === runId) return <PackageRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
   if (section && getWorkBuddyCapability(section)) return <CapabilityPlaceholder section={section} />;
@@ -39,7 +39,7 @@ export function AiAgentWorkSurface() {
 
 function NewTaskSkeleton() {
   const [feedback, setFeedback] = useState('');
-  const [contextPanelOpen, setContextPanelOpen] = useState(false);
+  const [contextPanelOpen, setContextPanelOpen] = useState(true);
   const navigate = useNavigate();
   const { goal, setGoal, clear: clearGoal } = useWorkBuddyWorkspace().taskDraft;
   const contextButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -90,8 +90,11 @@ function NewTaskSkeleton() {
           </div>
         </div>
 
-        <div className={styles.contextSummary} role="group" aria-label="核心上下文摘要">
-          {contextLabels.map((label) => <span key={label}><UsersRound aria-hidden="true" size={14} />{label}</span>)}
+        <div role="group" aria-label="核心上下文摘要">
+          <div className={styles.contextSummary} role="group" aria-label="已选择上下文">
+            {contextLabels.slice(0, 4).map((label) => <span key={label}><UsersRound aria-hidden="true" size={14} />{label}</span>)}
+            {contextLabels.length > 4 ? <span>+{contextLabels.length - 4}</span> : null}
+          </div>
         </div>
 
         <div className={styles.shortcuts} aria-label="快捷任务">

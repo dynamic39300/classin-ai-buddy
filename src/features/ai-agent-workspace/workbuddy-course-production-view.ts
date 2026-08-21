@@ -64,7 +64,7 @@ export type CoreContextView = Readonly<{
   snapshotVersion: string | null;
   snapshotId: string | null;
   items: readonly Readonly<{
-    id: string; section: CoreContextSection; kind: string; label: string; sourceLabel: string; sourceVersion: string;
+    id: string; parentId?: string; section: CoreContextSection; kind: string; label: string; sourceLabel: string; sourceVersion: string;
     permissionLabel: string; sensitivity: string; included: boolean; locked: boolean; selectable: boolean;
   }>[];
 }>;
@@ -80,7 +80,7 @@ const SENSITIVITY_LABELS = {
 export function projectCoreContextView(proposal: ContextProposal, snapshot: ContextSnapshot | null): CoreContextView {
   const selectedIds = new Set(snapshot?.items.map(({ id }) => id) ?? proposal.items.filter(({ included }) => included).map(({ id }) => id));
   const items = proposal.items.map((item) => Object.freeze({
-    id: item.id, section: item.section, kind: item.kind, label: item.label, sourceLabel: SOURCE_LABELS[item.source],
+    id: item.id, parentId: item.parentId, section: item.section, kind: item.kind, label: item.label, sourceLabel: SOURCE_LABELS[item.source],
     sourceVersion: item.sourceVersion, permissionLabel: item.permission === 'read' ? '可读取' : '受限', sensitivity: SENSITIVITY_LABELS[item.sensitivity],
     included: selectedIds.has(item.id), locked: item.selection === 'locked',
     selectable: !snapshot && item.selection !== 'locked' && (!item.parentId || selectedIds.has(item.parentId)),
