@@ -15,6 +15,13 @@
 
 - [希沃 AI 赋能教育全场景方案产品设计链路研究](./seewo_ai_education_full_scenario_solution_20260818.md)
 
+## 教师 Agent 与 Skill 产品案例
+
+- [NineClaw 本地架构与 Skill 资产设计研究](./product_research_nineclaw_local_architecture_and_skills_20260819.md)
+- [NineClaw 产品设计与交互研究](./product_research_nineclaw_product_design_and_interaction_20260820.md)
+- [NineClaw Skill 全量目录、实现审计与产品交叉验证](./product_research_nineclaw_skill_catalog_and_cross_validation_20260820.md)
+- [NineClaw 页面与交互关键帧证据图册](./product_research_nineclaw_keyframe_evidence_atlas_20260821.md)
+
 ## ClassIn 业务与教学
 
 - [ClassIn 公开资料研究底稿](./public_research_classin_20260815.md)
@@ -29,3 +36,4 @@
 - 引用研究结论时保留事实、判断和未知项的区分；
 - 对外部项目的产品体验证据不反推其未公开的技术架构；
 - 当研究结论成为项目约束时，将结论写入对应的项目、产品、Spec 或架构事实源。
+- 需要按项目阶段、主题或推荐路线阅读全部材料时，从[研究与分析资产回溯及阅读指南](../RESEARCH-RETROSPECTIVE-AND-READING-GUIDE.md)开始。

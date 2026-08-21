@@ -14,3 +14,5 @@
 | `07-history` | 阶段产出原稿、过程记录和历史会话 |
 
 研究原稿收录在 `01-research/source-notes/`，历史原稿收录在 `07-history/`。它们用于证据和思想过程追溯；新结论必须写入对应的当前唯一事实源。
+
+需要回溯全部研究与分析材料时，从[研究与分析资产回溯及阅读指南](./01-research/RESEARCH-RETROSPECTIVE-AND-READING-GUIDE.md)开始。
