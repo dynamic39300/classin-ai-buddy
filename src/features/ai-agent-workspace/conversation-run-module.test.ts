@@ -148,6 +148,36 @@ describe('ConversationRun Deep Module', () => {
     expect(module.open('run-1')?.events.at(-1)?.id).toBe('artifact-1');
   });
 
+  it('replays an in-place event update when the event count does not change', () => {
+    const clock = manualScheduler();
+    let projection = baseProjection();
+    let publishHostUpdate: () => void = () => undefined;
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection, progressStepCount: 2 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+      subscribe: (listener) => { publishHostUpdate = listener; return () => undefined; },
+    });
+    const module = createConversationRunModule(host, clock.scheduler);
+    const releaseOrganizer = module.subscribe('run-1', null, () => undefined);
+    clock.advance();
+    releaseOrganizer();
+    const initial = module.open('run-1')!;
+    const batches: string[][] = [];
+    const unsubscribe = module.subscribe('run-1', initial.cursor, (events) => batches.push(events.map(({ summary }) => summary)));
+
+    projection = Object.freeze({
+      ...projection,
+      events: Object.freeze(projection.events.map((event) => event.id === 'understanding'
+        ? Object.freeze({ ...event, summary: '将生成经过质量检查的智能课件', updatedAt: 'deterministic:003' })
+        : event)),
+    });
+    publishHostUpdate();
+
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toContain('将生成经过质量检查的智能课件');
+    unsubscribe();
+  });
+
   it('resumes an in-flight action after reload and reset clears all Run runtime', () => {
     const firstClock = manualScheduler();
     const executed: string[] = [];

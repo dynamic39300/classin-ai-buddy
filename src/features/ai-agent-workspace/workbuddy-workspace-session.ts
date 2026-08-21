@@ -189,7 +189,7 @@ function isPackageRun(value: unknown): value is CoursePackageRun {
 
 function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession {
   if (!isRecord(value) || value.version !== 2) return false;
-  return isContextProposal(value.contextProposal)
+  const shapeValid = isContextProposal(value.contextProposal)
     && isNullable(value.contextSnapshot, isContextSnapshot)
     && isRecord(value.snapshotsById) && Object.values(value.snapshotsById).every(isContextSnapshot)
     && (value.taskType === 'single-courseware' || value.taskType === 'course-package')
@@ -208,6 +208,35 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
     && ['navigator', 'approval', 'receipt', 'core_context', 'none'].includes(String(value.activePackagePanel))
     && (value.activePackageArtifactId === null || typeof value.activePackageArtifactId === 'string')
     && typeof value.draftGoal === 'string';
+  if (!shapeValid || !isRecord(value.snapshotsById)) return false;
+  const snapshots = value.snapshotsById;
+  if (Object.entries(snapshots).some(([id, snapshot]) => !isRecord(snapshot) || snapshot.id !== id)) return false;
+  if (isRecord(value.contextSnapshot) && !isRecord(snapshots[String(value.contextSnapshot.id)])) return false;
+
+  const coursewareRun = isRecord(value.coursewareRun) ? value.coursewareRun : null;
+  const coursewareAction = isRecord(value.coursewareAction) ? value.coursewareAction : null;
+  const coursewareApproval = isRecord(value.coursewareApproval) ? value.coursewareApproval : null;
+  const coursewareReceipt = isRecord(value.coursewareReceipt) ? value.coursewareReceipt : null;
+  if (coursewareRun && !isRecord(snapshots[String(coursewareRun.contextSnapshotId)])) return false;
+  const coursewareArtifactRef = coursewareAction && isRecord(coursewareAction.artifactRef) ? coursewareAction.artifactRef : null;
+  if (coursewareAction && (!coursewareRun || coursewareAction.runRef !== coursewareRun.id || coursewareAction.contextSnapshotId !== coursewareRun.contextSnapshotId
+    || !coursewareArtifactRef || !Array.isArray(coursewareRun.artifactHistory)
+    || !coursewareRun.artifactHistory.some((artifact: unknown) => isRecord(artifact) && artifact.id === coursewareArtifactRef.id && artifact.version === coursewareArtifactRef.version))) return false;
+  if (coursewareApproval && (!coursewareAction || coursewareApproval.actionId !== coursewareAction.id)) return false;
+  if (coursewareReceipt && (!coursewareAction || !coursewareApproval || coursewareReceipt.actionId !== coursewareAction.id || coursewareReceipt.approvalId !== coursewareApproval.id)) return false;
+
+  const packageRun = isRecord(value.packageRun) ? value.packageRun : null;
+  const packageAction = isRecord(value.packageAction) ? value.packageAction : null;
+  const packageApproval = isRecord(value.packageApproval) ? value.packageApproval : null;
+  const packageReceipt = isRecord(value.packageReceipt) ? value.packageReceipt : null;
+  if (packageRun && typeof packageRun.contextSnapshotId === 'string' && !isRecord(snapshots[packageRun.contextSnapshotId])) return false;
+  if (packageAction && (!packageRun || packageAction.runRef !== packageRun.id || packageAction.contextSnapshotId !== packageRun.contextSnapshotId
+    || !Array.isArray(packageAction.artifactRefs) || !Array.isArray(packageRun.artifacts)
+    || !packageAction.artifactRefs.every((ref) => isRecord(ref) && (packageRun.artifacts as unknown[]).some((artifact: unknown) => isRecord(artifact) && artifact.id === ref.id && artifact.version === ref.version)))) return false;
+  if (packageApproval && (!packageAction || packageApproval.actionId !== packageAction.id)) return false;
+  if (packageReceipt && (!packageAction || !packageApproval || packageReceipt.actionId !== packageAction.id || packageReceipt.approvalId !== packageApproval.id)) return false;
+  if (typeof value.activePackageArtifactId === 'string' && (!packageRun || !Array.isArray(packageRun.artifacts) || !packageRun.artifacts.some((artifact) => isRecord(artifact) && artifact.id === value.activePackageArtifactId))) return false;
+  return true;
 }
 
 export function loadWorkBuddyWorkspaceSession(): WorkBuddyWorkspaceSession | null {

@@ -60,6 +60,9 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft', in
     return level;
   };
   const visibleItems = view.items.filter(isVisible);
+  const effectiveActiveTreeItemId = visibleItems.some(({ id }) => id === activeTreeItemId)
+    ? activeTreeItemId
+    : visibleItems[0]?.id ?? '';
   const updateExpandedIds = (next: ReadonlySet<string>) => {
     if (onInspectorStateChange) onInspectorStateChange({ expandedIds: [...next] });
     else setLocalExpandedIds(next);
@@ -133,7 +136,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft', in
             <h2>{SECTION_LABELS[section]}</h2>
             <div className={styles.itemList} role="presentation">
               {view.items.filter((item) => item.section === section && isVisible(item)).map((item) => (
-                  <article id={`context-treeitem-${item.id}`} className={styles.contextItem} role="treeitem" aria-level={itemLevel(item)} aria-expanded={parentIds.has(item.id) ? expandedIds.has(item.id) : undefined} aria-selected={item.included} tabIndex={activeTreeItemId === item.id ? 0 : -1} onFocus={() => setActiveTreeItemId(item.id)} onKeyDown={(event) => handleTreeKey(event, item)} data-included={item.included} style={{ '--context-depth': itemLevel(item) - 1 } as CSSProperties} key={item.id}>
+                  <article id={`context-treeitem-${item.id}`} className={styles.contextItem} role="treeitem" aria-level={itemLevel(item)} aria-expanded={parentIds.has(item.id) ? expandedIds.has(item.id) : undefined} aria-selected={item.included} tabIndex={effectiveActiveTreeItemId === item.id ? 0 : -1} onFocus={() => setActiveTreeItemId(item.id)} onKeyDown={(event) => handleTreeKey(event, item)} data-included={item.included} style={{ '--context-depth': itemLevel(item) - 1 } as CSSProperties} key={item.id}>
                     {parentIds.has(item.id) ? <button className={styles.expandButton} type="button" tabIndex={-1} aria-label={`${expandedIds.has(item.id) ? '收起' : '展开'}${item.label}`} onClick={() => {
                       const next = new Set(expandedIds);
                       if (next.has(item.id)) next.delete(item.id); else next.add(item.id);

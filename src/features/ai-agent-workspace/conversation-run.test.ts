@@ -58,8 +58,7 @@ describe('ConversationRun public seam', () => {
       'clarification_submitted',
       'context_confirmed',
       'plan',
-      'process',
-      'process',
+      'capability_call',
       'capability_call',
       'capability_call',
       'capability_call',
@@ -73,13 +72,13 @@ describe('ConversationRun public seam', () => {
       state: 'completed',
       objectRefs: [{ type: 'receipt', id: 'receipt-courseware-save-1' }],
     });
-    expect(projection?.cursor).toBe('14');
+    expect(projection?.cursor).toBe('13');
   });
 
   it('replays from a cursor and rejects duplicate teacher commands', () => {
     const module = createDeterministicConversationRunModule([createCompletedProjection()]);
     const received: string[] = [];
-    const unsubscribe = module.subscribe('run-m4-courseware', '12', (events) => {
+    const unsubscribe = module.subscribe('run-m4-courseware', '11', (events) => {
       received.push(...events.map(({ id }) => id));
     });
 
@@ -96,8 +95,8 @@ describe('ConversationRun public seam', () => {
     unsubscribe();
 
     expect(received).toEqual(['action-courseware-save-1:approval', 'receipt-courseware-save-1', 'command-supplement-1']);
-    expect(first).toMatchObject({ status: 'accepted', cursor: '15' });
-    expect(duplicate).toMatchObject({ status: 'duplicate', cursor: '15' });
+    expect(first).toMatchObject({ status: 'accepted', cursor: '14' });
+    expect(duplicate).toMatchObject({ status: 'duplicate', cursor: '14' });
     expect(module.open('run-m4-courseware')?.events.filter(({ id }) => id === 'command-supplement-1')).toHaveLength(1);
   });
 });

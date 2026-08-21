@@ -4,6 +4,7 @@ import type {
   ConversationRunActor,
   ConversationRunCommandType,
   ConversationRunObjectRef,
+  ConversationRunEventDetail,
   ConversationRunProjection,
   ConversationRunStatus,
 } from '@contracts/workbuddy/conversation-run';
@@ -19,7 +20,24 @@ type EventInput = Readonly<{
   stepRef?: string;
   allowedCommands?: readonly ConversationRunCommandType[];
   objectRefs?: readonly ConversationRunObjectRef[];
+  detail?: ConversationRunEventDetail;
 }>;
+
+const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  'goal-interpreter': '智能课件目标理解',
+  'lesson-structure': '智能课件结构设计',
+  'courseware-renderer': '智能课件页面生成',
+  'courseware-quality-check': '智能课件质量检查',
+});
+const CAPABILITY_INPUTS: Readonly<Record<string, string>> = Object.freeze({
+  'goal-interpreter': '教师目标、课时要求与已确认教学范围',
+  'lesson-structure': '目标约束、课程标准与课件内容要求',
+  'courseware-renderer': '课件结构、页面风格与课堂活动要求',
+  'courseware-quality-check': '智能课件草稿与目标覆盖清单',
+});
+const CAPABILITY_DURATIONS: Readonly<Record<string, string>> = Object.freeze({
+  'goal-interpreter': '4 秒', 'lesson-structure': '12 秒', 'courseware-renderer': '28 秒', 'courseware-quality-check': '7 秒',
+});
 
 function freezeEvent(runRef: string, sequence: number, input: EventInput): ConversationRunEvent {
   return Object.freeze({
@@ -36,6 +54,7 @@ function freezeEvent(runRef: string, sequence: number, input: EventInput): Conve
     stepRef: input.stepRef,
     objectRefs: Object.freeze([...(input.objectRefs ?? [])]),
     allowedCommands: Object.freeze([...(input.allowedCommands ?? [])]),
+    detail: input.detail ? Object.freeze({ ...input.detail, contextLabels: Object.freeze([...input.detail.contextLabels]) }) : undefined,
   });
 }
 
@@ -104,16 +123,24 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
         title: '智能课件执行计划', summary: `${run.plan.length} 个步骤 · 等待教师确认后执行`,
       },
     );
-  }
-
-  for (const event of run.events) {
-    inputs.push({
-      id: event.id,
-      kind: event.capability ? 'capability_call' : 'process',
-      title: event.title,
-      summary: event.summary,
-      objectRefs: event.capability ? [{ type: 'capability', id: event.capability }] : [],
-    });
+    const projectionByCapability = new Map(view.projections.map((projection) => [projection.capabilityId, projection]));
+    for (const step of run.plan) {
+      const context = projectionByCapability.get(step.capability);
+      inputs.push({
+        id: `experience:${step.id}`, kind: 'capability_call', state: 'queued', title: step.title, summary: step.capabilitySummary,
+        stepRef: step.id,
+        objectRefs: [{ type: 'capability', id: step.capability }],
+        detail: {
+          capabilityLabel: CAPABILITY_LABELS[step.capability] ?? step.capabilitySummary,
+          purpose: context?.purpose ?? step.capabilitySummary,
+          inputSummary: CAPABILITY_INPUTS[step.capability] ?? '已确认的任务输入',
+          outputSummary: step.expectedOutput,
+          elapsedLabel: CAPABILITY_DURATIONS[step.capability] ?? '已完成',
+          contextLabels: Object.freeze(context?.items.map(({ label }) => label) ?? []),
+          excludedSensitiveCount: context?.excludedSensitiveCount ?? 0,
+        },
+      });
+    }
   }
 
   const artifacts = run.artifactHistory.length ? run.artifactHistory : run.artifact ? [run.artifact] : [];
@@ -219,6 +246,10 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
   if (run.showPackageConfiguration || run.showGeneration || run.showArtifacts) inputs.push({
     id: `${run.id}:plan`, kind: 'plan', state: run.showPackageConfiguration ? 'requires_teacher_input' : 'completed',
     title: '课程方案包执行计划', summary: '先形成共享课程目标和课件结构，再并行生成配套产物。',
+  });
+  if (run.showGeneration) inputs.push({
+    id: `${run.id}:package-progress`, kind: 'process', state: 'running', title: '课程方案包生成进度',
+    summary: '正在按依赖顺序生成课件、作业、测验和录播脚本。',
   });
   for (const artifact of run.artifacts) {
     if (!run.showGeneration && !run.showArtifacts) continue;

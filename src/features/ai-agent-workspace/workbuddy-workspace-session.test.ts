@@ -55,4 +55,18 @@ describe('WorkBuddy workspace session boundary', () => {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     expect(loadWorkBuddyWorkspaceSession()).toBeNull();
   });
+
+  it('fails closed when a stored Snapshot key does not match its object identity', () => {
+    const session = validSession();
+    const snapshot = {
+      id: 'context-snapshot-1',
+      version: 'workbuddy-m4-context-v1',
+      taskType: 'single-courseware',
+      confirmedAt: '2026-08-21T10:00:00+08:00',
+      items: session.contextProposal.items,
+    };
+    Object.assign(session, { contextSnapshot: snapshot, snapshotsById: { 'wrong-snapshot-key': snapshot } });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()).toBeNull();
+  });
 });

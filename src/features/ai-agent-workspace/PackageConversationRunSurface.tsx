@@ -2,11 +2,10 @@ import { Boxes, CheckCircle2, CircleAlert, CircleEllipsis, FileText, LoaderCircl
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
-import type { ConversationRunEvent, ConversationRunEventState, ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
+import type { ConversationRunEvent, ConversationRunEventState } from '@contracts/workbuddy/conversation-run';
 import type { PackageArtifact, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import { CoreContextPanel } from './CoreContextPanel';
 import { WorkBuddyModalDialog } from './WorkBuddyModalDialog';
-import { projectPackageExperienceArtifacts, type PackageExperienceState } from './package-run-experience';
 import { useConversationRun } from './use-conversation-run';
 import type { PackageRunView } from './workbuddy-course-production-view';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
@@ -15,13 +14,6 @@ import styles from './PackageConversationRunSurface.module.css';
 
 const KIND_LABELS = { courseware: '课件', homework: '作业', quiz: '测验', 'recording-script': '录播脚本' } as const;
 const RESULT_LABELS = { succeeded: '已执行', failed: '执行失败', not_executed: '未执行', waiting: '等待依赖' } as const;
-
-function projectExperience(progress: ConversationRunProgress): PackageExperienceState {
-  if (progress.status === 'running') return Object.freeze({ status: 'running', phase: Math.min(2, progress.activeIndex) as 0 | 1 | 2 });
-  if (progress.status === 'stopped') return Object.freeze({ status: 'stopped', phase: Math.min(2, progress.completedCount) as 0 | 1 | 2 });
-  if (progress.status === 'completed') return Object.freeze({ status: 'completed' });
-  return Object.freeze({ status: 'idle' });
-}
 
 export function PackageConversationRunSurface() {
   const workspace = useWorkBuddyWorkspace();
@@ -39,8 +31,17 @@ export function PackageConversationRunSurface() {
 
   const run = packageView?.run;
   if (!packageView || !run || !projection) return null;
-  const experience = projectExperience(projection.presentation.progress);
-  const experienceArtifacts = projectPackageExperienceArtifacts(experience, run.artifacts);
+  const progress = projection.presentation.progress;
+  const eventByArtifactId = new Map(projection.events.flatMap((event) => event.objectRefs
+    .filter(({ type }) => type === 'artifact')
+    .map(({ id }) => [id, event] as const)));
+  const experienceArtifacts = run.artifacts.map((artifact) => {
+    const event = eventByArtifactId.get(artifact.id);
+    const state = artifact.state === 'excluded' ? 'excluded' as const
+      : event?.state === 'completed' ? 'completed' as const
+        : event?.state === 'running' ? 'running' as const : 'waiting' as const;
+    return Object.freeze({ id: artifact.id, state });
+  });
   const { inspectorOpen, inspectorMode, composerDraft, executingAction: executing } = projection.presentation;
 
   const activeArtifact = run.artifacts.find(({ id }) => id === activePackageArtifactId) ?? run.artifacts[0];
@@ -57,12 +58,9 @@ export function PackageConversationRunSurface() {
       </header>
 
       <div className={conversationStyles.timeline} role="feed" aria-label="Agent 任务时间线">
-        {projection.events.map((event, index, events) => {
+        {projection.events.map((event) => {
           if (event.kind === 'plan' && run.showPackageConfiguration) return <PackagePlanEvent key={event.id} run={run} event={event} lessonCount={lessonCount} homeworkCount={homeworkCount} quizMinutes={quizMinutes} recordingMinutes={recordingMinutes} onLessonCount={setLessonCount} onHomeworkCount={setHomeworkCount} onQuizMinutes={setQuizMinutes} onRecordingMinutes={setRecordingMinutes} onSetIncluded={(artifactId, included) => dispatch({ type: 'set_package_item_included', artifactId, included })} onBegin={() => dispatch({ type: 'begin_package' })} />;
-          if (event.kind === 'process' && run.showGeneration) {
-            if (events.slice(0, index).some(({ kind }) => kind === 'process')) return null;
-            return <PackageProgressEvent key={event.id} experience={experience} artifacts={experienceArtifacts} />;
-          }
+          if (event.id === `${run.id}:package-progress`) return <PackageProgressEvent key={event.id} event={event} progressStatus={progress.status} artifacts={run.artifacts} experienceArtifacts={experienceArtifacts} />;
           if (event.kind === 'proposed_action' && packageView.action?.id === event.id) return <PackageActionEvent key={event.id} packageView={packageView} executing={executing} onSetIncluded={(artifactId, included) => dispatch({ type: 'set_package_item_included', artifactId, included })} onOpenApproval={() => setApprovalDialogOpen(true)} onReject={() => dispatch({ type: 'reject_action' })} onExecute={executeAction} />;
           if (event.kind === 'receipt') {
             const receipt = receiptHistory.find(({ id }) => id === event.id);
@@ -76,9 +74,9 @@ export function PackageConversationRunSurface() {
       </div>
       <div className={conversationStyles.runComposer} role="group" aria-label="任务补充输入">
         <textarea aria-label="向 Agent 补充要求" value={composerDraft} placeholder="补充要求、调整方案包或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
-        <div><span>{experience.status === 'running' ? '方案包生成中，可补充未开始产物' : experience.status === 'stopped' ? '任务已停止，可从当前位置继续' : '补充内容会记录在当前任务中'}</span>
-          {experience.status === 'running' ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
-          {experience.status === 'stopped' ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
+        <div><span>{progress.status === 'running' ? '方案包生成中，可补充未开始产物' : progress.status === 'stopped' ? '任务已停止，可从当前位置继续' : '补充内容会记录在当前任务中'}</span>
+          {progress.status === 'running' ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
+          {progress.status === 'stopped' ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
           <button className={conversationStyles.primary} type="button" aria-label="发送补充要求" disabled={!composerDraft.trim()} onClick={() => dispatch({ type: 'supplement', text: composerDraft.trim() })}>发送</button>
         </div>
       </div>
@@ -89,7 +87,7 @@ export function PackageConversationRunSurface() {
       <div hidden={inspectorMode !== 'context'}><CoreContextPanel readOnly={!run.showContextConfirmation} inspectorState={{ expandedIds: projection.presentation.contextExpandedIds, query: projection.presentation.contextQuery, scrollTop: projection.presentation.contextScrollTop }} onInspectorStateChange={(patch) => dispatch({ type: 'set_context_inspector_state', ...patch })} onClose={() => dispatch({ type: 'set_inspector', open: false })} /></div>
       <div hidden={inspectorMode !== 'output'}><PackageOutputDirectory
         artifacts={run.artifacts}
-        experienceArtifacts={experience.status === 'idle' ? null : experienceArtifacts}
+        experienceArtifacts={progress.status === 'idle' || progress.status === 'organizing' ? null : experienceArtifacts}
         activeArtifact={activeArtifact}
         action={packageView.action}
         receipt={packageView.receipt}
@@ -108,7 +106,7 @@ export function PackageConversationRunSurface() {
       /></div>
     </aside>
 
-    {approvalDialogOpen && packageView.action ? <WorkBuddyModalDialog className={conversationStyles.approvalDialog} labelledBy="package-approval-title" onClose={() => setApprovalDialogOpen(false)}><section><header><ShieldCheck aria-hidden="true" size={18} /><div><span>教师确认</span><h2 id="package-approval-title">确认保存课程方案包</h2></div></header><p>{packageView.action.target.label}</p><dl><div><dt>本次对象</dt><dd>{packageView.action.artifactRefs.length} 项</dd></div><div><dt>变更</dt><dd>{packageView.action.difference}</dd></div><div><dt>影响</dt><dd>{packageView.action.impact}</dd></div></dl><footer><button type="button" autoFocus onClick={() => setApprovalDialogOpen(false)}>返回检查</button><button className={conversationStyles.primary} type="button" onClick={() => { dispatch({ type: 'approve_action' }); setApprovalDialogOpen(false); }}>批准保存</button></footer></section></WorkBuddyModalDialog> : null}
+    {approvalDialogOpen && packageView.action ? <WorkBuddyModalDialog className={conversationStyles.approvalDialog} labelledBy="package-approval-title" onClose={() => setApprovalDialogOpen(false)}><section><header><ShieldCheck aria-hidden="true" size={18} /><div><span>教师确认</span><h2 id="package-approval-title">确认保存课程方案包</h2></div></header><p>{packageView.action.target.label}</p><dl><div><dt>本次对象</dt><dd>{packageView.action.artifactRefs.length} 项</dd></div><div><dt>变更</dt><dd>{packageView.action.difference}</dd></div><div><dt>影响</dt><dd>{packageView.action.impact}</dd></div></dl><ul aria-label="本次批准的课程产物">{run.artifacts.map((artifact) => { const selected = packageView.action?.artifactRefs.some(({ id, version }) => id === artifact.id && version === artifact.version) ?? false; return <li key={artifact.id}><span>{artifact.title}</span><small>{selected ? `已选择 · ${artifact.version}` : artifact.state === 'written_back' ? '已成功，不重复执行' : '本次不执行'}</small></li>; })}</ul><footer><button type="button" autoFocus onClick={() => setApprovalDialogOpen(false)}>返回检查</button><button className={conversationStyles.primary} type="button" onClick={() => { dispatch({ type: 'approve_action' }); setApprovalDialogOpen(false); }}>批准保存</button></footer></section></WorkBuddyModalDialog> : null}
   </section>;
 }
 
@@ -136,20 +134,23 @@ function PackagePlanEvent({ run, event, lessonCount, homeworkCount, quizMinutes,
   </article>;
 }
 
-function PackageProgressEvent({ experience, artifacts }: Readonly<{ experience: PackageExperienceState; artifacts: ReturnType<typeof projectPackageExperienceArtifacts> }>) {
-  return <article className={conversationStyles.event} data-kind="process" data-state={experience.status === 'completed' ? 'completed' : experience.status === 'stopped' ? 'cancelled' : 'running'}>
-    <span className={conversationStyles.eventMark}>{experience.status === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} /> : experience.status === 'stopped' ? <CircleEllipsis aria-hidden="true" size={15} /> : <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={15} />}</span>
-    <div className={conversationStyles.eventBody}><strong>课程方案包生成进度</strong><p>{artifacts.filter(({ state }) => state === 'completed').length}/{artifacts.filter(({ state }) => state !== 'excluded').length} 项完成{experience.status === 'stopped' ? ' · 已停止' : ''}</p><div className={styles.progressList}>{artifacts.map((artifact) => <div data-state={artifact.state} key={artifact.id}>{artifact.state === 'completed' ? <CheckCircle2 aria-hidden="true" size={14} /> : artifact.state === 'running' && experience.status !== 'stopped' ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <CircleEllipsis aria-hidden="true" size={14} />}<span>{artifact.title}</span><small>{artifact.state === 'completed' ? '已完成，可预览' : artifact.state === 'running' && experience.status === 'stopped' ? '已停止' : artifact.state === 'running' ? '生成中' : artifact.state === 'excluded' ? '已排除' : '等待依赖'}</small></div>)}</div></div>
-  </article>;
-}
-
 function TimelineEvent({ title, summary, icon, state = 'completed', children }: Readonly<{ title: string; summary: string; icon: ReactNode; state?: ConversationRunEventState; children?: ReactNode }>) {
   return <article className={conversationStyles.event} data-kind="process" data-state={state}><span className={conversationStyles.eventMark}>{icon}</span><div className={conversationStyles.eventBody}><strong>{title}</strong><p>{summary}</p>{children}</div></article>;
 }
 
+function PackageProgressEvent({ event, progressStatus, artifacts, experienceArtifacts }: Readonly<{
+  event: ConversationRunEvent;
+  progressStatus: 'organizing' | 'idle' | 'running' | 'stopped' | 'completed';
+  artifacts: readonly PackageArtifact[];
+  experienceArtifacts: readonly Readonly<{ id: string; state: 'waiting' | 'running' | 'completed' | 'excluded' }>[];
+}>) {
+  const stateById = new Map(experienceArtifacts.map(({ id, state }) => [id, state]));
+  return <article className={conversationStyles.event} data-kind={event.kind} data-state={event.state}><span className={conversationStyles.eventMark}>{event.state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} /> : event.state === 'cancelled' ? <CircleEllipsis aria-hidden="true" size={15} /> : <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={15} />}</span><div className={conversationStyles.eventBody}><strong>{event.title}</strong><p>{experienceArtifacts.filter(({ state }) => state === 'completed').length}/{experienceArtifacts.filter(({ state }) => state !== 'excluded').length} 项完成{progressStatus === 'stopped' ? ' · 已停止' : ''}</p><div className={styles.progressList}>{artifacts.map((artifact) => { const state = stateById.get(artifact.id) ?? 'waiting'; return <div data-state={state} key={artifact.id}>{state === 'completed' ? <CheckCircle2 aria-hidden="true" size={14} /> : state === 'running' && progressStatus !== 'stopped' ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <CircleEllipsis aria-hidden="true" size={14} />}<span>{artifact.title}</span><small>{state === 'completed' ? '已完成，可预览' : state === 'running' && progressStatus === 'stopped' ? '已停止' : state === 'running' ? '生成中' : state === 'excluded' ? '已排除' : '等待依赖'}</small></div>; })}</div></div></article>;
+}
+
 function PackageOutputDirectory({ artifacts, experienceArtifacts, activeArtifact, action, receipt, retryPrepared, canProposeSave, inspectorState, onSelect, onSetIncluded, onPropose, onRevise, onInspectorStateChange }: Readonly<{
   artifacts: readonly PackageArtifact[];
-  experienceArtifacts: ReturnType<typeof projectPackageExperienceArtifacts> | null;
+  experienceArtifacts: readonly Readonly<{ id: string; state: 'waiting' | 'running' | 'completed' | 'excluded' }>[] | null;
   activeArtifact: PackageArtifact | undefined;
   action: PackageRunView['action'];
   receipt: PackageRunView['receipt'];
@@ -185,5 +186,5 @@ function PackageActionEvent({ packageView, executing, onSetIncluded, onOpenAppro
 
 function PackageReceiptEvent({ receipt, artifacts, sequence, onRetry }: Readonly<{ receipt: PackageExecutionReceipt; artifacts: readonly PackageArtifact[]; sequence: number; onRetry: () => void }>) {
   const title = receipt.status === 'success' ? '课程方案包执行完成' : receipt.status === 'partial_success' ? '课程方案包部分成功' : '课程方案包写回需要处理';
-  return <article className={conversationStyles.event} data-kind="receipt" data-state={receipt.status === 'success' ? 'completed' : 'failed'}><span className={conversationStyles.eventMark}>{receipt.status === 'success' ? <CheckCircle2 aria-hidden="true" size={15} /> : <CircleAlert aria-hidden="true" size={15} />}</span><div className={conversationStyles.eventBody}><strong>{title}</strong><p>第 {sequence} 次执行结果 · {receipt.result.replace('[模拟]', '')}</p><div className={styles.receiptItems}>{receipt.items.map((item) => <div data-result={item.result} key={item.artifactId}><span>{artifacts.find(({ id }) => id === item.artifactId)?.title ?? '课程产物'}</span><strong>{item.result === 'not_executed' && artifacts.find(({ id }) => id === item.artifactId)?.state === 'written_back' ? '已成功，本次未重复执行' : RESULT_LABELS[item.result]}</strong></div>)}</div>{receipt.status === 'partial_success' ? <button className={styles.retryButton} type="button" onClick={onRetry}>修改并重试失败项</button> : null}</div></article>;
+  return <article className={conversationStyles.event} data-kind="receipt" data-state={receipt.status === 'success' ? 'completed' : 'failed'}><span className={conversationStyles.eventMark}>{receipt.status === 'success' ? <CheckCircle2 aria-hidden="true" size={15} /> : <CircleAlert aria-hidden="true" size={15} />}</span><div className={conversationStyles.eventBody}><span className={conversationStyles.truthMarker}>{receipt.truthLabel}</span><strong>{title}</strong><p>第 {sequence} 次执行结果 · {receipt.result.replace('[模拟]', '')}</p><div className={styles.receiptItems}>{receipt.items.map((item) => <div data-result={item.result} key={item.artifactId}><span>{artifacts.find(({ id }) => id === item.artifactId)?.title ?? '课程产物'}</span><strong>{item.result === 'not_executed' && artifacts.find(({ id }) => id === item.artifactId)?.state === 'written_back' ? '已成功，本次未重复执行' : RESULT_LABELS[item.result]}</strong></div>)}</div>{receipt.status === 'partial_success' ? <button className={styles.retryButton} type="button" onClick={onRetry}>修改并重试失败项</button> : null}</div></article>;
 }

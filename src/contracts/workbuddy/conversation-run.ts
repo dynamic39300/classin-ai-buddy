@@ -22,6 +22,16 @@ export type ConversationRunObjectType = 'context_snapshot' | 'artifact' | 'actio
 
 export type ConversationRunObjectRef = Readonly<{ type: ConversationRunObjectType; id: string; version?: string }>;
 
+export type ConversationRunEventDetail = Readonly<{
+  capabilityLabel: string;
+  purpose: string;
+  inputSummary: string;
+  outputSummary: string;
+  elapsedLabel: string;
+  contextLabels: readonly string[];
+  excludedSensitiveCount: number;
+}>;
+
 export type ConversationRunEvent = Readonly<{
   id: string;
   runRef: string;
@@ -36,6 +46,7 @@ export type ConversationRunEvent = Readonly<{
   stepRef?: string;
   objectRefs: readonly ConversationRunObjectRef[];
   allowedCommands: readonly ConversationRunCommandType[];
+  detail?: ConversationRunEventDetail;
 }>;
 
 export type ConversationRunInspectorMode = 'context' | 'output';
@@ -128,6 +139,7 @@ export type ConversationRunListener = (events: readonly ConversationRunEvent[], 
 
 export interface ConversationRunModule {
   open(runRef: string): ConversationRunProjection | null;
+  nextCommandId(runRef: string): string;
   dispatch(runRef: string, command: ConversationRunCommand): ConversationRunCommandReceipt;
   subscribe(runRef: string, cursor: string | null, listener: ConversationRunListener): () => void;
 }

@@ -57,13 +57,15 @@ type RuntimeState = Readonly<{
   artifactScrollTop: number;
   packageEditingArtifactId: string | null;
   packageEditDraft: string;
+  cursorRevision: number;
+  commandSequence: number;
 }>;
 
 type StoredState = Readonly<{
   runtimes: Readonly<Record<string, RuntimeState>>;
   commands: Readonly<Record<string, ConversationRunCommandReceipt>>;
 }>;
-const STORAGE_KEY = 'workbuddy:conversation-run:v3';
+const STORAGE_KEY = 'workbuddy:conversation-run:v4';
 const EVENT_ACTORS = new Set(['teacher', 'agent', 'system']);
 const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'error', 'system']);
 const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'cancelled', 'superseded']);
@@ -125,7 +127,9 @@ function isRuntimeState(value: unknown): value is RuntimeState {
     && typeof value.artifactPreviewPage === 'number'
     && typeof value.artifactScrollTop === 'number'
     && (value.packageEditingArtifactId === null || typeof value.packageEditingArtifactId === 'string')
-    && typeof value.packageEditDraft === 'string';
+    && typeof value.packageEditDraft === 'string'
+    && typeof value.cursorRevision === 'number'
+    && typeof value.commandSequence === 'number';
 }
 
 function isCommandReceipt(value: unknown): value is ConversationRunCommandReceipt {
@@ -142,7 +146,7 @@ function loadStoredState(): StoredState {
   if (typeof window === 'undefined') return empty();
   try {
     const parsed: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
-    if (!isRecord(parsed) || parsed.version !== 3 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
+    if (!isRecord(parsed) || parsed.version !== 4 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
     return Object.freeze({
       runtimes: Object.freeze(Object.fromEntries(Object.entries(parsed.runtimes).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1])))),
       commands: Object.freeze(Object.fromEntries(Object.entries(parsed.commands).filter((entry): entry is [string, ConversationRunCommandReceipt] => isCommandReceipt(entry[1])))),
@@ -244,13 +248,13 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   const restored = loadStoredState();
   const runtimes = new Map<string, RuntimeState>(Object.entries(restored.runtimes));
   const processedCommands = new Map<string, ConversationRunCommandReceipt>(Object.entries(restored.commands));
-  const listeners = new Map<string, Set<ConversationRunListener>>();
+  const listeners = new Map<string, Map<ConversationRunListener, string | null>>();
   const scheduled = new Map<string, () => void>();
 
   const persist = () => {
     if (typeof window === 'undefined') return;
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-      version: 3,
+      version: 4,
       runtimes: Object.fromEntries(runtimes),
       commands: Object.fromEntries(processedCommands),
     }));
@@ -282,6 +286,8 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       artifactScrollTop: 0,
       packageEditingArtifactId: null,
       packageEditDraft: '增加一道结合函数图像判断单调区间的探究题。',
+      cursorRevision: 0,
+      commandSequence: 0,
     });
   };
   const ensureRuntime = (runRef: string, snapshot: ConversationRunHostSnapshot): RuntimeState => {
@@ -295,16 +301,51 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   const project = (runRef: string): ConversationRunProjection | null => {
     const snapshot = host.open(runRef);
     if (!snapshot) return null;
-    const runtime = ensureRuntime(runRef, snapshot);
+    let runtime = ensureRuntime(runRef, snapshot);
     const base = snapshot.projection;
     const teacherEvent = base.events.find(({ kind }) => kind === 'teacher_message') ?? base.events[0];
     const organizing = Object.freeze({
       ...organizingEvent(runRef),
       state: runtime.progress.status === 'organizing' ? 'running' as const : 'completed' as const,
     });
+    const capabilityEvents = base.events.filter(({ kind }) => kind === 'capability_call');
+    const packageProcessEvents = base.events.filter((event) => event.kind === 'process' && event.objectRefs.some(({ type }) => type === 'artifact'));
+    const projectedBaseEvents = base.events.flatMap((event): ConversationRunEvent[] => {
+      if (event.kind === 'capability_call') {
+        if (runtime.progress.status === 'organizing' || runtime.progress.status === 'idle') return [];
+        const index = capabilityEvents.findIndex(({ id }) => id === event.id);
+        const completedCount = runtime.progress.status === 'running' || runtime.progress.status === 'stopped' || runtime.progress.status === 'completed' ? runtime.progress.completedCount : 0;
+        const state = runtime.progress.status === 'completed' || index < completedCount
+          ? 'completed' as const
+          : runtime.progress.status === 'running' && index === runtime.progress.activeIndex ? 'running' as const : 'queued' as const;
+        return [Object.freeze({
+          ...event,
+          state,
+          detail: event.detail ? Object.freeze({ ...event.detail, elapsedLabel: state === 'running' ? '计算中' : state === 'queued' ? '等待执行' : event.detail.elapsedLabel }) : undefined,
+        })];
+      }
+      if (event.kind === 'process' && base.taskKind === 'course_package' && packageProcessEvents.length) {
+        if (event.id.endsWith(':package-progress')) return [Object.freeze({
+          ...event,
+          state: runtime.progress.status === 'completed' ? 'completed' as const : runtime.progress.status === 'stopped' ? 'cancelled' as const : 'running' as const,
+        })];
+        if (event.summary.includes('已排除')) return [event];
+        const index = packageProcessEvents.findIndex(({ id }) => id === event.id);
+        const lastIndex = packageProcessEvents.length - 1;
+        const phase = runtime.progress.status === 'running' ? Math.min(2, runtime.progress.activeIndex)
+          : runtime.progress.status === 'stopped' ? Math.min(2, runtime.progress.completedCount) : 0;
+        const state = runtime.progress.status === 'completed'
+          ? 'completed' as const
+          : index === 0 ? phase === 0 ? 'running' as const : 'completed' as const
+            : index === lastIndex ? phase === 2 ? 'running' as const : 'queued' as const
+              : phase === 0 ? 'queued' as const : phase === 1 ? 'running' as const : 'completed' as const;
+        return [Object.freeze({ ...event, state })];
+      }
+      return [event];
+    });
     const publishedBaseEvents = runtime.progress.status === 'organizing'
       ? []
-      : base.events.filter(({ id }) => id !== teacherEvent?.id);
+      : projectedBaseEvents.filter(({ id }) => id !== teacherEvent?.id);
     const candidates = [teacherEvent, organizing, ...publishedBaseEvents, ...runtime.localEvents].filter(Boolean) as ConversationRunEvent[];
     const journalById = new Map(runtime.eventJournal.map((event) => [event.id, event]));
     for (const candidate of candidates) {
@@ -318,7 +359,8 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       return !previous || JSON.stringify(previous) !== JSON.stringify(event);
     });
     if (eventOrder.length !== runtime.eventOrder.length || eventOrder.some((id, index) => id !== runtime.eventOrder[index]) || journalChanged) {
-      runtimes.set(runRef, freezeRuntime({ ...runtime, eventOrder, eventJournal }));
+      runtime = freezeRuntime({ ...runtime, eventOrder, eventJournal, cursorRevision: runtime.cursorRevision + 1 });
+      runtimes.set(runRef, runtime);
       persist();
     }
     const events = Object.freeze(eventJournal.map((event, index) => Object.freeze({ ...event, sequence: index + 1 })));
@@ -336,7 +378,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       ...base,
       status,
       events,
-      cursor: String(events.length),
+      cursor: `${events.length}:${runtime.cursorRevision}`,
       allowedCommands,
       presentation: Object.freeze({
         inspectorOpen: runtime.inspectorOpen,
@@ -361,21 +403,33 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       }),
     });
   };
-  const notify = (runRef: string, previousCursor: number) => {
+  const replayFromCursor = (projection: ConversationRunProjection, cursor: string | null) => {
+    if (cursor === null) return projection.events;
+    const [countText, revisionText] = cursor.split(':');
+    const count = Number.parseInt(countText ?? '0', 10) || 0;
+    const revision = Number.parseInt(revisionText ?? '-1', 10);
+    const currentRevision = Number.parseInt(projection.cursor.split(':')[1] ?? '-2', 10);
+    return revision === currentRevision ? projection.events.slice(Math.max(0, Math.min(projection.events.length, count))) : projection.events;
+  };
+  const notify = (runRef: string) => {
     const projection = project(runRef);
     if (!projection) return;
-    const delta = projection.events.slice(previousCursor);
-    for (const listener of listeners.get(runRef) ?? []) listener(delta, projection);
+    const runListeners = listeners.get(runRef);
+    if (!runListeners) return;
+    for (const [listener, cursor] of runListeners) {
+      const delta = replayFromCursor(projection, cursor);
+      listener(delta, projection);
+      runListeners.set(listener, projection.cursor);
+    }
   };
   const replaceRuntime = (runRef: string, update: (current: RuntimeState) => RuntimeState) => {
     const snapshot = host.open(runRef);
     if (!snapshot) return;
-    const currentProjection = project(runRef);
-    const previousCursor = currentProjection?.events.length ?? 0;
+    project(runRef);
     const current = ensureRuntime(runRef, snapshot);
     runtimes.set(runRef, freezeRuntime(update(current)));
     persist();
-    notify(runRef, previousCursor);
+    notify(runRef);
   };
   const cancelScheduled = (runRef: string) => {
     scheduled.get(runRef)?.();
@@ -440,20 +494,31 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
     persist();
   };
 
-  const alwaysAllowed = new Set<ConversationRunCommandType>(['set_inspector', 'set_context_inspector_state', 'set_artifact_inspector_state', 'set_composer_draft', 'set_scenario', 'select_package_artifact', 'reset']);
+  const ephemeralCommands = new Set<ConversationRunCommandType>(['set_inspector', 'set_context_inspector_state', 'set_artifact_inspector_state', 'set_composer_draft', 'set_scenario', 'select_package_artifact']);
+  const alwaysAllowed = new Set<ConversationRunCommandType>([...ephemeralCommands, 'reset']);
   const isAllowed = (projection: ConversationRunProjection, runtime: RuntimeState, command: ConversationRunCommand) => alwaysAllowed.has(command.type)
     || projection.allowedCommands.includes(command.type)
     || (runtime.replanPending && (command.type === 'confirm_replan' || command.type === 'dismiss_replan'));
 
   host.subscribe?.(() => {
-    for (const runRef of listeners.keys()) notify(runRef, project(runRef)?.events.length ?? 0);
+    for (const runRef of listeners.keys()) notify(runRef);
   });
 
   return Object.freeze({
     open: project,
+    nextCommandId: (runRef: string) => {
+      const snapshot = host.open(runRef);
+      if (!snapshot) return `${runRef}:teacher-command:unavailable`;
+      const current = ensureRuntime(runRef, snapshot);
+      const commandSequence = current.commandSequence + 1;
+      runtimes.set(runRef, freezeRuntime({ ...current, commandSequence }));
+      persist();
+      return `${runRef}:teacher-command:${String(commandSequence).padStart(4, '0')}`;
+    },
     dispatch: (runRef: string, command: ConversationRunCommand): ConversationRunCommandReceipt => {
       const processedKey = `${runRef}\u0000${command.id}`;
-      const duplicate = processedCommands.get(processedKey);
+      const rememberCommand = !ephemeralCommands.has(command.type);
+      const duplicate = rememberCommand ? processedCommands.get(processedKey) : undefined;
       if (duplicate) return Object.freeze({ ...duplicate, status: 'duplicate' });
       if (command.type === 'reset') {
         resetRun(runRef);
@@ -464,14 +529,14 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       const projection = project(runRef);
       if (!snapshot || !projection) {
         const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: '0', reason: 'run-not-found' });
-        processedCommands.set(processedKey, rejected);
+        if (rememberCommand) processedCommands.set(processedKey, rejected);
         persist();
         return rejected;
       }
       const runtime = ensureRuntime(runRef, snapshot);
       if (!isAllowed(projection, runtime, command)) {
         const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: 'command-not-allowed' });
-        processedCommands.set(processedKey, rejected);
+        if (rememberCommand) processedCommands.set(processedKey, rejected);
         persist();
         return rejected;
       }
@@ -508,7 +573,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         const hostResult = host.execute(runRef, command);
         if (hostResult.status === 'rejected') {
           const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: hostResult.reason });
-          processedCommands.set(processedKey, rejected);
+          if (rememberCommand) processedCommands.set(processedKey, rejected);
           persist();
           return rejected;
         }
@@ -556,7 +621,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         const hostResult = host.execute(runRef, command);
         if (hostResult.status === 'rejected') {
           const rejected = Object.freeze({ commandId: command.id, status: 'rejected' as const, cursor: projection.cursor, reason: hostResult.reason });
-          processedCommands.set(processedKey, rejected);
+          if (rememberCommand) processedCommands.set(processedKey, rejected);
           persist();
           return rejected;
         }
@@ -573,19 +638,19 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       }
       const next = project(runRef);
       const receipt = Object.freeze({ commandId: command.id, status: 'accepted' as const, cursor: next?.cursor ?? projection.cursor, resultRef: resultRef ?? undefined });
-      processedCommands.set(processedKey, receipt);
+      if (rememberCommand) processedCommands.set(processedKey, receipt);
       persist();
       return receipt;
     },
     subscribe: (runRef: string, cursor: string | null, listener: ConversationRunListener) => {
-      const set = listeners.get(runRef) ?? new Set<ConversationRunListener>();
-      set.add(listener);
+      const set = listeners.get(runRef) ?? new Map<ConversationRunListener, string | null>();
+      set.set(listener, cursor);
       listeners.set(runRef, set);
       const projection = project(runRef);
       if (projection) {
-        const index = cursor === null ? 0 : Math.max(0, Math.min(projection.events.length, Number.parseInt(cursor, 10) || 0));
-        const replay = projection.events.slice(index);
+        const replay = replayFromCursor(projection, cursor);
         if (replay.length) listener(replay, projection);
+        set.set(listener, projection.cursor);
         const progress = projection.presentation.progress;
         const runtime = runtimes.get(runRef);
         if (runtime?.pendingActionCommand) scheduleActionExecution(runRef, runtime.pendingActionCommand);

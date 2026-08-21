@@ -11,7 +11,7 @@ export function useConversationRun(runRef: string) {
   const dispatch = useCallback((input: ConversationRunCommandInput): ConversationRunCommandReceipt => {
     return module.dispatch(runRef, {
       ...input,
-      id: `${runRef}:teacher-command:${window.crypto.randomUUID()}`,
+      id: module.nextCommandId(runRef),
     });
   }, [module, runRef]);
 

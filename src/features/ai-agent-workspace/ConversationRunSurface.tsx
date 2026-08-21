@@ -1,16 +1,12 @@
 import { CheckCircle2, ChevronDown, Download, Expand, FileText, LoaderCircle, PanelRight, Pencil, Save, ShieldCheck, Sparkles, WandSparkles, X } from 'lucide-react';
-import { Fragment, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
-import type { ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
+import type { ConversationRunEvent, ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import { CoreContextPanel } from './CoreContextPanel';
 import { WorkBuddyModalDialog } from './WorkBuddyModalDialog';
-import {
-  projectCoursewareExperienceEvents,
-  type CoursewareExperienceEvent,
-  type CoursewareExperienceState,
-} from './conversation-run-experience';
+import type { CoursewareExperienceState } from './conversation-run-experience';
 import type { CoursewareRunView } from './workbuddy-course-production-view';
 import { useConversationRun } from './use-conversation-run';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
@@ -52,9 +48,7 @@ export function ConversationRunSurface() {
   const followingRef = useRef(true);
   const previousEventCountRef = useRef(0);
   const experience = projection ? projectExperience(projection.presentation.progress) : Object.freeze({ status: 'idle' as const });
-  const experienceEvents = coursewareView ? projectCoursewareExperienceEvents(experience, coursewareView.run.plan, coursewareView.projections) : [];
-
-  const visibleEventCount = (projection?.events.length ?? 0) + experienceEvents.length + Number(projection?.presentation.replanPending);
+  const visibleEventCount = (projection?.events.length ?? 0) + Number(projection?.presentation.replanPending);
   useLayoutEffect(() => {
     const addedCount = Math.max(0, visibleEventCount - previousEventCountRef.current);
     previousEventCountRef.current = visibleEventCount;
@@ -70,7 +64,6 @@ export function ConversationRunSurface() {
 
   if (!coursewareView || !projection) return null;
 
-  const renderExperienceEvents = experience.status !== 'idle';
   const runStatusLabel = experience.status === 'running'
     ? '执行中'
     : experience.status === 'stopped' ? '已停止' : coursewareView.run.statusLabel;
@@ -94,8 +87,8 @@ export function ConversationRunSurface() {
           if (followingRef.current) setNewEventCount(0);
         }}>
           {projection.events.map((event) => {
-            if (renderExperienceEvents && (event.kind === 'process' || event.kind === 'capability_call')) return null;
-            return <Fragment key={event.id}>
+            if (event.kind === 'capability_call') return <CapabilityCallCard event={event} key={event.id} />;
+            return (
             <article className={styles.event} data-kind={event.kind} data-state={event.state} aria-posinset={event.sequence} aria-setsize={projection.events.length} key={event.id}>
               <span className={styles.eventMark}><Sparkles aria-hidden="true" size={15} /></span>
               <div className={styles.eventBody}>
@@ -106,7 +99,7 @@ export function ConversationRunSurface() {
                     dispatch({
                       type: 'submit_clarification',
                       durationMinutes: Number(duration),
-                      teachingApproach: `${style} · ${lesson === 'lesson-1' ? '第1课时' : lesson === 'lesson-2' ? '第2课时' : '第3课时'} · ${textbook}`,
+                      teachingApproach: `${style} · ${lesson === 'lesson-1' ? '第1课时' : lesson === 'lesson-2' ? '第2课时' : lesson === 'lesson-3' ? '第3课时' : otherLesson.trim()} · ${textbook}`,
                     });
                   }}>
                     <div className={styles.confirmationHeader}><span>需要您的确认</span><small>第 1 步，共 4 步</small></div>
@@ -115,7 +108,7 @@ export function ConversationRunSurface() {
                       <label><input type="radio" name="lesson" value="lesson-2" checked={lesson === 'lesson-2'} onChange={(changeEvent) => setLesson(changeEvent.target.value)} />第 2 课时（进阶探究）</label>
                       <label><input type="radio" name="lesson" value="lesson-3" checked={lesson === 'lesson-3'} onChange={(changeEvent) => setLesson(changeEvent.target.value)} />第 3 课时（综合应用）</label>
                       <label><input type="radio" name="lesson" value="other" checked={lesson === 'other'} onChange={(changeEvent) => setLesson(changeEvent.target.value)} />其他</label>
-                      {lesson === 'other' ? <input aria-label="其他课时安排" value={otherLesson} placeholder="请输入课时安排" onChange={(changeEvent) => setOtherLesson(changeEvent.target.value)} /> : null}
+                      {lesson === 'other' ? <input required aria-label="其他课时安排" value={otherLesson} placeholder="请输入课时安排" onChange={(changeEvent) => setOtherLesson(changeEvent.target.value)} /> : null}
                     </fieldset>
                     <div className={styles.fieldGrid}>
                       <label>课件时长<select aria-label="课件时长" value={duration} onChange={(changeEvent) => setDuration(changeEvent.target.value)}><option value="40">40 分钟</option><option value="45">45 分钟</option><option value="90">90 分钟</option></select></label>
@@ -129,7 +122,7 @@ export function ConversationRunSurface() {
                   <section className={styles.plan} aria-label="智能课件执行计划">
                     <ol>{coursewareView.run.plan.map((step) => <li key={step.id}><span>{step.title}</span><small>{step.capabilitySummary}</small><em>预期：{step.expectedOutput}</em></li>)}</ol>
                     <p>等待点：教师确认计划</p>
-                    {coursewareView.run.stage === 'awaiting_plan_confirmation' && experience.status === 'idle' ? <div className={styles.cardActions}><button type="button" onClick={() => dispatch({ type: 'revise_plan' })}>返回修改</button><button className={styles.primary} type="button" onClick={() => dispatch({ type: 'start_plan' })}>开始执行计划</button></div> : null}
+                    {coursewareView.run.stage === 'awaiting_plan_confirmation' && experience.status === 'idle' ? <div className={styles.cardActions}><button type="button" onClick={() => dispatch({ type: 'cancel' })}>取消任务</button><button type="button" onClick={() => dispatch({ type: 'revise_plan' })}>返回修改</button><button className={styles.primary} type="button" onClick={() => dispatch({ type: 'start_plan' })}>开始执行计划</button></div> : null}
                   </section>
                 ) : null}
                 {event.kind === 'artifact' ? <button className={styles.artifactLink} type="button" onClick={() => dispatch({ type: 'set_inspector', open: true, mode: 'output' })}><FileText aria-hidden="true" size={15} />打开智能课件产出</button> : null}
@@ -144,8 +137,7 @@ export function ConversationRunSurface() {
                 {event.kind === 'receipt' && coursewareView.receipt?.id === event.id ? <CoursewareReceiptCard receipt={coursewareView.receipt} onRecover={() => dispatch({ type: 'recover_action' })} onRetry={executeAction} /> : null}
               </div>
             </article>
-            {event.kind === 'plan' ? experienceEvents.map((experienceEvent) => <CapabilityCallCard event={experienceEvent} key={experienceEvent.id} />) : null}
-            </Fragment>;
+            );
           })}
           {newEventCount > 0 ? <button className={styles.newEvents} type="button" onClick={() => {
             followingRef.current = true;
@@ -214,21 +206,22 @@ export function ConversationRunSurface() {
   );
 }
 
-function CapabilityCallCard({ event }: Readonly<{ event: CoursewareExperienceEvent }>) {
+function CapabilityCallCard({ event }: Readonly<{ event: ConversationRunEvent }>) {
   const [expanded, setExpanded] = useState(event.state === 'running');
   const isExpanded = event.state === 'running' || expanded;
   const statusLabel = event.state === 'running' ? '运行中' : event.state === 'completed' ? '已完成' : '等待执行';
+  const detail = event.detail;
   return (
     <article className={styles.event} data-kind="capability_call" data-state={event.state} aria-label={`${event.title} · ${statusLabel}`}>
       <span className={styles.eventMark}>{event.state === 'running' ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={15} /> : event.state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} /> : <Sparkles aria-hidden="true" size={15} />}</span>
       <div className={styles.eventBody}>
-        <div className={styles.callHeading}><div><strong>{event.title}</strong><p>{event.capabilityLabel} · {event.purpose}</p></div><span data-state={event.state}>{statusLabel}</span></div>
-        <div className={styles.callResult}><span>预期产出</span><strong>{event.outputSummary}</strong><small>{event.elapsedLabel}</small></div>
+        <div className={styles.callHeading}><div><strong>{event.title}</strong><p>{detail?.capabilityLabel ?? '智能课件能力'} · {detail?.purpose ?? event.summary}</p></div><span data-state={event.state}>{statusLabel}</span></div>
+        <div className={styles.callResult}><span>预期产出</span><strong>{detail?.outputSummary ?? event.summary}</strong><small>{detail?.elapsedLabel ?? statusLabel}</small></div>
         <button className={styles.evidenceToggle} type="button" aria-expanded={isExpanded} onClick={() => setExpanded((current) => !current)}>查看技术证据 <ChevronDown aria-hidden="true" size={14} /></button>
         {isExpanded ? <dl className={styles.evidence}>
-          <div><dt>输入</dt><dd>{event.inputSummary}</dd></div>
-          <div><dt>上下文投影</dt><dd>{event.contextLabels.length ? event.contextLabels.join(' · ') : '仅使用该能力所需的最小上下文'}{event.excludedSensitiveCount ? ` · 已排除 ${event.excludedSensitiveCount} 项敏感信息` : ''}</dd></div>
-          <div><dt>能力标识</dt><dd>{event.capabilityId}</dd></div>
+          <div><dt>输入</dt><dd>{detail?.inputSummary ?? '已确认的任务输入'}</dd></div>
+          <div><dt>上下文投影</dt><dd>{detail?.contextLabels.length ? detail.contextLabels.join(' · ') : '仅使用该能力所需的最小上下文'}{detail?.excludedSensitiveCount ? ` · 已排除 ${detail.excludedSensitiveCount} 项敏感信息` : ''}</dd></div>
+          <div><dt>能力标识</dt><dd>{event.objectRefs.find(({ type }) => type === 'capability')?.id ?? '未标记'}</dd></div>
         </dl> : null}
       </div>
     </article>
@@ -325,7 +318,7 @@ function CoursewareReceiptCard({ receipt, onRecover, onRetry }: Readonly<{
   if (receipt.status !== 'success') {
     const title = receipt.status === 'permission_denied' ? '保存位置没有写入权限' : receipt.status === 'version_conflict' ? '目标版本已经更新' : receipt.status === 'timeout' ? '执行等待超时' : '保存服务暂时不可用';
     const recovery = receipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : receipt.status === 'version_conflict' ? '采用当前版本并重新确认' : '使用同一审批安全重试';
-    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>所选课程单元</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{versionLabel(receipt.expectedVersion)} → {versionLabel(receipt.currentVersion)}</dd></div> : null}</dl><button className={styles.recoveryButton} type="button" onClick={receipt.status === 'permission_denied' || receipt.status === 'version_conflict' ? onRecover : onRetry}>{recovery}</button></section>;
+    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>所选课程单元</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{versionLabel(receipt.expectedVersion)} → {versionLabel(receipt.currentVersion)}</dd></div> : null}</dl><button className={styles.recoveryButton} type="button" onClick={receipt.status === 'permission_denied' || receipt.status === 'version_conflict' ? onRecover : onRetry}>{recovery}</button></section>;
   }
-  return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
+  return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result.replace('[模拟]', '')}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
 }

@@ -26,6 +26,7 @@ export function createDeterministicConversationRunModule(
   const projections = new Map(initialProjections.map((projection) => [projection.runRef, freezeProjection(projection)]));
   const processedCommands = new Set<string>();
   const subscribers = new Map<string, Set<Subscriber>>();
+  const commandSequences = new Map<string, number>();
 
   const notify = (runRef: string, events: readonly ConversationRunEvent[], projection: ConversationRunProjection) => {
     for (const subscriber of subscribers.get(runRef) ?? []) subscriber.listener(events, projection);
@@ -33,6 +34,11 @@ export function createDeterministicConversationRunModule(
 
   return Object.freeze({
     open: (runRef: string) => projections.get(runRef) ?? null,
+    nextCommandId: (runRef: string) => {
+      const sequence = (commandSequences.get(runRef) ?? 0) + 1;
+      commandSequences.set(runRef, sequence);
+      return `${runRef}:teacher-command:${String(sequence).padStart(4, '0')}`;
+    },
     dispatch: (runRef: string, command: ConversationRunCommand): ConversationRunCommandReceipt => {
       const current = projections.get(runRef);
       if (!current) return Object.freeze({ commandId: command.id, status: 'rejected', cursor: '0', reason: 'run-not-found' });
