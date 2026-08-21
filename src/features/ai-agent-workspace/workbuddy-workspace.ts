@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
+import type { ConversationRunModule } from '@contracts/workbuddy/conversation-run';
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
 import type { CoursewareArtifactRevisionInput, CoursewareBrief } from '@domain/workbuddy/course-production';
 import type { CoreContextView, CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
@@ -64,6 +65,7 @@ export type WorkBuddyCoursePackage = Readonly<{
   beginPackageGeneration: () => void;
   completePackageGeneration: () => void;
   setPackageItemIncluded: (artifactId: string, included: boolean) => void;
+  revisePackageArtifact: (artifactId: string) => void;
   proposePackageSave: () => void;
   approvePackageSave: () => void;
   rejectPackageSave: () => void;
@@ -78,6 +80,7 @@ export type WorkBuddyCoursePackage = Readonly<{
 }>;
 
 export type WorkBuddyWorkspace = Readonly<{
+  conversationRun: ConversationRunModule;
   history: WorkBuddyHistory;
   taskDraft: WorkBuddyTaskDraft;
   context: WorkBuddyContext;

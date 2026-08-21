@@ -10,7 +10,7 @@ import {
 import type { SingleCoursewareRun } from '@domain/workbuddy/course-production';
 import {
   applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
-  markPackageArtifactsApproved, reopenPackageArtifacts, retryPackageArtifact, setPackageArtifactIncluded,
+  markPackageArtifactsApproved, reopenPackageArtifacts, retryPackageArtifact, revisePackageArtifact, setPackageArtifactIncluded,
   type CoursePackageDefinition, type CoursePackageRun, type PackageExecutionReceipt,
 } from '@domain/workbuddy/course-package';
 import {
@@ -109,6 +109,10 @@ export function createWorkBuddyPackageController(params: PackageControllerParams
         if (action?.status === 'proposed') setAction(createPackageSaveAction(next, action));
         return next;
       }),
+      revisePackageArtifact: (artifactId: string) => {
+        setRun((current) => current ? revisePackageArtifact(current, artifactId) : current);
+        clearWriteback();
+      },
       proposePackageSave: () => {
         if (!run) return;
         const retrying = receipt?.status === 'partial_success';

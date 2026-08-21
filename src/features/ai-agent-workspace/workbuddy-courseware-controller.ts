@@ -162,7 +162,7 @@ export function createWorkBuddyCoursewareController(params: CoursewareController
         const proposal = selectContextItems(createContextProposal(initialContextItems, 'single-courseware'), runtimeFixture.replan.selectedContextItemIds);
         const result = confirmContext(proposal, { snapshotId: runtimeFixture.snapshot.replannedCoursewareId, confirmedAt: runtimeFixture.snapshot.replannedAt });
         if (!result.ok) return;
-        const nextPlan = run.plan.map((step) => Object.freeze({ ...step, id: `${step.id}-r${run.revision + 1}`, expectedOutput: `机械波主题 · ${step.expectedOutput}` }));
+        const nextPlan = run.plan.map((step) => Object.freeze({ ...step, id: `${step.id}-r${run.revision + 1}`, expectedOutput: `二次函数主题 · ${step.expectedOutput}` }));
         const next = replanCoursewareRun(
           run, result.snapshot.id, runtimeFixture.replan.reason,
           { title: runtimeFixture.replan.title, goal: runtimeFixture.replan.goal, plan: nextPlan },

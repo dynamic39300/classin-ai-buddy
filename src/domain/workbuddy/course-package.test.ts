@@ -4,7 +4,7 @@ import { createPackageSaveAction, decidePackageAction, expirePackageAction, rene
 import type { PackageExecutionReceipt } from './course-package';
 import {
   applyPackageExecutionReceipt, attachPackageContext, beginPackageGeneration, completePackageGeneration, createCoursePackageRun,
-  markPackageArtifactsApproved, retryPackageArtifact, setPackageArtifactIncluded,
+  markPackageArtifactsApproved, retryPackageArtifact, revisePackageArtifact, setPackageArtifactIncluded,
 } from './course-package';
 
 describe('course-package Artifact Graph', () => {
@@ -73,6 +73,16 @@ describe('course-package Artifact Graph', () => {
       items: approved.artifacts.map(({ id, state }) => ({ artifactId: id, result: state === 'waiting' ? 'waiting' : 'not_executed' })),
     } as unknown as PackageExecutionReceipt;
     expect(applyPackageExecutionReceipt(approved, decision.action, decision.approval, recoverable)).toEqual({ accepted: true, run: approved });
+  });
+
+  it('creates a new version when the teacher modifies one reviewable package item', () => {
+    const created = createCoursePackageRun(WORKBUDDY_COURSE_PACKAGE_DEFINITION, '生成函数单调性课程方案包', 'snapshot-package-1');
+    const generated = completePackageGeneration(beginPackageGeneration(created), []);
+    const revised = revisePackageArtifact(generated, 'package-homework');
+
+    expect(revised.artifacts.find(({ id }) => id === 'package-homework')).toMatchObject({ version: 'v2', state: 'ready' });
+    expect(revised.artifacts.find(({ id }) => id === 'package-courseware')).toMatchObject({ version: 'v1', state: 'ready' });
+    expect(revisePackageArtifact(beginPackageGeneration(created), 'package-homework')).toEqual(beginPackageGeneration(created));
   });
 
   it('validates the Artifact DAG and resolves legal out-of-order dependencies', () => {

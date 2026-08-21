@@ -65,18 +65,18 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
 
         {!readOnly ? <button className={styles.recommendation} type="button" onClick={applyRecommendedContext}>
           <Database aria-hidden="true" size={16} />
-          <span><strong>应用动量课程建议</strong><small>高二物理 3 班 · 动量与碰撞 · 第一单元</small></span>
+          <span><strong>应用函数单调性课程建议</strong><small>高一（3）班 · 高中数学 · 函数的性质</small></span>
         </button> : null}
 
         <label className={styles.search}><Search aria-hidden="true" size={14} /><span className={styles.srOnly}>搜索上下文</span><input aria-label="搜索上下文" value={query} placeholder="搜索班级、课程、单元或资源" onChange={(event) => setQuery(event.target.value)} /></label>
 
-        <div role="tree" aria-label="教学上下文对象">
+        <div aria-label="教学上下文对象">
         {CORE_CONTEXT_SECTIONS.map((section) => (
-          <section className={styles.contextSection} role="group" aria-label={SECTION_LABELS[section]} key={section}>
+          <section className={styles.contextSection} aria-label={SECTION_LABELS[section]} key={section}>
             <h2>{SECTION_LABELS[section]}</h2>
-            <div className={styles.itemList}>
+            <div className={styles.itemList} role="list">
               {view.items.filter((item) => item.section === section && isVisible(item)).map((item) => (
-                  <article className={styles.contextItem} role="treeitem" aria-level={itemLevel(item)} aria-expanded={parentIds.has(item.id) ? expandedIds.has(item.id) : undefined} aria-selected={item.included} data-included={item.included} style={{ '--context-depth': itemLevel(item) - 1 } as CSSProperties} key={item.id}>
+                  <article className={styles.contextItem} role="listitem" data-included={item.included} style={{ '--context-depth': itemLevel(item) - 1 } as CSSProperties} key={item.id}>
                     {parentIds.has(item.id) ? <button className={styles.expandButton} type="button" aria-label={`${expandedIds.has(item.id) ? '收起' : '展开'}${item.label}`} onClick={() => setExpandedIds((current) => {
                       const next = new Set(current);
                       if (next.has(item.id)) next.delete(item.id); else next.add(item.id);

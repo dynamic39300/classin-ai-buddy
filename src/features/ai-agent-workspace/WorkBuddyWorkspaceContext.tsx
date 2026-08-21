@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackAdapter, PackageWritebackScenario, PackageWritebackScenarioController } from '@contracts/workbuddy/package-writeback';
@@ -16,6 +16,17 @@ import { createWorkBuddyCoursewareController } from './workbuddy-courseware-cont
 import { projectCoreContextView, projectCoursewareRunView, projectPackageRunView } from './workbuddy-course-production-view';
 import { useWorkBuddyHistory } from './use-workbuddy-history';
 import { createWorkBuddyPackageController } from './workbuddy-package-controller';
+import { projectCoursewareConversationRun, projectPackageConversationRun } from './conversation-run-projection';
+import {
+  createBrowserConversationRunScheduler,
+  createConversationRunHostPort,
+  createConversationRunModule,
+} from './conversation-run-module';
+import {
+  clearWorkBuddyWorkspaceSession,
+  loadWorkBuddyWorkspaceSession,
+  saveWorkBuddyWorkspaceSession,
+} from './workbuddy-workspace-session';
 import { WorkBuddyWorkspaceContext, type CoursewarePanel, type PackagePanel, type WorkBuddyWorkspace } from './workbuddy-workspace';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
@@ -45,25 +56,31 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture, clock,
     writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, children,
   } = props;
-  const [contextProposal, setContextProposal] = useState(() => createContextProposal(initialContextItems, 'single-courseware'));
-  const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(null);
-  const [snapshotsById, setSnapshotsById] = useState<Readonly<Record<string, ContextSnapshot>>>({});
-  const [taskType, setTaskTypeState] = useState<WorkBuddyTaskType>('single-courseware');
-  const [coursewareRun, setCoursewareRun] = useState<SingleCoursewareRun | null>(null);
-  const [coursewareAction, setCoursewareAction] = useState<ProposedAction | null>(null);
-  const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(null);
-  const [coursewareReceipt, setCoursewareReceipt] = useState<ExecutionReceipt | null>(null);
-  const [writebackScenario, setWritebackScenario] = useState<WritebackScenario>(() => writebackScenarioController.getScenario());
-  const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<CoursewarePanel>('none');
-  const [packageRun, setPackageRun] = useState<CoursePackageRun | null>(null);
-  const [packageAction, setPackageAction] = useState<PackageProposedAction | null>(null);
-  const [packageApproval, setPackageApproval] = useState<PackageApproval | null>(null);
-  const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(null);
-  const [packageReceiptHistory, setPackageReceiptHistory] = useState<readonly PackageExecutionReceipt[]>([]);
-  const [packageWritebackScenario, setPackageWritebackScenario] = useState<PackageWritebackScenario>(() => packageWritebackScenarioController.getScenario());
-  const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>('none');
-  const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(null);
-  const [draftGoal, setDraftGoal] = useState('');
+  const restoredSession = useMemo(() => loadWorkBuddyWorkspaceSession(), []);
+  const [contextProposal, setContextProposal] = useState(() => restoredSession?.contextProposal ?? createContextProposal(initialContextItems, 'single-courseware'));
+  const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(() => restoredSession?.contextSnapshot ?? null);
+  const [snapshotsById, setSnapshotsById] = useState<Readonly<Record<string, ContextSnapshot>>>(() => restoredSession?.snapshotsById ?? {});
+  const [taskType, setTaskTypeState] = useState<WorkBuddyTaskType>(() => restoredSession?.taskType ?? 'single-courseware');
+  const [coursewareRun, setCoursewareRun] = useState<SingleCoursewareRun | null>(() => restoredSession?.coursewareRun ?? null);
+  const [coursewareAction, setCoursewareAction] = useState<ProposedAction | null>(() => restoredSession?.coursewareAction ?? null);
+  const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(() => restoredSession?.coursewareApproval ?? null);
+  const [coursewareReceipt, setCoursewareReceipt] = useState<ExecutionReceipt | null>(() => restoredSession?.coursewareReceipt ?? null);
+  const [writebackScenario, setWritebackScenario] = useState<WritebackScenario>(() => restoredSession?.writebackScenario ?? writebackScenarioController.getScenario());
+  const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<CoursewarePanel>(() => restoredSession?.activeCoursewarePanel ?? 'none');
+  const [packageRun, setPackageRun] = useState<CoursePackageRun | null>(() => restoredSession?.packageRun ?? null);
+  const [packageAction, setPackageAction] = useState<PackageProposedAction | null>(() => restoredSession?.packageAction ?? null);
+  const [packageApproval, setPackageApproval] = useState<PackageApproval | null>(() => restoredSession?.packageApproval ?? null);
+  const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(() => restoredSession?.packageReceipt ?? null);
+  const [packageReceiptHistory, setPackageReceiptHistory] = useState<readonly PackageExecutionReceipt[]>(() => restoredSession?.packageReceiptHistory ?? []);
+  const [packageWritebackScenario, setPackageWritebackScenario] = useState<PackageWritebackScenario>(() => restoredSession?.packageWritebackScenario ?? packageWritebackScenarioController.getScenario());
+  const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>(() => restoredSession?.activePackagePanel ?? 'none');
+  const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(() => restoredSession?.activePackageArtifactId ?? null);
+  const [draftGoal, setDraftGoal] = useState(() => restoredSession?.draftGoal ?? '');
+  const [conversationHostPort] = useState(() => createConversationRunHostPort());
+  const [conversationModule] = useState(() => createConversationRunModule(
+    conversationHostPort.host,
+    createBrowserConversationRunScheduler(),
+  ));
 
   const coursewareController = createWorkBuddyCoursewareController({
     contextSnapshot, initialContextItems, coursewareDefinition, coursewareOutput, replannedCoursewareOutput, coursewareActionInput,
@@ -93,8 +110,92 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     && packageRun.sourceArtifactRef?.id === coursewareRun?.artifact?.id
     && packageRun.sourceArtifactRef?.version === coursewareRun?.artifact?.version
     ? packageRun.id : null;
+  const coursewareView = projectCoursewareRunView(
+    coursewareRun, projections, coursewareAction, coursewareReceipt, snapshotsById, derivedPackageRunRef,
+  );
+  const packageView = projectPackageRunView(packageRun, packageAction, packageReceipt, packageReceiptHistory);
+
+  conversationHostPort.bind(Object.freeze({
+    open: (runRef) => {
+      if (coursewareView?.run.id === runRef) return Object.freeze({
+        projection: projectCoursewareConversationRun(coursewareView),
+        progressStepCount: coursewareView.run.plan.length,
+      });
+      if (packageView?.run.id === runRef) return Object.freeze({
+        projection: projectPackageConversationRun(packageView),
+        progressStepCount: 3,
+      });
+      return null;
+    },
+    execute: (runRef, command) => {
+      if (coursewareView?.run.id === runRef) {
+        switch (command.type) {
+          case 'submit_clarification':
+            coursewareController.commands.updateCoursewareTaskBrief({
+              durationMinutes: command.durationMinutes,
+              teachingApproach: command.teachingApproach,
+            });
+            coursewareController.commands.confirmCoursewareTaskBrief();
+            return;
+          case 'confirm_clarification': coursewareController.commands.confirmCoursewareTaskBrief(); return;
+          case 'revise_plan': coursewareController.commands.reviseCoursewareTaskBrief(); return;
+          case 'complete_generation': coursewareController.commands.executeCoursewareTaskPlan(); return;
+          case 'confirm_replan': coursewareController.commands.replanToWaveContext(); return;
+          case 'approve_artifact': coursewareController.commands.approveCoursewareArtifact(); return;
+          case 'revise_artifact': coursewareController.commands.reviseCoursewareArtifact({ instruction: command.instruction, changes: command.changes }); return;
+          case 'propose_action': coursewareController.commands.proposeCoursewareSave(); return;
+          case 'approve_action': coursewareController.commands.approveCoursewareSave(); return;
+          case 'reject_action': coursewareController.commands.rejectCoursewareSave(); return;
+          case 'execute_action': coursewareController.commands.executeApprovedCoursewareSave(); return;
+          case 'recover_action': coursewareController.commands.recoverCoursewareSave(); return;
+          case 'derive_package': return coursewareController.run ? packageController.commands.derivePackageFromCourseware() : null;
+          case 'set_scenario':
+            if (command.scenario !== 'partial_success') coursewareController.commands.setWritebackScenario(command.scenario);
+            return;
+          default: return;
+        }
+      }
+      if (packageView?.run.id === runRef) {
+        switch (command.type) {
+          case 'begin_package': packageController.commands.beginPackageGeneration(); return;
+          case 'complete_generation': packageController.commands.completePackageGeneration(); return;
+          case 'set_package_item_included': packageController.commands.setPackageItemIncluded(command.artifactId, command.included); return;
+          case 'revise_package_artifact': packageController.commands.revisePackageArtifact(command.artifactId); return;
+          case 'select_package_artifact': packageController.commands.setActivePackageArtifactId(command.artifactId); return;
+          case 'propose_action': packageController.commands.proposePackageSave(); return;
+          case 'approve_action': packageController.commands.approvePackageSave(); return;
+          case 'reject_action': packageController.commands.rejectPackageSave(); return;
+          case 'execute_action': packageController.commands.executeApprovedPackageSave(); return;
+          case 'recover_action': packageController.commands.recoverPackageSave(); return;
+          case 'retry_failed': packageController.commands.retryFailedPackageItems(); return;
+          case 'set_scenario':
+            packageController.commands.setPackageWritebackScenario(command.scenario === 'partial_success' ? 'partial_success' : 'success');
+            return;
+          default: return;
+        }
+      }
+    },
+  }));
+
+  useEffect(() => {
+    writebackScenarioController.setScenario(writebackScenario);
+    packageWritebackScenarioController.setScenario(packageWritebackScenario);
+    saveWorkBuddyWorkspaceSession(Object.freeze({
+      version: 2,
+      contextProposal, contextSnapshot, snapshotsById, taskType,
+      coursewareRun, coursewareAction, coursewareApproval, coursewareReceipt, writebackScenario, activeCoursewarePanel,
+      packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageWritebackScenario,
+      activePackagePanel, activePackageArtifactId, draftGoal,
+    }));
+  }, [
+    activeCoursewarePanel, activePackageArtifactId, activePackagePanel, contextProposal, contextSnapshot, coursewareAction,
+    coursewareApproval, coursewareReceipt, coursewareRun, draftGoal, packageAction, packageApproval, packageReceipt,
+    packageReceiptHistory, packageRun, packageWritebackScenario, packageWritebackScenarioController, snapshotsById, taskType,
+    writebackScenario, writebackScenarioController,
+  ]);
 
   const workspace: WorkBuddyWorkspace = Object.freeze({
+    conversationRun: conversationModule,
     history: Object.freeze({
       runs: history.runs,
       getRun: history.getRun,
@@ -128,6 +229,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
         packageController.attachContext(result.snapshot);
       },
       resetCoreContext: () => {
+        clearWorkBuddyWorkspaceSession();
         setContextSnapshot(null); setSnapshotsById({});
         setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');
         coursewareController.reset(); packageController.reset(); history.resetHistory();
@@ -140,13 +242,11 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       },
     }),
     courseware: Object.freeze({
-      coursewareView: projectCoursewareRunView(
-        coursewareRun, projections, coursewareAction, coursewareReceipt, snapshotsById, derivedPackageRunRef,
-      ),
+      coursewareView,
       ...coursewareController.commands,
     }),
     coursePackage: Object.freeze({
-      packageView: projectPackageRunView(packageRun, packageAction, packageReceipt, packageReceiptHistory),
+      packageView,
       ...packageController.commands,
     }),
   });

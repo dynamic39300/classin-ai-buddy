@@ -29,7 +29,7 @@ describe('deterministic courseware conversation experience', () => {
       state = advanceCoursewareExperience(state, plan.length);
     }
 
-    expect(state).toEqual({ status: 'completed', activeIndex: null, completedCount: plan.length });
+    expect(state).toEqual({ status: 'completed', completedCount: plan.length });
     expect(projectCoursewareExperienceEvents(state, plan, []).every(({ state }) => state === 'completed')).toBe(true);
   });
 
@@ -45,14 +45,14 @@ describe('deterministic courseware conversation experience', () => {
       generatedAt: 'deterministic:001',
       excludedSensitiveCount: 1,
       items: [{
-        id: 'class-1', section: 'teaching_scope', kind: 'class', label: '高二物理 3 班', source: 'classin',
+        id: 'class-1', section: 'teaching_scope', kind: 'class', label: '高一（3）班', source: 'classin',
         sourceVersion: 'v1', permission: 'read', sensitivity: 'class', selection: 'locked', included: true,
       }],
     }]);
 
     expect(events[0]).toMatchObject({
       purpose: '解释教学目标与边界',
-      contextLabels: ['高二物理 3 班'],
+      contextLabels: ['高一（3）班'],
       excludedSensitiveCount: 1,
     });
     expect(events[1]!.contextLabels).toEqual([]);
@@ -63,7 +63,7 @@ describe('deterministic courseware conversation experience', () => {
     const running = advanceCoursewareExperience(startCoursewareExperience(createCoursewareExperience(plan)), plan.length);
     const stopped = stopCoursewareExperience(running);
 
-    expect(stopped).toEqual({ status: 'stopped', activeIndex: null, completedCount: 1 });
+    expect(stopped).toEqual({ status: 'stopped', completedCount: 1 });
     expect(advanceCoursewareExperience(stopped, plan.length)).toBe(stopped);
 
     const resumed = resumeCoursewareExperience(stopped, plan.length);

@@ -171,6 +171,56 @@
   color: var(--color-ink-muted);
 }
 
+.packagePreview > button {
+  min-height: 2.1rem;
+  margin-top: var(--space-sm);
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.itemEditor {
+  display: grid;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-line-subtle);
+}
+
+.itemEditor label {
+  display: grid;
+  gap: var(--space-xsxs);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-xs);
+}
+
+.itemEditor textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+  padding: var(--space-xs);
+  border: 1px solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.itemEditor > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+
+.itemEditor button {
+  min-height: 2.1rem;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
 .outputDirectory > footer {
   border-top: 1px solid var(--color-line-subtle);
   border-bottom: 0;

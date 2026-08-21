@@ -39,7 +39,7 @@ export function createDeterministicConversationRunModule(
       if (processedCommands.has(command.id)) {
         return Object.freeze({ commandId: command.id, status: 'duplicate', cursor: current.cursor });
       }
-      if (!current.allowedCommands.includes(command.type) || !command.text.trim()) {
+      if (command.type !== 'supplement' || !current.allowedCommands.includes(command.type) || !command.text.trim()) {
         return Object.freeze({ commandId: command.id, status: 'rejected', cursor: current.cursor, reason: 'command-not-allowed' });
       }
       processedCommands.add(command.id);
@@ -49,11 +49,14 @@ export function createDeterministicConversationRunModule(
         runRef,
         sequence,
         occurredAt: `deterministic:${String(sequence).padStart(3, '0')}`,
+        updatedAt: `deterministic:${String(sequence).padStart(3, '0')}`,
+        actor: 'teacher',
         kind: 'teacher_message',
         state: 'completed',
         title: '补充要求',
         summary: command.text.trim(),
         objectRefs: Object.freeze([]),
+        allowedCommands: Object.freeze([]),
       });
       const next = freezeProjection({ ...current, events: [...current.events, event], cursor: String(sequence) });
       projections.set(runRef, next);

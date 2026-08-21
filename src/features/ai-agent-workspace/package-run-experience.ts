@@ -1,9 +1,10 @@
 import type { PackageArtifact } from '@domain/workbuddy/course-package';
 
-export type PackageExperienceState = Readonly<{
-  status: 'idle' | 'running' | 'stopped' | 'completed';
-  phase: 0 | 1 | 2 | 3;
-}>;
+export type PackageExperienceState =
+  | Readonly<{ status: 'idle' }>
+  | Readonly<{ status: 'running'; phase: 0 | 1 | 2 }>
+  | Readonly<{ status: 'stopped'; phase: 0 | 1 | 2 }>
+  | Readonly<{ status: 'completed' }>;
 
 export type PackageExperienceArtifact = Readonly<{
   id: string;
@@ -14,7 +15,7 @@ export type PackageExperienceArtifact = Readonly<{
 }>;
 
 export function createPackageExperience(): PackageExperienceState {
-  return Object.freeze({ status: 'idle', phase: 0 });
+  return Object.freeze({ status: 'idle' });
 }
 
 export function startPackageExperience(state: PackageExperienceState): PackageExperienceState {
@@ -23,7 +24,7 @@ export function startPackageExperience(state: PackageExperienceState): PackageEx
 
 export function advancePackageExperience(state: PackageExperienceState): PackageExperienceState {
   if (state.status !== 'running') return state;
-  if (state.phase === 2) return Object.freeze({ status: 'completed', phase: 3 });
+  if (state.phase === 2) return Object.freeze({ status: 'completed' });
   return Object.freeze({ status: 'running', phase: (state.phase + 1) as 1 | 2 });
 }
 
@@ -44,9 +45,12 @@ export function projectPackageExperienceArtifacts(
     if (artifact.state === 'excluded') state = 'excluded';
     else if (experience.status === 'completed') state = 'completed';
     else if (experience.status === 'idle') state = 'waiting';
-    else if (index === 0) state = experience.phase === 0 ? 'running' : 'completed';
-    else if (index === artifacts.length - 1) state = experience.phase === 2 ? 'running' : experience.phase === 3 ? 'completed' : 'waiting';
-    else state = experience.phase === 0 ? 'waiting' : experience.phase === 1 ? 'running' : 'completed';
+    else {
+      const phase = experience.phase;
+      if (index === 0) state = phase === 0 ? 'running' : 'completed';
+      else if (index === artifacts.length - 1) state = phase === 2 ? 'running' : 'waiting';
+      else state = phase === 0 ? 'waiting' : phase === 1 ? 'running' : 'completed';
+    }
     return Object.freeze({ id: artifact.id, title: artifact.title, kind: artifact.kind, version: artifact.version, state });
   }));
 }

@@ -61,9 +61,9 @@ function NewTaskSkeleton() {
       <div className={styles.newTaskLayout} data-panel-open={contextPanelOpen}>
       <section className={styles.newTaskMain}>
       <section className={styles.composerShell}>
-        <span className={styles.eyebrow}><Sparkles aria-hidden="true" size={15} />教师 WorkBuddy</span>
+        <span className={styles.eyebrow}><Sparkles aria-hidden="true" size={15} />Work Buddy</span>
         <h1 id="workbuddy-new-task-title">今天想完成什么教学任务？</h1>
-        <p className={styles.lead}>描述目标即可。教师 WorkBuddy 会检查教学上下文、拆解任务并交付可复查的产物。</p>
+        <p className={styles.lead}>描述目标即可。Work Buddy 会检查教学上下文、拆解任务并交付可复查的产物。</p>
 
         <div className={styles.goalComposer}>
           <textarea
@@ -98,8 +98,8 @@ function NewTaskSkeleton() {
         </div>
 
         <div className={styles.shortcuts} aria-label="快捷任务">
-          <button type="button" onClick={() => { setTaskType('single-courseware'); setGoal('为高二物理 3 班设计一份动量守恒模型课件，从碰撞实验进入守恒定律'); }}>生成单个课件</button>
-          <button type="button" onClick={() => { setTaskType('course-package'); setGoal('从动量单元课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包'); }}>生成课程方案包</button>
+          <button type="button" onClick={() => { setTaskType('single-courseware'); setGoal('为高一（3）班生成一份函数单调性智能课件，包含概念讲解、例题和课堂练习'); }}>生成单个课件</button>
+          <button type="button" onClick={() => { setTaskType('course-package'); setGoal('从函数单调性课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包'); }}>生成课程方案包</button>
           <button type="button" onClick={() => setGoal('分析高一（3）班最近一次作业，归纳共性问题并给出教学建议')}>分析班级学情</button>
         </div>
         {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}
@@ -254,7 +254,7 @@ function RunSkeleton({ runId }: { runId: string }) {
 
 function CapabilityPlaceholder({ section }: { section: string }) {
   const capability = getWorkBuddyCapability(section);
-  const copy = capability ? { title: capability.id === 'settings' ? '教师 WorkBuddy 设置' : capability.label, description: capability.description } : { title: '教师 WorkBuddy', description: '该页面尚未进入当前实施范围。' };
+  const copy = capability ? { title: capability.id === 'settings' ? 'Work Buddy 设置' : capability.label, description: capability.description } : { title: 'Work Buddy', description: '该页面尚未进入当前实施范围。' };
   return (
     <section className={styles.placeholderPage} aria-labelledby="workbuddy-placeholder-title">
       <span className={styles.placeholderIcon}><Shapes aria-hidden="true" size={22} /></span>

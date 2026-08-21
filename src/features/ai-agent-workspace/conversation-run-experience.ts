@@ -2,11 +2,11 @@ import type { ContextProjection } from '@domain/workbuddy/core-context';
 import type { CoursewarePlanStep } from '@domain/workbuddy/course-production';
 import type { ConversationRunEventState } from '@contracts/workbuddy/conversation-run';
 
-export type CoursewareExperienceState = Readonly<{
-  status: 'idle' | 'running' | 'stopped' | 'completed';
-  activeIndex: number | null;
-  completedCount: number;
-}>;
+export type CoursewareExperienceState =
+  | Readonly<{ status: 'idle' }>
+  | Readonly<{ status: 'running'; activeIndex: number; completedCount: number }>
+  | Readonly<{ status: 'stopped'; completedCount: number }>
+  | Readonly<{ status: 'completed'; completedCount: number }>;
 
 export type CoursewareExperienceEvent = Readonly<{
   id: string;
@@ -46,7 +46,7 @@ const CAPABILITY_DURATIONS: Readonly<Record<string, string>> = Object.freeze({
 
 export function createCoursewareExperience(plan: readonly CoursewarePlanStep[]): CoursewareExperienceState {
   void plan;
-  return Object.freeze({ status: 'idle', activeIndex: null, completedCount: 0 });
+  return Object.freeze({ status: 'idle' });
 }
 
 export function startCoursewareExperience(state: CoursewareExperienceState): CoursewareExperienceState {
@@ -55,15 +55,15 @@ export function startCoursewareExperience(state: CoursewareExperienceState): Cou
 }
 
 export function advanceCoursewareExperience(state: CoursewareExperienceState, stepCount: number): CoursewareExperienceState {
-  if (state.status !== 'running' || state.activeIndex === null) return state;
+  if (state.status !== 'running') return state;
   const completedCount = Math.min(stepCount, state.completedCount + 1);
-  if (completedCount >= stepCount) return Object.freeze({ status: 'completed', activeIndex: null, completedCount });
+  if (completedCount >= stepCount) return Object.freeze({ status: 'completed', completedCount });
   return Object.freeze({ status: 'running', activeIndex: completedCount, completedCount });
 }
 
 export function stopCoursewareExperience(state: CoursewareExperienceState): CoursewareExperienceState {
   if (state.status !== 'running') return state;
-  return Object.freeze({ status: 'stopped', activeIndex: null, completedCount: state.completedCount });
+  return Object.freeze({ status: 'stopped', completedCount: state.completedCount });
 }
 
 export function resumeCoursewareExperience(state: CoursewareExperienceState, stepCount: number): CoursewareExperienceState {
@@ -80,9 +80,11 @@ export function projectCoursewareExperienceEvents(
   const projectionByCapability = new Map(projections.map((projection) => [projection.capabilityId, projection]));
   return Object.freeze(plan.map((step, index) => {
     const projection = projectionByCapability.get(step.capability);
-    const eventState: CoursewareExperienceEvent['state'] = index < state.completedCount
+    const completedCount = state.completedCount;
+    const activeIndex = state.status === 'running' ? state.activeIndex : null;
+    const eventState: CoursewareExperienceEvent['state'] = index < completedCount
       ? 'completed'
-      : index === state.activeIndex ? 'running' : 'queued';
+      : index === activeIndex ? 'running' : 'queued';
     return Object.freeze({
       id: `experience:${step.id}`,
       stepId: step.id,

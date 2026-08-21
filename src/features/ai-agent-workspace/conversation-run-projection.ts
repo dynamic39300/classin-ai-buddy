@@ -1,11 +1,13 @@
 import type {
   ConversationRunEvent,
   ConversationRunEventKind,
+  ConversationRunActor,
+  ConversationRunCommandType,
   ConversationRunObjectRef,
   ConversationRunProjection,
   ConversationRunStatus,
 } from '@contracts/workbuddy/conversation-run';
-import type { CoursewareRunView } from './workbuddy-course-production-view';
+import type { CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
 
 type EventInput = Readonly<{
   id: string;
@@ -13,6 +15,9 @@ type EventInput = Readonly<{
   state?: ConversationRunEvent['state'];
   title: string;
   summary: string;
+  actor?: ConversationRunActor;
+  stepRef?: string;
+  allowedCommands?: readonly ConversationRunCommandType[];
   objectRefs?: readonly ConversationRunObjectRef[];
 }>;
 
@@ -22,11 +27,15 @@ function freezeEvent(runRef: string, sequence: number, input: EventInput): Conve
     runRef,
     sequence,
     occurredAt: `deterministic:${String(sequence).padStart(3, '0')}`,
+    updatedAt: `deterministic:${String(sequence).padStart(3, '0')}`,
+    actor: input.actor ?? (input.kind === 'teacher_message' || input.kind === 'clarification_submitted' ? 'teacher' : input.kind === 'system' ? 'system' : 'agent'),
     kind: input.kind,
     state: input.state ?? 'completed',
     title: input.title,
     summary: input.summary,
+    stepRef: input.stepRef,
     objectRefs: Object.freeze([...(input.objectRefs ?? [])]),
+    allowedCommands: Object.freeze([...(input.allowedCommands ?? [])]),
   });
 }
 
@@ -37,6 +46,18 @@ function getStatus(view: CoursewareRunView): ConversationRunStatus {
   if (view.run.stage === 'needs_information') return 'needs_information';
   if (view.run.stage === 'awaiting_plan_confirmation') return 'awaiting_plan_confirmation';
   return 'completed_pending_review';
+}
+
+function getCoursewareAllowedCommands(view: CoursewareRunView): readonly ConversationRunCommandType[] {
+  if (view.receipt?.status === 'success') return Object.freeze(['supplement', 'derive_package']);
+  if (view.receipt) return Object.freeze(['supplement', 'recover_action']);
+  if (view.action?.status === 'approved') return Object.freeze(['supplement', 'execute_action']);
+  if (view.action) return Object.freeze(['supplement', 'approve_action', 'reject_action']);
+  if (view.run.stage === 'needs_information') return Object.freeze(['submit_clarification', 'supplement']);
+  if (view.run.stage === 'awaiting_plan_confirmation') return Object.freeze(['revise_plan', 'start_plan', 'supplement']);
+  if (view.run.artifact && view.run.reviewStatus === 'pending') return Object.freeze(['revise_artifact', 'approve_artifact', 'supplement']);
+  if (view.run.artifact) return Object.freeze(['propose_action', 'derive_package', 'supplement']);
+  return Object.freeze(['supplement']);
 }
 
 export function projectCoursewareConversationRun(view: CoursewareRunView): ConversationRunProjection {
@@ -90,7 +111,7 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       id: event.id,
       kind: event.capability ? 'capability_call' : 'process',
       title: event.title,
-      summary: event.summary.replace('[模拟]', ''),
+      summary: event.summary,
       objectRefs: event.capability ? [{ type: 'capability', id: event.capability }] : [],
     });
   }
@@ -141,11 +162,110 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
   const events = Object.freeze(inputs.map((input, index) => freezeEvent(run.id, index + 1, input)));
   return Object.freeze({
     runRef: run.id,
+    taskKind: 'courseware',
     title: run.title,
     goal: run.goal,
     status: getStatus(view),
     events,
     cursor: String(events.length),
-    allowedCommands: Object.freeze(['supplement'] as const),
+    allowedCommands: getCoursewareAllowedCommands(view),
+    presentation: Object.freeze({
+      inspectorOpen: true,
+      inspectorMode: run.artifact ? 'output' : 'context',
+      outputCount: run.artifact ? 1 : 0,
+      unreadOutputCount: 0,
+      composerDraft: '',
+      progress: Object.freeze({ status: 'idle' as const }),
+      executingAction: false,
+      replanPending: false,
+    }),
+  });
+}
+
+export function projectPackageConversationRun(view: PackageRunView): ConversationRunProjection {
+  const { run } = view;
+  const inputs: EventInput[] = [
+    { id: `${run.id}:goal`, kind: 'teacher_message', title: '课程方案包目标', summary: run.goal },
+    {
+      id: `${run.id}:understanding`, kind: 'goal_understood', title: '已理解你的交付目标',
+      summary: '我会围绕同一课程目标生成课件、作业、测验和录播脚本，并保留每项产物的独立状态。',
+    },
+  ];
+  if (run.contextSnapshotId) inputs.push({
+    id: `${run.id}:context`, kind: 'context_confirmed', title: '独立核心上下文已确认',
+    summary: '本次方案包使用独立 ContextSnapshot；四类产物共享课程目标，但不共享写回状态。',
+    objectRefs: [{ type: 'context_snapshot', id: run.contextSnapshotId }],
+  });
+  if (run.showPackageConfiguration || run.showGeneration || run.showArtifacts) inputs.push({
+    id: `${run.id}:plan`, kind: 'plan', state: run.showPackageConfiguration ? 'requires_teacher_input' : 'completed',
+    title: '课程方案包执行计划', summary: '先形成共享课程目标和课件结构，再并行生成配套产物。',
+  });
+  for (const artifact of run.artifacts) {
+    if (!run.showGeneration && !run.showArtifacts) continue;
+    inputs.push({
+      id: `${run.id}:${artifact.id}:${artifact.version}`,
+      kind: run.showArtifacts ? 'artifact' : 'process',
+      state: artifact.state === 'failed' ? 'failed' : artifact.state === 'waiting' || artifact.state === 'generating' ? 'running' : 'completed',
+      title: artifact.title,
+      summary: `${artifact.version} · ${artifact.state === 'written_back' ? '已写回' : artifact.state === 'excluded' ? '已排除' : artifact.state === 'failed' ? '生成失败' : artifact.state === 'waiting' ? '等待依赖' : '可预览'}`,
+      objectRefs: [{ type: 'artifact', id: artifact.id, version: artifact.version }],
+    });
+  }
+  if (view.action) {
+    inputs.push({
+      id: view.action.id, kind: 'proposed_action', title: '保存课程方案包到 ClassIn',
+      summary: `${view.action.artifactRefs.length} 项对象 · ${view.action.difference}`,
+      objectRefs: [{ type: 'action', id: view.action.id }],
+    });
+    if (view.action.status === 'approved' || view.receipt) inputs.push({
+      id: view.receipt?.approvalId ?? `${view.action.id}:approval`, kind: 'approval', title: '教师已批准方案包写回',
+      summary: '写回提案已批准，等待对象级执行结果。',
+      objectRefs: [{ type: 'action', id: view.action.id }],
+    });
+  }
+  for (const receipt of view.receiptHistory.length ? view.receiptHistory : view.receipt ? [view.receipt] : []) inputs.push({
+    id: receipt.id, kind: 'receipt', state: receipt.status === 'success' ? 'completed' : 'failed',
+    title: receipt.status === 'success' ? '课程方案包已写回 ClassIn' : '课程方案包写回结果', summary: receipt.result,
+    objectRefs: [{ type: 'receipt', id: receipt.id }],
+  });
+  const events = Object.freeze(inputs.map((input, index) => freezeEvent(run.id, index + 1, input)));
+  const status: ConversationRunStatus = view.receipt?.status === 'success' ? 'completed'
+    : view.receipt ? 'failed'
+      : view.action ? 'waiting_approval'
+        : run.showContextConfirmation ? 'needs_information'
+          : run.showPackageConfiguration ? 'awaiting_plan_confirmation'
+            : run.showGeneration ? 'running' : 'completed_pending_review';
+  const allowedCommands: readonly ConversationRunCommandType[] = view.receipt?.status === 'partial_success'
+    ? Object.freeze(['retry_failed', 'supplement'])
+    : view.receipt
+      ? Object.freeze(['supplement'])
+      : view.action?.status === 'approved'
+        ? Object.freeze(['execute_action', 'supplement'])
+        : view.action
+          ? Object.freeze(['approve_action', 'reject_action', 'supplement'])
+          : run.showPackageConfiguration
+            ? Object.freeze(['begin_package', 'set_package_item_included', 'supplement'])
+            : run.showArtifacts
+              ? Object.freeze(['revise_package_artifact', 'set_package_item_included', 'propose_action', 'supplement'])
+              : Object.freeze(['supplement']);
+  return Object.freeze({
+    runRef: run.id,
+    taskKind: 'course_package',
+    title: run.title,
+    goal: run.goal,
+    status,
+    events,
+    cursor: String(events.length),
+    allowedCommands,
+    presentation: Object.freeze({
+      inspectorOpen: true,
+      inspectorMode: run.showArtifacts ? 'output' : 'context',
+      outputCount: run.showGeneration || run.showArtifacts ? run.artifacts.filter(({ state }) => state !== 'excluded').length : 0,
+      unreadOutputCount: 0,
+      composerDraft: '',
+      progress: Object.freeze({ status: 'idle' as const }),
+      executingAction: false,
+      replanPending: false,
+    }),
   });
 }

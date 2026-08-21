@@ -178,6 +178,18 @@ export function retryPackageArtifact(run: CoursePackageRun, artifactId: string):
   return freezeRun({ ...run, stage: 'artifact_ready', artifacts: run.artifacts.map((item) => withArtifactState(item, states.get(item.id) ?? item.state)), allowedCommands: Object.freeze(['review-artifacts', 'propose-save']), recovery: null });
 }
 
+export function revisePackageArtifact(run: CoursePackageRun, artifactId: string): CoursePackageRun {
+  if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
+  const target = run.artifacts.find(({ id }) => id === artifactId);
+  if (!target || target.state !== 'ready') return run;
+  const versionNumber = Number.parseInt(target.version.replace(/^v/, ''), 10);
+  const version = `v${Number.isFinite(versionNumber) ? versionNumber + 1 : 2}`;
+  return freezeRun({
+    ...run,
+    artifacts: run.artifacts.map((item) => item.id === artifactId ? withArtifactState({ ...item, version }, 'ready') : item),
+  });
+}
+
 export function markPackageArtifactsApproved(run: CoursePackageRun, selectedArtifactIds: readonly string[]): CoursePackageRun {
   if (run.stage !== 'artifact_ready' && run.stage !== 'partial_success') return run;
   const approvable = new Set(getPackageApprovableArtifactIds(run));
