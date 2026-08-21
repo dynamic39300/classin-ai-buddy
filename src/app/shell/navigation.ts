@@ -52,7 +52,7 @@ function taskBadge(role: AppRole): string | undefined {
 
 const TEACHER_NAVIGATION: readonly NavigationNode[] = [
   item({ id: 'teacher-home', label: '首页', to: '/teacher/home', icon: Home, group: 'business' }),
-  item({ id: 'teacher-ai-agent', label: 'AI Agent', to: '/teacher/ai-agent', icon: Sparkles, group: 'business' }),
+  item({ id: 'teacher-ai-agent', label: '教师 WorkBuddy', to: '/teacher/ai-agent', icon: Sparkles, group: 'business' }),
   {
     kind: 'collapsible',
     id: 'teacher-class-management',

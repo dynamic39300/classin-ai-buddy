@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 async function openPreparedWorkBuddy(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: '教师 WorkBuddy' }).click();
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const panel = page.getByRole('complementary', { name: '核心上下文' });
   await panel.getByRole('button', { name: '应用动量课程建议' }).click();
@@ -25,7 +25,7 @@ async function createPackageArtifacts(page: import('@playwright/test').Page) {
   await page.goto('/');
   const teacherView = page.getByRole('button', { name: /老师视角/ });
   if (await teacherView.count()) await teacherView.click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: '教师 WorkBuddy' }).click();
   await page.getByRole('button', { name: '生成课程方案包' }).click();
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
@@ -52,7 +52,7 @@ test('teacher reviews Core Context and freezes a resettable Snapshot @a11y', asy
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: '教师 WorkBuddy' }).click();
 
   const summary = page.getByRole('group', { name: '核心上下文摘要' });
   await expect(summary.getByText('ClassIn 教研中心', { exact: true })).toBeVisible();
@@ -221,7 +221,7 @@ test('teacher writes a course package with object-level partial results', async 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: '教师 WorkBuddy' }).click();
   await page.getByRole('button', { name: '生成课程方案包' }).click();
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
@@ -267,8 +267,9 @@ test('teacher writes a course package with object-level partial results', async 
   await receipt.getByText('技术证据', { exact: true }).last().click();
   await expect(receipt.getByText('receipt-package-success-1 · action-package-save-retry-1 · approval-package-save-retry-1', { exact: true })).toBeVisible();
 
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'AI Agent' }).click();
-  await page.getByRole('list', { name: '近期任务列表' }).getByRole('link', { name: /动量单元课程方案包/ }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: '教师 WorkBuddy' }).click();
+  await page.getByRole('navigation', { name: '已打开的 WorkBuddy 任务' }).locator('button[aria-current="page"]').click();
+  await page.getByRole('dialog', { name: '全部任务选择器' }).getByRole('button', { name: /动量单元课程方案包/ }).first().click();
   receipt = page.getByRole('complementary', { name: '课程方案包执行回执' });
   await expect(receipt.getByText('碰撞实验录播脚本', { exact: true })).toBeVisible();
   await receipt.getByRole('button', { name: '返回导航' }).click();
@@ -433,11 +434,13 @@ test('teacher previews Context impact and preserves superseded evidence when rep
 test('reviewer resets every M4 in-memory object to the fixed fixture', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await createCoursewareArtifact(page);
-  await page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '新建任务', exact: true }).click();
+  const taskNavigation = page.getByRole('navigation', { name: '已打开的 WorkBuddy 任务' });
+  await page.getByRole('button', { name: '新建任务', exact: true }).click();
   await page.getByRole('button', { name: /核心上下文/ }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
   await context.getByRole('button', { name: '重置演示数据' }).click();
   await expect(context.getByText('需要补充教学范围', { exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: '核心上下文摘要' }).getByText('需要选择教学范围', { exact: true })).toBeVisible();
-  await expect(page.getByRole('group', { name: 'AI Agent 二级导航' }).getByRole('link', { name: '生成动量守恒模型课件', exact: true })).toHaveCount(0);
+  await taskNavigation.locator('button[aria-current="page"]').click();
+  await expect(page.getByRole('dialog', { name: '全部任务选择器' }).getByRole('button', { name: /生成动量守恒模型课件/ })).toHaveCount(0);
 });

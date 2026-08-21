@@ -38,10 +38,10 @@ export function AiAgentWorkSurface() {
 }
 
 function NewTaskSkeleton() {
-  const [goal, setGoal] = useState('');
   const [feedback, setFeedback] = useState('');
   const [contextPanelOpen, setContextPanelOpen] = useState(false);
   const navigate = useNavigate();
+  const { goal, setGoal, clear: clearGoal } = useWorkBuddyWorkspace().taskDraft;
   const contextButtonRef = useRef<HTMLButtonElement | null>(null);
   const { contextView, taskType, setTaskType } = useWorkBuddyWorkspace().context;
   const { createCoursewareTask } = useWorkBuddyWorkspace().courseware;
@@ -63,7 +63,7 @@ function NewTaskSkeleton() {
       <section className={styles.composerShell}>
         <span className={styles.eyebrow}><Sparkles aria-hidden="true" size={15} />教师 WorkBuddy</span>
         <h1 id="workbuddy-new-task-title">今天想完成什么教学任务？</h1>
-        <p className={styles.lead}>描述目标即可。AI Agent 会检查教学上下文、拆解任务并交付可复查的产物。</p>
+        <p className={styles.lead}>描述目标即可。教师 WorkBuddy 会检查教学上下文、拆解任务并交付可复查的产物。</p>
 
         <div className={styles.goalComposer}>
           <textarea
@@ -79,7 +79,10 @@ function NewTaskSkeleton() {
             </div>
             <button className={styles.sendButton} type="button" disabled={!goal.trim() || contextView.status !== 'confirmed'} onClick={() => {
               const runId = taskType === 'course-package' ? createPackageTask(goal) : createCoursewareTask(goal);
-              if (runId) navigate(`/teacher/ai-agent/runs/${runId}`);
+              if (runId) {
+                clearGoal();
+                navigate(`/teacher/ai-agent/runs/${runId}`);
+              }
             }}>
               <ArrowUp aria-hidden="true" size={16} />
               <span className={styles.srOnly}>创建任务</span>
@@ -248,7 +251,7 @@ function RunSkeleton({ runId }: { runId: string }) {
 
 function CapabilityPlaceholder({ section }: { section: string }) {
   const capability = getWorkBuddyCapability(section);
-  const copy = capability ? { title: capability.id === 'settings' ? 'AI Agent 设置' : capability.label, description: capability.description } : { title: 'AI Agent', description: '该页面尚未进入当前实施范围。' };
+  const copy = capability ? { title: capability.id === 'settings' ? '教师 WorkBuddy 设置' : capability.label, description: capability.description } : { title: '教师 WorkBuddy', description: '该页面尚未进入当前实施范围。' };
   return (
     <section className={styles.placeholderPage} aria-labelledby="workbuddy-placeholder-title">
       <span className={styles.placeholderIcon}><Shapes aria-hidden="true" size={22} /></span>

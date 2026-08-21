@@ -1,6 +1,6 @@
 # WorkBuddy M4 Phase 4 Review Checklist
 
-**Status:** READY_FOR_USER_REVIEW
+**Status:** FUNCTIONAL_SCOPE_ACCEPTED_UX_REVISION_REQUIRED
 **Date:** 2026-08-21  
 **Fixture:** `workbuddy-m4-course-production-v1`
 
@@ -14,6 +14,13 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 - 恢复：主教学范围变更先展示影响，确认后生成新 Snapshot，旧 Snapshot/Artifact/Action/Receipt 保留为 superseded 证据。
 
 所有生成内容、执行结果和 ClassIn 写回均为固定、脱敏、内存态 Mock，不代表真实模型、文件生成或生产 API 已接入。
+
+2026-08-21 用户 Review 已确认上述功能 Feature、领域对象、异常与治理覆盖全面，没有功能范围缺口。同时，用户未接受当前阶段卡片和活动面板驱动的最终交互表达：教师应当在一个持续存在的 Agent 任务对话窗口中感知目标理解、结构化补参、Context、计划、动态过程、Skill/Tool 调用、产物、动作提案、确认与回执，而不是依靠阶段页面或立即跳转完成链路。
+
+因此本结论拆成两部分：
+
+- **功能与技术基线：接受。** 现有 `WorkBuddyRun`、`ContextSnapshot`、Artifact Graph、Action、Approval、Adapter、Receipt、异常恢复和幂等语义继续作为 M4.1 输入；
+- **产品交互体验：需要修订。** 进入 [M4.1 对话式 Agent Run UX 规格包](../workbuddy-m4-agent-run-ux/README.md)，完成设计 Review、实现和用户复审前，不把 M4 标记为最终产品体验验收通过。
 
 ## 2. 建议 Review 路径
 
@@ -79,4 +86,12 @@ M4 已把 M3 的工作台骨架推进为两条可操作、可重置且明确标�
 
 ## 7. 用户 Review 记录
 
-内部工程门禁已完成，当前进入用户验收。Standards/Spec 双轴终审均无剩余 P0–P3；用户确认前不把 M4 自动升级为新的 `LOCKED` 产品决策。
+2026-08-21 用户完成 M4 整体审阅并确认：功能 Feature 覆盖全面，底层技术方案可以保留；当前阶段实际模拟的是 Agent Run 体验，尚未接入真实 Agent。用户要求把单课件和课程方案包都改为一个对话窗口内动态完成的完整 Agent Run，并确认以下方向：
+
+1. 使用一体化对话时间线表达完整闭环；
+2. V05 智能教案作为主流程证据，V04/V06 补充产物预览与编辑；
+3. Core Context 改为默认展开、可收起的结构化业务对象树；
+4. 右侧活动区使用 `上下文 / 产出` 两个视图动态切换；
+5. 当前使用确定性体验 Adapter 模拟 Run，未来真实 Agent Runtime 通过同一 Seam 替换。
+
+导航结构与文案由独立会话处理；历史任务最终数量、全局 Demo 文案与统一真值表达尚未在本次确认中锁定。内部 Standards/Spec 双轴工程终审仍保持 PASS，但产品体验 Review Gate 转入 M4.1。

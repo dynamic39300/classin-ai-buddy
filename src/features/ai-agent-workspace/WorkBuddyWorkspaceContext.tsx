@@ -62,6 +62,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [packageWritebackScenario, setPackageWritebackScenario] = useState<PackageWritebackScenario>(() => packageWritebackScenarioController.getScenario());
   const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>('none');
   const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(null);
+  const [draftGoal, setDraftGoal] = useState('');
 
   const coursewareController = createWorkBuddyCoursewareController({
     contextSnapshot, initialContextItems, coursewareDefinition, coursewareOutput, replannedCoursewareOutput, coursewareActionInput,
@@ -99,6 +100,11 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       renameRun: history.renameRun,
       togglePinRun: history.togglePinRun,
       removeRun: history.removeRun,
+    }),
+    taskDraft: Object.freeze({
+      goal: draftGoal,
+      setGoal: setDraftGoal,
+      clear: () => setDraftGoal(''),
     }),
     context: Object.freeze({
       contextView: projectCoreContextView(contextProposal, contextSnapshot),

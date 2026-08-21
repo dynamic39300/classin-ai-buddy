@@ -24,6 +24,7 @@ review_gate: PHASE_3_PASSED
 | [组件、字段与状态规格](./COMPONENT-FIELD-AND-STATE-SPEC.md) | 原型必须覆盖的组件契约、状态与权限表达 | `REVIEWED_APPROVED` |
 | [Phase 3 Review 清单](./PHASE-3-REVIEW-CHECKLIST.md) | 汇总原型前必须确认、影响交互和可保持 OPEN 的事项 | `REVIEWED_APPROVED` |
 | [实施规格](./IMPLEMENTATION-SPEC.md) | 把已审阅 PRD 转换为 ClassIn PC 基座中的首个可实施 Shell 切片、测试 Seam 与范围边界 | `READY_FOR_TICKETING` |
+| [M4.1 对话式 Agent Run UX 规格包](../workbuddy-m4-agent-run-ux/README.md) | M4 功能范围验收后的交互修订：一体化动态 Run、Context 树和统一右侧活动区 | `REVIEWED_APPROVED / TO_SPEC` |
 
 ## 3. 已锁定输入
 

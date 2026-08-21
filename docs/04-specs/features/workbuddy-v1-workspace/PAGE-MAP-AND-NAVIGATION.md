@@ -1,7 +1,7 @@
 ---
 title: ClassIn WorkBuddy V1 页面地图与导航
 status: REVIEWED_APPROVED
-version: v0.1
+version: v0.2
 date: 2026-08-20
 page_count: 43
 ---
@@ -11,7 +11,7 @@ page_count: 43
 ## 1. 页面 ID 规则
 
 - `WB-G`：ClassIn 全局壳；
-- `WB-N`：AI Agent 二级导航；
+- `WB-N`：教师 WorkBuddy 二级导航与任务工作区导航；
 - `WB-T`：新任务与 Run；
 - `WB-AR`：Artifact、审批与写回；
 - `WB-S`：Skill；`WB-M`：Tool/MCP；
@@ -26,8 +26,9 @@ page_count: 43
 | WB-G-P01 | ClassIn 共享应用壳 | 固定壳 | 应用启动 | 所有一级模块 | G-P01 |
 | WB-G-O01 | 全局侧栏收起态 | 壳状态 | 收起按钮/快捷键 | 展开恢复 | G-O01 |
 | WB-G-O02 | 账户与组织菜单 | Popover | 头像/组织名 | 账户、切换组织、退出 | G-O02 |
-| WB-N-P01 | AI Agent 二级导航扩展 | ClassIn 左侧栏内嵌 Surface | ClassIn 一级主导航的 AI Agent 入口 | 新任务、近期任务、Skills、Tools、内容、定时、文件、设置 | G-P01 + ClassIn 适配 |
-| WB-N-O01 | 历史任务操作菜单 | Popover | 任务条目 `…` | 重命名、置顶、删除 | G-O03 |
+| WB-N-P01 | 教师 WorkBuddy 二级能力目录 | ClassIn 左侧栏内嵌 Surface | 可展开/收起的教师 WorkBuddy 一级入口 | 技能市场、工具连接、内容资源、定时任务、我的文件、设置 | G-P01 + ClassIn 适配 |
+| WB-N-P02 | 并行任务 Tab 条 | Work Surface 顶层 | 教师 WorkBuddy / 当前任务 | 已打开任务、新建任务、全部任务选择器 | G-P01/G-O03 + ClassIn 适配 |
+| WB-N-O01 | 全部任务选择器与操作菜单 | Popover | 当前任务 Tab | 切换/打开任务、重命名、置顶、删除 | G-O03 |
 | WB-T-P01 | 新建任务 | 主 Surface | 二级菜单/业务对象入口 | 创建 Run | T-P01 |
 | WB-T-P02 | Agent Run 工作区 | 主 Surface | 新任务提交/历史/关联任务 | Artifact、Context、执行详情、Focus | T-P02/T-P03 |
 | WB-T-O01 | 资源与位置选择器 | Popover/Dialog | 附件/资源/目标位置 | T-P01/T-P02 | T-O01 |
@@ -57,7 +58,7 @@ page_count: 43
 | WB-AU-P02 | 定时任务历史 | 主页面/Tab | 列表历史 | 关联 Run、Artifact、Receipt | A-P02 |
 | WB-F-P01 | WorkBuddy 文件视图 | 共享 Space 页面 | 二级菜单/Run | 预览、作为输入、回到来源 | F-P01 |
 | WB-F-O01 | 文件预览与引用 | 右侧/Overlay | 文件条目 | 打开、作为 Context、定位来源 | F-P01 设计补全 |
-| WB-SET-P01 | AI Agent 设置壳/通用 | 主页面 | 二级菜单 | 各设置子页 | SET-P01 |
+| WB-SET-P01 | 教师 WorkBuddy 设置壳/通用 | 主页面 | 二级菜单 | 各设置子页 | SET-P01 |
 | WB-SET-P02 | 模型设置 | 设置子页 | 设置/模型选择器 | 添加、测试、设默认 | SET-P02 |
 | WB-SET-P03 | WorkBuddy 数据与备份 | 设置子页 | 设置 | 备份、恢复、数据说明 | SET-P03 |
 | WB-SET-P04 | 外部消息与通知 | 设置子页 | 设置 | 绑定、重绑、权限 | SET-P04 |
@@ -78,12 +79,13 @@ page_count: 43
 
 ```mermaid
 flowchart TD
-  SH["WB-G-P01 ClassIn Shell"] --> NAV["WB-N-P01 AI Agent 二级菜单"]
-  NAV --> NEW["WB-T-P01 新建任务"]
-  NAV --> RUN["WB-T-P02 历史 Run"]
-  NAV --> SK["WB-S-P01 Skills"]
-  NAV --> TL["WB-M-P01 Tools"]
-  NAV --> CT["WB-C-P01 内容"]
+  SH["WB-G-P01 ClassIn Shell"] --> NAV["WB-N-P01 教师 WorkBuddy 二级能力目录"]
+  SH --> TABS["WB-N-P02 并行任务 Tab 条"]
+  TABS --> NEW["WB-T-P01 新建任务"]
+  TABS --> RUN["WB-T-P02 历史 Run"]
+  NAV --> SK["WB-S-P01 技能市场"]
+  NAV --> TL["WB-M-P01 工具连接"]
+  NAV --> CT["WB-C-P01 内容资源"]
   NAV --> AU["WB-AU-P01 定时任务"]
   NAV --> FI["WB-F-P01 文件"]
   NAV --> ST["WB-SET-P01 设置"]
@@ -108,16 +110,11 @@ flowchart LR
   R -->|派生| NR["新的 WB-T-P02 Run"]
 ```
 
-## 6. AI Agent 二级导航扩展顺序
+## 6. 教师 WorkBuddy 导航顺序
 
-1. 新建任务；
-2. 近期任务标题、搜索/全部；
-3. 置顶与普通任务，默认共显示 6 条，区域内部滚动；
-4. 能力与资源折叠组：Skills、Tools、内容、我的文件；
-5. 定时任务；
-6. AI Agent 设置。
+左侧二级目录依次为：技能市场、工具连接、内容资源、我的文件、定时任务、设置。一级“教师 WorkBuddy”入口提供独立展开/收起按钮，不产生第三级菜单。
 
-以上均位于 AI Agent 一级入口下方的同一扁平二级导航扩展；“近期任务”“能力与资源”等 Section 标题只分组，不产生第三级菜单。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置。右侧 Stage 不为导航预留独立列。
+新建任务、已打开任务 Tab 与全部任务选择器位于右侧 Work Surface 顶层。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置，右侧 Stage 不为任务导航预留独立列。
 
 ## 7. Deep Link 与返回现场
 
@@ -131,7 +128,7 @@ returnPolicy
 ```
 
 - 从业务对象打开 WorkBuddy：返回该对象现场；
-- 从历史打开 Run：返回 AI Agent 二级菜单的原滚动位置；
+- 从全部任务选择器打开 Run：返回选择器原搜索条件和滚动位置；
 - 从 Artifact Focus 返回：恢复 Run 时间线位置、右侧模式、Artifact 版本和展开项；
 - 切换组织后，不恢复另一组织的 Run 内容，只可显示无权限历史占位与安全说明；
 - 浏览器/应用后退优先回来源现场，不默认回 AI Agent 首页。

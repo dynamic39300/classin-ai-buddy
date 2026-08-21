@@ -33,7 +33,8 @@ describe('teacher navigation architecture', () => {
     ]);
   });
 
-  it('exposes AI Agent only in the teacher tree and keeps every nested route active', () => {
+  it('exposes 教师 WorkBuddy only in the teacher tree and keeps every nested route active', () => {
+    expect(getNavigation('teacher').find(({ id }) => id === 'teacher-ai-agent')).toMatchObject({ label: '教师 WorkBuddy' });
     expect(findActiveNavigationItem('teacher', '/teacher/ai-agent/new')?.id).toBe('teacher-ai-agent');
     expect(findActiveNavigationItem('teacher', '/teacher/ai-agent/runs/run-courseware')?.id).toBe('teacher-ai-agent');
     expect(getNavigation('student-family').some(({ id }) => id.includes('ai-agent'))).toBe(false);

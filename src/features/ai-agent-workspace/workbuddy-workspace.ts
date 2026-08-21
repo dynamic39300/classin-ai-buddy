@@ -17,6 +17,12 @@ export type WorkBuddyHistory = Readonly<{
   removeRun: (runId: string) => void;
 }>;
 
+export type WorkBuddyTaskDraft = Readonly<{
+  goal: string;
+  setGoal: (goal: string) => void;
+  clear: () => void;
+}>;
+
 export type WorkBuddyContext = Readonly<{
   contextView: CoreContextView;
   coursewareContextView: CoreContextView | null;
@@ -72,6 +78,7 @@ export type WorkBuddyCoursePackage = Readonly<{
 
 export type WorkBuddyWorkspace = Readonly<{
   history: WorkBuddyHistory;
+  taskDraft: WorkBuddyTaskDraft;
   context: WorkBuddyContext;
   courseware: WorkBuddyCourseware;
   coursePackage: WorkBuddyCoursePackage;

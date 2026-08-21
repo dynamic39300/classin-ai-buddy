@@ -42,8 +42,9 @@ export function AppShell({ role }: AppShellProps) {
     >
       <Sidebar
         role={role}
-        navigationExtension={agentWorkspaceActive ? {
+        navigationExtension={role === 'teacher' ? {
           afterItemId: 'teacher-ai-agent',
+          activePathPrefix: '/teacher/ai-agent',
           content: <AgentSecondaryNav />,
         } : undefined}
         onOpenSettings={() => navigate(`/${role === 'teacher' ? 'teacher' : 'student'}/settings/benefits`)}

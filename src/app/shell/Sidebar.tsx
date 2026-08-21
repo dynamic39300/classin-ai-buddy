@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Fragment, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import type { AppRole } from '@domain/account/role';
 import { ROLE_LABELS } from '@domain/account/role';
@@ -14,6 +14,7 @@ type SidebarProps = {
   role: AppRole;
   navigationExtension?: {
     afterItemId: string;
+    activePathPrefix: string;
     content: ReactNode;
   };
   onOpenSettings: () => void;
@@ -27,10 +28,13 @@ const GROUP_LABELS: Record<NavigationGroup, string> = {
 };
 
 export function Sidebar({ role, navigationExtension, onOpenSettings, onOpenHelp }: SidebarProps) {
+  const location = useLocation();
   const [accountOpen, setAccountOpen] = useState(false);
   const [classManagementManualOpen, setClassManagementManualOpen] = useState(false);
+  const extensionRouteActive = Boolean(navigationExtension && location.pathname.startsWith(navigationExtension.activePathPrefix));
+  const [navigationExtensionOpen, setNavigationExtensionOpen] = useState(extensionRouteActive);
+  const previousExtensionRouteActive = useRef(extensionRouteActive);
   const accountButtonRef = useRef<HTMLButtonElement>(null);
-  const location = useLocation();
   const threads = useMessageThreads();
   const messageUnreadCount = countUnreadMessages(role, threads);
   const navigation = getNavigation(role).map((node) => (
@@ -47,10 +51,15 @@ export function Sidebar({ role, navigationExtension, onOpenSettings, onOpenHelp 
     navigation.some((item) => item.group === group),
   );
 
+  useEffect(() => {
+    if (extensionRouteActive && !previousExtensionRouteActive.current) setNavigationExtensionOpen(true);
+    previousExtensionRouteActive.current = extensionRouteActive;
+  }, [extensionRouteActive]);
+
   return (
     <aside
       className={styles.sidebar}
-      data-contextual-navigation={navigationExtension ? 'true' : undefined}
+      data-contextual-navigation={navigationExtensionOpen ? 'true' : undefined}
     >
       <div className={styles.brand}>
         <span className={styles.brandMark} aria-hidden="true">C</span>
@@ -120,8 +129,11 @@ export function Sidebar({ role, navigationExtension, onOpenSettings, onOpenHelp 
                     if (classManagementRouteActive) setClassManagementManualOpen(true);
                   }}
                   onToggle={() => setClassManagementManualOpen((current) => !current)}
+                  extensionOpen={navigationExtensionOpen}
+                  hasExtension={navigationExtension?.afterItemId === node.id}
+                  onToggleExtension={() => setNavigationExtensionOpen((current) => !current)}
                 />
-                {navigationExtension?.afterItemId === node.id ? navigationExtension.content : null}
+                {navigationExtension?.afterItemId === node.id && navigationExtensionOpen ? navigationExtension.content : null}
               </Fragment>
             ))}
           </section>
@@ -138,17 +150,43 @@ type NavigationNodeViewProps = {
   disableCollapse: boolean;
   onNavigate: () => void;
   onToggle: () => void;
+  hasExtension: boolean;
+  extensionOpen: boolean;
+  onToggleExtension: () => void;
 };
 
-function NavigationNodeView({ node, open, disableCollapse, onNavigate, onToggle }: NavigationNodeViewProps) {
+function NavigationNodeView({ node, open, disableCollapse, onNavigate, onToggle, hasExtension, extensionOpen, onToggleExtension }: NavigationNodeViewProps) {
   if (node.kind === 'item') {
     const Icon = node.icon;
-    return (
-      <NavLink className={styles.navItem} to={node.to} title={node.label} aria-label={node.label} data-label={node.label} onClick={onNavigate}>
+    const link = (
+      <NavLink className={`${styles.navItem} ${hasExtension ? styles.navItemWithToggle : ''}`} to={node.to} title={node.label} aria-label={node.label} data-label={node.label} onClick={() => {
+        onNavigate();
+        if (hasExtension && !extensionOpen) onToggleExtension();
+      }}>
         <Icon aria-hidden="true" size={18} />
         <span className={styles.navLabel}>{node.label}</span>
         {node.badge ? <span className={styles.badge} aria-label={`${node.badge}条待处理`}>{node.badge}</span> : null}
       </NavLink>
+    );
+
+    if (hasExtension) {
+      return (
+        <div className={styles.extensionNode}>
+          {link}
+          <button
+            className={styles.extensionToggle}
+            type="button"
+            aria-label={`${extensionOpen ? '收起' : '展开'}${node.label} 二级导航`}
+            aria-expanded={extensionOpen}
+            onClick={onToggleExtension}
+          >
+            <ChevronRight className={`${styles.chevron} ${extensionOpen ? styles.chevronExpanded : ''}`} aria-hidden="true" size={16} />
+          </button>
+        </div>
+      );
+    }
+    return (
+      link
     );
   }
 

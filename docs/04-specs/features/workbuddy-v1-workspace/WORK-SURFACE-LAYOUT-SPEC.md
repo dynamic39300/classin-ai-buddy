@@ -10,7 +10,7 @@ target_viewport: 1440x900
 
 ## 1. 目标
 
-布局需要同时保留 ClassIn 一级主导航、嵌入其下的 AI Agent 二级导航、Agent Run 主轴和一个当前最重要的辅助对象。二级导航对标 NineClaw 并直接包含历史条目；右侧 Stage 不再为导航保留独立列，不能增加第三级菜单或第三根历史栏，也不能让 Context 与 Artifact 同时常驻。
+布局需要同时保留 ClassIn 一级主导航、嵌入其下的教师 WorkBuddy 二级能力目录、Work Surface 顶部任务 Tab、Agent Run 主轴和一个当前最重要的辅助对象。左侧不再包含任务历史；全部任务通过当前 Tab 的下拉选择器滚动访问，不能增加独立历史栏，也不能让 Context 与 Artifact 同时常驻。
 
 ## 2. 1440×900 基准画布
 
@@ -19,7 +19,7 @@ target_viewport: 1440x900
 | 区域 | 基准值 | 允许范围/行为 |
 |---|---:|---|
 | Viewport | `1440×900` | Phase 3/4 主验收尺寸 |
-| ClassIn 一级主导航 + Agent 二级扩展 | `220px` | 锁定范围 `216-224px`；Agent 路由内保持展开，其他路由收起态目标 `64px` |
+| ClassIn 一级主导航 + WorkBuddy 二级目录 | `220px` | 锁定范围 `216-224px`；目录可由一级入口独立展开/收起，紧凑收起态目标 `64px` |
 | 全局顶部栏 | `48px` | 锁定范围 `44-56px` |
 | Agent 主工作区 | `1204×852px` | 位于唯一左侧栏右侧、顶部栏下方 |
 | Work Surface 外边距 | `12px` | 四边一致，遵循 4px 网格 |
@@ -36,11 +36,11 @@ target_viewport: 1440x900
 ```text
 ┌─ ClassIn Sidebar 220 ─┬──────────────── Main 1204 ──────────────────────┐
 │ 首页                   │ Topbar 48                                      │
-│ AI Agent               ├────────────────────────────────────────────────┤
-│  ├ 新建任务            │ Work Surface                                   │
-│  ├ 近期任务 × 6        │        Goal Composer                           │
-│  ├ Skills / Tools      │        Core Context Summary                    │
-│  └ 内容/定时/文件/设置 │        Task Type Shortcuts                     │
+│ 教师 WorkBuddy         ├────────────────────────────────────────────────┤
+│  ├ 技能市场            │ Task Tabs / Current Task Selector / +          │
+│  ├ 工具连接            ├────────────────────────────────────────────────┤
+│  ├ 内容资源/文件       │        Goal Composer                           │
+│  └ 定时任务/设置       │        Core Context / Task Type Shortcuts      │
 └────────────────────────┴────────────────────────────────────────────────┘
 ```
 
@@ -53,8 +53,9 @@ target_viewport: 1440x900
 ```text
 ┌ ClassIn Sidebar ┬──────────────────── Work Surface ───────────────────┐
 │ Primary         │ Run Header                                          │
-│ AI Agent        ├─────────────────────────────────────────────────────┤
-│  History/tools  │ Goal / Context Summary                              │
+│ 教师 WorkBuddy  │ Task Tabs / Current Task Selector / +               │
+│  能力目录        ├─────────────────────────────────────────────────────┤
+│                 │ Goal / Context Summary                              │
 │                 │ Timeline / Plan / Process / Artifact refs           │
 │                 ├─────────────────────────────────────────────────────┤
 │                 │ Composer / Stop / Waiting action                    │
@@ -70,8 +71,8 @@ target_viewport: 1440x900
 ```text
 ┌ ClassIn Sidebar ┬────── Run Main ≥560 ─────────┬ Active Panel 360 ──┐
 │ Primary         │ Run Header                    │ Panel Header         │
-│ AI Agent        │ Timeline                      │ Artifact / Context / │
-│  History/tools  │                               │ Process Detail       │
+│ 教师 WorkBuddy  │ Timeline                      │ Artifact / Context / │
+│  能力目录        │                               │ Process Detail       │
 │                 │ Composer                      │ Footer/Actions       │
 └─────────────────┴───────────────────────────────┴──────────────────────┘
 ```
@@ -137,8 +138,9 @@ Footer：按状态显示停止、重试、换策略、复制诊断、返回最�
 
 | 区域 | 滚动所有者 | 禁止行为 |
 |---|---|---|
-| ClassIn 一级主导航 + Agent 二级扩展 | 左侧栏内部 | 页面正文推动导航离开视口；Section 展开产生第三级菜单 |
-| 近期任务 | 二级扩展的任务 Section 内部 | 新事件强制跳到列表顶部 |
+| ClassIn 一级主导航 + WorkBuddy 二级目录 | 左侧栏内部 | 页面正文推动导航离开视口；能力入口产生第三级菜单 |
+| 已打开任务 Tab | Work Surface 顶部横向滚动 | 压缩标题到不可识别；关闭 Tab 同时删除 Run |
+| 全部任务 | 当前 Tab 下拉选择器内部 | 新事件强制跳到列表顶部；推动页面正文滚动 |
 | Run Timeline | 主内容区 | Composer 随正文滚走 |
 | Active Panel | Panel Body | Header/Footer 双重嵌套滚动 |
 | Focus Editor | Artifact Canvas | 页面与编辑器同时争夺垂直滚动 |
@@ -162,8 +164,8 @@ Footer：按状态显示停止、重试、换策略、复制诊断、返回最�
 
 ## 9. 原型验收点
 
-1. 1440×900 首屏可见 ClassIn 一级主导航、其下的 AI Agent 扁平二级导航、6 条任务、新/当前 Run 与唯一主行动；
-2. AI Agent 二级扩展位于同一左侧栏且没有第三级菜单，右侧无独立导航列，历史不形成第三根栏；
+1. 1440×900 首屏可见 ClassIn 一级主导航、其下的教师 WorkBuddy 二级能力目录、并行任务 Tab、新/当前 Run 与唯一主行动；
+2. WorkBuddy 二级目录位于同一左侧栏且没有任务历史或第三级菜单；任务历史进入当前 Tab 下拉选择器，不形成第三根栏；
 3. 打开任一右侧模式后只新增一个活动辅助区；
 4. 360-400px Artifact 与 Core Context 切换不造成 Run 状态丢失；
 5. 更宽面板或复杂编辑会转入 Overlay/Focus，而不是把 Run 压到 560px 以下；

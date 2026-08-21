@@ -99,6 +99,30 @@
   gap: var(--space-xs);
 }
 
+.extensionNode {
+  position: relative;
+  min-width: 0;
+}
+
+.navItemWithToggle {
+  padding-right: 2.5rem;
+}
+
+.extensionToggle {
+  position: absolute;
+  top: 0.375rem;
+  right: var(--space-xs);
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-shell-muted);
+  cursor: pointer;
+}
+
 .childNavigation {
   display: grid;
   gap: var(--space-xs);
@@ -240,6 +264,7 @@
 
 @media (hover: hover) {
   .navItem:hover,
+  .extensionToggle:hover,
   .accountButton:hover {
     background: var(--color-shell-hover);
     color: var(--color-shell-text);
@@ -366,6 +391,14 @@
     align-items: center;
     justify-items: stretch;
     padding: 0 var(--space-sm);
+  }
+
+  .extensionToggle {
+    display: none;
+  }
+
+  .sidebar[data-contextual-navigation='true'] .extensionToggle {
+    display: grid;
   }
 
   .sidebar[data-contextual-navigation='true'] .navItem[data-label]::after {
