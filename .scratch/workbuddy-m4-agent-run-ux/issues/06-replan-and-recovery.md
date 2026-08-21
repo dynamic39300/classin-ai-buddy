@@ -4,11 +4,11 @@
 
 **Blocked by:** 05 — 完成课件编辑、AI 修改、审批与成功 Receipt。
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] 普通补充只影响未开始步骤，重大变化进入影响确认。
-- [ ] Replanning 产生新 Snapshot/Plan/Artifact 身份并保留 superseded 证据。
-- [ ] 停止、取消和恢复具有显式事件与允许命令。
-- [ ] 权限、冲突、超时、临时失败和重试保持既有领域不变量。
-- [ ] 重试不重复已成功副作用，恢复后的 Action/Approval/Receipt 归属正确。
-- [ ] 历史恢复不把旧 Artifact 的派生关系误投影到新版本。
+- [x] 普通补充只影响未开始步骤，重大变化进入影响确认。
+- [x] Replanning 产生新 Snapshot/Plan/Artifact 身份并保留 superseded 证据。
+- [x] 停止、取消和恢复具有显式事件与允许命令。
+- [x] 权限、冲突、超时、临时失败和重试保持既有领域不变量。
+- [x] 重试不重复已成功副作用，恢复后的 Action/Approval/Receipt 归属正确。
+- [x] 历史恢复不把旧 Artifact 的派生关系误投影到新版本。

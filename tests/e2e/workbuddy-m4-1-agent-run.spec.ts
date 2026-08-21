@@ -159,3 +159,63 @@ test('teacher edits the Artifact and completes Action, Approval, execution and R
   await expect(page.getByRole('tab', { name: '产出' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('feed', { name: 'Agent 任务时间线' }).getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
 });
+
+test('teacher supplements, stops, resumes and replans the same Run while old evidence remains inspectable', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const plan = await confirmCoursewarePlan(page);
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  await plan.getByRole('button', { name: '开始执行计划' }).click();
+
+  const composer = page.getByRole('group', { name: '任务补充输入' });
+  await composer.getByRole('textbox', { name: '向 Agent 补充要求' }).fill('例题讲解后增加一分钟的同桌讨论。');
+  await composer.getByRole('button', { name: '发送补充要求' }).click();
+  await expect(timeline.getByText('例题讲解后增加一分钟的同桌讨论。', { exact: true })).toBeVisible();
+  await expect(timeline.getByText('已应用到尚未开始的步骤', { exact: true })).toBeVisible();
+
+  await composer.getByRole('button', { name: '停止执行' }).click();
+  await expect(timeline.getByText('任务执行已停止', { exact: true })).toBeVisible();
+  await expect(composer.getByRole('button', { name: '继续执行' })).toBeVisible();
+  await composer.getByRole('button', { name: '继续执行' }).click();
+  await expect(timeline.getByText('任务已从停止位置继续', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
+
+  await composer.getByRole('textbox', { name: '向 Agent 补充要求' }).fill('把主教学范围改为高二物理 1 班的机械波基础。');
+  await composer.getByRole('button', { name: '发送补充要求' }).click();
+  const impact = timeline.getByRole('article').filter({ hasText: '教学范围变化需要重新规划' });
+  await expect(impact.getByText('高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量', { exact: true })).toBeVisible();
+  await expect(impact.getByText('高二物理 1 班 · 机械波基础 · 第一单元 机械波', { exact: true })).toBeVisible();
+  await impact.getByRole('button', { name: '确认并重新规划' }).click();
+
+  await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
+  await expect(page.getByRole('heading', { name: '生成机械波基础课件' })).toBeVisible();
+  await expect(timeline.getByText('已归档调整前的计划与产物', { exact: true })).toBeVisible();
+  await expect(timeline.getByText('还需要确认课件要求', { exact: true })).toBeVisible();
+});
+
+test('governed recovery keeps a denied save inside the same Run and requires a new approval', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await generateCoursewareArtifact(page);
+  await page.evaluate(() => {
+    window.history.replaceState({}, '', `${window.location.pathname}?review=recovery`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await page.getByRole('combobox', { name: '恢复路径验收场景' }).selectOption('permission_denied');
+  const output = page.getByRole('region', { name: '智能课件产出' });
+  await output.getByRole('button', { name: '确认课件可用于后续任务' }).click();
+  await output.getByRole('button', { name: '保存到 ClassIn' }).click();
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  let action = timeline.getByRole('article').filter({ hasText: '保存到 ClassIn' });
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准动作' }).click();
+
+  const denied = timeline.getByRole('article').filter({ hasText: '保存动作需要处理' });
+  await expect(denied.getByText('保存位置没有写入权限', { exact: true })).toBeVisible();
+  await denied.getByRole('button', { name: '改用教师草稿区并重新确认' }).click();
+  action = timeline.getByRole('article').filter({ hasText: '保存到 ClassIn' });
+  await expect(action.getByText('高二物理 3 班 / 动量与碰撞 / 教师草稿区', { exact: true })).toBeVisible();
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准动作' }).click();
+  await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
+});

@@ -74,7 +74,7 @@ function NewTaskSkeleton() {
           />
           <div className={styles.composerFooter}>
             <div className={styles.composerTools}>
-              <button type="button" aria-label="添加附件" onClick={() => setFeedback('附件入口为本地 Demo，尚未上传真实文件。')}><Paperclip aria-hidden="true" size={16} /></button>
+              <button type="button" aria-label="添加附件" onClick={() => setFeedback('请从“我的文件”中选择要加入当前任务的资料。')}><Paperclip aria-hidden="true" size={16} /></button>
               <button ref={contextButtonRef} type="button" aria-pressed={contextPanelOpen} onClick={() => setContextPanelOpen(true)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
             </div>
             <button className={styles.sendButton} type="button" disabled={!goal.trim() || contextView.status !== 'confirmed'} onClick={() => {
@@ -151,7 +151,7 @@ function RunSkeleton({ runId }: { runId: string }) {
         <header className={styles.runHeader}>
           <div>
             <h1 id="workbuddy-run-title">{item.title}</h1>
-            <span data-status={item.runState.status}>{WORKBUDDY_HISTORY_STATUS_LABELS[item.runState.status]} · 本地模拟</span>
+            <span data-status={item.runState.status}>{WORKBUDDY_HISTORY_STATUS_LABELS[item.runState.status]}</span>
           </div>
           <button ref={panelToggleRef} type="button" aria-pressed={panelOpen} onClick={() => {
             if (panelOpen) {
@@ -210,8 +210,8 @@ function RunSkeleton({ runId }: { runId: string }) {
             <button type="button" aria-label={composerCommand === 'supplement' ? '发送补充要求' : '保存修改要求'} disabled={!supplement.trim()} onClick={() => {
               setSupplements((current) => [...current, supplement.trim()]);
               setFeedback(composerCommand === 'supplement'
-                ? '补充要求已保存到当前本地 Demo 会话，尚未连接真实 Agent。'
-                : '修改要求已保存到当前本地 Demo 会话，尚未连接真实 Agent。');
+                ? '补充要求已记录到当前任务。'
+                : '修改要求已记录到当前任务。');
               setSupplement('');
             }}><ArrowUp aria-hidden="true" size={15} /></button>
           </div>

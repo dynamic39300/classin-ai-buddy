@@ -41,7 +41,18 @@ function getStatus(view: CoursewareRunView): ConversationRunStatus {
 
 export function projectCoursewareConversationRun(view: CoursewareRunView): ConversationRunProjection {
   const { run } = view;
-  const inputs: EventInput[] = [
+  const inputs: EventInput[] = [];
+  for (const evidence of run.supersededEvidence) {
+    inputs.push({
+      id: `${run.id}:superseded:${evidence.snapshotId}`,
+      kind: 'system',
+      state: 'superseded',
+      title: '已归档调整前的计划与产物',
+      summary: `${evidence.reason} · ${evidence.contextLabels.join(' · ')}`,
+      objectRefs: evidence.artifact ? [{ type: 'artifact', id: evidence.artifact.id, version: evidence.artifact.version }] : [],
+    });
+  }
+  inputs.push(
     {
       id: `${run.id}:goal`, kind: 'teacher_message', title: '教学目标', summary: run.goal,
     },
@@ -49,7 +60,7 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       id: `${run.id}:understanding`, kind: 'goal_understood', title: '已理解你的目标',
       summary: `我会基于已确认的教学范围，生成“${run.title}”并保留可复查的过程。`,
     },
-  ];
+  );
 
   if (run.stage === 'needs_information') {
     inputs.push({

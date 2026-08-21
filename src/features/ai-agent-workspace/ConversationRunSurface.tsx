@@ -1,13 +1,16 @@
 import { CheckCircle2, ChevronDown, Download, Expand, FileText, LoaderCircle, PanelRight, Pencil, Save, ShieldCheck, Sparkles, WandSparkles, X } from 'lucide-react';
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import { CoreContextPanel } from './CoreContextPanel';
 import {
   advanceCoursewareExperience,
   createCoursewareExperience,
   projectCoursewareExperienceEvents,
+  resumeCoursewareExperience,
   startCoursewareExperience,
+  stopCoursewareExperience,
   type CoursewareExperienceEvent,
 } from './conversation-run-experience';
 import { projectCoursewareConversationRun } from './conversation-run-projection';
@@ -30,7 +33,14 @@ export function ConversationRunSurface() {
     approveCoursewareSave,
     rejectCoursewareSave,
     executeApprovedCoursewareSave,
+    recoverCoursewareSave,
+    replanScope,
+    replanToWaveContext,
+    writebackScenario,
+    setWritebackScenario,
   } = useWorkBuddyWorkspace().courseware;
+  const [searchParams] = useSearchParams();
+  const recoveryReviewMode = searchParams.get('review') === 'recovery';
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [inspectorMode, setInspectorMode] = useState<InspectorMode>(() => coursewareView?.run.artifact ? 'output' : 'context');
   const [lesson, setLesson] = useState('lesson-1');
@@ -42,10 +52,14 @@ export function ConversationRunSurface() {
   const [newEventCount, setNewEventCount] = useState(0);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [executingAction, setExecutingAction] = useState(false);
+  const [supplement, setSupplement] = useState('');
+  const [replanPending, setReplanPending] = useState(false);
+  const [localEvents, setLocalEvents] = useState<readonly Readonly<{ id: string; title: string; summary: string; state: 'completed' | 'cancelled' }>[]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
   const followingRef = useRef(true);
   const previousEventCountRef = useRef(0);
   const executionCommittedRef = useRef(false);
+  const localEventSequenceRef = useRef(0);
   const approvalTriggerRef = useRef<HTMLButtonElement | null>(null);
   const projection = useMemo(
     () => coursewareView ? projectCoursewareConversationRun(coursewareView) : null,
@@ -70,7 +84,7 @@ export function ConversationRunSurface() {
     return () => window.clearTimeout(timeout);
   }, [coursewareView?.run.plan.length, executeCoursewareTaskPlan, experience]);
 
-  const visibleEventCount = (projection?.events.length ?? 0) + experienceEvents.length;
+  const visibleEventCount = (projection?.events.length ?? 0) + experienceEvents.length + localEvents.length + Number(replanPending);
   useLayoutEffect(() => {
     const addedCount = Math.max(0, visibleEventCount - previousEventCountRef.current);
     previousEventCountRef.current = visibleEventCount;
@@ -91,15 +105,26 @@ export function ConversationRunSurface() {
     setApprovalDialogOpen(false);
     requestAnimationFrame(() => approvalTriggerRef.current?.isConnected && approvalTriggerRef.current.focus());
   };
+  const appendLocalEvent = (title: string, summary: string, state: 'completed' | 'cancelled' = 'completed') => {
+    localEventSequenceRef.current += 1;
+    setLocalEvents((current) => [...current, Object.freeze({ id: `local-event-${localEventSequenceRef.current}`, title, summary, state })]);
+  };
+  const executeAction = () => {
+    setExecutingAction(true);
+    window.setTimeout(() => {
+      executeApprovedCoursewareSave();
+      setExecutingAction(false);
+    }, 500);
+  };
 
   return (
     <section className={styles.page} data-inspector-open={inspectorOpen} aria-labelledby="conversation-run-title">
       <section className={styles.main}>
         <header className={styles.header}>
           <div><h1 id="conversation-run-title">{projection.title}</h1><span>{coursewareView.run.statusLabel}</span></div>
-          <button type="button" aria-pressed={inspectorOpen} onClick={() => setInspectorOpen((open) => !open)}>
+          <div className={styles.headerActions}>{recoveryReviewMode ? <label className={styles.recoveryHarness}>恢复路径验收<select aria-label="恢复路径验收场景" value={writebackScenario} onChange={(event) => setWritebackScenario(event.target.value as WritebackScenario)}><option value="success">正常保存</option><option value="permission_denied">无写入权限</option><option value="version_conflict">目标版本已更新</option><option value="recoverable_failure">服务暂时不可用</option><option value="timeout">执行等待超时</option></select></label> : null}<button type="button" aria-pressed={inspectorOpen} onClick={() => setInspectorOpen((open) => !open)}>
             <PanelRight aria-hidden="true" size={16} />{inspectorOpen ? '收起辅助区' : '展开辅助区'}
-          </button>
+          </button></div>
         </header>
 
         <div className={styles.timeline} role="feed" aria-label="Agent 任务时间线" ref={timelineRef} onScroll={(scrollEvent) => {
@@ -150,17 +175,12 @@ export function ConversationRunSurface() {
                 {event.kind === 'proposed_action' && coursewareView.action ? <CoursewareActionCard
                   action={coursewareView.action}
                   executing={executingAction}
+                  blockedByReceipt={Boolean(coursewareView.receipt)}
                   onOpenApproval={(trigger) => { approvalTriggerRef.current = trigger; setApprovalDialogOpen(true); }}
                   onReject={rejectCoursewareSave}
-                  onExecute={() => {
-                    setExecutingAction(true);
-                    window.setTimeout(() => {
-                      executeApprovedCoursewareSave();
-                      setExecutingAction(false);
-                    }, 500);
-                  }}
+                  onExecute={executeAction}
                 /> : null}
-                {event.kind === 'receipt' && coursewareView.receipt ? <CoursewareReceiptCard receipt={coursewareView.receipt} /> : null}
+                {event.kind === 'receipt' && coursewareView.receipt ? <CoursewareReceiptCard receipt={coursewareView.receipt} onRecover={recoverCoursewareSave} onRetry={executeAction} /> : null}
               </div>
             </article>
             {event.kind === 'plan' ? experienceEvents.map((experienceEvent) => <CapabilityCallCard event={experienceEvent} key={experienceEvent.id} />) : null}
@@ -171,6 +191,31 @@ export function ConversationRunSurface() {
             setNewEventCount(0);
             timelineRef.current?.scrollTo({ top: timelineRef.current.scrollHeight, behavior: 'smooth' });
           }}>新增 {newEventCount} 条</button> : null}
+          {localEvents.map((event) => <article className={styles.event} data-kind="teacher_message" data-state={event.state} key={event.id}><span className={styles.eventMark}><Sparkles aria-hidden="true" size={15} /></span><div className={styles.eventBody}><strong>{event.title}</strong><p>{event.summary}</p></div></article>)}
+          {replanPending ? <article className={styles.event} data-kind="system" data-state="requires_teacher_input">
+            <span className={styles.eventMark}><ShieldCheck aria-hidden="true" size={15} /></span>
+            <div className={styles.eventBody}><strong>教学范围变化需要重新规划</strong><p>这会生成新的核心上下文快照与执行计划，旧计划、过程和产物会保留为历史证据。</p><dl className={styles.impactList}><div><dt>当前范围</dt><dd>{replanScope.previousLabel}</dd></div><div><dt>新范围</dt><dd>{replanScope.nextLabel}</dd></div><div><dt>受影响步骤</dt><dd>目标理解、教学结构、课件组装、质量检查</dd></div><div><dt>保留内容</dt><dd>旧 ContextSnapshot、Plan、过程、Artifact、Action 与 Receipt</dd></div></dl><div className={styles.cardActions}><button type="button" onClick={() => setReplanPending(false)}>保留当前范围</button><button className={styles.primary} type="button" onClick={() => {
+              replanToWaveContext();
+              setReplanPending(false);
+              setExperience(createCoursewareExperience([]));
+              executionCommittedRef.current = false;
+              setInspectorMode('context');
+            }}>确认并重新规划</button></div></div>
+          </article> : null}
+        </div>
+        <div className={styles.runComposer} role="group" aria-label="任务补充输入">
+          <textarea aria-label="向 Agent 补充要求" value={supplement} placeholder="补充要求、调整任务或继续追问…" onChange={(event) => setSupplement(event.target.value)} />
+          <div><span>{experience.status === 'running' ? '任务执行中，可补充未开始步骤' : experience.status === 'stopped' ? '任务已停止，可继续执行' : '补充内容会记录在当前任务中'}</span>
+            {experience.status === 'running' ? <button type="button" onClick={() => { setExperience((current) => stopCoursewareExperience(current)); appendLocalEvent('任务执行已停止', '已完成步骤保持不变，当前和未开始步骤没有继续执行。', 'cancelled'); }}>停止执行</button> : null}
+            {experience.status === 'stopped' ? <button type="button" onClick={() => { setExperience((current) => resumeCoursewareExperience(current, coursewareView.run.plan.length)); appendLocalEvent('任务已从停止位置继续', '已完成步骤不会重复执行。'); }}>继续执行</button> : null}
+            <button className={styles.primary} type="button" aria-label="发送补充要求" disabled={!supplement.trim()} onClick={() => {
+              const message = supplement.trim();
+              appendLocalEvent('教师补充要求', message);
+              if (/主教学范围|机械波|改为高二物理 1 班/.test(message)) setReplanPending(true);
+              else appendLocalEvent('已应用到尚未开始的步骤', '已完成步骤和既有产物不会被静默覆盖。');
+              setSupplement('');
+            }}>发送</button>
+          </div>
         </div>
       </section>
 
@@ -271,9 +316,10 @@ function CoursewareOutput({
   );
 }
 
-function CoursewareActionCard({ action, executing, onOpenApproval, onReject, onExecute }: Readonly<{
+function CoursewareActionCard({ action, executing, blockedByReceipt, onOpenApproval, onReject, onExecute }: Readonly<{
   action: NonNullable<CoursewareRunView['action']>;
   executing: boolean;
+  blockedByReceipt: boolean;
   onOpenApproval: (trigger: HTMLButtonElement) => void;
   onReject: () => void;
   onExecute: () => void;
@@ -282,13 +328,19 @@ function CoursewareActionCard({ action, executing, onOpenApproval, onReject, onE
   return <section className={styles.actionCard} aria-label="ClassIn 保存提案">
     <dl><div><dt>目标位置</dt><dd>{action.target.label}</dd></div><div><dt>变更内容</dt><dd>{action.difference}</dd></div><div><dt>写入判断</dt><dd>{action.risk === 'low' ? '低风险' : action.risk === 'medium' ? '中风险' : '高风险'} · {action.permission === 'allowed' ? '允许写入' : '无写入权限'} · {action.reversible ? '可撤销' : '不可撤销'}</dd></div><div><dt>目标版本</dt><dd>{action.target.expectedVersion}</dd></div><div><dt>确认有效期</dt><dd>{expiryLabel}</dd></div></dl>
     {executing ? <p className={styles.executionStatus} role="status"><LoaderCircle className={styles.spinner} aria-hidden="true" size={14} />正在执行</p> : action.status === 'approved' ? <p className={styles.executionStatus}>已批准 · 尚未执行</p> : null}
-    <div className={styles.cardActions}>{action.status === 'proposed' ? <><button type="button" onClick={onReject}>取消保存</button><button className={styles.primary} type="button" onClick={(event) => onOpenApproval(event.currentTarget)}>确认执行</button></> : action.status === 'approved' && !executing ? <button className={styles.primary} type="button" onClick={onExecute}>执行已批准动作</button> : null}</div>
+    <div className={styles.cardActions}>{action.status === 'proposed' ? <><button type="button" onClick={onReject}>取消保存</button><button className={styles.primary} type="button" onClick={(event) => onOpenApproval(event.currentTarget)}>确认执行</button></> : action.status === 'approved' && !executing && !blockedByReceipt ? <button className={styles.primary} type="button" onClick={onExecute}>执行已批准动作</button> : null}</div>
   </section>;
 }
 
-function CoursewareReceiptCard({ receipt }: Readonly<{
+function CoursewareReceiptCard({ receipt, onRecover, onRetry }: Readonly<{
   receipt: NonNullable<CoursewareRunView['receipt']>;
+  onRecover: () => void;
+  onRetry: () => void;
 }>) {
-  if (receipt.status !== 'success') return <section className={styles.receiptCard}><strong>保存动作需要处理</strong><p>{receipt.result}</p></section>;
+  if (receipt.status !== 'success') {
+    const title = receipt.status === 'permission_denied' ? '保存位置没有写入权限' : receipt.status === 'version_conflict' ? '目标版本已经更新' : receipt.status === 'timeout' ? '执行等待超时' : '保存服务暂时不可用';
+    const recovery = receipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : receipt.status === 'version_conflict' ? '采用当前版本并重新确认' : '使用同一审批安全重试';
+    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>{receipt.unexecutedTarget}</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{receipt.expectedVersion} → {receipt.currentVersion}</dd></div> : null}</dl><button className={styles.recoveryButton} type="button" onClick={receipt.status === 'permission_denied' || receipt.status === 'version_conflict' ? onRecover : onRetry}>{recovery}</button></section>;
+  }
   return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
 }

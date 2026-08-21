@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronRight, Database, RotateCcw, Search, ShieldCheck, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Database, RotateCcw, Search, X } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { CORE_CONTEXT_SECTIONS, type CoreContextSection } from '@domain/workbuddy/core-context';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
@@ -52,20 +52,15 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
       <header className={styles.header}>
         <div>
           <strong>核心上下文 · {view.includedCount}</strong>
-          <span>[模拟] 固定版本 · 可重置</span>
+          <span>本次任务快照</span>
         </div>
         <button type="button" aria-label="关闭核心上下文" onClick={onClose}><X aria-hidden="true" size={16} /></button>
       </header>
 
       <div className={styles.body}>
-        <section className={styles.truthNotice} aria-label="上下文真值说明">
-          <ShieldCheck aria-hidden="true" size={16} />
-          <div><strong>实时事实与任务快照分开</strong><p>当前内容来自[模拟]固定版本；确认后冻结为本次任务使用的上下文版本。</p></div>
-        </section>
-
         <div className={styles.statusCard} data-ready={view.status === 'ready_to_confirm'}>
           <span>{status}</span>
-          {view.snapshotVersion ? <code>{view.snapshotVersion}</code> : <small>选择建议不会自动创建任务</small>}
+          <small>{view.snapshotVersion ? '已确认版本' : '选择教学对象后确认'}</small>
         </div>
 
         {!readOnly ? <button className={styles.recommendation} type="button" onClick={applyRecommendedContext}>
@@ -90,8 +85,6 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
                     <span className={styles.itemState} role="img" aria-label={item.included ? '已纳入' : '建议项'}>{item.included ? <Check aria-hidden="true" size={13} /> : <span aria-hidden="true" />}</span>
                     <div>
                       <strong>{item.label}</strong>
-                      <p>{item.sourceLabel} · {item.sourceVersion}</p>
-                      <small>{item.permissionLabel} · {item.sensitivity}</small>
                     </div>
                     {!readOnly && !item.locked ? <button type="button" disabled={!item.selectable && !item.included} onClick={() => toggleCoreContextItem(item.id)}>{item.included ? '排除' : '选择'}</button> : null}
                   </article>
@@ -105,7 +98,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft' }: 
       </div>
 
       {!readOnly ? <footer className={styles.footer}>
-        <button type="button" onClick={resetCoreContext}><RotateCcw aria-hidden="true" size={14} />重置演示数据</button>
+        <button type="button" onClick={resetCoreContext}><RotateCcw aria-hidden="true" size={14} />重新选择</button>
         <button className={styles.confirmButton} type="button" disabled={view.status !== 'ready_to_confirm'} onClick={confirmCoreContext}>确认上下文版本</button>
       </footer> : null}
     </aside>

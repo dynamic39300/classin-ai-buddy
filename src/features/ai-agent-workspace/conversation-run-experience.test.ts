@@ -4,7 +4,9 @@ import {
   advanceCoursewareExperience,
   createCoursewareExperience,
   projectCoursewareExperienceEvents,
+  resumeCoursewareExperience,
   startCoursewareExperience,
+  stopCoursewareExperience,
 } from './conversation-run-experience';
 
 describe('deterministic courseware conversation experience', () => {
@@ -54,5 +56,20 @@ describe('deterministic courseware conversation experience', () => {
       excludedSensitiveCount: 1,
     });
     expect(events[1]!.contextLabels).toEqual([]);
+  });
+
+  it('stops without completing the active step and resumes from the same boundary', () => {
+    const plan = WORKBUDDY_COURSEWARE_DEFINITION.plan;
+    const running = advanceCoursewareExperience(startCoursewareExperience(createCoursewareExperience(plan)), plan.length);
+    const stopped = stopCoursewareExperience(running);
+
+    expect(stopped).toEqual({ status: 'stopped', activeIndex: null, completedCount: 1 });
+    expect(advanceCoursewareExperience(stopped, plan.length)).toBe(stopped);
+
+    const resumed = resumeCoursewareExperience(stopped, plan.length);
+    expect(resumed).toEqual({ status: 'running', activeIndex: 1, completedCount: 1 });
+    expect(projectCoursewareExperienceEvents(resumed, plan, []).map(({ state }) => state)).toEqual([
+      'completed', 'running', 'queued', 'queued',
+    ]);
   });
 });

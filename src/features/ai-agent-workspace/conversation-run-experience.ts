@@ -3,7 +3,7 @@ import type { CoursewarePlanStep } from '@domain/workbuddy/course-production';
 import type { ConversationRunEventState } from '@contracts/workbuddy/conversation-run';
 
 export type CoursewareExperienceState = Readonly<{
-  status: 'idle' | 'running' | 'completed';
+  status: 'idle' | 'running' | 'stopped' | 'completed';
   activeIndex: number | null;
   completedCount: number;
 }>;
@@ -59,6 +59,16 @@ export function advanceCoursewareExperience(state: CoursewareExperienceState, st
   const completedCount = Math.min(stepCount, state.completedCount + 1);
   if (completedCount >= stepCount) return Object.freeze({ status: 'completed', activeIndex: null, completedCount });
   return Object.freeze({ status: 'running', activeIndex: completedCount, completedCount });
+}
+
+export function stopCoursewareExperience(state: CoursewareExperienceState): CoursewareExperienceState {
+  if (state.status !== 'running') return state;
+  return Object.freeze({ status: 'stopped', activeIndex: null, completedCount: state.completedCount });
+}
+
+export function resumeCoursewareExperience(state: CoursewareExperienceState, stepCount: number): CoursewareExperienceState {
+  if (state.status !== 'stopped' || state.completedCount >= stepCount) return state;
+  return Object.freeze({ status: 'running', activeIndex: state.completedCount, completedCount: state.completedCount });
 }
 
 export function projectCoursewareExperienceEvents(
