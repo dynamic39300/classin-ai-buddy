@@ -7,11 +7,10 @@ import {
   Paperclip,
   PanelRight,
   Presentation,
-  Shapes,
   Sparkles,
   UsersRound,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
@@ -20,6 +19,7 @@ import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
 import { ConversationRunSurface } from './ConversationRunSurface';
 import { PackageConversationRunSurface } from './PackageConversationRunSurface';
+import { CapabilityWorkspace } from './CapabilityWorkspace';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
 
@@ -32,7 +32,8 @@ export function AiAgentWorkSurface() {
   if (runId && coursewareView?.run.id === runId) return <ConversationRunSurface />;
   if (runId && packageView?.run.id === runId) return <PackageConversationRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
-  if (section && getWorkBuddyCapability(section)) return <CapabilityPlaceholder section={section} />;
+  const capability = section ? getWorkBuddyCapability(section) : undefined;
+  if (capability) return <CapabilityWorkspace key={capability.id} surface={capability.id} />;
   if (location.pathname.endsWith('/new')) return <NewTaskSkeleton />;
   return <NewTaskSkeleton />;
 }
@@ -41,12 +42,24 @@ function NewTaskSkeleton() {
   const [feedback, setFeedback] = useState('');
   const [contextPanelOpen, setContextPanelOpen] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const { goal, setGoal, clear: clearGoal } = useWorkBuddyWorkspace().taskDraft;
   const contextButtonRef = useRef<HTMLButtonElement | null>(null);
   const { contextView, taskType, setTaskType } = useWorkBuddyWorkspace().context;
   const { createCoursewareTask } = useWorkBuddyWorkspace().courseware;
   const { createPackageTask } = useWorkBuddyWorkspace().coursePackage;
   const contextItems = contextView.items.filter(({ included }) => included);
+  useEffect(() => {
+    const state = location.state as { capabilityTitle?: string; intent?: 'context' | 'adapt' | 'schedule' } | null;
+    if (!state?.capabilityTitle || goal.trim()) return;
+    const intentCopy = state.intent === 'schedule'
+      ? `立即执行定时任务“${state.capabilityTitle}”，并按标准 Run 流程生成结果。`
+      : state.intent === 'adapt'
+        ? `基于“${state.capabilityTitle}”改编一份新的智能课件。`
+        : `将“${state.capabilityTitle}”作为当前教学任务的参考 Context。`;
+    setGoal(intentCopy);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [goal, location, navigate, setGoal]);
   const contextLabels = contextView.status === 'confirmed'
     ? contextItems.filter(({ kind }) => ['organization', 'class', 'course', 'unit', 'learner_scope'].includes(kind)).map(({ label }) => label)
     : [contextItems.find(({ kind }) => kind === 'organization')?.label ?? 'ClassIn 教研中心', '需要选择教学范围'];
@@ -248,19 +261,6 @@ function RunSkeleton({ runId }: { runId: string }) {
           }}>{artifactFocused ? '退出聚焦' : '展开查看'}</button><button type="button" disabled>保存到 ClassIn</button></footer>
         </aside>
       ) : null}
-    </section>
-  );
-}
-
-function CapabilityPlaceholder({ section }: { section: string }) {
-  const capability = getWorkBuddyCapability(section);
-  const copy = capability ? { title: capability.id === 'settings' ? 'Work Buddy 设置' : capability.label, description: capability.description } : { title: 'Work Buddy', description: '该页面尚未进入当前实施范围。' };
-  return (
-    <section className={styles.placeholderPage} aria-labelledby="workbuddy-placeholder-title">
-      <span className={styles.placeholderIcon}><Shapes aria-hidden="true" size={22} /></span>
-      <h1 id="workbuddy-placeholder-title">{copy.title}</h1>
-      <p>{copy.description}</p>
-      <span className={styles.truthLabel}>M3 结构占位 · 将按已审阅 PRD 在 Phase 4 实现</span>
     </section>
   );
 }
