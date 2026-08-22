@@ -21,7 +21,7 @@ narrativeRef: intelligent-courseware-run-1
 teacher: 王老师
 goal: 为高一（3）班生成一份函数单调性智能课件，包含概念讲解、图像示例、课堂探究和随堂练习
 contextSnapshotRef: context-snapshot-courseware-1
-artifactRef: artifact-courseware-monotonicity@v1 → v2
+artifactRef: artifact-courseware-monotonicity@v1（浏览不产生新版本）
 target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 ```
 
@@ -29,7 +29,7 @@ target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 
 - V05 提供唯一任务目标、Agent 口吻、缺参、计划、执行和完成叙事；
 - V04 只提供过程轨迹、产物引用、分栏预览和交互式产物结构；
-- V06 只提供选择、编辑、AI 修改、保存和反馈结构；
+- V06 只提供聚焦层、工具位置和退出结构；内嵌编辑按 D-044 明确不复刻；
 - 目标 Timeline 不出现“三顾茅庐故事动画”“课后练习”或对应源文件名；
 - V04/V06 的源文案仍完整登记，但目标文案统一为同一个智能课件及其版本；
 - 课程方案包是另一独立 Task Type，不借用本矩阵中的 V04/V06 原任务文案。
@@ -44,8 +44,8 @@ target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 | S-04 | 当前执行内容位于视口下方，页面随新事件向下推进 | 用户位于底部时自动跟随；用户上滚后停止抢占并显示“新增 N 条” | `EXACT` |
 | S-05 | Skill、文件读取、命令、写入等调用使用紧凑行表达进行中与完成 | 保留同层级调用卡；教师摘要默认可见，脱敏技术证据按需展开 | `CLASSIN_ADAPTATION` |
 | S-06 | 产物打开后形成左会话、右预览 | 右侧统一辅助区切换到“产出”，Timeline 和 Composer 不被替换 | `EXACT` |
-| S-07 | 右侧产物拥有全屏、分享、下载、编辑等工具位置 | 保留预览、聚焦、下载和编辑；分享是否可用遵循当前 Scope，不伪造能力 | `CLASSIN_ADAPTATION` |
-| S-08 | 编辑态拥有保存、退出、选择框和 AI 修改输入 | 映射为课件页面选择、AI 修改、保存草稿和退出编辑 | `TASK_SEMANTIC_NORMALIZATION` |
+| S-07 | 右侧产物拥有全屏、分享、下载、编辑等工具位置 | 保留预览、聚焦和下载；编辑改为进入专业第三方文档编辑器，未接入时明确提示 | `CLASSIN_ADAPTATION` |
+| S-08 | 编辑态拥有保存、退出、选择框和 AI 修改输入 | 不在 Work Buddy 预览器内复刻；按 D-044 收敛为只读全局预览与第三方编辑器衔接 | `USER_DIRECTED_DIVERGENCE` |
 | S-09 | 视频中的账号、积分、会员和模型选择持续可见但不参与任务主链 | 不复制到 WorkBuddy Run；这些属于 NineClaw Shell 而非目标 Agent Run 事件 | `CLASSIN_ADAPTATION` |
 | S-10 | 视频中存在绝对路径、环境变量、原始命令和终端输出 | 保留调用事件、进行中/完成状态和技术证据入口；真实账号、Secret 与本机路径脱敏 | `SECURITY_REDACTION` |
 
@@ -74,7 +74,7 @@ target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 | A-05 | [animation@03:07](../../../01-research/evidence/nineclaw-keyframes/animation_0187_artifact-file-result.jpg) | 录屏在该时间点切到另一智能教案任务，主区出现完整教案长 Prompt；不是动画任务的连续结果 | 不把长教案 Prompt 作为新消息插入当前 Run；只登记源任务切换，目标 Run 保持稳定 | 不产生目标事件 | `TASK_SEMANTIC_NORMALIZATION` |
 | A-06 | [animation@03:40](../../../01-research/evidence/nineclaw-keyframes/animation_0220_preview-split.jpg) | 左侧仍保留计划和调用；右侧打开代码/文件预览，形成双栏；调用完成后说明文件已复制到工作目录 | Artifact 引用出现后右侧自动切换到“产出”；左侧 Timeline 保持；预览标题为“函数单调性智能课件 v1” | A13–A14 | `TASK_SEMANTIC_NORMALIZATION` |
 | A-07 | [animation@04:03](../../../01-research/evidence/nineclaw-keyframes/animation_0243_interactive-artifact.jpg) | Agent 总结“生成成果、内容亮点、访问链接”；右侧显示交互式产物 | 总结列出课件结构和验证结果；右侧显示可翻页课件预览；Timeline Artifact 卡保留稳定引用 | A14–A15 | `TASK_SEMANTIC_NORMALIZATION` |
-| A-08 | [animation@04:37](../../../01-research/evidence/nineclaw-keyframes/animation_0277_edit-ai-modify.jpg) | 右侧顶部有全屏、分享、下载、编辑；产物保持可交互；左侧完成总结不消失 | 复用工具区、双栏和持续会话；工具标题、产物内容和辅助文案统一为智能课件 | A15–A16 | `TASK_SEMANTIC_NORMALIZATION` |
+| A-08 | [animation@04:37](../../../01-research/evidence/nineclaw-keyframes/animation_0277_edit-ai-modify.jpg) | 右侧顶部有全屏、分享、下载、编辑；产物保持可交互；左侧完成总结不消失 | 复用工具区、双栏和持续会话；编辑入口改为第三方专业编辑器，Work Buddy 内保持只读 | A15–A16 | `USER_DIRECTED_DIVERGENCE` |
 
 ## 6. V06：产物编辑与保存补充事件
 
@@ -83,8 +83,8 @@ target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 | E-01 | [exercise@00:00](../../../01-research/evidence/nineclaw-keyframes/exercise_0000_goal.jpg) | 首页选择“课后练习”，任务上下文与智能教案不同 | 不创建第三个 Goal；只复用从新任务进入标准 Run 的入口结构 | A00–A03 | `TASK_SEMANTIC_NORMALIZATION` |
 | E-02 | [exercise@00:54](../../../01-research/evidence/nineclaw-keyframes/exercise_0054_execution.jpg) | Agent 分析学科年级、知识点、题型、题量、难度、答案解析等缺口，当前状态为执行中 | 复用结构化缺口分析的密度与进行中反馈；字段替换为课时、时长、教材版本和课件风格 | A04–A05 | `TASK_SEMANTIC_NORMALIZATION` |
 | E-03 | [exercise@02:54](../../../01-research/evidence/nineclaw-keyframes/exercise_0174_preview-split.jpg) | 左侧显示生成总结和题型表；右侧打开产物正文；顶部有全屏、分享、下载、编辑 | 左侧显示课件完成总结；右侧打开课件页面预览；顶部工具保持同位置与状态 | A14–A15 | `TASK_SEMANTIC_NORMALIZATION` |
-| E-04 | [exercise@03:30](../../../01-research/evidence/nineclaw-keyframes/exercise_0210_edit-ai-modify.jpg) | 右侧进入“编辑中”；顶部“保存”“退出”；正文元素有选中框；底部出现“AI修改 / 请输入修改意见” | 右侧课件进入编辑态；教师选中课件页面或区块，输入“把图像示例改成课堂可拖动的参数探究”；保留保存、退出、选择框和 AI 修改输入 | A15–A16 | `TASK_SEMANTIC_NORMALIZATION` |
-| E-05 | [exercise@03:40](../../../01-research/evidence/nineclaw-keyframes/exercise_0220-save-success.jpg) | 顶部出现“保存成功”；编辑工具退出，回到非编辑预览 | AI 修改先产生课件 `v2` 和 Timeline 版本事件；“保存到 ClassIn”仍需 ProposedAction、Approval 和 Adapter；Receipt 到达后显示“课件草稿已保存到 ClassIn” | A16–A20 | `ADDED_DOMAIN_GOVERNANCE` |
+| E-04 | [exercise@03:30](../../../01-research/evidence/nineclaw-keyframes/exercise_0210_edit-ai-modify.jpg) | 右侧进入“编辑中”；顶部“保存”“退出”；正文元素有选中框；底部出现“AI修改 / 请输入修改意见” | 不复刻内嵌编辑；聚焦层改为全局页面目录与只读逐页预览，修改交给第三方专业编辑器 | A15–A16 | `USER_DIRECTED_DIVERGENCE` |
+| E-05 | [exercise@03:40](../../../01-research/evidence/nineclaw-keyframes/exercise_0220-save-success.jpg) | 顶部出现“保存成功”；编辑工具退出，回到非编辑预览 | Work Buddy 浏览不产生新版本；“保存到 ClassIn”仍需 ProposedAction、Approval 和 Adapter，Receipt 到达后才显示“课件草稿已保存到 ClassIn” | A16–A20 | `ADDED_DOMAIN_GOVERNANCE` |
 
 ## 7. ClassIn 增量治理事件
 
@@ -111,7 +111,7 @@ target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 | 调用状态 | V05@02:06、V04@00:23→01:57 | 调用卡先出现 running，再在原位置追加结果并进入 completed/failed |
 | 长过程滚动 | V04@01:57、V05@03:30→05:18 | 用户在底部时平滑跟随；用户上滚时不抢焦点 |
 | 产物到达 | V04@03:40→04:03 | Timeline 先出现 Artifact 引用，再打开或提示右侧产出；不能先显示无来源预览 |
-| 进入编辑 | V06@02:54→03:30 | 右侧进入编辑态，工具区和 AI 修改输入出现，Timeline 保持原位 |
+| 全局预览 | V06@02:54→03:30 | 右侧进入聚焦只读阅读态，页面目录和翻页工具出现，Timeline 状态保持原位 |
 | 保存反馈 | V06@03:30→03:40 | 保存动作具有进行中反馈；ClassIn 目标链只有 Receipt 可以声明业务保存成功 |
 
 ## 9. 实现与验收断言
@@ -121,9 +121,9 @@ target: 高中数学·必修一 / 函数的性质 / 课程资源草稿
 3. 目标页面中不得出现“三顾茅庐”“教学动画”“北京版小学英语”“课后练习.html”等源任务残留。
 4. V05 的确认卡结构、步骤进度、跳过/提交、调用行、任务步骤和完成总结都必须可观察。
 5. V04 的左会话右预览、Artifact 引用、工具区和持续 Timeline 都必须可观察。
-6. V06 的编辑态、选择框、AI 修改输入、保存/退出和保存反馈都必须可观察。
+6. V06 的版面结构映射为全局只读预览、页面目录、翻页与退出；内嵌编辑按 D-044 明确不实现。
 7. `prefers-reduced-motion` 只减少过渡，不改变事件顺序或跳过 running 状态。
-8. 视觉回归至少覆盖确认卡、计划、运行中调用、Artifact 到达、编辑态、ProposedAction、Approval 和 Receipt。
+8. 视觉回归至少覆盖确认卡、计划、运行中调用、Artifact 到达、全局只读预览、ProposedAction、Approval 和 Receipt。
 9. 所有 `ADAPTED` 文案都必须能回溯到本矩阵的源事件和目标文案，不在组件内临时发明第三套任务叙事。
 10. 真实 Agent Runtime 接入后只替换事件来源，不改变本矩阵定义的教师可观察语义、审批边界和 Receipt 真值。
 

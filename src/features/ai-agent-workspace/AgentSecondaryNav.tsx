@@ -7,8 +7,8 @@ export function AgentSecondaryNav() {
   const systemCapabilities = WORKBUDDY_CAPABILITIES.filter(({ placement }) => placement === 'system');
 
   return (
-    <div className={styles.panel} role="group" aria-label="教师 WorkBuddy 二级导航">
-      <nav className={styles.links} aria-label="教师 WorkBuddy 能力目录">
+    <div className={styles.panel} role="group" aria-label="Work Buddy 二级导航">
+      <nav className={styles.links} aria-label="Work Buddy 能力目录">
         {resourceCapabilities.map(({ id, label, icon: Icon }) => (
           <NavLink key={id} to={`/teacher/ai-agent/${id}`}>
             <Icon aria-hidden="true" size={16} />
@@ -16,7 +16,7 @@ export function AgentSecondaryNav() {
           </NavLink>
         ))}
       </nav>
-      <nav className={`${styles.links} ${styles.systemLinks}`} aria-label="教师 WorkBuddy 自动化与设置">
+      <nav className={`${styles.links} ${styles.systemLinks}`} aria-label="Work Buddy 自动化与设置">
         {systemCapabilities.map(({ id, label, icon: Icon }) => (
           <NavLink key={id} to={`/teacher/ai-agent/${id}`}>
             <Icon aria-hidden="true" size={16} />

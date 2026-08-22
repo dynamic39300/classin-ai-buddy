@@ -13,16 +13,23 @@ async function openWorkBuddy(page: import('@playwright/test').Page) {
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
 }
 
+async function openNewTaskContext(page: import('@playwright/test').Page) {
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  if (!await context.isVisible()) await page.getByRole('button', { name: '展开核心上下文' }).click();
+  await expect(context).toBeVisible();
+  return context;
+}
+
 async function createCoursewareRun(page: import('@playwright/test').Page) {
   await openWorkBuddy(page);
-  const context = page.getByRole('complementary', { name: '核心上下文' });
+  const context = await openNewTaskContext(page);
   await context.getByRole('button', { name: '应用函数单调性课程建议' }).click();
   await context.getByRole('button', { name: '确认上下文版本' }).click();
   await page.getByRole('button', { name: '生成单个课件' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
   await expect(page.getByText('正在整理任务与上下文', { exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('button', { name: '停止执行' })).toHaveCount(0);
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
 }
 
 async function confirmCoursewarePlan(page: import('@playwright/test').Page) {
@@ -37,19 +44,19 @@ async function generateCoursewareArtifact(page: import('@playwright/test').Page)
   const plan = await confirmCoursewarePlan(page);
   await plan.getByRole('button', { name: '开始执行计划' }).click();
   await expect(page.getByRole('button', { name: '停止执行' })).toBeVisible();
-  await page.clock.runFor(1440);
+  await page.clock.runFor(12_000);
   await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
 }
 
 async function createPackageRun(page: import('@playwright/test').Page) {
   await openWorkBuddy(page);
   await page.getByRole('button', { name: '生成课程方案包' }).click();
-  const context = page.getByRole('complementary', { name: '核心上下文' });
+  const context = await openNewTaskContext(page);
   await context.getByRole('button', { name: '应用函数单调性课程建议' }).click();
   await context.getByRole('button', { name: '确认上下文版本' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
   await expect(page.getByText('正在整理任务与上下文', { exact: true })).toBeVisible();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
 }
 
 async function generatePackageArtifacts(page: import('@playwright/test').Page) {
@@ -57,16 +64,18 @@ async function generatePackageArtifacts(page: import('@playwright/test').Page) {
   const plan = page.getByRole('article').filter({ hasText: '课程方案包执行计划' });
   await plan.getByRole('button', { name: '确认范围并开始生成' }).click();
   await expect(page.getByRole('button', { name: '停止执行' })).toBeVisible();
-  await page.clock.runFor(1080);
+  await page.clock.runFor(9_000);
   await expect(page.getByRole('region', { name: '课程方案包产出' })).toBeVisible();
   return page.getByRole('feed', { name: 'Agent 任务时间线' });
 }
 
-test('teacher creates one dynamic smart-courseware run from the default Context tree', async ({ page }) => {
+test('teacher creates one dynamic smart-courseware run from the on-demand Context tree', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openWorkBuddy(page);
 
   const context = page.getByRole('complementary', { name: '核心上下文' });
+  await expect(context).toBeHidden();
+  await page.getByRole('button', { name: '展开核心上下文' }).click();
   await expect(context).toBeVisible();
   const contextTree = context.getByRole('tree', { name: '教学上下文对象' });
   await expect(contextTree).toBeVisible();
@@ -93,7 +102,7 @@ test('teacher creates one dynamic smart-courseware run from the default Context 
   await page.getByRole('button', { name: '生成单个课件' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
   await expect(page.getByText('正在整理任务与上下文', { exact: true })).toBeVisible();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
   await expect(page.getByLabel('当前为固定体验数据')).toHaveText('[模拟] 体验环境');
@@ -154,10 +163,18 @@ test('approved plan runs capabilities in place before the smart courseware Artif
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
 
   await plan.getByRole('button', { name: '开始执行计划' }).click();
-  const activeCall = timeline.getByRole('article').filter({ hasText: '理解教学目标' });
+  const activeCall = timeline.getByRole('article', { name: '理解教学目标 · 运行中' });
   await expect(activeCall.getByText('运行中', { exact: true })).toBeVisible();
   await expect(activeCall.getByText('目标与课时约束', { exact: true })).toBeVisible();
-  await page.clock.runFor(1440);
+  await expect(page.getByRole('status').filter({ hasText: '执行中' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: '执行中' })).toContainText('第 1/4 步 · 预计还需 12 秒');
+  await expect(activeCall.getByText('本步预计 3 秒', { exact: true })).toBeVisible();
+  expect(await activeCall.evaluate((element) => getComputedStyle(element, '::after').animationName)).toContain('runSweep');
+  await page.clock.runFor(1_000);
+  await expect(page.getByRole('status').filter({ hasText: '执行中' })).toContainText('预计还需 11 秒');
+  await expect(activeCall.getByText('本步预计 2 秒', { exact: true })).toBeVisible();
+  await expect(timeline.getByRole('article', { name: '设计教学结构 · 等待执行' })).toBeVisible();
+  await page.clock.runFor(11_000);
 
   for (const capability of ['理解教学目标', '设计教学结构', '组装课件初稿', '检查教学与内容质量']) {
     const call = timeline.getByRole('article').filter({ hasText: capability });
@@ -180,31 +197,60 @@ test('approved plan runs capabilities in place before the smart courseware Artif
   await expect(timeline).not.toContainText('课后练习');
 });
 
-test('teacher edits the Artifact and completes Action, Approval, execution and Receipt in one Timeline', async ({ page }) => {
+test('collapsing the completed Run inspector removes the output from layout and restores one-column workspace', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await generateCoursewareArtifact(page);
+
+  const runSurface = page.locator('section[aria-labelledby="conversation-run-title"]');
+  const output = page.getByRole('region', { name: '智能课件产出' });
+
+  await page.getByRole('button', { name: '收起辅助区' }).click();
+
+  await expect(runSurface).toHaveAttribute('data-inspector-open', 'false');
+  await expect(page.getByRole('button', { name: '展开辅助区' })).toBeVisible();
+  await expect(output).toBeHidden();
+  const collapsedColumnCount = await runSurface.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length);
+  expect(collapsedColumnCount).toBe(1);
+});
+
+test('teacher previews the full read-only Artifact and completes Action, Approval, execution and Receipt in one Timeline', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await generateCoursewareArtifact(page);
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   const output = page.getByRole('region', { name: '智能课件产出' });
 
-  const focusPreview = output.getByRole('button', { name: '聚焦预览' });
+  await expect(output.getByText('可查看全部页面。内容修改需使用专业文档编辑器。', { exact: true })).toBeVisible();
+  await expect(output.getByText('[模拟] 预览', { exact: true })).toBeVisible();
+  await expect(output.getByRole('button', { name: '编辑课件' })).toHaveCount(0);
+  await expect(output.getByRole('textbox', { name: 'AI 修改要求' })).toHaveCount(0);
+  await expect(output.getByText('第 1 页，共 18 页', { exact: true })).toBeVisible();
+  await expect(output.getByRole('button', { name: '上一页' })).toBeDisabled();
+  await output.getByRole('button', { name: '下一页' }).click();
+  await expect(output.getByRole('heading', { name: '本节课，我们要解决什么' })).toBeVisible();
+  await expect(output.getByText('第 2 页，共 18 页', { exact: true })).toBeVisible();
+
+  const focusPreview = output.getByRole('button', { name: '全局预览' });
   await focusPreview.click();
   await expect(output).toBeFocused();
+  const pageDirectory = output.getByRole('navigation', { name: '课件全部页面' });
+  await expect(pageDirectory).toBeVisible();
+  await expect(pageDirectory.getByRole('button')).toHaveCount(18);
+  await pageDirectory.getByRole('button', { name: '打开第 6 页：哪些图像在区间内单调递增' }).click();
+  await expect(output.getByRole('heading', { name: '哪些图像在区间内单调递增' })).toBeVisible();
+  await expect(output.getByText('第 6 页，共 18 页', { exact: true })).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(output.getByRole('heading', { name: '增函数的数学定义' })).toBeVisible();
+  await page.keyboard.press('End');
+  await expect(output.getByText('第 18 页，共 18 页', { exact: true })).toBeVisible();
+  await expect(output.getByRole('button', { name: '下一页' })).toBeDisabled();
+  await page.keyboard.press('Home');
+  await expect(output.getByText('第 1 页，共 18 页', { exact: true })).toBeVisible();
+  await output.getByRole('button', { name: '使用专业编辑器打开' }).click();
+  await expect(output.getByRole('status')).toContainText('未接入第三方文档编辑器');
   await page.keyboard.press('Escape');
   await expect(focusPreview).toBeFocused();
-
-  await output.getByRole('button', { name: '编辑课件' }).click();
-  await expect(output.getByText('编辑中', { exact: true })).toBeVisible();
-  await output.getByRole('button', { name: '第 6 页 · 图像辨析' }).click();
-  await output.getByRole('textbox', { name: 'AI 修改要求' }).fill('把第 6 页改成更直观的函数图像对比，并增加一页易错点辨析。');
-  await output.getByRole('button', { name: '应用 AI 修改' }).click();
-
   await expect(output.getByText('v1', { exact: true })).toBeVisible();
-  await expect(output.getByText('v2', { exact: true })).toBeVisible();
   await expect(timeline.getByText('函数单调性：从图像变化到形式化定义', { exact: true })).toBeVisible();
-  await expect(timeline.getByText('课件已更新为 v2', { exact: true })).toBeVisible();
-  await expect(timeline.getByText('替换第 6 页案例 · 新增易错点辨析页 · 其他页面保持不变', { exact: true })).toBeVisible();
-  await output.getByRole('button', { name: '保存草稿' }).click();
-  await expect(output.getByRole('status')).toContainText('未写入 ClassIn');
 
   await output.getByRole('button', { name: '确认课件可用于后续任务' }).click();
   await output.getByRole('button', { name: '保存到 ClassIn' }).click();
@@ -220,20 +266,21 @@ test('teacher edits the Artifact and completes Action, Approval, execution and R
   await expect(action.getByRole('button', { name: '确认执行' })).toBeFocused();
   await action.getByRole('button', { name: '确认执行' }).click();
   approval = page.getByRole('dialog', { name: '确认保存到 ClassIn' });
-  await expect(approval.getByText('来源课件 v2', { exact: true })).toBeVisible();
+  await expect(approval.getByText('来源课件 v1', { exact: true })).toBeVisible();
   await approval.getByRole('button', { name: '批准保存' }).click();
   await expect(action.getByText('已批准 · 尚未执行', { exact: true })).toBeVisible();
   await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toHaveCount(0);
   await action.getByRole('button', { name: '执行已批准动作' }).click();
   await expect(action.getByText('正在执行', { exact: true })).toBeVisible();
-  await page.clock.runFor(360);
+  await expect(action.getByText('预计 2 秒', { exact: true })).toBeVisible();
+  await page.clock.runFor(2_000);
 
   const receipt = timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' });
   await expect(receipt).toBeVisible();
   await expect(receipt.getByText('只有执行回执能证明 ClassIn 已接受本次保存。', { exact: true })).toBeVisible();
   await expect(receipt.getByRole('link', { name: '打开 ClassIn 课程对象' })).toBeVisible();
 
-  const taskNavigation = page.getByRole('navigation', { name: '已打开的 WorkBuddy 任务' });
+  const taskNavigation = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
   await taskNavigation.getByRole('button').first().click();
   await taskNavigation.getByRole('button', { name: '生成函数单调性智能课件', exact: true }).click();
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
@@ -257,7 +304,7 @@ test('teacher supplements, stops, resumes and replans the same Run while old evi
   await expect(timeline.getByText('任务执行已停止', { exact: true })).toBeVisible();
   await expect(composer.getByRole('button', { name: '继续执行' })).toBeVisible();
   await composer.getByRole('button', { name: '继续执行' }).click();
-  await page.clock.runFor(1440);
+  await page.clock.runFor(12_000);
   await expect(timeline.getByText('任务已从停止位置继续', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
 
@@ -287,11 +334,12 @@ test('stable Run ID restores Timeline, Artifact, Receipt, Inspector and Composer
   await action.getByRole('button', { name: '确认执行' }).click();
   await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
   await action.getByRole('button', { name: '执行已批准动作' }).click();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
   await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
   await page.getByRole('group', { name: '任务补充输入' }).getByRole('textbox', { name: '向 Agent 补充要求' }).fill('刷新后继续完善例题层次');
-  await output.getByRole('button', { name: '编辑课件' }).click();
-  await output.getByRole('textbox', { name: 'AI 修改要求' }).fill('保留这条未提交的修改要求');
+  await output.getByRole('button', { name: '全局预览' }).click();
+  await output.getByRole('navigation', { name: '课件全部页面' }).getByRole('button', { name: '打开第 12 页：三个容易混淆的判断' }).click();
+  await page.keyboard.press('Escape');
   await page.getByRole('tab', { name: '上下文' }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
   await context.getByRole('textbox', { name: '搜索上下文' }).fill('高一（3）班');
@@ -305,7 +353,8 @@ test('stable Run ID restores Timeline, Artifact, Receipt, Inspector and Composer
   await expect(page.getByRole('region', { name: '智能课件产出' }).getByText('函数单调性：从图像变化到形式化定义', { exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: /产出/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('group', { name: '任务补充输入' }).getByRole('textbox', { name: '向 Agent 补充要求' })).toHaveValue('刷新后继续完善例题层次');
-  await expect(page.getByRole('region', { name: '智能课件产出' }).getByRole('textbox', { name: 'AI 修改要求' })).toHaveValue('保留这条未提交的修改要求');
+  await expect(page.getByRole('region', { name: '智能课件产出' }).getByText('第 12 页，共 18 页', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: '智能课件产出' }).getByRole('heading', { name: '三个容易混淆的判断' })).toBeVisible();
   await page.getByRole('tab', { name: '上下文' }).click();
   await expect(page.getByRole('complementary', { name: '核心上下文' }).getByRole('textbox', { name: '搜索上下文' })).toHaveValue('高一（3）班');
 });
@@ -326,7 +375,7 @@ test('governed recovery keeps a denied save inside the same Run and requires a n
   await action.getByRole('button', { name: '确认执行' }).click();
   await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
   await action.getByRole('button', { name: '执行已批准动作' }).click();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
 
   const denied = timeline.getByRole('article').filter({ hasText: '保存动作需要处理' });
   await expect(denied.getByText('保存位置没有写入权限', { exact: true })).toBeVisible();
@@ -336,7 +385,7 @@ test('governed recovery keeps a denied save inside the same Run and requires a n
   await action.getByRole('button', { name: '确认执行' }).click();
   await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
   await action.getByRole('button', { name: '执行已批准动作' }).click();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
   await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
 });
 
@@ -378,7 +427,7 @@ test('teacher configures and generates a four-artifact course package inside one
   await composer.getByRole('button', { name: '发送补充要求' }).click();
   await expect(timeline.getByText('录播脚本结尾增加两道课堂反思问题。', { exact: true })).toBeVisible();
   await composer.getByRole('button', { name: '继续执行' }).click();
-  await page.clock.runFor(1080);
+  await page.clock.runFor(9_000);
   const output = page.getByRole('region', { name: '课程方案包产出' });
   await expect(output).toBeVisible();
   await expect(output.getByText('4 项产出', { exact: true })).toBeVisible();
@@ -427,7 +476,9 @@ test('teacher approves the package once and receives object-level execution resu
   await approval.getByRole('button', { name: '批准保存' }).click();
   await expect(action.getByText('已批准 · 尚未执行', { exact: true })).toBeVisible();
   await action.getByRole('button', { name: '执行已批准方案包' }).click();
-  await page.clock.runFor(360);
+  await expect(action.getByText('正在执行对象级写回', { exact: true })).toBeVisible();
+  await expect(action.getByText('预计 2 秒', { exact: true })).toBeVisible();
+  await page.clock.runFor(2_000);
 
   const receipt = timeline.getByRole('article').filter({ hasText: '课程方案包执行完成' });
   await expect(receipt).toBeVisible();
@@ -449,7 +500,7 @@ test('partial package writeback retries only failed and waiting items while reta
   await action.getByRole('button', { name: '确认执行' }).click();
   await page.getByRole('dialog', { name: '确认保存课程方案包' }).getByRole('button', { name: '批准保存' }).click();
   await action.getByRole('button', { name: '执行已批准方案包' }).click();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
 
   const partialReceipt = timeline.getByRole('article').filter({ hasText: '课程方案包部分成功' });
   await expect(partialReceipt.getByText('执行失败', { exact: true })).toBeVisible();
@@ -463,7 +514,7 @@ test('partial package writeback retries only failed and waiting items while reta
   await action.getByRole('button', { name: '确认执行' }).click();
   await page.getByRole('dialog', { name: '确认保存课程方案包' }).getByRole('button', { name: '批准保存' }).click();
   await action.getByRole('button', { name: '执行已批准方案包' }).click();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
 
   await expect(partialReceipt).toBeVisible();
   const receipts = timeline.getByRole('article').filter({ hasText: /课程方案包(部分成功|执行完成)/ });
@@ -480,7 +531,7 @@ test('approved courseware derives an independently contextualized package with b
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-course-package$/);
   await expect(page.getByText('正在整理任务与上下文', { exact: true })).toBeVisible();
-  await page.clock.runFor(360);
+  await page.clock.runFor(2_000);
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   await expect(timeline.getByText('来源课件 · v1', { exact: true })).toBeVisible();
   await expect(timeline.getByRole('link', { name: '返回源课件任务' })).toBeVisible();
@@ -500,7 +551,9 @@ test('compact reduced-motion Run keeps the Timeline, Inspector and primary comma
   const plan = await confirmCoursewarePlan(page);
   await plan.getByRole('button', { name: '开始执行计划' }).focus();
   await page.keyboard.press('Enter');
-  await page.clock.runFor(1440);
+  const runningCall = page.getByRole('feed', { name: 'Agent 任务时间线' }).getByRole('article', { name: '理解教学目标 · 运行中' });
+  expect(await runningCall.evaluate((element) => getComputedStyle(element, '::after').animationName)).toBe('none');
+  await page.clock.runFor(12_000);
   await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
   await page.getByRole('tab', { name: '上下文' }).click();
   await expect(page.getByRole('complementary', { name: '核心上下文' })).toBeVisible();

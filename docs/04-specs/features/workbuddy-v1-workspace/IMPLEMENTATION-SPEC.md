@@ -58,7 +58,7 @@ implementation_gate: M3_LAYOUT_REVISION_COMPLETE
 
 - The current runtime is one npm, React, Vite, and strict TypeScript application. A monorepo, API/BFF, or durable Agent runtime is introduced only when a second real deployable or runtime exists.
 - The complete teacher and student ClassIn page trees remain available. WorkBuddy is added only to the teacher tree; role-specific pages do not import one another's private implementations.
-- The existing AppShell continues to own identity, organization, primary navigation, Topbar, account behavior, and the main content slot.
+- The existing AppShell continues to own identity, organization, primary navigation, account behavior, the main content slot, and the route-level Topbar policy. It suppresses the generic Topbar only for WorkBuddy routes per D-030; task navigation remains private to the WorkBuddy Feature.
 - AppShell is the UI composition Seam: it owns only a contextual-navigation slot beneath the active primary item; the WorkBuddy Feature owns the flat secondary navigation, while the nested teacher-route layout owns only the current Work Surface.
 - `AI Agent` is a teacher primary navigation destination. The WorkBuddy panel is the only secondary navigation level; Section labels may group items visually but do not create third-level navigation.
 - Recent history shows six rows in the locked review viewport and scrolls for more. Pinned tasks sort ahead of ordinary tasks without live status updates forcing scroll jumps.

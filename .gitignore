@@ -13,3 +13,6 @@ coverage/
 playwright-report/
 test-results/
 *.log
+
+# Local product research captures; derived evidence belongs in docs/01-research/.
+reference/

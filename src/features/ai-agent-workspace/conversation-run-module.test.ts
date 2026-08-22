@@ -28,6 +28,7 @@ function baseProjection(): ConversationRunProjection {
     presentation: Object.freeze({
       inspectorOpen: true, inspectorMode: 'context', outputCount: 0, unreadOutputCount: 0,
       composerDraft: '', progress: Object.freeze({ status: 'idle' as const }), executingAction: false, replanPending: false,
+      executionEndsAt: null,
       contextExpandedIds: null, contextQuery: '', contextScrollTop: 0,
       artifactFocused: false, artifactEditing: false, artifactEditDraft: '', artifactSelectedBlock: '', artifactPreviewPage: 1, artifactScrollTop: 0,
       packageEditingArtifactId: null, packageEditDraft: '',
@@ -37,20 +38,29 @@ function baseProjection(): ConversationRunProjection {
 }
 
 function manualScheduler() {
-  const callbacks: Array<() => void> = [];
+  let now = 0;
+  const callbacks: Array<Readonly<{ delayMs: number; callback: () => void }>> = [];
   const scheduler: ConversationRunScheduler = Object.freeze({
-    schedule: (_delayMs, callback) => {
-      callbacks.push(callback);
+    now: () => now,
+    schedule: (delayMs, callback) => {
+      const scheduled = Object.freeze({ delayMs, callback });
+      callbacks.push(scheduled);
       return () => {
-        const index = callbacks.indexOf(callback);
+        const index = callbacks.indexOf(scheduled);
         if (index >= 0) callbacks.splice(index, 1);
       };
     },
   });
   return Object.freeze({
     scheduler,
-    advance: () => callbacks.shift()?.(),
+    advance: () => {
+      const scheduled = callbacks.shift();
+      if (!scheduled) return;
+      now += scheduled.delayMs;
+      scheduled.callback();
+    },
     pendingCount: () => callbacks.length,
+    nextDelay: () => callbacks[0]?.delayMs ?? null,
   });
 }
 
@@ -72,6 +82,7 @@ describe('ConversationRun Deep Module', () => {
     expect(module.open('run-1')).toMatchObject({ status: 'organizing' });
     expect(module.open('run-1')?.events.find(({ id }) => id === 'run-1:organizing')?.allowedCommands).toEqual([]);
     expect(clock.pendingCount()).toBe(1);
+    expect(clock.nextDelay()).toBe(2_000);
     clock.advance();
     expect(module.open('run-1')?.events.map(({ id }) => id)).toEqual(['goal', 'run-1:organizing', 'understanding']);
 
@@ -81,6 +92,7 @@ describe('ConversationRun Deep Module', () => {
       allowedCommands: ['supplement', 'stop'],
       presentation: { progress: { status: 'running', activeIndex: 0 } },
     });
+    expect(clock.nextDelay()).toBe(3_000);
     clock.advance();
     expect(module.open('run-1')?.presentation.progress).toMatchObject({ status: 'running', activeIndex: 1 });
     clock.advance();
@@ -264,6 +276,7 @@ describe('ConversationRun Deep Module', () => {
     expect(restored.open('run-1')?.presentation.executingAction).toBe(true);
     restored.subscribe('run-1', null, () => undefined);
     expect(restoredClock.pendingCount()).toBe(1);
+    expect(restoredClock.nextDelay()).toBe(2_000);
     restoredClock.advance();
     expect(executed).toEqual(['execute_action']);
     expect(restored.open('run-1')?.presentation.executingAction).toBe(false);

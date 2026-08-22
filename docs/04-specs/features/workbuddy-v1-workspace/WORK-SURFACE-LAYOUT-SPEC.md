@@ -10,7 +10,7 @@ target_viewport: 1440x900
 
 ## 1. 目标
 
-布局需要同时保留 ClassIn 一级主导航、嵌入其下的教师 WorkBuddy 二级能力目录、Work Surface 顶部任务 Tab、Agent Run 主轴和一个当前最重要的辅助对象。左侧不再包含任务历史；全部任务通过当前 Tab 的下拉选择器滚动访问，不能增加独立历史栏，也不能让 Context 与 Artifact 同时常驻。
+布局需要同时保留 ClassIn 一级主导航、嵌入其下的 Work Buddy 二级能力目录、Work Surface 顶部任务 Tab、Agent Run 主轴和一个当前最重要的辅助对象。左侧不再包含任务历史；全部任务通过当前 Tab 的下拉选择器滚动访问，不能增加独立历史栏，也不能让 Context 与 Artifact 同时常驻。
 
 ## 2. 1440×900 基准画布
 
@@ -20,13 +20,14 @@ target_viewport: 1440x900
 |---|---:|---|
 | Viewport | `1440×900` | Phase 3/4 主验收尺寸 |
 | ClassIn 一级主导航 + WorkBuddy 二级目录 | `220px` | 锁定范围 `216-224px`；目录可由一级入口独立展开/收起，紧凑收起态目标 `64px` |
-| 全局顶部栏 | `48px` | 锁定范围 `44-56px` |
-| Agent 主工作区 | `1204×852px` | 位于唯一左侧栏右侧、顶部栏下方 |
+| 全局顶部栏 | Work Buddy 任务路由不显示 | 二级能力页与其他 ClassIn 页面继续使用 `44-56px` 通用 Topbar |
+| Work Buddy 任务 Tab 条 | `42px` | 仅位于新建任务和具体 Run 的右侧 Stage 顶部，白色底、底部细分隔线、单行横向滚动；新建入口紧跟最后一个 Tab 并在 Hover / Focus 时由加号切换为书写图标；每个 Run Tab 的编辑与关闭操作在对应 Hover / Focus 时成组显现，能力页改用标准 Topbar |
+| Agent 主工作区 | `1204×834px` | 位于唯一左侧栏右侧、任务 Tab 条下方 |
 | Work Surface 外边距 | `12px` | 四边一致，遵循 4px 网格 |
 | Work Surface | `1180×828px` | 白色连续表面，外层 `16px` 圆角 |
 | Run Header | `48px` | 固定，不随时间线滚动 |
 | Composer 区 | `auto`，最小 `72px` | 固定底部，最多约 6 行后内部滚动 |
-| 右侧活动区 | 默认 `360px` | `344-400px` 可并列；更宽进入 Overlay/Focus |
+| 右侧活动区 | 展开时 `360px` | 新任务首页默认收起；`344-400px` 可并列，更宽进入 Overlay/Focus |
 | 中央 Run 最小宽 | `560px` | 达到下限后辅助区改为 Overlay/Focus |
 
 ## 3. 布局模式
@@ -35,10 +36,10 @@ target_viewport: 1440x900
 
 ```text
 ┌─ ClassIn Sidebar 220 ─┬──────────────── Main 1204 ──────────────────────┐
-│ 首页                   │ Topbar 48                                      │
-│ 教师 WorkBuddy         ├────────────────────────────────────────────────┤
-│  ├ 技能市场            │ Task Tabs / Current Task Selector / +          │
-│  ├ 工具连接            ├────────────────────────────────────────────────┤
+│ 首页                   │ Task Tabs / +                 / Panel          │
+│ Work Buddy               ├────────────────────────────────────────────────┤
+│  ├ 技能市场            │                                                │
+│  ├ 工具连接            │                                                │
 │  ├ 内容资源/文件       │        Goal Composer                           │
 │  └ 定时任务/设置       │        Core Context / Task Type Shortcuts      │
 └────────────────────────┴────────────────────────────────────────────────┘
@@ -46,15 +47,19 @@ target_viewport: 1440x900
 
 - 主输入区域视觉中心位于 Work Surface 中上部，不用营销 Hero 挤占任务输入；
 - 初次使用显示价值说明和示例，已有使用记录时优先显示最近业务入口与任务类型；
-- Core Context 摘要紧邻输入器，不放到页面远端卡片。
+- Core Context 摘要紧邻输入器，不放到页面远端卡片；
+- 新建入口属于 Tab 横向序列并紧贴最后一个 Tab；其固定热区只切换加号与书写图标，不引起 Tab、入口或最右辅助区开关位移；
+- 新任务首页的右侧辅助区默认收起，任务 Tab 条最右侧使用图标开关表达全局展开状态；
+- 展开后主区与 `360px` Core Context 面板无间隙共边，任务条底边、面板顶边和主区顶边处于同一结构基线；
+- 收起只隐藏面板并回收主区宽度，不卸载 Context 搜索、树展开、选择或滚动现场；达到中央主区宽度下限时，辅助区改为右侧 Overlay。
 
 ### L2：Run，仅主轴
 
 ```text
 ┌ ClassIn Sidebar ┬──────────────────── Work Surface ───────────────────┐
-│ Primary         │ Run Header                                          │
-│ 教师 WorkBuddy  │ Task Tabs / Current Task Selector / +               │
-│  能力目录        ├─────────────────────────────────────────────────────┤
+│ Primary         │ Task Tabs / Current Task Selector / +               │
+│ Work Buddy      ├─────────────────────────────────────────────────────┤
+│  能力目录        │ Run Header                                          │
 │                 │ Goal / Context Summary                              │
 │                 │ Timeline / Plan / Process / Artifact refs           │
 │                 ├─────────────────────────────────────────────────────┤
@@ -71,7 +76,7 @@ target_viewport: 1440x900
 ```text
 ┌ ClassIn Sidebar ┬────── Run Main ≥560 ─────────┬ Active Panel 360 ──┐
 │ Primary         │ Run Header                    │ Panel Header         │
-│ 教师 WorkBuddy  │ Timeline                      │ Artifact / Context / │
+│ Work Buddy      │ Timeline                      │ Artifact / Context / │
 │  能力目录        │                               │ Process Detail       │
 │                 │ Composer                      │ Footer/Actions       │
 └─────────────────┴───────────────────────────────┴──────────────────────┘
@@ -164,7 +169,7 @@ Footer：按状态显示停止、重试、换策略、复制诊断、返回最�
 
 ## 9. 原型验收点
 
-1. 1440×900 首屏可见 ClassIn 一级主导航、其下的教师 WorkBuddy 二级能力目录、并行任务 Tab、新/当前 Run 与唯一主行动；
+1. 1440×900 首屏可见 ClassIn 一级主导航、其下的 Work Buddy 二级能力目录、并行任务 Tab、新/当前 Run 与唯一主行动；
 2. WorkBuddy 二级目录位于同一左侧栏且没有任务历史或第三级菜单；任务历史进入当前 Tab 下拉选择器，不形成第三根栏；
 3. 打开任一右侧模式后只新增一个活动辅助区；
 4. 360-400px Artifact 与 Core Context 切换不造成 Run 状态丢失；

@@ -33,11 +33,11 @@ M4.1 只重做**体验表达与页面编排**：把完整任务闭环放回一�
 | [统一右侧活动区规格](./ACTIVE-INSPECTOR-SPEC.md) | `上下文 / 产出` 如何切换、收起、自动提示、全屏与恢复 | `REVIEWED_APPROVED` |
 | [双任务 Storyboard](./COURSEWARE-AND-PACKAGE-STORYBOARD.md) | 单课件和课程方案包逐帧、逐动作如何动态完成完整 Run | `REVIEWED_APPROVED` |
 | [M4.1 Review 清单](./M4-1-REVIEW-CHECKLIST.md) | 用户需要逐项确认什么，哪些事项仍未锁定 | `REVIEWED_APPROVED` |
-| [M4.1 用户端到端验收清单](./M4-1-USER-END-TO-END-ACCEPTANCE-CHECKLIST.md) | 在可运行页面中按教师真实操作顺序验收两条完整闭环、恢复与可用性 | `READY_FOR_USER_REVIEW` |
+| [M4.1 用户端到端验收清单](./M4-1-USER-END-TO-END-ACCEPTANCE-CHECKLIST.md) | 在可运行页面中按教师真实操作顺序验收两条完整闭环、恢复与可用性 | `REVIEWED_APPROVED` |
 | [NineClaw 逐帧还原矩阵](./NINECLAW-FRAME-PARITY-MATRIX.md) | V04/V05/V06 的可见交互如何统一映射为同一智能课件任务 | `TO_SPEC_EVIDENCE` |
 | [M4.1 Feature Spec](./FEATURE-SPEC.md) | 把已批准产品设计转换为 ConversationRun Interface、实施决策、测试 Seam 与验收边界 | `READY_FOR_AGENT` |
 | [Ticket 拆分提案](./TICKET-BREAKDOWN-PROPOSAL.md) | 10 个 tracer-bullet 纵向票及其阻塞关系 | `REVIEWED_APPROVED` |
-| [M4.1 实施验收记录](./M4-1-IMPLEMENTATION-REVIEW.md) | 当前可操作闭环、自动化事实、明确边界与用户 Review 顺序 | `READY_FOR_USER_REVIEW` |
+| [M4.1 实施验收记录](./M4-1-IMPLEMENTATION-REVIEW.md) | 当前可操作闭环、自动化事实、明确边界与用户 Review 顺序 | `REVIEWED_APPROVED` |
 
 ## 4. 本轮 Write Set
 

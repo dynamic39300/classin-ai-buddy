@@ -76,24 +76,24 @@ source_spec: ./FEATURE-SPEC.md
 - Artifact 到达先有来源事件，再更新右侧未读/预览；
 - 产出标题、内容和完成总结始终是同一个智能课件，不残留 V04/V06 源任务语义。
 
-### 05 — 完成课件编辑、AI 修改、审批与成功 Receipt
+### 05 — 完成课件全局只读预览、审批与成功 Receipt
 
 **Blocked by:** 04 — 动态执行 Skill/Tool 过程并交付可预览智能课件。
 
-**What it delivers:** 教师在右侧产出区预览、聚焦、选择课件内容并输入 AI 修改要求，得到新 Artifact 版本；随后从 Timeline 提出保存到 ClassIn 的 Action、完成低风险确认、等待执行，并在原 Run 获得成功 ExecutionReceipt。
+**What it delivers:** 教师在右侧产出区逐页预览课件，在聚焦层通过完整页面目录浏览全局内容；文档修改明确转交专业第三方编辑器。随后从 Timeline 提出保存到 ClassIn 的 Action、完成低风险确认、等待执行，并在原 Run 获得成功 ExecutionReceipt。
 
 **Acceptance outline:**
 
-- 预览、Focus、下载、编辑、保存与退出位置稳定且键盘可达；
-- AI 修改产生 `v2` 与 Timeline 版本事件，不覆盖 `v1`；
-- V06 的编辑框、选择态和保存反馈结构被智能课件语义完整复刻；
+- 当前页、上一页、下一页、页码、全局页面目录和退出位置稳定且键盘可达；
+- 预览明确标注为只读与 `[模拟]`，浏览页码不产生新的 Artifact 版本；
+- “使用专业编辑器打开”代替内嵌编辑，未接入时给出明确反馈且不伪造外部打开成功；
 - ProposedAction 显示目标、差异、风险、权限、版本与过期；
 - Approval 与执行中明确分开；只有 Receipt 表示 ClassIn 保存成功；
 - 刷新/重新打开可通过 Run ID 恢复 Timeline、Artifact、Inspector 和 Receipt。
 
 ### 06 — 交付停止、补充、Replanning 与写回异常恢复
 
-**Blocked by:** 05 — 完成课件编辑、AI 修改、审批与成功 Receipt。
+**Blocked by:** 05 — 完成课件全局只读预览、审批与成功 Receipt。
 
 **What it delivers:** 教师可以在原对话中补充普通要求、停止执行、改变教学范围、查看影响并 Replanning；保存时的权限拒绝、版本冲突、超时和临时失败均在同一 Timeline 中给出受治理恢复，而不丢失旧证据。
 
@@ -108,7 +108,7 @@ source_spec: ./FEATURE-SPEC.md
 
 ### 07 — 在 Conversation Run 中完成课程方案包成功主链
 
-**Blocked by:** 05 — 完成课件编辑、AI 修改、审批与成功 Receipt。
+**Blocked by:** 05 — 完成课件全局只读预览、审批与成功 Receipt。
 
 **What it delivers:** 教师直接创建独立课程方案包 Run，在同一个 Timeline 中确认 Context 和四类产物，观察并行生成、边生成边预览、逐项复查、批量 ProposedAction、Approval 和全成功对象级 Receipt。
 
@@ -137,7 +137,7 @@ source_spec: ./FEATURE-SPEC.md
 
 ### 09 — 交付课件派生方案包与双向 Run 恢复
 
-**Blocked by:** 05 — 完成课件编辑、AI 修改、审批与成功 Receipt；07 — 在 Conversation Run 中完成课程方案包成功主链。
+**Blocked by:** 05 — 完成课件全局只读预览、审批与成功 Receipt；07 — 在 Conversation Run 中完成课程方案包成功主链。
 
 **What it delivers:** 教师从已审阅智能课件创建关联但独立的方案包 Run，重新确认 Context 和产物范围；源 Run 与派生 Run 可以双向定位，且关系严格匹配源 Artifact ID 与版本。
 

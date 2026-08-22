@@ -11,7 +11,7 @@ page_count: 43
 ## 1. 页面 ID 规则
 
 - `WB-G`：ClassIn 全局壳；
-- `WB-N`：教师 WorkBuddy 二级导航与任务工作区导航；
+- `WB-N`：Work Buddy 二级导航与任务工作区导航；
 - `WB-T`：新任务与 Run；
 - `WB-AR`：Artifact、审批与写回；
 - `WB-S`：Skill；`WB-M`：Tool/MCP；
@@ -26,8 +26,8 @@ page_count: 43
 | WB-G-P01 | ClassIn 共享应用壳 | 固定壳 | 应用启动 | 所有一级模块 | G-P01 |
 | WB-G-O01 | 全局侧栏收起态 | 壳状态 | 收起按钮/快捷键 | 展开恢复 | G-O01 |
 | WB-G-O02 | 账户与组织菜单 | Popover | 头像/组织名 | 账户、切换组织、退出 | G-O02 |
-| WB-N-P01 | 教师 WorkBuddy 二级能力目录 | ClassIn 左侧栏内嵌 Surface | 可展开/收起的教师 WorkBuddy 一级入口 | 技能市场、工具连接、内容资源、定时任务、我的文件、设置 | G-P01 + ClassIn 适配 |
-| WB-N-P02 | 并行任务 Tab 条 | Work Surface 顶层 | 教师 WorkBuddy / 当前任务 | 已打开任务、新建任务、全部任务选择器 | G-P01/G-O03 + ClassIn 适配 |
+| WB-N-P01 | Work Buddy 二级能力目录 | ClassIn 左侧栏内嵌 Surface | 可展开/收起的 Work Buddy 一级入口 | 技能市场、工具连接、内容资源、定时任务、我的文件、设置 | G-P01 + ClassIn 适配 |
+| WB-N-P02 | 并行任务 Tab 条 | Work Surface 顶层 | Work Buddy / 当前任务 | 已打开任务、新建任务、全部任务选择器 | G-P01/G-O03 + ClassIn 适配 |
 | WB-N-O01 | 全部任务选择器与操作菜单 | Popover | 当前任务 Tab | 切换/打开任务、重命名、置顶、删除 | G-O03 |
 | WB-T-P01 | 新建任务 | 主 Surface | 二级菜单/业务对象入口 | 创建 Run | T-P01 |
 | WB-T-P02 | Agent Run 工作区 | 主 Surface | 新任务提交/历史/关联任务 | Artifact、Context、执行详情、Focus | T-P02/T-P03 |
@@ -58,7 +58,7 @@ page_count: 43
 | WB-AU-P02 | 定时任务历史 | 主页面/Tab | 列表历史 | 关联 Run、Artifact、Receipt | A-P02 |
 | WB-F-P01 | WorkBuddy 文件视图 | 共享 Space 页面 | 二级菜单/Run | 预览、作为输入、回到来源 | F-P01 |
 | WB-F-O01 | 文件预览与引用 | 右侧/Overlay | 文件条目 | 打开、作为 Context、定位来源 | F-P01 设计补全 |
-| WB-SET-P01 | 教师 WorkBuddy 设置壳/通用 | 主页面 | 二级菜单 | 各设置子页 | SET-P01 |
+| WB-SET-P01 | Work Buddy 设置壳/通用 | 主页面 | 二级菜单 | 各设置子页 | SET-P01 |
 | WB-SET-P02 | 模型设置 | 设置子页 | 设置/模型选择器 | 添加、测试、设默认 | SET-P02 |
 | WB-SET-P03 | WorkBuddy 数据与备份 | 设置子页 | 设置 | 备份、恢复、数据说明 | SET-P03 |
 | WB-SET-P04 | 外部消息与通知 | 设置子页 | 设置 | 绑定、重绑、权限 | SET-P04 |
@@ -79,7 +79,7 @@ page_count: 43
 
 ```mermaid
 flowchart TD
-  SH["WB-G-P01 ClassIn Shell"] --> NAV["WB-N-P01 教师 WorkBuddy 二级能力目录"]
+  SH["WB-G-P01 ClassIn Shell"] --> NAV["WB-N-P01 Work Buddy 二级能力目录"]
   SH --> TABS["WB-N-P02 并行任务 Tab 条"]
   TABS --> NEW["WB-T-P01 新建任务"]
   TABS --> RUN["WB-T-P02 历史 Run"]
@@ -110,9 +110,9 @@ flowchart LR
   R -->|派生| NR["新的 WB-T-P02 Run"]
 ```
 
-## 6. 教师 WorkBuddy 导航顺序
+## 6. Work Buddy 导航顺序
 
-左侧二级目录依次为：技能市场、工具连接、内容资源、我的文件、定时任务、设置。一级“教师 WorkBuddy”入口提供独立展开/收起按钮，不产生第三级菜单。
+左侧二级目录依次为：技能市场、工具连接、内容资源、我的文件、定时任务、设置。一级“Work Buddy”入口提供独立展开/收起按钮，不产生第三级菜单。
 
 新建任务、已打开任务 Tab 与全部任务选择器位于右侧 Work Surface 顶层。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置，右侧 Stage 不为任务导航预留独立列。
 

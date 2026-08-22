@@ -50,6 +50,31 @@
   box-sizing: border-box;
   overflow-y: auto;
   padding: 0 var(--space-sm) var(--space-md);
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+}
+
+.navigation::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+.navigation::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+  border: 0.125rem solid transparent;
+  border-radius: var(--radius-round);
+  background: transparent;
+  background-clip: padding-box;
+}
+
+.navigation:has(:focus-visible) {
+  scrollbar-color: var(--color-line-control) transparent;
+}
+
+.navigation:has(:focus-visible)::-webkit-scrollbar-thumb {
+  background-color: var(--color-line-control);
 }
 
 .navGroup {
@@ -121,6 +146,11 @@
   background: transparent;
   color: var(--color-shell-muted);
   cursor: pointer;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+
+.extensionNode:has(.navItem[aria-current='page']) .extensionToggle {
+  color: var(--color-shell-text);
 }
 
 .childNavigation {
@@ -263,10 +293,26 @@
 }
 
 @media (hover: hover) {
+  .navigation:hover {
+    scrollbar-color: var(--color-line-control) transparent;
+  }
+
+  .navigation:hover::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-control);
+  }
+
+  .navigation:hover::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-shell-muted);
+  }
+
   .navItem:hover,
-  .extensionToggle:hover,
   .accountButton:hover {
     background: var(--color-shell-hover);
+    color: var(--color-shell-text);
+  }
+
+  .extensionToggle:hover {
+    background: transparent;
     color: var(--color-shell-text);
   }
 
@@ -278,6 +324,11 @@
     background: transparent;
     color: var(--color-shell-muted);
   }
+}
+
+.extensionToggle:active {
+  background: transparent;
+  color: var(--color-action-strong);
 }
 
 @media (max-width: 68rem) {

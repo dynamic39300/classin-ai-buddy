@@ -31,8 +31,15 @@ export type ConversationRunHostPort = Readonly<{
 }>;
 
 export type ConversationRunScheduler = Readonly<{
+  now: () => number;
   schedule: (delayMs: number, callback: () => void) => () => void;
 }>;
+
+export const CONVERSATION_RUN_TIMING = Object.freeze({
+  organizingMs: 2_000,
+  executionStepMs: 3_000,
+  actionExecutionMs: 2_000,
+});
 
 type LocalEvent = Omit<ConversationRunEvent, 'sequence'>;
 type RuntimeState = Readonly<{
@@ -45,6 +52,7 @@ type RuntimeState = Readonly<{
   unreadOutputCount: number;
   composerDraft: string;
   executingAction: boolean;
+  executionEndsAt: number | null;
   pendingActionCommand: ConversationRunCommand | null;
   replanPending: boolean;
   contextExpandedIds: readonly string[] | null;
@@ -78,14 +86,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isProgress(value: unknown): value is ConversationRunProgress {
   if (!isRecord(value) || typeof value.status !== 'string') return false;
-  if (value.status === 'organizing' || value.status === 'idle') return true;
-  if (value.status === 'completed' || value.status === 'stopped' || value.status === 'cancelled') {
+  if (value.status === 'idle') return true;
+  if (value.status === 'organizing') return typeof value.stepEndsAt === 'number';
+  if (value.status === 'completed' || value.status === 'cancelled') {
     return typeof value.completedCount === 'number' && typeof value.totalCount === 'number';
   }
+  if (value.status === 'stopped') return typeof value.completedCount === 'number'
+    && typeof value.totalCount === 'number'
+    && typeof value.remainingMs === 'number';
   return value.status === 'running'
     && typeof value.activeIndex === 'number'
     && typeof value.completedCount === 'number'
-    && typeof value.totalCount === 'number';
+    && typeof value.totalCount === 'number'
+    && typeof value.stepEndsAt === 'number';
 }
 
 function isLocalEvent(value: unknown): value is LocalEvent {
@@ -117,6 +130,7 @@ function isRuntimeState(value: unknown): value is RuntimeState {
     && typeof value.unreadOutputCount === 'number'
     && typeof value.composerDraft === 'string'
     && typeof value.executingAction === 'boolean'
+    && (value.executionEndsAt === null || typeof value.executionEndsAt === 'number')
     && (value.pendingActionCommand === null || (isRecord(value.pendingActionCommand) && value.pendingActionCommand.type === 'execute_action' && typeof value.pendingActionCommand.id === 'string'))
     && typeof value.replanPending === 'boolean'
     && (value.contextExpandedIds === null || (Array.isArray(value.contextExpandedIds) && value.contextExpandedIds.every((item) => typeof item === 'string')))
@@ -153,7 +167,7 @@ function loadStoredState(): StoredState {
   if (typeof window === 'undefined') return empty();
   try {
     const parsed: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
-    if (!isRecord(parsed) || parsed.version !== 6 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
+    if (!isRecord(parsed) || parsed.version !== 7 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
     return Object.freeze({
       runtimes: Object.freeze(Object.fromEntries(Object.entries(parsed.runtimes).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1])))),
       commands: Object.freeze(Object.fromEntries(Object.entries(parsed.commands).filter((entry): entry is [string, ConversationRunCommandReceipt] => isCommandReceipt(entry[1])))),
@@ -263,6 +277,7 @@ function freezeRuntime(runtime: RuntimeState): RuntimeState {
 
 export function createBrowserConversationRunScheduler(): ConversationRunScheduler {
   return Object.freeze({
+    now: () => Date.now(),
     schedule: (delayMs, callback) => {
       const timer = window.setTimeout(callback, delayMs);
       return () => window.clearTimeout(timer);
@@ -293,7 +308,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   const persist = () => {
     if (typeof window === 'undefined') return;
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-      version: 6,
+      version: 7,
       runtimes: Object.fromEntries(runtimes),
       commands: Object.fromEntries(processedCommands),
     }));
@@ -303,7 +318,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
     return freezeRuntime({
       progress: completed
         ? { status: 'completed', completedCount: snapshot.progressStepCount, totalCount: snapshot.progressStepCount }
-        : { status: 'organizing' },
+        : { status: 'organizing', stepEndsAt: scheduler.now() + CONVERSATION_RUN_TIMING.organizingMs },
       localEvents: Object.freeze([]),
       eventOrder: Object.freeze([]),
       eventJournal: Object.freeze([]),
@@ -312,6 +327,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       unreadOutputCount: 0,
       composerDraft: '',
       executingAction: false,
+      executionEndsAt: null,
       pendingActionCommand: null,
       replanPending: false,
       contextExpandedIds: null,
@@ -452,6 +468,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         composerDraft: runtime.composerDraft,
         progress: runtime.progress,
         executingAction: runtime.executingAction,
+        executionEndsAt: runtime.executionEndsAt,
         replanPending: runtime.replanPending,
         contextExpandedIds: runtime.contextExpandedIds,
         contextQuery: runtime.contextQuery,
@@ -502,7 +519,11 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   };
   const scheduleProgress = (runRef: string) => {
     cancelScheduled(runRef);
-    const cancel = scheduler.schedule(360, () => {
+    const current = runtimes.get(runRef);
+    const delayMs = current?.progress.status === 'organizing' || current?.progress.status === 'running'
+      ? Math.max(0, current.progress.stepEndsAt - scheduler.now())
+      : 0;
+    const cancel = scheduler.schedule(delayMs, () => {
       scheduled.delete(runRef);
       const snapshot = host.open(runRef);
       const runtime = snapshot ? ensureRuntime(runRef, snapshot) : null;
@@ -528,7 +549,13 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
       }
       replaceRuntime(runRef, (current) => ({
         ...current,
-        progress: { status: 'running', activeIndex: completedCount, completedCount, totalCount },
+        progress: {
+          status: 'running',
+          activeIndex: completedCount,
+          completedCount,
+          totalCount,
+          stepEndsAt: scheduler.now() + CONVERSATION_RUN_TIMING.executionStepMs,
+        },
       }));
       scheduleProgress(runRef);
     });
@@ -536,13 +563,18 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
   };
   const scheduleActionExecution = (runRef: string, command: ConversationRunCommand) => {
     cancelScheduled(runRef);
-    replaceRuntime(runRef, (current) => ({ ...current, executingAction: true, pendingActionCommand: command }));
-    const cancel = scheduler.schedule(360, () => {
+    const existing = runtimes.get(runRef);
+    const executionEndsAt = existing?.executingAction && existing.executionEndsAt
+      ? existing.executionEndsAt
+      : scheduler.now() + CONVERSATION_RUN_TIMING.actionExecutionMs;
+    replaceRuntime(runRef, (current) => ({ ...current, executingAction: true, executionEndsAt, pendingActionCommand: command }));
+    const cancel = scheduler.schedule(Math.max(0, executionEndsAt - scheduler.now()), () => {
       scheduled.delete(runRef);
       const result = host.execute(runRef, command);
       replaceRuntime(runRef, (current) => ({
         ...current,
         executingAction: false,
+        executionEndsAt: null,
         pendingActionCommand: null,
         localEvents: result.status === 'rejected'
           ? [...current.localEvents, localEvent(runRef, `${command.id}:rejected`, current.localEvents.length + 1, 'system', '执行未开始', result.reason, 'failed')]
@@ -661,7 +693,13 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
               packageConfigurationSummary,
             )]
             : current.localEvents,
-          progress: { status: 'running', activeIndex: 0, completedCount: 0, totalCount: snapshot.progressStepCount },
+          progress: {
+            status: 'running',
+            activeIndex: 0,
+            completedCount: 0,
+            totalCount: snapshot.progressStepCount,
+            stepEndsAt: scheduler.now() + CONVERSATION_RUN_TIMING.executionStepMs,
+          },
         }));
         scheduleProgress(runRef);
       } else if (command.type === 'stop') {
@@ -669,7 +707,12 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         replaceRuntime(runRef, (current) => current.progress.status === 'running'
           ? {
             ...current,
-            progress: { status: 'stopped', completedCount: current.progress.completedCount, totalCount: current.progress.totalCount },
+            progress: {
+              status: 'stopped',
+              completedCount: current.progress.completedCount,
+              totalCount: current.progress.totalCount,
+              remainingMs: Math.max(0, current.progress.stepEndsAt - scheduler.now()),
+            },
             localEvents: [...current.localEvents, localEvent(
               runRef, command.id, current.localEvents.length + 1, 'system',
               snapshot.projection.taskKind === 'courseware' ? '任务执行已停止' : '课程方案包生成已停止',
@@ -681,7 +724,13 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
         replaceRuntime(runRef, (current) => current.progress.status === 'stopped'
           ? {
             ...current,
-            progress: { status: 'running', activeIndex: current.progress.completedCount, completedCount: current.progress.completedCount, totalCount: current.progress.totalCount },
+            progress: {
+              status: 'running',
+              activeIndex: current.progress.completedCount,
+              completedCount: current.progress.completedCount,
+              totalCount: current.progress.totalCount,
+              stepEndsAt: scheduler.now() + current.progress.remainingMs,
+            },
             localEvents: [
               ...current.localEvents.map((event) => event.state === 'stopped' && event.allowedCommands.includes('resume')
                 ? Object.freeze({ ...event, state: 'completed' as const, allowedCommands: Object.freeze([]) })

@@ -19,13 +19,13 @@ date: 2026-08-20
 
 ### 2.1 `ClassInAppShell`
 
-| 输入 | 内容 |
-|---|---|
-| actor | 教师显示名、头像、当前视角 |
-| organization | 当前组织、成员身份、切换能力 |
-| primaryRoute | 当前一级菜单 |
-| notificationSummary | 全局通知与等待动作摘要 |
-| collapsed | 展开/收起 |
+| 输入                | 内容                         |
+| ------------------- | ---------------------------- |
+| actor               | 教师显示名、头像、当前视角   |
+| organization        | 当前组织、成员身份、切换能力 |
+| primaryRoute        | 当前一级菜单                 |
+| notificationSummary | 全局通知与等待动作摘要       |
+| collapsed           | 展开/收起                    |
 
 事件：`navigatePrimary`、`toggleCollapsed`、`openAccountMenu`、`requestOrganizationSwitch`。
 
@@ -35,14 +35,14 @@ date: 2026-08-20
 
 ### 2.3 `TaskHistoryRow`
 
-| 字段 | 规则 |
-|---|---|
-| title | 单行省略；完整标题 Tooltip/可访问名 |
-| relativeTime | 默认右侧显示 |
-| state | 等待教师、执行中、失败、完成等文字/图标 |
-| pinned | 独立标记，不与 selected 混用 |
-| menu | Hover、Focus、selected 可见；始终键盘可达 |
-| truth | 仅必要时显示模拟/未来标签 |
+| 字段         | 规则                                      |
+| ------------ | ----------------------------------------- |
+| title        | 单行省略；完整标题 Tooltip/可访问名       |
+| relativeTime | 默认右侧显示                              |
+| state        | 等待教师、执行中、失败、完成等文字/图标   |
+| pinned       | 独立标记，不与 selected 混用              |
+| menu         | Hover、Focus、selected 可见；始终键盘可达 |
+| truth        | 仅必要时显示模拟/未来标签                 |
 
 事件：`openRun`、`rename`、`togglePin`、`delete`。
 
@@ -84,16 +84,16 @@ date: 2026-08-20
 
 ### 4.3 `ContextItemRow`
 
-| 字段 | 必需 |
-|---|---|
-| objectType / objectName | 是 |
-| sourceType / sourceRef | 是 |
-| included | 是 |
-| version / updatedAt | 是，适用时 |
-| permission | 是 |
-| sensitivity | 是 |
-| reason | 建议/加入原因 |
-| actions | 查看来源、替换、排除、刷新中适用项 |
+| 字段                    | 必需                               |
+| ----------------------- | ---------------------------------- |
+| objectType / objectName | 是                                 |
+| sourceType / sourceRef  | 是                                 |
+| included                | 是                                 |
+| version / updatedAt     | 是，适用时                         |
+| permission              | 是                                 |
+| sensitivity             | 是                                 |
+| reason                  | 建议/加入原因                      |
+| actions                 | 查看来源、替换、排除、刷新中适用项 |
 
 ### 4.4 `LearnerScopePicker`
 
@@ -194,16 +194,16 @@ detailRef
 
 ### 7.1 `ProposedActionCard`
 
-| 字段 | 说明 |
-|---|---|
-| actionType | 创建/修改/发布/发送/保存等稳定类型 |
-| targetObject | ClassIn 正式对象引用 |
-| changeSet | 当前值、建议值和差异 |
-| sourceArtifact | 来源版本 |
-| impact | 影响范围与副作用 |
-| policy | 权限、风险和必需审批 |
-| reversibility | 可撤销与期限 |
-| expiry | 审批过期时间，适用时 |
+| 字段           | 说明                               |
+| -------------- | ---------------------------------- |
+| actionType     | 创建/修改/发布/发送/保存等稳定类型 |
+| targetObject   | ClassIn 正式对象引用               |
+| changeSet      | 当前值、建议值和差异               |
+| sourceArtifact | 来源版本                           |
+| impact         | 影响范围与副作用                   |
+| policy         | 权限、风险和必需审批               |
+| reversibility  | 可撤销与期限                       |
+| expiry         | 审批过期时间，适用时               |
 
 动作：批准、拒绝、修改、查看目标。批准不等于执行成功。
 
@@ -253,31 +253,39 @@ Card：封面、类型、标题、作者、来源、授权、收藏/获取状态
 
 字段：目标模板、Task Type、时区、周期、开始/结束、Context 规则、能力策略、通知、重叠策略、审批策略。提供未来三次触发预览。
 
-### 9.4 `FileReferenceRow`
+### 9.4 `FileAssetLibrary`
 
-字段：名称、来源、类型、版本、权限、关联 Run/对象、解析状态。动作：预览、作为 Context、定位来源、回到 Run。
+输入：已限定为 AI 协作产物的固定版本文件资产、query、typeFilter、favoriteOnly 和 sort。Module 在 Interface 内完成搜索、筛选、按关联 Run/教学项目分组及组内排序，页面不自行拼接分组规则；Adapter 必须在 Interface 外排除教师上传、组织共享和仅作为 Session 输入的资料。
+
+分组字段：project/run ref、标题、课程/班级上下文、最近生成时间、文件数。主列表使用“任务 / Session 分组 → 精简文件行”层级，不使用卡片墙；Session 是独立块级标题，标题加粗且上下文换行，文件列表整体缩进并降低文件名字重。任务图标与文件类型图标使用不同视觉语言，不复用同一灰底方形底座。生成时间是清晰但低权重的稳定列，不作为视觉主轴。文件列只展示名称、类型、生成时间和大小。版本、权限、解析状态、收藏、引用次数和分享去向进入详情或状态反馈，避免把治理字段与首要检索字段放在同一视觉层。
+
+动作：预览、下载、收藏、作为 Context、定位来源、回到 Run、分享到一对一聊天、分享到班级群、复制链接。行级快捷动作在 Hover/Focus Within 显示；同一动作在详情层常驻，确保无 Hover 设备和键盘用户可达。
+
+类型筛选使用 ClassIn Token 控制的轻量 Listbox Popover，不调用操作系统原生 Select 菜单。触发器与搜索框同高；菜单使用标准 Surface、Overlay 圆角和阴影，选中项同时显示浅色底、文字强调与勾选图标。支持 Enter/Space 选择、方向键/Home/End 移动、Escape 返回触发器、Tab 离开关闭和点击外部关闭。
+
+状态：loading、ready、empty、permission_denied、preview_unavailable、sharing、shared、context_attached、download_failed。当前本地 Adapter 的副作用结果统一标注 `[模拟]`。
 
 ## 10. 生命周期状态矩阵
 
 ### 10.1 Run
 
-| 状态 | 页面反馈 | 主要动作 | 必须保留 |
-|---|---|---|---|
-| draft | 可编辑目标 | 发送/放弃 | 输入草稿 |
-| needs_context | 缺必需项 | 补充/调整 | 已有目标与资源 |
-| planning | 正在形成计划 | 停止/追加约束 | Snapshot |
-| awaiting_plan_confirmation | 计划与影响 | 确认/修改/停止 | 计划版本 |
-| executing | 当前步骤与进度 | 追加约束/停止/查看 | 全部事件 |
-| awaiting_input | 高可见问题 | 回答/停止 | 已完成步骤 |
-| awaiting_approval | 动作与影响 | 批准/拒绝/修改 | Artifact/Action |
-| replanning | 新旧约束影响 | 等待/停止 | 新旧计划/Snapshot |
-| recoverable_failed | 原因与恢复 | 重试/换策略/停止 | 失败 attempt |
-| stopped | 已停止与保留项 | 继续/查看 | 已有事件/产物 |
-| partially_completed | 逐项结果 | 重试/排除/审阅 | 成功与失败项 |
-| completed_pending_review | 产物可审阅 | 审阅/修改/写回 | 当前 Artifact |
-| completed | 总结与 Receipt | 查看/派生新 Run | 完整记录 |
-| terminal_failed | 无可行恢复 | 复制/重新开始 | 失败证据 |
-| superseded | 被关联/新版本替代 | 查看来源/当前 | 历史证据 |
+| 状态                       | 页面反馈          | 主要动作           | 必须保留          |
+| -------------------------- | ----------------- | ------------------ | ----------------- |
+| draft                      | 可编辑目标        | 发送/放弃          | 输入草稿          |
+| needs_context              | 缺必需项          | 补充/调整          | 已有目标与资源    |
+| planning                   | 正在形成计划      | 停止/追加约束      | Snapshot          |
+| awaiting_plan_confirmation | 计划与影响        | 确认/修改/停止     | 计划版本          |
+| executing                  | 当前步骤与进度    | 追加约束/停止/查看 | 全部事件          |
+| awaiting_input             | 高可见问题        | 回答/停止          | 已完成步骤        |
+| awaiting_approval          | 动作与影响        | 批准/拒绝/修改     | Artifact/Action   |
+| replanning                 | 新旧约束影响      | 等待/停止          | 新旧计划/Snapshot |
+| recoverable_failed         | 原因与恢复        | 重试/换策略/停止   | 失败 attempt      |
+| stopped                    | 已停止与保留项    | 继续/查看          | 已有事件/产物     |
+| partially_completed        | 逐项结果          | 重试/排除/审阅     | 成功与失败项      |
+| completed_pending_review   | 产物可审阅        | 审阅/修改/写回     | 当前 Artifact     |
+| completed                  | 总结与 Receipt    | 查看/派生新 Run    | 完整记录          |
+| terminal_failed            | 无可行恢复        | 复制/重新开始      | 失败证据          |
+| superseded                 | 被关联/新版本替代 | 查看来源/当前      | 历史证据          |
 
 ### 10.2 Context
 
@@ -297,33 +305,33 @@ Card：封面、类型、标题、作者、来源、授权、收藏/获取状态
 
 ## 11. 页面共通状态
 
-| 状态 | 表达 | 动作 |
-|---|---|---|
-| initial_loading | 骨架匹配最终结构 | 等待/取消适用时 |
-| empty_first_use | 价值说明 + 明确第一步 | 创建/导入 |
-| empty_filtered | 当前筛选无结果 | 清除/调整筛选 |
-| partial | 可用内容 + 缺失说明 | 重试缺失部分 |
-| recoverable_error | 安全原因 + 保留内容 | 重试/替代 |
-| offline/unavailable | 受影响范围 | 稍后重试/离线查看 |
-| permission_denied | 缺少权限和未执行内容 | 请求权限/返回 |
-| session_expired | 不丢本地草稿 | 重新登录 |
-| submitting | 防重复 + 进度 | 取消适用时 |
-| success | 具体成功对象与下一步 | 查看/撤销 |
-| stale/conflict | 新旧版本与影响 | 刷新/保留/比较 |
+| 状态                | 表达                  | 动作              |
+| ------------------- | --------------------- | ----------------- |
+| initial_loading     | 骨架匹配最终结构      | 等待/取消适用时   |
+| empty_first_use     | 价值说明 + 明确第一步 | 创建/导入         |
+| empty_filtered      | 当前筛选无结果        | 清除/调整筛选     |
+| partial             | 可用内容 + 缺失说明   | 重试缺失部分      |
+| recoverable_error   | 安全原因 + 保留内容   | 重试/替代         |
+| offline/unavailable | 受影响范围            | 稍后重试/离线查看 |
+| permission_denied   | 缺少权限和未执行内容  | 请求权限/返回     |
+| session_expired     | 不丢本地草稿          | 重新登录          |
+| submitting          | 防重复 + 进度         | 取消适用时        |
+| success             | 具体成功对象与下一步  | 查看/撤销         |
+| stale/conflict      | 新旧版本与影响        | 刷新/保留/比较    |
 
 ## 12. 权限与敏感数据矩阵
 
-| 数据/动作 | 默认可见 | 默认可下发能力 | 必需保护 |
-|---|---|---|---|
-| 教师/组织范围 | 是 | 任务必要摘要 | Tenant 隔离 |
-| 班级/课程/单元 | 有权限时 | 任务需要引用 | 来源/版本 |
-| 班级人数聚合 | 是 | 适用任务可用 | 不含姓名 |
-| 学生姓名/昵称 | 展开且有权限 | 默认否 | 明确选择与原因 |
-| 个体学习证据 | 默认不展开 | 默认否 | student_sensitive 策略 |
-| Domain Knowledge | 适用范围可见 | 按任务投影 | 版本/所有者 |
-| Secret/Token | 否 | 仅安全 Adapter | 不回显/不进日志 |
-| 原始路径/命令 | 高级详情脱敏 | 仅沙箱/策略允许 | 危险动作审批 |
-| ClassIn 写回 | ProposedAction 可见 | 不由模型直接执行 | Approval + Receipt |
+| 数据/动作        | 默认可见            | 默认可下发能力   | 必需保护               |
+| ---------------- | ------------------- | ---------------- | ---------------------- |
+| 教师/组织范围    | 是                  | 任务必要摘要     | Tenant 隔离            |
+| 班级/课程/单元   | 有权限时            | 任务需要引用     | 来源/版本              |
+| 班级人数聚合     | 是                  | 适用任务可用     | 不含姓名               |
+| 学生姓名/昵称    | 展开且有权限        | 默认否           | 明确选择与原因         |
+| 个体学习证据     | 默认不展开          | 默认否           | student_sensitive 策略 |
+| Domain Knowledge | 适用范围可见        | 按任务投影       | 版本/所有者            |
+| Secret/Token     | 否                  | 仅安全 Adapter   | 不回显/不进日志        |
+| 原始路径/命令    | 高级详情脱敏        | 仅沙箱/策略允许  | 危险动作审批           |
+| ClassIn 写回     | ProposedAction 可见 | 不由模型直接执行 | Approval + Receipt     |
 
 ## 13. 埋点与评价事件
 

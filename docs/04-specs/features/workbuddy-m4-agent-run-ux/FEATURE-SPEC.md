@@ -24,7 +24,7 @@ M4 已经实现并验证 `WorkBuddyRun`、`ContextSnapshot`、`ArtifactDraft`、
 
 新增一个 Deep ConversationRun Module，向页面提供一个稳定的打开、命令和事件订阅 Interface。当前 Deterministic Experience Adapter 按固定脚本、可控 Clock 和稳定事件 ID 产生 NineClaw 对标的动态 Run；未来 Real Agent Runtime Adapter 通过同一 Seam 产生真实流式事件。Context、Artifact、Action、Approval 和 Receipt 继续由既有领域 Module 和写回 Adapter 治理，页面和 Agent Runtime 都不能自行宣布业务保存成功。
 
-主智能课件体验以 NineClaw V05 为唯一任务叙事，100% 覆盖目标录屏中已登记的可见交互结构、状态顺序和动态效果。V04/V06 只提供产物引用、右侧预览、编辑、AI 修改和保存反馈等交互证据；其“教学动画”“课后练习”文案统一改写为同一个智能课件 Goal、ContextSnapshot 和 Artifact 版本链。课程方案包仍是独立 Task Type 和独立 Run，不与单课件任务混合。
+主智能课件体验以 NineClaw V05 为唯一任务叙事，覆盖目标录屏中已登记的可见交互结构、状态顺序和动态效果。V04 提供产物引用、右侧预览和交互式 Artifact 证据；V06 的版面结构只作为聚焦阅读与工具区参考，内嵌编辑、AI 修改和保存反馈按 D-044 替换为只读全局预览与第三方专业编辑器衔接。其“教学动画”“课后练习”文案统一改写为同一个智能课件 Goal、ContextSnapshot 和 Artifact。课程方案包仍是独立 Task Type 和独立 Run，不与单课件任务混合。
 
 ## User Stories
 

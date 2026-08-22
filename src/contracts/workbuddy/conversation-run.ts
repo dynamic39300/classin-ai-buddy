@@ -59,10 +59,10 @@ export type ConversationRunPackageConfiguration = Readonly<{
 }>;
 
 export type ConversationRunProgress =
-  | Readonly<{ status: 'organizing' }>
+  | Readonly<{ status: 'organizing'; stepEndsAt: number }>
   | Readonly<{ status: 'idle' }>
-  | Readonly<{ status: 'running'; activeIndex: number; completedCount: number; totalCount: number }>
-  | Readonly<{ status: 'stopped'; completedCount: number; totalCount: number }>
+  | Readonly<{ status: 'running'; activeIndex: number; completedCount: number; totalCount: number; stepEndsAt: number }>
+  | Readonly<{ status: 'stopped'; completedCount: number; totalCount: number; remainingMs: number }>
   | Readonly<{ status: 'cancelled'; completedCount: number; totalCount: number }>
   | Readonly<{ status: 'completed'; completedCount: number; totalCount: number }>;
 
@@ -74,6 +74,7 @@ export type ConversationRunPresentation = Readonly<{
   composerDraft: string;
   progress: ConversationRunProgress;
   executingAction: boolean;
+  executionEndsAt: number | null;
   replanPending: boolean;
   contextExpandedIds: readonly string[] | null;
   contextQuery: string;

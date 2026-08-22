@@ -7,11 +7,14 @@ import {
   Paperclip,
   PanelRight,
   Presentation,
+  Search,
+  Shapes,
   Sparkles,
   UsersRound,
+  X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getWorkBuddyCapability } from './capability-registry';
@@ -20,8 +23,10 @@ import { CoreContextPanel } from './CoreContextPanel';
 import { ConversationRunSurface } from './ConversationRunSurface';
 import { PackageConversationRunSurface } from './PackageConversationRunSurface';
 import { CapabilityWorkspace } from './CapabilityWorkspace';
+import { TASK_SKILL_OPTIONS, type TaskSkillOption } from './capability-workspace';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
+import type { WorkBuddyTaskLayoutContext } from './AiAgentWorkspaceLayout';
 
 export function AiAgentWorkSurface() {
   const location = useLocation();
@@ -38,36 +43,78 @@ export function AiAgentWorkSurface() {
   return <NewTaskSkeleton />;
 }
 
+type NewTaskNavigationState = Readonly<{
+  capabilityId?: string;
+  capabilityTitle?: string;
+  intent?: 'context' | 'adapt' | 'schedule' | 'skill-find' | 'skill-create' | 'skill-use';
+  prompt?: string;
+}>;
+
+function skillFromNavigationState(state: NewTaskNavigationState | null): TaskSkillOption | null {
+  if (!state?.capabilityTitle || !state.intent?.startsWith('skill-')) return null;
+  return {
+    id: state.capabilityId ?? 'selected-skill',
+    title: state.capabilityTitle,
+    description: state.intent === 'skill-find'
+      ? '帮助查找适合当前目标的 Skill'
+      : state.intent === 'skill-create'
+        ? '帮助创建一个新的自定义 Skill'
+        : '用于当前任务的已安装 Skill',
+    source: '官方',
+  };
+}
+
 function NewTaskSkeleton() {
-  const [feedback, setFeedback] = useState('');
-  const [contextPanelOpen, setContextPanelOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const [feedback, setFeedback] = useState('');
+  const [skillPickerOpen, setSkillPickerOpen] = useState(false);
+  const [skillQuery, setSkillQuery] = useState('');
+  const [selectedSkill, setSelectedSkill] = useState<TaskSkillOption | null>(() =>
+    skillFromNavigationState(location.state as NewTaskNavigationState | null));
+  const { contextPanelOpen, setContextPanelOpen } = useOutletContext<WorkBuddyTaskLayoutContext>();
+  const handledCapabilityState = useRef<string | null>(null);
   const { goal, setGoal, clear: clearGoal } = useWorkBuddyWorkspace().taskDraft;
-  const contextButtonRef = useRef<HTMLButtonElement | null>(null);
   const { contextView, taskType, setTaskType } = useWorkBuddyWorkspace().context;
   const { createCoursewareTask } = useWorkBuddyWorkspace().courseware;
   const { createPackageTask } = useWorkBuddyWorkspace().coursePackage;
   const contextItems = contextView.items.filter(({ included }) => included);
   useEffect(() => {
-    const state = location.state as { capabilityTitle?: string; intent?: 'context' | 'adapt' | 'schedule' } | null;
-    if (!state?.capabilityTitle || goal.trim()) return;
+    const state = location.state as NewTaskNavigationState | null;
+    if (!state?.capabilityTitle) return;
+    const stateKey = `${location.key}:${state.intent ?? 'context'}:${state.capabilityTitle}`;
+    if (handledCapabilityState.current === stateKey) return;
+    handledCapabilityState.current = stateKey;
+    if (state.intent?.startsWith('skill-')) {
+      if (state.prompt && (state.intent === 'skill-find' || state.intent === 'skill-create' || !goal.trim())) {
+        setGoal(state.prompt);
+      }
+      navigate(location.pathname, { replace: true, state: null });
+      return;
+    }
+    if (goal.trim() && state.intent !== 'context') {
+      navigate(location.pathname, { replace: true, state: null });
+      return;
+    }
     const intentCopy = state.intent === 'schedule'
       ? `立即执行定时任务“${state.capabilityTitle}”，并按标准 Run 流程生成结果。`
       : state.intent === 'adapt'
         ? `基于“${state.capabilityTitle}”改编一份新的智能课件。`
         : `将“${state.capabilityTitle}”作为当前教学任务的参考 Context。`;
-    setGoal(intentCopy);
+    setGoal(goal.trim() ? `${goal.trim()}\n${intentCopy}` : intentCopy);
     navigate(location.pathname, { replace: true, state: null });
   }, [goal, location, navigate, setGoal]);
+  const visibleSkills = TASK_SKILL_OPTIONS.filter((skill) => {
+    const needle = skillQuery.trim().toLowerCase();
+    return !needle || `${skill.title} ${skill.description}`.toLowerCase().includes(needle);
+  });
+  const closeSkillPicker = (returnFocus = false) => {
+    setSkillPickerOpen(false);
+    if (returnFocus) requestAnimationFrame(() => document.getElementById('workbuddy-skill-picker-trigger')?.focus());
+  };
   const contextLabels = contextView.status === 'confirmed'
     ? contextItems.filter(({ kind }) => ['organization', 'class', 'course', 'unit', 'learner_scope'].includes(kind)).map(({ label }) => label)
     : [contextItems.find(({ kind }) => kind === 'organization')?.label ?? 'ClassIn 教研中心', '需要选择教学范围'];
-
-  const closeContextPanel = () => {
-    setContextPanelOpen(false);
-    requestAnimationFrame(() => contextButtonRef.current?.focus());
-  };
 
   return (
     <section className={styles.newTaskPage} aria-labelledby="workbuddy-new-task-title">
@@ -88,7 +135,80 @@ function NewTaskSkeleton() {
           <div className={styles.composerFooter}>
             <div className={styles.composerTools}>
               <button type="button" aria-label="添加附件" onClick={() => setFeedback('请从“我的文件”中选择要加入当前任务的资料。')}><Paperclip aria-hidden="true" size={16} /></button>
-              <button ref={contextButtonRef} type="button" aria-pressed={contextPanelOpen} onClick={() => setContextPanelOpen(true)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
+              <div
+                className={styles.skillPickerAnchor}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setSkillPickerOpen(false);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') closeSkillPicker(true);
+                }}
+              >
+                <button
+                  id="workbuddy-skill-picker-trigger"
+                  type="button"
+                  aria-label="选择技能"
+                  aria-haspopup="dialog"
+                  aria-expanded={skillPickerOpen}
+                  onClick={() => setSkillPickerOpen((open) => !open)}
+                >
+                  <Shapes aria-hidden="true" size={15} />技能
+                </button>
+                {skillPickerOpen ? (
+                  <section className={styles.skillPicker} role="dialog" aria-label="选择技能">
+                    <label className={styles.skillPickerSearch}>
+                      <Search aria-hidden="true" size={15} />
+                      <input
+                        autoFocus
+                        aria-label="搜索技能"
+                        placeholder="搜索技能"
+                        value={skillQuery}
+                        onChange={(event) => setSkillQuery(event.target.value)}
+                      />
+                    </label>
+                    <div className={styles.skillPickerList}>
+                      {visibleSkills.map((skill) => (
+                        <button
+                          key={skill.id}
+                          type="button"
+                          aria-pressed={selectedSkill?.id === skill.id}
+                          onClick={() => {
+                            setSelectedSkill(skill);
+                            closeSkillPicker(true);
+                            setSkillQuery('');
+                            setFeedback(`[模拟] 已选择 ${skill.title}，创建任务前仍可移除。`);
+                          }}
+                        >
+                          <span className={styles.skillPickerGlyph}><Shapes aria-hidden="true" size={15} /></span>
+                          <span><strong>{skill.title}</strong><small>{skill.description}</small></span>
+                          <em>{skill.source}</em>
+                        </button>
+                      ))}
+                      {!visibleSkills.length ? <p className={styles.skillPickerEmpty}>没有匹配的已安装 Skill</p> : null}
+                    </div>
+                    <Link className={styles.skillMarketLink} to="/teacher/ai-agent/skills" onClick={() => closeSkillPicker()}>
+                      <Shapes aria-hidden="true" size={15} />打开技能市场
+                    </Link>
+                  </section>
+                ) : null}
+              </div>
+              {selectedSkill ? (
+                <span className={styles.selectedSkillChip}>
+                  <Shapes aria-hidden="true" size={13} />
+                  {selectedSkill.title}
+                  <button
+                    type="button"
+                    aria-label={`移除已选技能 ${selectedSkill.title}`}
+                    onClick={() => {
+                      setSelectedSkill(null);
+                      setFeedback('已移除所选 Skill。');
+                    }}
+                  >
+                    <X aria-hidden="true" size={12} />
+                  </button>
+                </span>
+              ) : null}
+              <button type="button" aria-expanded={contextPanelOpen} aria-controls="workbuddy-core-context-panel" onClick={() => setContextPanelOpen((open) => !open)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
             </div>
             <button className={styles.sendButton} type="button" disabled={!goal.trim() || contextView.status !== 'confirmed'} onClick={() => {
               const runId = taskType === 'course-package' ? createPackageTask(goal) : createCoursewareTask(goal);
@@ -118,7 +238,7 @@ function NewTaskSkeleton() {
         {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}
       </section>
       </section>
-      {contextPanelOpen ? <CoreContextPanel onClose={closeContextPanel} /> : null}
+      <CoreContextPanel id="workbuddy-core-context-panel" hidden={!contextPanelOpen} onClose={() => setContextPanelOpen(false)} />
       </div>
     </section>
   );

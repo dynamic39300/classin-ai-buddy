@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { AppRole } from '@domain/account/role';
-import { AgentSecondaryNav } from '@features/ai-agent-workspace';
+import { AgentSecondaryNav, getWorkBuddyCapabilityFromPathname } from '@features/ai-agent-workspace';
 import { CapabilityDialog, type CapabilityKind } from './CapabilityDialog';
 import { getPageTitle } from './navigation';
 import { PageHeaderProvider } from './PageHeaderContext';
@@ -18,9 +18,11 @@ export function AppShell({ role }: AppShellProps) {
   const navigate = useNavigate();
   const [capability, setCapability] = useState<CapabilityKind | null>(null);
   const capabilityTriggerRef = useRef<HTMLElement | null>(null);
-  const pageTitle = getPageTitle(role, location.pathname);
-  const pageHeaderFallback = useMemo(() => ({ title: pageTitle }), [pageTitle]);
   const agentWorkspaceActive = role === 'teacher' && location.pathname.startsWith('/teacher/ai-agent');
+  const agentCapability = agentWorkspaceActive ? getWorkBuddyCapabilityFromPathname(location.pathname) : undefined;
+  const agentTaskWorkspaceActive = agentWorkspaceActive && !agentCapability;
+  const pageTitle = agentCapability?.label ?? getPageTitle(role, location.pathname);
+  const pageHeaderFallback = useMemo(() => ({ title: pageTitle }), [pageTitle]);
 
   const openCapability = useCallback((nextCapability: CapabilityKind) => {
     capabilityTriggerRef.current = document.activeElement instanceof HTMLElement
@@ -51,8 +53,8 @@ export function AppShell({ role }: AppShellProps) {
         onOpenHelp={() => openCapability('help')}
       />
       <PageHeaderProvider fallback={pageHeaderFallback}>
-        <div className={styles.stage}>
-          <Topbar />
+        <div className={styles.stage} data-workbuddy-stage={agentTaskWorkspaceActive ? 'true' : undefined}>
+          {agentTaskWorkspaceActive ? null : <Topbar />}
           <main className={styles.workspace} id="main-content">
             <Outlet />
           </main>

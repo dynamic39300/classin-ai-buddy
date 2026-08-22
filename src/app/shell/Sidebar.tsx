@@ -176,7 +176,7 @@ function NavigationNodeView({ node, open, disableCollapse, onNavigate, onToggle,
           <button
             className={styles.extensionToggle}
             type="button"
-            aria-label={`${extensionOpen ? '收起' : '展开'}${node.label} 二级导航`}
+            aria-label={`${extensionOpen ? '收起' : '展开'} ${node.label} 二级导航`}
             aria-expanded={extensionOpen}
             onClick={onToggleExtension}
           >

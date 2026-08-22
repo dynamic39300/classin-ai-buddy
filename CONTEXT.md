@@ -54,6 +54,36 @@ _Avoid_：正式课程、已发布课程、单一课件文件、自动发布的�
 可由“单课件生成任务”独立产出，也可作为课程方案包中的一项产物；包含页面结构、页面内容以及后续审阅、修改与版本。它拥有独立的来源、状态和交付结果，不因属于方案包而失去独立生命周期。
 _Avoid_：课程方案包、课程对象、自动发布的 PPT
 
+### ClassIn 空间
+
+由 ClassIn 拥有的个人、组织和业务文件存储载体，负责文件引用、存储权限和可访问状态。它可以承载 WorkBuddy 产物文件，但不拥有 Agent Run、Artifact 语义或 TeacherIn 的作品发布状态。
+_Avoid_：WorkBuddy 文件系统、TeacherIn 作品库、会话历史
+
+### 我的文件
+
+WorkBuddy 对 ClassIn 空间中历史 Agent Run 产物的组织与检索视图，只收录教师与 AI 协作生成的 Artifact 及其文件结果，并保留产物与来源会话、Run、版本及下游动作回执的关联，便于作为新上下文、继续编辑、发起教学动作或定位 TeacherIn 作品。它不提供上传入口，不收录教师上传、组织共享或仅作为会话输入的文件，也不建立独立存储空间或复制 ClassIn 的文件所有权。
+_Avoid_：第二套云盘、WorkBuddy 私有文件系统、文件上传入口、会话输入资料库、TeacherIn 内容广场
+
+### TeacherIn
+
+ClassIn 体系内保持独立品牌的教研内容生产与市场分发产品线，拥有作品管理、发布、授权、定价、获取和衍生规则。原“资源中心”已升级并合并到 TeacherIn，不再视为另一套资源存储空间。
+_Avoid_：资源中心与 TeacherIn 并列的两套内容库、WorkBuddy 内容广场
+
+### TeacherIn 作品
+
+进入 TeacherIn 内容生命周期、可继续编辑并按规则发布、授权和分发的教研内容对象。WorkBuddy Artifact 只有经教师明确执行“创建草稿到 TeacherIn”后才成为作品草稿，并保留来源 Run、版本和创作方式。
+_Avoid_：任意会话附件、自动发布的 AI 产物、ClassIn 云盘文件
+
+### TeacherIn 作品草稿
+
+由教师选择的 WorkBuddy Artifact 或 TeacherIn 人工创作内容形成、尚未发布的作品状态。它可以在 TeacherIn 中继续编辑并定位回来源 Artifact；创建成功只表示已创建草稿，不表示已发布。
+_Avoid_：已发布作品、自动上架内容、WorkBuddy Artifact 的重复文件
+
+### 创建草稿到 TeacherIn
+
+教师把选定的 WorkBuddy Artifact 转换为 TeacherIn 作品草稿的显式动作。成功反馈统一提示“你可以前往 TeacherIn 继续编辑作品信息、设置授权并发布。”；该动作不等于发布。
+_Avoid_：沉淀到 TeacherIn、发布到 TeacherIn、提交审核
+
 ### 单课件生成任务
 
 以制作一份可预览、可编辑、可保存的课件为目标的独立 Agent Run。它可以不依赖课程方案包完成，也可以在完成后作为来源创建关联的课程方案包任务。

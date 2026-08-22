@@ -5,12 +5,22 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   border-left: var(--rule-thin) solid var(--color-line-faint);
   background: var(--color-surface-raised);
-  box-shadow: var(--shadow-overlay);
+  box-shadow: none;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+@media (max-width: 54rem) {
+  .panel {
+    box-shadow: var(--shadow-overlay);
+  }
 }
 
 .header {
   display: flex;
-  min-height: 3.5rem;
+  min-height: 3rem;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
@@ -19,8 +29,10 @@
 }
 
 .header > div {
-  display: grid;
-  gap: var(--space-3xs);
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: var(--space-xs);
 }
 
 .header strong {
@@ -161,7 +173,9 @@
   margin-top: var(--space-md);
 }
 
-.contextSection h2 {
+.contextSection::before {
+  content: attr(aria-label);
+  display: block;
   margin: 0 0 var(--space-xs);
   color: var(--color-ink-muted);
   font-size: var(--text-xs);

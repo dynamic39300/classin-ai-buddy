@@ -17,7 +17,9 @@ const SECTION_LABELS: Record<CoreContextSection, string> = {
 type ContextInspectorState = Readonly<{ expandedIds: readonly string[] | null; query: string; scrollTop: number }>;
 type ContextInspectorPatch = Readonly<{ expandedIds?: readonly string[]; query?: string; scrollTop?: number }>;
 
-export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft', inspectorState, onInspectorStateChange }: {
+export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode = 'draft', inspectorState, onInspectorStateChange }: {
+  id?: string;
+  hidden?: boolean;
   onClose: () => void;
   readOnly?: boolean;
   mode?: 'draft' | 'courseware';
@@ -106,7 +108,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft', in
   }, [persistedScrollTop]);
 
   return (
-    <aside className={styles.panel} aria-label="核心上下文" onKeyDown={(event) => {
+    <aside id={id} hidden={hidden} className={styles.panel} aria-label="核心上下文" onKeyDown={(event) => {
       if (event.key === 'Escape') onClose();
     }}>
       <header className={styles.header}>
@@ -132,8 +134,7 @@ export function CoreContextPanel({ onClose, readOnly = false, mode = 'draft', in
 
         <div role="tree" aria-label="教学上下文对象">
         {CORE_CONTEXT_SECTIONS.map((section) => (
-          <section className={styles.contextSection} role="presentation" key={section}>
-            <h2>{SECTION_LABELS[section]}</h2>
+          <section className={styles.contextSection} role="group" aria-label={SECTION_LABELS[section]} key={section}>
             <div className={styles.itemList} role="presentation">
               {view.items.filter((item) => item.section === section && isVisible(item)).map((item) => (
                   <article id={`context-treeitem-${item.id}`} className={styles.contextItem} role="treeitem" aria-level={itemLevel(item)} aria-expanded={parentIds.has(item.id) ? expandedIds.has(item.id) : undefined} aria-selected={item.included} tabIndex={effectiveActiveTreeItemId === item.id ? 0 : -1} onFocus={() => setActiveTreeItemId(item.id)} onKeyDown={(event) => handleTreeKey(event, item)} data-included={item.included} style={{ '--context-depth': itemLevel(item) - 1 } as CSSProperties} key={item.id}>
