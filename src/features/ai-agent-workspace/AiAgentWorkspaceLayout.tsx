@@ -11,9 +11,14 @@ export type WorkBuddyTaskLayoutContext = Readonly<{
 
 export function AiAgentWorkspaceLayout() {
   const location = useLocation();
-  const capabilityActive = Boolean(getWorkBuddyCapabilityFromPathname(location.pathname));
+  const capabilityActive = Boolean(getWorkBuddyCapabilityFromPathname(location.pathname, { includeDormant: true }));
   const newTaskActive = location.pathname.endsWith('/new') || location.pathname === '/teacher/ai-agent';
-  const [contextPanelOpen, setContextPanelOpen] = useState(false);
+  const contextAttached = (location.state as Readonly<{ intent?: string }> | null)?.intent === 'context-attached';
+  const [contextPanelOverride, setContextPanelOverride] = useState<boolean | null>(null);
+  const contextPanelOpen = contextPanelOverride ?? contextAttached;
+  const setContextPanelOpen: Dispatch<SetStateAction<boolean>> = (next) => {
+    setContextPanelOverride(typeof next === 'function' ? next(contextPanelOpen) : next);
+  };
 
   return (
     <div className={styles.layout} data-task-navigation={capabilityActive ? undefined : 'true'} data-testid="ai-agent-workspace-layout">

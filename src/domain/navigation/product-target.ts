@@ -15,7 +15,7 @@ export type ProductTarget =
   | { kind: 'message'; category: MessageCategory; threadId?: string; source?: 'home' }
   | { kind: 'insight'; classId?: string; studentId?: string; section?: 'diagnosis' | 'students' | 'homework'; source?: 'home' }
   | { kind: 'growth'; recordId?: string }
-  | { kind: 'space'; surface?: 'my-drive' | 'organization-drive' | 'resource-center' | 'question-bank' };
+  | { kind: 'space'; surface?: 'my-drive' | 'organization-drive' | 'teacherin' | 'question-bank' };
 
 function withSearch(path: string, entries: ReadonlyArray<readonly [string, string | undefined]>): string {
   const search = new URLSearchParams();

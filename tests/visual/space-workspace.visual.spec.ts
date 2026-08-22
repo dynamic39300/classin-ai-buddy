@@ -49,7 +49,7 @@ test.beforeEach(async ({ page }) => {
 for (const surface of [
   { path: '/teacher/space', name: 'teacher-my-drive-1440x900.png' },
   { path: '/teacher/space/organization-drive', name: 'teacher-organization-drive-1440x900.png' },
-  { path: '/teacher/space/resource-center', name: 'teacher-resource-center-1440x900.png' },
+  { path: '/teacher/space/teacherin', name: 'teacher-teacherin-1440x900.png' },
   { path: '/teacher/space/question-bank', name: 'teacher-question-bank-1440x900.png' },
 ]) {
   test(surface.name, async ({ page }) => {
@@ -59,6 +59,14 @@ for (const surface of [
     await expect(page).toHaveScreenshot(surface.name, { fullPage: true });
   });
 }
+
+test('teacher-teacherin-draft-1440x900.png', async ({ page }) => {
+  await selectRole(page, /老师视角/);
+  await page.goto('/teacher/space/teacherin?draft=teacherin-draft-courseware-pptx&source=workbuddy&title=函数单调性智能课件');
+  await expectSpaceVisualContract(page);
+  await expect(page.getByRole('region', { name: '作品草稿' })).toBeVisible();
+  await expect(page).toHaveScreenshot('teacher-teacherin-draft-1440x900.png', { fullPage: true });
+});
 
 test('student-authorized-resources-1440x900.png', async ({ page }) => {
   await selectRole(page, /学生视角/);

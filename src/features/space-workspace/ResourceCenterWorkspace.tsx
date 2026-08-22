@@ -1,9 +1,11 @@
-import { Archive, ArrowUpDown, Check, Search } from 'lucide-react';
+import { Archive, ArrowUpDown, Check, FilePenLine, Search } from 'lucide-react';
+import { useState } from 'react';
 import type { CatalogResource, ResourceSortKey } from '@domain/space/space';
 import type { SpaceRouteState } from './space-route-state';
 import styles from './SpaceWorkspace.module.css';
 
 type ResourceCenterWorkspaceProps = {
+  draft: Readonly<{ id: string; title: string; source: 'workbuddy' | 'teacherin' }> | null;
   routeState: SpaceRouteState;
   updateRouteState: (updates: Partial<SpaceRouteState>) => void;
   catalogList: ReadonlyArray<CatalogResource>;
@@ -13,7 +15,10 @@ type ResourceCenterWorkspaceProps = {
   feedback: string | null;
 };
 
-export function ResourceCenterWorkspace({ routeState, updateRouteState, catalogList, mineList, acquiredResourceIds, onAcquire, feedback }: ResourceCenterWorkspaceProps) {
+export function ResourceCenterWorkspace({ draft, routeState, updateRouteState, catalogList, mineList, acquiredResourceIds, onAcquire, feedback }: ResourceCenterWorkspaceProps) {
+  const [draftTitle, setDraftTitle] = useState(draft?.title ?? '');
+  const [license, setLicense] = useState('organization-editable');
+  const [draftFeedback, setDraftFeedback] = useState('');
   const renderCards = (resources: ReadonlyArray<CatalogResource>, mine: boolean) => (
     <div className={styles.resourceGrid}>
       {resources.map((resource) => {
@@ -30,8 +35,18 @@ export function ResourceCenterWorkspace({ routeState, updateRouteState, catalogL
 
   return (
     <section className={styles.pageContent} aria-labelledby="space-title">
-      <h1 className={styles.srOnly} id="space-title">资源中心</h1>
-      <div className={styles.surfaceTabs} role="tablist" aria-label="资源中心视图">
+      <h1 className={styles.srOnly} id="space-title">TeacherIn</h1>
+      {draft ? <section className={styles.teacherInDraftEditor} aria-labelledby="teacherin-draft-title">
+        <header><span><FilePenLine aria-hidden="true" size={18} /><span><small>[模拟] TeacherIn 草稿定位</small><h2 id="teacherin-draft-title">作品草稿</h2></span></span><em>草稿</em></header>
+        <div className={styles.teacherInDraftFields}>
+          <label>作品名称<input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} /></label>
+          <label>授权方式<select value={license} onChange={(event) => setLicense(event.target.value)}><option value="organization-editable">机构内可获取和改编</option><option value="public-readable">公开获取，不可改编</option><option value="private">仅自己可见</option></select></label>
+        </div>
+        <p>来源：{draft.source === 'workbuddy' ? 'WorkBuddy AI 协作产物' : 'TeacherIn'} · 草稿 ID：{draft.id}</p>
+        <footer><button type="button" onClick={() => setDraftFeedback('[模拟] 草稿信息已保存在当前体验环境。')}>保存草稿</button><button className={styles.primaryButton} type="button" onClick={() => setDraftFeedback('[模拟] 已完成发布体验；未写入真实 TeacherIn。')}>发布</button></footer>
+        {draftFeedback ? <p className={styles.teacherInDraftFeedback} role="status">{draftFeedback}</p> : null}
+      </section> : null}
+      <div className={styles.surfaceTabs} role="tablist" aria-label="TeacherIn 视图">
         <button type="button" role="tab" aria-selected={routeState.resourceTab === 'all'} onClick={() => updateRouteState({ resourceTab: 'all', query: '', resourceSort: 'latest' })}>全部资源</button>
         <button type="button" role="tab" aria-selected={routeState.resourceTab === 'mine'} onClick={() => updateRouteState({ resourceTab: 'mine', query: '', resourceSort: 'latest' })}>我的资源 <small>{acquiredResourceIds.size}</small></button>
       </div>

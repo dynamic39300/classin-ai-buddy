@@ -40,11 +40,11 @@ export function parseSpaceRouteState(
     parentId: isDrive ? parentId : null,
     query: params.get('q') ?? '',
     driveSort: isDrive && isOneOf(sort, DRIVE_SORTS) ? sort : 'name',
-    resourceSort: surface === 'resource-center' && isOneOf(sort, RESOURCE_SORTS)
+    resourceSort: surface === 'teacherin' && isOneOf(sort, RESOURCE_SORTS)
       ? sort
       : 'latest',
     view: isDrive && (view === 'list' || view === 'grid') ? view : 'list',
-    resourceTab: surface === 'resource-center' && (resourceTab === 'all' || resourceTab === 'mine')
+    resourceTab: surface === 'teacherin' && (resourceTab === 'all' || resourceTab === 'mine')
       ? resourceTab
       : 'all',
   };

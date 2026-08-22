@@ -46,6 +46,12 @@ export type FileAssetView = Readonly<{
   favoriteCount: number;
 }>;
 
+export type FileAssetReference = Readonly<{
+  artifactRef: Readonly<{ id: string; version: string }>;
+  spaceFileRef: Readonly<{ id: string; version: string; pathLabel: string }>;
+  teacherInPermission: 'allowed' | 'denied';
+}>;
+
 export const FILE_ASSET_KIND_OPTIONS: readonly FileAssetKind[] = [
   "课件",
   "教案",
@@ -186,6 +192,18 @@ export const FILE_ASSET_FIXTURES: readonly FileAsset[] = [
     canShare: true,
   },
 ];
+
+export function getFileAssetReference(asset: FileAsset): FileAssetReference {
+  return Object.freeze({
+    artifactRef: Object.freeze({ id: asset.id, version: asset.version }),
+    spaceFileRef: Object.freeze({
+      id: `space-file-${asset.id.replace(/^asset-/, '')}`,
+      version: asset.version,
+      pathLabel: `我的云盘 / WorkBuddy 产物 / ${asset.name}`,
+    }),
+    teacherInPermission: asset.status === '无权访问' ? 'denied' : 'allowed',
+  });
+}
 
 export function buildFileAssetView(
   assets: readonly FileAsset[],

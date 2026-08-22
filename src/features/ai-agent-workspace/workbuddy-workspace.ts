@@ -4,6 +4,8 @@ import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
 import type { ConversationRunModule } from '@contracts/workbuddy/conversation-run';
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
+import type { CoreContextItem } from '@domain/workbuddy/core-context';
+import type { CreateTeacherInDraftInput, TeacherInDraftReceipt, TeacherInResource } from '@domain/workbuddy/teacherin';
 import type { CoursewareArtifactRevisionInput, CoursewareBrief } from '@domain/workbuddy/course-production';
 import type { CoreContextView, CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
 
@@ -33,6 +35,14 @@ export type WorkBuddyContext = Readonly<{
   resetCoreContext: () => void;
   taskType: WorkBuddyTaskType;
   setTaskType: (taskType: WorkBuddyTaskType) => void;
+  addReference: (item: CoreContextItem) => void;
+}>;
+
+export type WorkBuddyTeacherIn = Readonly<{
+  resources: readonly TeacherInResource[];
+  searchResources: (query: string) => readonly TeacherInResource[];
+  draftReceipts: Readonly<Record<string, TeacherInDraftReceipt>>;
+  createDraft: (input: CreateTeacherInDraftInput) => TeacherInDraftReceipt;
 }>;
 
 export type WorkBuddyCourseware = Readonly<{
@@ -84,6 +94,7 @@ export type WorkBuddyWorkspace = Readonly<{
   history: WorkBuddyHistory;
   taskDraft: WorkBuddyTaskDraft;
   context: WorkBuddyContext;
+  teacherIn: WorkBuddyTeacherIn;
   courseware: WorkBuddyCourseware;
   coursePackage: WorkBuddyCoursePackage;
 }>;

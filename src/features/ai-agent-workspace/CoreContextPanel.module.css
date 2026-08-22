@@ -160,6 +160,139 @@
   font-size: var(--text-xs);
 }
 
+.teacherInPicker {
+  margin-top: var(--space-sm);
+  overflow: hidden;
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-object);
+  background: var(--color-surface);
+}
+
+.teacherInPicker > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+}
+
+.teacherInTitle {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  color: var(--color-action-strong);
+}
+
+.teacherInTitle > span {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3xs);
+}
+
+.teacherInTitle strong,
+.teacherInTitle small {
+  font-size: var(--text-xs);
+}
+
+.teacherInTitle strong {
+  color: var(--color-ink);
+}
+
+.teacherInTitle small {
+  color: var(--color-ink-muted);
+  line-height: 1.4;
+}
+
+.teacherInPicker > header > button,
+.teacherInResource button {
+  flex: none;
+  min-height: 1.875rem;
+  padding: 0 var(--space-xs);
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-raised);
+  color: var(--color-action-strong);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.teacherInPickerBody {
+  display: grid;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm) var(--space-sm);
+}
+
+.teacherInSearch {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-xs);
+  border: var(--rule-thin) solid var(--color-line-faint);
+  border-radius: var(--radius-control);
+  color: var(--color-ink-muted);
+}
+
+.teacherInSearch input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+}
+
+.teacherInResults {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.teacherInResource {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.teacherInResource[data-selected='true'] {
+  background: var(--color-success-soft);
+}
+
+.teacherInResource > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3xs);
+}
+
+.teacherInResource strong,
+.teacherInResource small {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacherInResource small {
+  color: var(--color-ink-muted);
+}
+
+.teacherInResource button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.teacherInEmpty {
+  margin: 0;
+  padding: var(--space-sm);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

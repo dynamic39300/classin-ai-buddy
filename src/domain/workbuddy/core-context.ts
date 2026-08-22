@@ -10,10 +10,15 @@ export const CORE_CONTEXT_SECTIONS = [
 
 export type CoreContextSection = typeof CORE_CONTEXT_SECTIONS[number];
 export type WorkBuddyTaskType = 'single-courseware' | 'course-package';
-export type CoreContextSource = 'classin' | 'teacher-input' | 'institution-rule' | 'domain-knowledge';
+export type CoreContextSource = 'classin' | 'teacher-input' | 'institution-rule' | 'domain-knowledge' | 'workbuddy-artifact' | 'teacherin';
 export type CoreContextSensitivity = 'public' | 'organization' | 'class' | 'personal' | 'student_sensitive';
 export type CoreContextPermission = 'read' | 'restricted';
 export type CoreContextSelection = 'locked' | 'suggested';
+export type CoreContextReference = Readonly<{
+  system: 'classin-space' | 'teacherin';
+  objectId: string;
+  version: string;
+}>;
 
 export type CoreContextItem = Readonly<{
   id: string;
@@ -26,6 +31,7 @@ export type CoreContextItem = Readonly<{
   permission: CoreContextPermission;
   sensitivity: CoreContextSensitivity;
   selection: CoreContextSelection;
+  reference?: CoreContextReference;
 }>;
 
 export type ProposedContextItem = CoreContextItem & Readonly<{ included: boolean }>;
@@ -100,6 +106,16 @@ function validateContextHierarchy(items: readonly CoreContextItem[]): void {
 export function createContextProposal(items: readonly CoreContextItem[], taskType: WorkBuddyTaskType): ContextProposal {
   validateContextHierarchy(items);
   return buildProposal(taskType, items.map((item) => Object.freeze({ ...item, included: item.selection === 'locked' })));
+}
+
+export function upsertContextReference(proposal: ContextProposal, item: CoreContextItem): ContextProposal {
+  const nextItems = proposal.items.some(({ id }) => id === item.id)
+    ? proposal.items.map((current) => current.id === item.id
+      ? Object.freeze({ ...item, included: true })
+      : current)
+    : [...proposal.items, Object.freeze({ ...item, included: true })];
+  validateContextHierarchy(nextItems);
+  return buildProposal(proposal.taskType, nextItems);
 }
 
 export function selectContextItems(proposal: ContextProposal, selectedIds: readonly string[]): ContextProposal {

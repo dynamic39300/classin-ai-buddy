@@ -199,19 +199,9 @@ test("custom tool creation returns a managed connection card", async ({
   await expect(page.getByText("教研资料索引", { exact: true })).toBeVisible();
 });
 
-test("content and files preserve task entry as an explicit action", async ({
+test("files add a stable Artifact reference without rewriting the task goal", async ({
   page,
 }) => {
-  await openSurface(page, "内容资源");
-  await page
-    .getByRole("combobox", { name: "筛选内容类型" })
-    .selectOption("课件");
-  await expect(
-    page.getByRole("button", { name: "查看机械波概念演示" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "查看机械波概念演示" }).click();
-  await page.getByRole("button", { name: "改编到新任务" }).click();
-  await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
   await openSurface(page, "我的文件");
   await page
     .getByRole("button", { name: "查看函数单调性智能课件.pptx" })
@@ -223,9 +213,34 @@ test("content and files preserve task entry as an explicit action", async ({
   ).toContainText("生成函数单调性智能课件");
   await page.getByRole("button", { name: "作为上下文", exact: true }).click();
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
-  await expect(page.getByRole("textbox", { name: "描述教学任务" })).toHaveValue(
-    /将“函数单调性智能课件\.pptx”作为当前教学任务的参考 Context。/,
-  );
+  await expect(page.getByRole("textbox", { name: "描述教学任务" })).toHaveValue("");
+  await expect(page.getByRole('status')).toContainText('稳定引用加入 Core Context');
+  await expect(page.getByRole('complementary', { name: '核心上下文' })).toContainText('函数单调性智能课件.pptx');
+});
+
+test('files create a TeacherIn draft and keep a direct continuation link', async ({ page }) => {
+  await openSurface(page, '我的文件');
+  await page.getByRole('button', { name: '查看函数单调性智能课件.pptx' }).click();
+  const detail = page.getByRole('complementary', { name: '函数单调性智能课件.pptx文件详情' });
+  await detail.getByRole('button', { name: '创建草稿到 TeacherIn' }).click();
+  await expect(page.locator('p[role="status"]')).toContainText('你可以前往 TeacherIn 继续编辑作品信息、设置授权并发布');
+  await detail.getByRole('button', { name: '前往 TeacherIn' }).click();
+  await expect(page).toHaveURL(/\/teacher\/space\/teacherin\?draft=/);
+  await expect(page.getByRole('heading', { name: 'TeacherIn' })).toBeVisible();
+  const draftEditor = page.getByRole('region', { name: '作品草稿' });
+  await expect(draftEditor.getByRole('textbox', { name: '作品名称' })).toHaveValue('函数单调性智能课件');
+  await expect(draftEditor.getByRole('button', { name: '发布', exact: true })).toBeVisible();
+  await expect(draftEditor.getByText(/提交审核|审核中/)).toHaveCount(0);
+});
+
+test('files can locate their underlying ClassIn Space object', async ({ page }) => {
+  await openSurface(page, '我的文件');
+  await page.getByRole('button', { name: '查看函数单调性智能课件.pptx' }).click();
+  await page.getByRole('complementary', { name: '函数单调性智能课件.pptx文件详情' })
+    .getByRole('button', { name: '在空间中定位' }).click();
+  await expect(page).toHaveURL(/parentId=my-workbuddy-artifacts&file=space-file-courseware-pptx/);
+  await expect(page.getByRole('status')).toContainText('已在空间中定位“函数单调性智能课件.pptx”');
+  await expect(page.getByRole('checkbox', { name: '选择函数单调性智能课件.pptx' })).toBeChecked();
 });
 
 test("files support task traceability, cross-field search and class-group sharing", async ({
@@ -295,25 +310,13 @@ test("files support task traceability, cross-field search and class-group sharin
   ).toEqual([]);
 });
 
-test("content supports my works dashboard and four-step publishing", async ({
+test("legacy WorkBuddy content route redirects to TeacherIn", async ({
   page,
 }) => {
-  await openSurface(page, "内容资源");
-  await page.getByRole("tab", { name: "我的作品" }).click();
-  await expect(
-    page.getByRole("region", { name: "我的作品概览" }),
-  ).toContainText("被复用");
-  await page.getByRole("button", { name: "发布作品" }).click();
-  const publish = page.getByRole("dialog", { name: "发布作品" });
-  await expect(publish).toContainText("上传作品文件");
-  await publish.getByRole("button", { name: "下一步" }).click();
-  await expect(publish).toContainText("完善作品信息");
-  await publish.getByRole("button", { name: "下一步" }).click();
-  await expect(publish).toContainText("设置可见与复用范围");
-  await publish.getByRole("button", { name: "下一步" }).click();
-  await expect(publish).toContainText("准备提交审核");
-  await publish.getByRole("button", { name: "提交审核", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("作品已提交审核");
+  await openSurface(page, '我的文件');
+  await page.goto('/teacher/ai-agent/content');
+  await expect(page).toHaveURL(/\/teacher\/space\/teacherin$/);
+  await expect(page.getByRole('heading', { name: 'TeacherIn' })).toBeVisible();
 });
 
 test("scheduled tasks reproduce the create, edit and running-history journey", async ({

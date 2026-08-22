@@ -5,6 +5,7 @@ import {
   projectContext,
   selectContextItems,
   toggleContextItem,
+  upsertContextReference,
   type CoreContextItem,
 } from './core-context';
 
@@ -69,5 +70,19 @@ describe('CoreContext Module', () => {
     expect(projection).toMatchObject({ snapshotId: 'snapshot-1', capabilityId: 'courseware-renderer', purpose: '组装课件内容', taskGoal: '生成动量守恒课件', excludedSensitiveCount: 1 });
     expect(Object.isFrozen(result.snapshot)).toBe(true);
     expect(Object.isFrozen(result.snapshot.items)).toBe(true);
+  });
+
+  it('upserts a stable external resource reference without rewriting other selections', () => {
+    const proposal = selectContextItems(createContextProposal(ITEMS, 'single-courseware'), ['class-a', 'course-a', 'unit-a']);
+    const withReference = upsertContextReference(proposal, {
+      id: 'space:asset-courseware', section: 'resources_input', kind: 'space_file', label: '函数单调性课件.pptx',
+      source: 'workbuddy-artifact', sourceVersion: 'v2', permission: 'read', sensitivity: 'personal', selection: 'suggested',
+      reference: { system: 'classin-space', objectId: 'space-file-courseware', version: 'v2' },
+    });
+    expect(withReference.items.find(({ id }) => id === 'space:asset-courseware')).toMatchObject({
+      included: true,
+      reference: { system: 'classin-space', objectId: 'space-file-courseware', version: 'v2' },
+    });
+    expect(withReference.items.find(({ id }) => id === 'class-a')?.included).toBe(true);
   });
 });

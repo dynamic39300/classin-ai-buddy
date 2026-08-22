@@ -1,6 +1,6 @@
 import type { AppRole } from '@domain/account/role';
 
-export type SpaceSurface = 'my-drive' | 'organization-drive' | 'resource-center' | 'question-bank';
+export type SpaceSurface = 'my-drive' | 'organization-drive' | 'teacherin' | 'question-bank';
 export type SpaceScope = 'personal' | 'organization';
 export type SpaceFileStatus = 'ready' | 'converting' | 'failed';
 export type SpaceFileCapability = 'classroom-openable' | 'storage-only' | 'no-external-share';
@@ -74,14 +74,14 @@ export const SPACE_LIMITS = {
 export const SPACE_SURFACES: readonly SpaceSurface[] = [
   'my-drive',
   'organization-drive',
-  'resource-center',
+  'teacherin',
   'question-bank',
 ];
 
 export const SPACE_SURFACE_LABELS: Record<SpaceSurface, string> = {
   'my-drive': '我的云盘',
   'organization-drive': '组织云盘',
-  'resource-center': '资源中心',
+  teacherin: 'TeacherIn',
   'question-bank': '题库中心',
 };
 

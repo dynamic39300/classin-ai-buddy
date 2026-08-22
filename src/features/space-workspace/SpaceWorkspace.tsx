@@ -35,9 +35,19 @@ export function SpaceWorkspace({ role, surface }: SpaceWorkspaceProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { items, catalogResources, acquiredResourceIds, setItems, setAcquiredResourceIds } = useSpaceWorkspaceStore();
+  const locatedFileId = searchParams.get('file');
+  const locatedFile = locatedFileId
+    ? items.find((item) => item.id === locatedFileId && item.kind === 'file' && item.scope === 'personal')
+    : undefined;
+  const teacherInDraftId = searchParams.get('draft');
+  const teacherInDraft = teacherInDraftId ? {
+    id: teacherInDraftId,
+    title: searchParams.get('title')?.trim() || 'WorkBuddy 作品草稿',
+    source: searchParams.get('source') === 'workbuddy' ? 'workbuddy' as const : 'teacherin' as const,
+  } : null;
   const folderSequence = useRef(0);
   const transferSequence = useRef(0);
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set(locatedFile ? [locatedFile.id] : []));
   const [previewItem, setPreviewItem] = useState<SpaceFile | null>(null);
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
@@ -45,7 +55,9 @@ export function SpaceWorkspace({ role, surface }: SpaceWorkspaceProps) {
   const [folderError, setFolderError] = useState<string | null>(null);
   const [deleteGuard, setDeleteGuard] = useState(false);
   const [supplementMenuOpen, setSupplementMenuOpen] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => locatedFileId
+    ? locatedFile ? `已在空间中定位“${locatedFile.name}”。` : '未能在当前空间中定位这份 WorkBuddy 产物。'
+    : null);
   const [placeholderDialog, setPlaceholderDialog] = useState<string | null>(null);
 
   const routeState = useMemo(() => parseSpaceRouteState(surface, searchParams), [searchParams, surface]);
@@ -116,5 +128,5 @@ export function SpaceWorkspace({ role, surface }: SpaceWorkspaceProps) {
   const deleteDialog = deleteGuard ? <div className={styles.dialogBackdrop}><section className={styles.confirmDialog} role="dialog" aria-modal="true" aria-labelledby="delete-title"><Trash2 aria-hidden="true" size={22} /><div><h2 id="delete-title">确认删除</h2><p>删除后不可恢复，确定删除 {selectedIds.size} 项？文件夹内子项将一并删除。</p></div><footer><button className={styles.secondaryButton} type="button" onClick={() => setDeleteGuard(false)}>取消</button><button className={styles.dangerButton} type="button" onClick={confirmDelete}>确认删除</button></footer></section></div> : null;
   const driveProps = { path, currentPermission, visibleItems, routeState, updateRouteState, selectedIds, onToggleSelected: toggleSelected, onDeleteRequest: () => setDeleteGuard(true), onOpenDirectory: moveToDirectory, onItemAction: handleItemAction, onPlaceholder: placeholder, newMenuOpen, onToggleNewMenu: () => setNewMenuOpen((current) => !current), onOpenNewFolder: openNewFolder, supplementMenuOpen, onToggleSupplementMenu: () => setSupplementMenuOpen((current) => !current), previewItem, onClosePreview: () => setPreviewItem(null), newFolderPanel, deleteDialog, feedback };
 
-  return <div className={styles.page}><SpaceNavigation active={surface} onOpen={openSurface} />{surface === 'my-drive' ? <MyDriveWorkspace {...driveProps} /> : surface === 'organization-drive' ? <OrganizationDriveWorkspace {...driveProps} /> : surface === 'resource-center' ? <ResourceCenterWorkspace routeState={routeState} updateRouteState={updateRouteState} catalogList={catalogList} mineList={mineList} acquiredResourceIds={acquiredResourceIds} onAcquire={acquireResource} feedback={feedback} /> : <QuestionBankPlaceholder />}{<BoundaryDialog description={placeholderDialog} onClose={() => setPlaceholderDialog(null)} />}</div>;
+  return <div className={styles.page}><SpaceNavigation active={surface} onOpen={openSurface} />{surface === 'my-drive' ? <MyDriveWorkspace {...driveProps} /> : surface === 'organization-drive' ? <OrganizationDriveWorkspace {...driveProps} /> : surface === 'teacherin' ? <ResourceCenterWorkspace draft={teacherInDraft} routeState={routeState} updateRouteState={updateRouteState} catalogList={catalogList} mineList={mineList} acquiredResourceIds={acquiredResourceIds} onAcquire={acquireResource} feedback={feedback} /> : <QuestionBankPlaceholder />}{<BoundaryDialog description={placeholderDialog} onClose={() => setPlaceholderDialog(null)} />}</div>;
 }

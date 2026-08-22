@@ -4,10 +4,12 @@ import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioContr
 import type { PackageWritebackAdapter, PackageWritebackScenario, PackageWritebackScenarioController } from '@contracts/workbuddy/package-writeback';
 import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixture';
 import type { WorkBuddyClock } from '@contracts/workbuddy/clock';
+import type { TeacherInAdapter } from '@contracts/workbuddy/teacherin';
 import {
-  confirmContext, createContextProposal, projectContext, selectContextItems, toggleContextItem,
+  confirmContext, createContextProposal, projectContext, selectContextItems, toggleContextItem, upsertContextReference,
   type CapabilityContextManifest, type ContextSnapshot, type CoreContextItem, type WorkBuddyTaskType,
 } from '@domain/workbuddy/core-context';
+import { approveTeacherInDraft, proposeTeacherInDraft, type CreateTeacherInDraftInput, type TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
 import type { CoursewareExecutionOutput, CoursewareRunDefinition, SingleCoursewareRun } from '@domain/workbuddy/course-production';
 import type { CoursePackageDefinition, CoursePackageRun, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import type { PackageActionInput, PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
@@ -29,6 +31,7 @@ import {
   saveWorkBuddyWorkspaceSession,
 } from './workbuddy-workspace-session';
 import { WorkBuddyWorkspaceContext, type CoursewarePanel, type PackagePanel, type WorkBuddyWorkspace } from './workbuddy-workspace';
+import { clearTeacherInDraftReceipts, loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
   initialRuns: readonly WorkBuddyRunViewModel[];
@@ -48,6 +51,7 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   writebackScenarioController: WritebackScenarioController;
   packageWritebackAdapter: PackageWritebackAdapter;
   packageWritebackScenarioController: PackageWritebackScenarioController;
+  teacherInAdapter: TeacherInAdapter;
   children: ReactNode;
 }>;
 
@@ -55,7 +59,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const {
     initialRuns, initialContextItems, recommendedContextItemIds, coursewareDefinition, coursewareOutput, replannedCoursewareOutput,
     capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture, clock,
-    writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, children,
+    writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, teacherInAdapter, children,
   } = props;
   const restoredSession = useMemo(() => loadWorkBuddyWorkspaceSession(), []);
   const [contextProposal, setContextProposal] = useState(() => restoredSession?.contextProposal ?? createContextProposal(initialContextItems, 'single-courseware'));
@@ -77,6 +81,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>(() => restoredSession?.activePackagePanel ?? 'none');
   const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(() => restoredSession?.activePackageArtifactId ?? null);
   const [draftGoal, setDraftGoal] = useState(() => restoredSession?.draftGoal ?? '');
+  const [teacherInDraftReceipts, setTeacherInDraftReceipts] = useState<Readonly<Record<string, TeacherInDraftReceipt>>>(() => loadTeacherInDraftReceipts());
   const [conversationHostPort] = useState(() => createConversationRunHostPort());
   const [conversationModule] = useState(() => createConversationRunModule(
     conversationHostPort.host,
@@ -204,6 +209,8 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     writebackScenario, writebackScenarioController,
   ]);
 
+  useEffect(() => saveTeacherInDraftReceipts(teacherInDraftReceipts), [teacherInDraftReceipts]);
+
   const workspace: WorkBuddyWorkspace = Object.freeze({
     conversationRun: conversationModule,
     history: Object.freeze({
@@ -242,6 +249,8 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
         if (coursewareRun) conversationModule.dispatch(coursewareRun.id, { id: `${coursewareRun.id}:reset`, type: 'reset' });
         if (packageRun) conversationModule.dispatch(packageRun.id, { id: `${packageRun.id}:reset`, type: 'reset' });
         clearWorkBuddyWorkspaceSession();
+        clearTeacherInDraftReceipts();
+        setTeacherInDraftReceipts({});
         setContextSnapshot(null); setSnapshotsById({});
         setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');
         coursewareController.reset(); packageController.reset(); history.resetHistory();
@@ -252,10 +261,36 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
         setTaskTypeState(nextTaskType); setContextSnapshot(null);
         setContextProposal(createContextProposal(initialContextItems, nextTaskType));
       },
+      addReference: (item: CoreContextItem) => {
+        setContextSnapshot(null);
+        setContextProposal((current) => upsertContextReference(current, item));
+      },
+    }),
+    teacherIn: Object.freeze({
+      resources: teacherInAdapter.searchResources(''),
+      searchResources: (query: string) => teacherInAdapter.searchResources(query),
+      draftReceipts: teacherInDraftReceipts,
+      createDraft: (input: CreateTeacherInDraftInput) => {
+        const proposed = proposeTeacherInDraft(input);
+        const approved = approveTeacherInDraft(proposed, {
+          approvalId: proposed.id.replace(/^action-/, 'approval-'),
+          decidedBy: 'teacher-wang',
+          decidedAt: '2026-08-22T10:10:01+08:00',
+        });
+        if (!approved) throw new Error('TeacherIn draft proposal could not be approved.');
+        const receipt = teacherInAdapter.createDraft(approved.action, approved.approval);
+        setTeacherInDraftReceipts((current) => Object.freeze({ ...current, [input.artifactRef.id]: receipt }));
+        return receipt;
+      },
     }),
     courseware: Object.freeze({
       coursewareView,
       ...coursewareController.commands,
+      createCoursewareTask: (goal: string) => {
+        const runRef = coursewareController.commands.createCoursewareTask(goal);
+        if (runRef) conversationModule.dispatch(runRef, { id: `${runRef}:reset`, type: 'reset' });
+        return runRef;
+      },
     }),
     coursePackage: Object.freeze({
       packageView,

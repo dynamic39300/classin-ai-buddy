@@ -66,12 +66,14 @@ export type CoreContextView = Readonly<{
   snapshotId: string | null;
   items: readonly Readonly<{
     id: string; parentId?: string; section: CoreContextSection; kind: string; label: string; sourceLabel: string; sourceVersion: string;
+    reference?: Readonly<{ system: 'classin-space' | 'teacherin'; objectId: string; version: string }>;
     permissionLabel: string; sensitivity: string; included: boolean; locked: boolean; selectable: boolean;
   }>[];
 }>;
 
 const SOURCE_LABELS = {
   classin: 'ClassIn 业务事实', 'teacher-input': '教师输入', 'institution-rule': '机构规则', 'domain-knowledge': '受版本治理的知识',
+  'workbuddy-artifact': 'WorkBuddy AI 产物', teacherin: 'TeacherIn 资源',
 } as const;
 
 const SENSITIVITY_LABELS = {
@@ -82,7 +84,7 @@ export function projectCoreContextView(proposal: ContextProposal, snapshot: Cont
   const selectedIds = new Set(snapshot?.items.map(({ id }) => id) ?? proposal.items.filter(({ included }) => included).map(({ id }) => id));
   const items = proposal.items.map((item) => Object.freeze({
     id: item.id, parentId: item.parentId, section: item.section, kind: item.kind, label: item.label, sourceLabel: SOURCE_LABELS[item.source],
-    sourceVersion: item.sourceVersion, permissionLabel: item.permission === 'read' ? '可读取' : '受限', sensitivity: SENSITIVITY_LABELS[item.sensitivity],
+    sourceVersion: item.sourceVersion, reference: item.reference, permissionLabel: item.permission === 'read' ? '可读取' : '受限', sensitivity: SENSITIVITY_LABELS[item.sensitivity],
     included: selectedIds.has(item.id), locked: item.selection === 'locked',
     selectable: !snapshot && item.selection !== 'locked' && (!item.parentId || selectedIds.has(item.parentId)),
   }));

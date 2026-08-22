@@ -54,6 +54,9 @@ async function expectWorkbenchGeometry(page: Page) {
 }
 
 async function createCoursewareArtifact(page: Page) {
+  const now = new Date('2026-08-21T10:00:00+08:00');
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(new Date(now.getTime() + 1_000));
   await openTeacherAgent(page);
   await page.getByRole('button', { name: /^核心上下文/ }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });
@@ -62,9 +65,32 @@ async function createCoursewareArtifact(page: Page) {
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '生成单个课件' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
-  await page.getByRole('button', { name: '确认任务信息' }).click();
-  await page.getByRole('button', { name: '确认计划并执行' }).click();
-  await page.getByRole('complementary', { name: '当前任务产物' }).getByRole('button', { name: '确认课件可用于后续任务' }).click();
+  await page.clock.runFor(2_000);
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  await timeline.getByRole('article').filter({ hasText: '还需要确认课件要求' }).getByRole('button', { name: '提交确认' }).click();
+  await timeline.getByRole('article').filter({ hasText: '智能课件执行计划' }).getByRole('button', { name: '开始执行计划' }).click();
+  await page.clock.runFor(12_000);
+  const output = page.getByRole('region', { name: '智能课件产出' });
+  await expect(output).toBeVisible();
+  await output.getByRole('button', { name: '确认课件可用于后续任务' }).click();
+}
+
+async function startCoursewareRun(page: Page) {
+  const now = new Date('2026-08-21T10:00:00+08:00');
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(new Date(now.getTime() + 1_000));
+  await openTeacherAgent(page);
+  await page.getByRole('button', { name: /^核心上下文/ }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '应用函数单调性课程建议' }).click();
+  await context.getByRole('button', { name: '确认上下文版本' }).click();
+  await context.getByRole('button', { name: '关闭核心上下文' }).click();
+  await page.getByRole('button', { name: '生成单个课件' }).click();
+  await page.getByRole('button', { name: '创建任务' }).click();
+  await page.clock.runFor(2_000);
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  await timeline.getByRole('article').filter({ hasText: '还需要确认课件要求' }).getByRole('button', { name: '提交确认' }).click();
+  await timeline.getByRole('article').filter({ hasText: '智能课件执行计划' }).getByRole('button', { name: '开始执行计划' }).click();
 }
 
 test('WorkBuddy new task at 1440x900', async ({ page }) => {
@@ -72,7 +98,7 @@ test('WorkBuddy new task at 1440x900', async ({ page }) => {
   await expectWorkbenchGeometry(page);
 
   const secondaryNavigation = page.getByRole('group', { name: 'Work Buddy 二级导航' });
-  for (const title of ['技能市场', '工具连接', '内容资源', '我的文件', '定时任务', '设置']) {
+  for (const title of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await expect(secondaryNavigation.getByRole('link', { name: title, exact: true })).toBeVisible();
   }
 
@@ -81,9 +107,10 @@ test('WorkBuddy new task at 1440x900', async ({ page }) => {
 
 test('WorkBuddy new task entry hover at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
-  const newTaskEntry = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).getByRole('button', { name: '新建任务页面' });
+  const newTaskEntry = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).getByRole('button', { name: '添加新任务' });
   await newTaskEntry.hover();
-  await expect(newTaskEntry.locator('svg').nth(1)).toHaveCSS('opacity', '1');
+  await expect(newTaskEntry.locator('svg.lucide-plus')).toBeVisible();
+  await expect(newTaskEntry.locator('svg')).toHaveCount(1);
 
   await expect(page).toHaveScreenshot('workbuddy-new-task-entry-hover-1440x900.png', { fullPage: true });
 });
@@ -94,6 +121,15 @@ test('WorkBuddy new task with Core Context auxiliary panel at 1440x900', async (
   await expect(page.getByRole('complementary', { name: '核心上下文' })).toBeVisible();
 
   await expect(page).toHaveScreenshot('workbuddy-new-task-context-open-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy TeacherIn Context picker at 1440x900', async ({ page }) => {
+  await openTeacherAgent(page);
+  await page.getByRole('button', { name: '展开核心上下文' }).click();
+  const context = page.getByRole('complementary', { name: '核心上下文' });
+  await context.getByRole('button', { name: '选择资源' }).click();
+  await expect(context.getByRole('list', { name: 'TeacherIn 搜索结果' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-teacherin-context-picker-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy capability page uses the standard title topbar at 1440x900', async ({ page }) => {
@@ -142,34 +178,52 @@ test('WorkBuddy all-task selector anchors to the current task tab at 1440x900', 
 test('WorkBuddy M4 courseware ArtifactDraft at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
   await expectWorkbenchGeometry(page);
-  await expect(page.getByRole('complementary', { name: '当前任务产物' })).toBeVisible();
+  await expect(page.getByRole('region', { name: '智能课件产出' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-courseware-artifact-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy M4 running step progress at 1440x900', async ({ page }) => {
+  await startCoursewareRun(page);
+  const progressTrigger = page.getByRole('button', { name: /查看任务执行步骤，第 1\/4 步/ });
+  await progressTrigger.hover();
+  await expect(page.getByRole('region', { name: '任务执行步骤' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-m4-running-step-progress-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy M4 ExecutionReceipt at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
-  await page.getByRole('complementary', { name: '当前任务产物' }).getByRole('button', { name: '保存到 ClassIn' }).click();
-  const approval = page.getByRole('complementary', { name: '保存审批' });
-  await approval.getByRole('button', { name: '批准保存' }).click();
-  await approval.getByRole('button', { name: '执行已批准动作' }).click();
-  await expect(page.getByRole('complementary', { name: '执行回执' })).toBeVisible();
+  await page.getByRole('region', { name: '智能课件产出' }).getByRole('button', { name: '保存到 ClassIn' }).click();
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  const action = timeline.getByRole('article').filter({ hasText: '保存到 ClassIn' });
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准动作' }).click();
+  await page.clock.runFor(2_000);
+  await expect(timeline.getByRole('article').filter({ hasText: '课件草稿已保存到 ClassIn' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-courseware-receipt-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy M4 writeback conflict at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
-  const artifact = page.getByRole('complementary', { name: '当前任务产物' });
-  await artifact.getByText('评审工具', { exact: true }).click();
-  await artifact.getByRole('combobox', { name: '模拟写回场景' }).selectOption('version_conflict');
-  await artifact.getByRole('button', { name: '保存到 ClassIn' }).click();
-  const approval = page.getByRole('complementary', { name: '保存审批' });
-  await approval.getByRole('button', { name: '批准保存' }).click();
-  await approval.getByRole('button', { name: '执行已批准动作' }).click();
-  await expect(page.getByRole('heading', { name: '版本冲突' })).toBeVisible();
+  await page.evaluate(() => {
+    window.history.replaceState({}, '', `${window.location.pathname}?review=recovery`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await page.getByRole('combobox', { name: '恢复路径验收场景' }).selectOption('version_conflict');
+  await page.getByRole('region', { name: '智能课件产出' }).getByRole('button', { name: '保存到 ClassIn' }).click();
+  const action = page.getByRole('feed', { name: 'Agent 任务时间线' }).getByRole('article').filter({ hasText: '保存到 ClassIn' });
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存到 ClassIn' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准动作' }).click();
+  await page.clock.runFor(2_000);
+  await expect(page.getByText('目标版本已经更新', { exact: true })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-writeback-conflict-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) => {
+  const now = new Date('2026-08-21T10:00:00+08:00');
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(new Date(now.getTime() + 1_000));
   await openTeacherAgent(page);
   await page.getByRole('button', { name: '生成课程方案包' }).click();
   await page.getByRole('button', { name: /^核心上下文/ }).click();
@@ -178,22 +232,31 @@ test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) 
   await context.getByRole('button', { name: '确认上下文版本' }).click();
   await context.getByRole('button', { name: '关闭核心上下文' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
-  await page.getByRole('button', { name: '确认产物清单并开始生成' }).click();
-  await page.getByRole('button', { name: '查看生成结果' }).click();
-  const navigator = page.getByRole('complementary', { name: '课程方案包导航' });
-  await navigator.getByRole('button', { name: '重试失败项' }).click();
-  await navigator.getByRole('button', { name: '生成批量写回提案' }).click();
-  const approval = page.getByRole('complementary', { name: '课程方案包审批' });
-  await approval.getByRole('button', { name: '批准写回' }).click();
-  await approval.getByRole('button', { name: '执行已批准方案包' }).click();
-  await expect(page.getByText('部分成功', { exact: true })).toBeVisible();
+  await page.clock.runFor(2_000);
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  await timeline.getByRole('article').filter({ hasText: '课程方案包执行计划' }).getByRole('button', { name: '确认范围并开始生成' }).click();
+  await page.clock.runFor(9_000);
+  await page.evaluate(() => {
+    window.history.replaceState({}, '', `${window.location.pathname}?review=package-partial`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await page.getByRole('combobox', { name: '课程方案包恢复场景' }).selectOption('partial_success');
+  await page.getByRole('region', { name: '课程方案包产出' }).getByRole('button', { name: '保存所选产物到 ClassIn' }).click();
+  const action = timeline.getByRole('article').filter({ hasText: '保存课程方案包到 ClassIn' });
+  await action.getByRole('button', { name: '确认执行' }).click();
+  await page.getByRole('dialog', { name: '确认保存课程方案包' }).getByRole('button', { name: '批准保存' }).click();
+  await action.getByRole('button', { name: '执行已批准方案包' }).click();
+  await page.clock.runFor(2_000);
+  await expect(page.getByRole('status').filter({ hasText: '部分成功' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-course-package-partial-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy M4 Context replanning impact at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
-  await page.getByRole('button', { name: '调整教学范围' }).click();
-  await expect(page.getByRole('complementary', { name: '重新规划影响' })).toBeVisible();
+  const composer = page.getByRole('group', { name: '任务补充输入' });
+  await composer.getByRole('textbox', { name: '向 Agent 补充要求' }).fill('把主教学范围改为高一（2）班的二次函数单元。');
+  await composer.getByRole('button', { name: '发送补充要求' }).click();
+  await expect(page.getByRole('feed', { name: 'Agent 任务时间线' }).getByRole('article').filter({ hasText: '教学范围变化需要重新规划' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-context-replanning-1440x900.png', { fullPage: true });
 });
 
@@ -208,7 +271,6 @@ test('WorkBuddy keeps embedded navigation reachable at compact desktop width', a
   for (const { name, exact } of [
     { name: '技能市场', exact: true },
     { name: '工具连接', exact: true },
-    { name: '内容资源', exact: true },
     { name: '我的文件', exact: true },
     { name: '定时任务', exact: true },
     { name: '设置', exact: true },

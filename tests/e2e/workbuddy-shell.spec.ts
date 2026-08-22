@@ -36,9 +36,10 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toBeVisible();
 
   const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'Work Buddy 二级导航' });
-  for (const destination of ['技能市场', '工具连接', '内容资源', '我的文件', '定时任务', '设置']) {
+  for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await expect(secondaryNavigation.getByRole('link', { name: destination, exact: true })).toBeVisible();
   }
+  await expect(secondaryNavigation.getByRole('link', { name: '内容资源', exact: true })).toHaveCount(0);
   await primaryNavigation.getByRole('button', { name: '班课管理', exact: true }).click();
   const workBuddyChild = secondaryNavigation.getByRole('link', { name: '技能市场', exact: true });
   const classManagementChild = primaryNavigation.getByRole('link', { name: '我的班级', exact: true });
@@ -131,6 +132,20 @@ test('new task keeps a Codex-style right auxiliary panel compact, aligned and st
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
 });
 
+test('new task selects a versioned TeacherIn resource inside Core Context', async ({ page }) => {
+  await openTeacherWorkBuddy(page);
+  await page.getByRole('button', { name: '展开核心上下文' }).click();
+  const panel = page.getByRole('complementary', { name: '核心上下文' });
+  await panel.getByRole('button', { name: '应用函数单调性课程建议' }).click();
+  await panel.getByRole('button', { name: '选择资源' }).click();
+  await panel.getByRole('textbox', { name: '搜索 TeacherIn 资源' }).fill('探究');
+  await panel.getByRole('button', { name: '加入上下文' }).click();
+  await expect(panel).toContainText('函数图像探究学习单');
+  await expect(panel).toContainText('v2');
+  await panel.getByRole('button', { name: '确认上下文版本' }).click();
+  await expect(panel).toContainText('上下文已冻结');
+});
+
 test('primary navigation reveals its scrollbar only while the region is engaged', async ({ page }) => {
   await openTeacherWorkBuddy(page);
   await page.setViewportSize({ width: 1000, height: 768 });
@@ -164,7 +179,7 @@ test('capability destinations use the standard page topbar instead of task tabs'
   const secondaryNavigation = page.getByRole('group', { name: 'Work Buddy 二级导航' });
   const capabilityStage = page.locator('#main-content').locator('..');
 
-  for (const destination of ['技能市场', '工具连接', '内容资源', '我的文件', '定时任务', '设置']) {
+  for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await secondaryNavigation.getByRole('link', { name: destination, exact: true }).click();
     await expect(capabilityStage.locator(':scope > header').getByRole('heading', { level: 1, name: destination })).toBeVisible();
     await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toHaveCount(0);
@@ -183,7 +198,7 @@ test('student navigation does not expose teacher WorkBuddy', async ({ page }) =>
   await expect(page.getByRole('group', { name: 'Work Buddy 二级导航' })).toHaveCount(0);
 });
 
-test('teacher keeps a new-task draft while switching parallel task tabs', async ({ page }) => {
+test('teacher keeps a new-task draft when reopening it as a parallel tab', async ({ page }) => {
   await openTeacherWorkBuddy(page);
   const goal = page.getByRole('textbox', { name: '描述教学任务' });
   await goal.fill('为高一三班准备明天的函数复习课');
@@ -192,6 +207,7 @@ test('teacher keeps a new-task draft while switching parallel task tabs', async 
   await expect(page.getByRole('heading', { level: 1, name: '生成函数单调性课件' })).toBeVisible();
   const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
   await expect(taskTabs.getByRole('button', { name: '生成函数单调性课件', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(taskTabs.getByRole('button', { name: '新建任务', exact: true })).toHaveCount(0);
 
   const activeTab = taskTabs.locator('button[aria-current="page"]');
   const activeTabChevron = activeTab.locator('svg');
@@ -199,7 +215,7 @@ test('teacher keeps a new-task draft while switching parallel task tabs', async 
   await activeTab.hover();
   await expect.poll(() => activeTabChevron.evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
 
-  await taskTabs.getByRole('button', { name: '新建任务', exact: true }).click();
+  await taskTabs.getByRole('button', { name: '添加新任务' }).click();
   await expect(goal).toHaveValue('为高一三班准备明天的函数复习课');
 
   const generatedTab = taskTabs.getByRole('button', { name: '生成函数单调性课件', exact: true });
@@ -224,6 +240,19 @@ test('teacher keeps a new-task draft while switching parallel task tabs', async 
   await expect(taskTabs.getByRole('button', { name: '生成函数单调性课件', exact: true })).toHaveCount(0);
   const selector = await openAllTasks(page);
   await expect(selector.getByRole('button', { name: /生成函数单调性课件/ }).first()).toBeVisible();
+});
+
+test('current-tab selector replaces the active tab instead of opening another tab', async ({ page }) => {
+  await openTeacherWorkBuddy(page);
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+
+  await switchTask(page, '函数单元课程方案包');
+  await expect(taskTabs.getByRole('button', { name: '函数单元课程方案包', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(taskTabs.getByRole('button', { name: '新建任务', exact: true })).toHaveCount(0);
+
+  await switchTask(page, '分析三班作业共性问题');
+  await expect(taskTabs.getByRole('button', { name: '分析三班作业共性问题', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(taskTabs.getByRole('button', { name: '函数单元课程方案包', exact: true })).toHaveCount(0);
 });
 
 test('teacher renames the current Session inline from its active tab', async ({ page }) => {
@@ -300,14 +329,13 @@ test('all tasks selector anchors to the active task tab', async ({ page }) => {
   expect(Math.abs(selectorBox!.x - triggerBox!.x)).toBeLessThanOrEqual(2);
 });
 
-test('new task entry follows the open tabs and swaps icons without layout shift', async ({ page }) => {
+test('new task entry follows the open tabs and keeps its add icon in every state', async ({ page }) => {
   await openTeacherWorkBuddy(page);
   const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
-  const newTaskEntry = taskTabs.getByRole('button', { name: '新建任务页面' });
+  const newTaskEntry = taskTabs.getByRole('button', { name: '添加新任务' });
   const lastOpenTab = taskTabs.locator(':scope > div').last();
   const contextToggle = page.getByRole('button', { name: '展开核心上下文' });
-  const plusIcon = newTaskEntry.locator('svg').nth(0);
-  const composeIcon = newTaskEntry.locator('svg').nth(1);
+  const plusIcon = newTaskEntry.locator('svg.lucide-plus');
   const readGeometry = () => newTaskEntry.evaluate((element) => {
     const rectangle = element.getBoundingClientRect();
     return { left: rectangle.left, top: rectangle.top, width: rectangle.width, height: rectangle.height };
@@ -328,22 +356,29 @@ test('new task entry follows the open tabs and swaps icons without layout shift'
 
   const idleGeometry = await readGeometry();
   const idleBackground = await newTaskEntry.evaluate((element) => getComputedStyle(element).backgroundColor);
-  await expect.poll(() => plusIcon.evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
-  await expect.poll(() => composeIcon.evaluate((element) => getComputedStyle(element).opacity)).toBe('0');
+  await expect(plusIcon).toBeVisible();
+  await expect(newTaskEntry.locator('svg')).toHaveCount(1);
 
   await newTaskEntry.hover();
-  await expect.poll(() => plusIcon.evaluate((element) => getComputedStyle(element).opacity)).toBe('0');
-  await expect.poll(() => composeIcon.evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
+  await expect(plusIcon).toBeVisible();
+  await expect(newTaskEntry.locator('svg')).toHaveCount(1);
   await expect.poll(() => newTaskEntry.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(idleBackground);
   expect(await readGeometry()).toEqual(idleGeometry);
 
   await newTaskEntry.focus();
   await expect(newTaskEntry).toBeFocused();
-  await expect.poll(() => composeIcon.evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
+  await expect(plusIcon).toBeVisible();
+  await expect(newTaskEntry.locator('svg')).toHaveCount(1);
+  expect(await readGeometry()).toEqual(idleGeometry);
+
+  await newTaskEntry.click();
+  await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
+  await expect(plusIcon).toBeVisible();
+  await expect(newTaskEntry.locator('svg')).toHaveCount(1);
   expect(await readGeometry()).toEqual(idleGeometry);
 });
 
-test('teacher opens unopened history as a tab and switches between Run contexts', async ({ page }) => {
+test('teacher uses the add button to keep one Run open while switching another tab', async ({ page }) => {
   await openTeacherWorkBuddy(page);
   await switchTask(page, '整理本周学情沟通要点');
 
@@ -352,6 +387,7 @@ test('teacher opens unopened history as a tab and switches between Run contexts'
   await expect(taskTabs.getByRole('button', { name: '整理本周学情沟通要点', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByText('可重试', { exact: true })).toBeVisible();
 
+  await taskTabs.getByRole('button', { name: '添加新任务' }).click();
   await switchTask(page, '分析三班作业共性问题');
   await expect(page.getByText('已完成', { exact: true })).toBeVisible();
   await expect(taskTabs.getByRole('button', { name: '分析三班作业共性问题', exact: true })).toHaveAttribute('aria-current', 'page');

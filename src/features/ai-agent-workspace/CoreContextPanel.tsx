@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronRight, Database, RotateCcw, Search, X } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, ChevronRight, Database, RotateCcw, Search, X } from 'lucide-react';
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { CORE_CONTEXT_SECTIONS, type CoreContextSection } from '@domain/workbuddy/core-context';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
@@ -26,6 +26,7 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
   inspectorState?: ContextInspectorState;
   onInspectorStateChange?: (patch: ContextInspectorPatch) => void;
 }) {
+  const workspace = useWorkBuddyWorkspace();
   const {
     contextView,
     coursewareContextView,
@@ -33,12 +34,14 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
     toggleCoreContextItem,
     confirmCoreContext,
     resetCoreContext,
-  } = useWorkBuddyWorkspace().context;
+  } = workspace.context;
   const view = mode === 'courseware' ? coursewareContextView ?? contextView : contextView;
   const status = view.status === 'confirmed' ? '上下文已冻结' : view.status === 'ready_to_confirm' ? '可以确认上下文' : '需要补充教学范围';
   const parentIds = useMemo(() => new Set(view.items.flatMap((item) => item.parentId ? [item.parentId] : [])), [view.items]);
   const [localExpandedIds, setLocalExpandedIds] = useState<ReadonlySet<string>>(() => parentIds);
   const [localQuery, setLocalQuery] = useState('');
+  const [teacherInPickerOpen, setTeacherInPickerOpen] = useState(false);
+  const [teacherInQuery, setTeacherInQuery] = useState('');
   const [activeTreeItemId, setActiveTreeItemId] = useState(view.items[0]?.id ?? '');
   const bodyRef = useRef<HTMLDivElement>(null);
   const expandedIds = inspectorState?.expandedIds === null
@@ -62,6 +65,10 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
     return level;
   };
   const visibleItems = view.items.filter(isVisible);
+  const teacherInResources = workspace.teacherIn.searchResources(teacherInQuery);
+  const selectedTeacherInIds = new Set(view.items.flatMap((item) => (
+    item.reference?.system === 'teacherin' && item.included ? [item.reference.objectId] : []
+  )));
   const effectiveActiveTreeItemId = visibleItems.some(({ id }) => id === activeTreeItemId)
     ? activeTreeItemId
     : visibleItems[0]?.id ?? '';
@@ -131,6 +138,38 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
         </button> : null}
 
         <label className={styles.search}><Search aria-hidden="true" size={14} /><span className={styles.srOnly}>搜索上下文</span><input aria-label="搜索上下文" value={query} placeholder="搜索班级、课程、单元或资源" onChange={(event) => onInspectorStateChange ? onInspectorStateChange({ query: event.target.value }) : setLocalQuery(event.target.value)} /></label>
+
+        {!readOnly ? <section className={styles.teacherInPicker} aria-label="TeacherIn 资源">
+          <header>
+            <span className={styles.teacherInTitle}><BookOpen aria-hidden="true" size={16} /><span><strong>TeacherIn 资源</strong><small>选入当前任务上下文，不在这里浏览内容广场</small></span></span>
+            <button type="button" aria-expanded={teacherInPickerOpen} onClick={() => setTeacherInPickerOpen((open) => !open)}>{teacherInPickerOpen ? '收起' : '选择资源'}</button>
+          </header>
+          {teacherInPickerOpen ? <div className={styles.teacherInPickerBody}>
+            <label className={styles.teacherInSearch}><Search aria-hidden="true" size={14} /><span className={styles.srOnly}>搜索 TeacherIn 资源</span><input aria-label="搜索 TeacherIn 资源" value={teacherInQuery} placeholder="搜索课件、学习单或学科" onChange={(event) => setTeacherInQuery(event.target.value)} /></label>
+            <div className={styles.teacherInResults} role="list" aria-label="TeacherIn 搜索结果">
+              {teacherInResources.map((resource) => {
+                const selected = selectedTeacherInIds.has(resource.id);
+                const restricted = resource.permission === 'restricted';
+                return <article className={styles.teacherInResource} role="listitem" key={resource.id} data-selected={selected}>
+                  <div><strong>{resource.title}</strong><small>{resource.stage} · {resource.subject} · {resource.author}</small><small>{resource.licenseLabel} · {resource.version}</small></div>
+                  <button type="button" disabled={selected || restricted} onClick={() => workspace.context.addReference({
+                    id: `teacherin:${resource.id}:${resource.version}`,
+                    section: 'resources_input',
+                    kind: 'teacherin_resource',
+                    label: resource.title,
+                    source: 'teacherin',
+                    sourceVersion: resource.version,
+                    permission: resource.permission,
+                    sensitivity: resource.sensitivity,
+                    selection: 'suggested',
+                    reference: { system: 'teacherin', objectId: resource.id, version: resource.version },
+                  })}>{selected ? '已加入' : restricted ? '无权限' : '加入上下文'}</button>
+                </article>;
+              })}
+              {teacherInResources.length === 0 ? <p className={styles.teacherInEmpty}>没有找到匹配的 TeacherIn 资源。</p> : null}
+            </div>
+          </div> : null}
+        </section> : null}
 
         <div role="tree" aria-label="教学上下文对象">
         {CORE_CONTEXT_SECTIONS.map((section) => (

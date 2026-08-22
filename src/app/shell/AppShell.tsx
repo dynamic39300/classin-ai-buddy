@@ -19,7 +19,7 @@ export function AppShell({ role }: AppShellProps) {
   const [capability, setCapability] = useState<CapabilityKind | null>(null);
   const capabilityTriggerRef = useRef<HTMLElement | null>(null);
   const agentWorkspaceActive = role === 'teacher' && location.pathname.startsWith('/teacher/ai-agent');
-  const agentCapability = agentWorkspaceActive ? getWorkBuddyCapabilityFromPathname(location.pathname) : undefined;
+  const agentCapability = agentWorkspaceActive ? getWorkBuddyCapabilityFromPathname(location.pathname, { includeDormant: true }) : undefined;
   const agentTaskWorkspaceActive = agentWorkspaceActive && !agentCapability;
   const pageTitle = agentCapability?.label ?? getPageTitle(role, location.pathname);
   const pageHeaderFallback = useMemo(() => ({ title: pageTitle }), [pageTitle]);

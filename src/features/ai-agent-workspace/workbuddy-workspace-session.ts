@@ -56,11 +56,14 @@ function isContextItem(value: unknown): boolean {
     && hasStrings(value, ['id', 'kind', 'label', 'sourceVersion'])
     && (value.parentId === undefined || typeof value.parentId === 'string')
     && CONTEXT_SECTIONS.has(String(value.section))
-    && ['classin', 'teacher-input', 'institution-rule', 'domain-knowledge'].includes(String(value.source))
+    && ['classin', 'teacher-input', 'institution-rule', 'domain-knowledge', 'workbuddy-artifact', 'teacherin'].includes(String(value.source))
     && ['read', 'restricted'].includes(String(value.permission))
     && ['public', 'organization', 'class', 'personal', 'student_sensitive'].includes(String(value.sensitivity))
     && ['locked', 'suggested'].includes(String(value.selection))
-    && typeof value.included === 'boolean';
+    && typeof value.included === 'boolean'
+    && (value.reference === undefined || (isRecord(value.reference)
+      && ['classin-space', 'teacherin'].includes(String(value.reference.system))
+      && hasStrings(value.reference, ['objectId', 'version'])));
 }
 
 function hasValidHierarchy(items: readonly unknown[]): boolean {

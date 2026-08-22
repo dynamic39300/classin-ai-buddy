@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   FILE_ASSET_FIXTURES,
   buildFileAssetView,
+  getFileAssetReference,
   type FileAssetQuery,
 } from "./file-library";
 
@@ -53,5 +54,16 @@ describe("file asset library module", () => {
     expect(view.resultCount).toBe(1);
     expect(view.groups[0]?.project.runId).toBe("run-homework-review");
     expect(view.groups[0]?.assets[0]?.id).toBe("asset-homework-report");
+  });
+
+  it('projects stable Artifact and Space references for downstream commands', () => {
+    expect(getFileAssetReference(FILE_ASSET_FIXTURES[0]!)).toEqual({
+      artifactRef: { id: 'asset-courseware-pptx', version: 'v2' },
+      spaceFileRef: {
+        id: 'space-file-courseware-pptx', version: 'v2',
+        pathLabel: '我的云盘 / WorkBuddy 产物 / 函数单调性智能课件.pptx',
+      },
+      teacherInPermission: 'allowed',
+    });
   });
 });

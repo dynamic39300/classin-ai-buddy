@@ -26,6 +26,7 @@
 
 - [ClassIn 公开资料研究底稿](./public_research_classin_20260815.md)
 - [ClassIn 教与学 SOP 及 AI 能力共识输入](./ClassIn教与学SOP及AI能力共识输入_20260815.md)
+- [ClassIn 当前 AI 能力与交互设计现状审计](./classin_current_ai_capability_design_audit_20260822.md)
 
 ## 工程方法
 

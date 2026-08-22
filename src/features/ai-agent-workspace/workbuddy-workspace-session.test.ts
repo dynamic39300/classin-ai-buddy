@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { beginPackageGeneration, completePackageGeneration, createCoursePackageRun } from '@domain/workbuddy/course-package';
 import { WORKBUDDY_COURSE_PACKAGE_DEFINITION } from '@mocks/scenarios/workbuddy-course-production';
 import { loadWorkBuddyWorkspaceSession } from './workbuddy-workspace-session';
+import { loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
 
 const STORAGE_KEY = 'workbuddy:workspace-session:v2';
 
@@ -89,5 +90,28 @@ describe('WorkBuddy workspace session boundary', () => {
     Object.assign(session, { snapshotsById: { [snapshot.id]: snapshot }, packageRun, packageReceiptHistory: [unrelatedReceipt] });
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     expect(loadWorkBuddyWorkspaceSession()).toBeNull();
+  });
+
+  it('persists a valid TeacherIn draft receipt outside the main Run session', () => {
+    const receipt = {
+      id: 'receipt-teacherin-1', actionId: 'action-teacherin-1', approvalId: 'approval-teacherin-1',
+      idempotencyKey: 'teacherin-draft:artifact-1:v1', executedAt: '2026-08-22T10:10:00+08:00',
+      truthLabel: '[模拟] TeacherIn 草稿执行回执' as const, result: '已创建草稿', status: 'success' as const,
+      draft: {
+        id: 'draft-1', status: 'draft' as const, title: '函数单调性课件', createdAt: '2026-08-22T10:10:00+08:00',
+        editorPath: '/teacher/space/teacherin?draft=draft-1',
+        sourceArtifactRef: { id: 'artifact-1', version: 'v1' },
+        sourceSpaceFileRef: { id: 'space-file-1', version: 'v1', pathLabel: '我的云盘 / WorkBuddy 产物' },
+      },
+    };
+    saveTeacherInDraftReceipts({ 'artifact-1': receipt });
+    expect(loadTeacherInDraftReceipts()).toEqual({ 'artifact-1': receipt });
+  });
+
+  it('fails closed for a malformed TeacherIn draft receipt', () => {
+    window.sessionStorage.setItem('workbuddy:teacherin-draft-receipts:v1', JSON.stringify({
+      'artifact-1': { status: 'success', truthLabel: '[模拟] TeacherIn 草稿执行回执' },
+    }));
+    expect(loadTeacherInDraftReceipts()).toEqual({});
   });
 });

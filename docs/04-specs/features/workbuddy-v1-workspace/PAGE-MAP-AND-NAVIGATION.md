@@ -26,9 +26,9 @@ page_count: 43
 | WB-G-P01 | ClassIn 共享应用壳 | 固定壳 | 应用启动 | 所有一级模块 | G-P01 |
 | WB-G-O01 | 全局侧栏收起态 | 壳状态 | 收起按钮/快捷键 | 展开恢复 | G-O01 |
 | WB-G-O02 | 账户与组织菜单 | Popover | 头像/组织名 | 账户、切换组织、退出 | G-O02 |
-| WB-N-P01 | Work Buddy 二级能力目录 | ClassIn 左侧栏内嵌 Surface | 可展开/收起的 Work Buddy 一级入口 | 技能市场、工具连接、内容资源、定时任务、我的文件、设置 | G-P01 + ClassIn 适配 |
+| WB-N-P01 | Work Buddy 二级能力目录 | ClassIn 左侧栏内嵌 Surface | 可展开/收起的 Work Buddy 一级入口 | 技能市场、工具连接、我的文件、定时任务、设置 | G-P01 + ClassIn 适配 |
 | WB-N-P02 | 并行任务 Tab 条 | Work Surface 顶层 | Work Buddy / 当前任务 | 已打开任务、新建任务、全部任务选择器 | G-P01/G-O03 + ClassIn 适配 |
-| WB-N-O01 | 全部任务选择器与操作菜单 | Popover | 当前任务 Tab | 切换/打开任务、重命名、置顶、删除 | G-O03 |
+| WB-N-O01 | 全部任务选择器与操作菜单 | Popover | 当前任务 Tab | 在当前 Tab 切换任务、重命名、置顶、删除 | G-O03 |
 | WB-T-P01 | 新建任务 | 主 Surface | 二级菜单/业务对象入口 | 创建 Run | T-P01 |
 | WB-T-P02 | Agent Run 工作区 | 主 Surface | 新任务提交/历史/关联任务 | Artifact、Context、执行详情、Focus | T-P02/T-P03 |
 | WB-T-O01 | 资源与位置选择器 | Popover/Dialog | 附件/资源/目标位置 | T-P01/T-P02 | T-O01 |
@@ -49,10 +49,9 @@ page_count: 43
 | WB-M-P02 | 我的 Tools | 主页面/Tab | Tool 广场 | 启停、编辑、删除 | M-P02 |
 | WB-M-O01 | Tool 详情/管理 | Dialog/详情层 | Tool 卡 | 安装、编辑、删除、关闭 | M-O01 |
 | WB-M-O02 | 自定义 MCP | Dialog | 自定义/编辑 | 校验、测试、保存 | M-O02 |
-| WB-C-P01 | 内容广场 | 主页面 | 二级菜单 | 详情、我的作品、发布 | C-P01 |
-| WB-C-P02 | 内容作品详情 | 主页面 | 内容卡 | 获取、收藏、一键改编 | C-P02 |
-| WB-C-P03 | 我的作品 | 主页面/Tab | 内容广场 | 发布、管理、查看审核 | C-P03 |
-| WB-C-O01 | 发布作品向导 | 四步 Dialog | 发布作品 | 提交审核、关闭 | C-O01 |
+| WB-C-P01 | 旧内容广场（Dormant） | 非公开 Module | 仅回归测试 | 未来决策后恢复 | C-P01 |
+| WB-C-P02 | TeacherIn 资源选择 | Core Context 内嵌选择器 | 资源与教师输入 | ContextSnapshot、TeacherIn 详情 | ClassIn 适配 |
+| WB-C-O01 | 创建 TeacherIn 草稿 | Artifact/文件动作 | 创建草稿到 TeacherIn | Receipt、TeacherIn 草稿 | ClassIn 新增 |
 | WB-AU-P01 | 定时任务列表 | 主页面 | 二级菜单 | 创建、运行、编辑、历史 | A-P01 |
 | WB-AU-O01 | 创建/编辑定时任务 | Dialog | 新建/编辑 | 保存、取消 | A-O01 |
 | WB-AU-P02 | 定时任务历史 | 主页面/Tab | 列表历史 | 关联 Run、Artifact、Receipt | A-P02 |
@@ -85,12 +84,13 @@ flowchart TD
   TABS --> RUN["WB-T-P02 历史 Run"]
   NAV --> SK["WB-S-P01 技能市场"]
   NAV --> TL["WB-M-P01 工具连接"]
-  NAV --> CT["WB-C-P01 内容资源"]
+  NAV -. Dormant .-> CT["WB-C-P01 旧内容广场"]
   NAV --> AU["WB-AU-P01 定时任务"]
   NAV --> FI["WB-F-P01 文件"]
   NAV --> ST["WB-SET-P01 设置"]
   NEW --> RUN
-  CT -->|一键改编| NEW
+  NEW -->|选择资源| TI["WB-C-P02 TeacherIn Context"]
+  FI -->|创建草稿| TD["WB-C-O01 TeacherIn 草稿"]
   SK -->|去使用 / Skill Creator| NEW
   AU -->|立即运行 / 触发| RUN
   FI -->|作为任务输入| NEW
@@ -112,9 +112,9 @@ flowchart LR
 
 ## 6. Work Buddy 导航顺序
 
-左侧二级目录依次为：技能市场、工具连接、内容资源、我的文件、定时任务、设置。一级“Work Buddy”入口提供独立展开/收起按钮，不产生第三级菜单。
+左侧二级目录依次为：技能市场、工具连接、我的文件、定时任务、设置。旧“内容资源”保留为 Dormant Module，不进入默认导航。一级“Work Buddy”入口提供独立展开/收起按钮，不产生第三级菜单。
 
-新建任务、已打开任务 Tab 与全部任务选择器位于右侧 Work Surface 顶层。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置，右侧 Stage 不为任务导航预留独立列。
+新建任务、已打开任务 Tab 与全部任务选择器位于右侧 Work Surface 顶层。通过当前 Tab 打开全部任务选择器并选择任务时，目标任务替换当前 Tab，不产生额外 Tab；只有点击 Tab 列表后的加号才新增并行 Tab。任务条目默认右侧显示相对时间；Hover、Focus 或选中时显示 `…`。置顶任务不因最新状态自动改变教师滚动位置，右侧 Stage 不为任务导航预留独立列。
 
 ## 7. Deep Link 与返回现场
 

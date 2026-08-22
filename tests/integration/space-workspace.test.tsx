@@ -25,7 +25,7 @@ describe('space workspace', () => {
   it('starts on my drive with exactly four top-level surfaces and no removed tools', () => {
     renderTeacherSpace('my-drive');
 
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['我的云盘', '组织云盘', '资源中心', '题库中心']);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['我的云盘', '组织云盘', 'TeacherIn', '题库中心']);
     expect(screen.getByRole('heading', { name: '我的云盘' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '返回上级目录' })).not.toBeInTheDocument();
     expect(screen.queryByText('个人资料')).not.toBeInTheDocument();
@@ -38,7 +38,6 @@ describe('space workspace', () => {
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual(['选择', '名称 / 格式', '状态 / 权限', '更新时间', '操作']);
     expect(screen.getByRole('button', { name: '辅助工具' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '全局文档搜索' })).not.toBeInTheDocument();
-    expect(screen.queryByText('TeacherIn')).not.toBeInTheDocument();
     expect(screen.queryByText('本地教室')).not.toBeInTheDocument();
     expect(screen.queryByText('FlowIn')).not.toBeInTheDocument();
   });
@@ -153,7 +152,7 @@ describe('space workspace', () => {
 
   it('searches, sorts, and acquires resources from the direct catalog list', async () => {
     const user = userEvent.setup();
-    renderTeacherSpace('resource-center');
+    renderTeacherSpace('teacherin');
 
     expect(screen.getByRole('tab', { name: '全部资源' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByText('教材与课件')).not.toBeInTheDocument();
@@ -174,7 +173,7 @@ describe('space workspace', () => {
 
   it('restores resource search and sort from the URL and clears them when opening my resources', async () => {
     const user = userEvent.setup();
-    renderTeacherSpace('resource-center', '/teacher/space/resource-center?q=动量&sort=name');
+    renderTeacherSpace('teacherin', '/teacher/space/teacherin?q=动量&sort=name');
 
     expect(screen.getByRole('searchbox', { name: '搜索资源标题或标签' })).toHaveValue('动量');
     expect(screen.getByRole('combobox', { name: '资源排序' })).toHaveValue('name');

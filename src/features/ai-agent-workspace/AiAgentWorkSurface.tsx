@@ -14,10 +14,10 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
-import { getWorkBuddyCapability } from './capability-registry';
+import { getVisibleWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
 import { ConversationRunSurface } from './ConversationRunSurface';
@@ -37,7 +37,8 @@ export function AiAgentWorkSurface() {
   if (runId && coursewareView?.run.id === runId) return <ConversationRunSurface />;
   if (runId && packageView?.run.id === runId) return <PackageConversationRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
-  const capability = section ? getWorkBuddyCapability(section) : undefined;
+  if (section === 'content') return <Navigate to="/teacher/space/teacherin" replace />;
+  const capability = section ? getVisibleWorkBuddyCapability(section) : undefined;
   if (capability) return <CapabilityWorkspace key={capability.id} surface={capability.id} />;
   if (location.pathname.endsWith('/new')) return <NewTaskSkeleton />;
   return <NewTaskSkeleton />;
@@ -46,7 +47,7 @@ export function AiAgentWorkSurface() {
 type NewTaskNavigationState = Readonly<{
   capabilityId?: string;
   capabilityTitle?: string;
-  intent?: 'context' | 'adapt' | 'schedule' | 'skill-find' | 'skill-create' | 'skill-use';
+  intent?: 'context' | 'context-attached' | 'adapt' | 'schedule' | 'skill-find' | 'skill-create' | 'skill-use';
   prompt?: string;
 }>;
 
@@ -67,7 +68,12 @@ function skillFromNavigationState(state: NewTaskNavigationState | null): TaskSki
 function NewTaskSkeleton() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState(() => {
+    const state = location.state as NewTaskNavigationState | null;
+    return state?.intent === 'context-attached' && state.capabilityTitle
+      ? `已将“${state.capabilityTitle}”作为稳定引用加入 Core Context，请确认上下文版本。`
+      : '';
+  });
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [skillQuery, setSkillQuery] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<TaskSkillOption | null>(() =>
@@ -90,6 +96,9 @@ function NewTaskSkeleton() {
         setGoal(state.prompt);
       }
       navigate(location.pathname, { replace: true, state: null });
+      return;
+    }
+    if (state.intent === 'context-attached') {
       return;
     }
     if (goal.trim() && state.intent !== 'context') {

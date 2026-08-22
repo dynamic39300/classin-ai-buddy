@@ -1,5 +1,6 @@
 import {
   Bot,
+  BookOpen,
   Check,
   ChevronDown,
   Copy,
@@ -19,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
 import {
   FILE_ASSET_FIXTURES,
   FILE_ASSET_KIND_OPTIONS,
@@ -31,6 +33,10 @@ import styles from "./FileLibrary.module.css";
 type Props = Readonly<{
   onUseAsContext: (asset: FileAsset) => void;
   onOpenRun: (runId: string) => void;
+  draftReceipts: Readonly<Record<string, TeacherInDraftReceipt>>;
+  onCreateTeacherInDraft: (asset: FileAsset) => TeacherInDraftReceipt;
+  onOpenTeacherIn: (path: string) => void;
+  onLocateInSpace: (asset: FileAsset) => void;
 }>;
 
 const SHARE_TARGETS = [
@@ -83,7 +89,9 @@ function AssetIcon({
   return <Icon aria-hidden="true" size={size} />;
 }
 
-export function FileLibrary({ onUseAsContext, onOpenRun }: Props) {
+export function FileLibrary({
+  onUseAsContext, onOpenRun, draftReceipts, onCreateTeacherInDraft, onOpenTeacherIn, onLocateInSpace,
+}: Props) {
   const [assets, setAssets] = useState<FileAsset[]>(() =>
     FILE_ASSET_FIXTURES.map((asset) => ({ ...asset })),
   );
@@ -109,6 +117,7 @@ export function FileLibrary({ onUseAsContext, onOpenRun }: Props) {
   const selectedTypeLabel =
     TYPE_FILTER_OPTIONS.find((option) => option.value === kind)?.label ??
     "全部类型";
+  const selectedReceipt = selected ? draftReceipts[selected.id] : undefined;
 
   useEffect(() => {
     if (!typeMenuOpen) return;
@@ -170,6 +179,13 @@ export function FileLibrary({ onUseAsContext, onOpenRun }: Props) {
   };
   const openRun = (asset: FileAsset) => {
     if (asset.project.runId) onOpenRun(asset.project.runId);
+  };
+  const createTeacherInDraft = (asset: FileAsset, event?: MouseEvent) => {
+    event?.stopPropagation();
+    const receipt = onCreateTeacherInDraft(asset);
+    setFeedback(receipt.status === 'success'
+      ? '已在 TeacherIn 创建草稿。你可以前往 TeacherIn 继续编辑作品信息、设置授权并发布。'
+      : receipt.result);
   };
 
   return (
@@ -359,6 +375,29 @@ export function FileLibrary({ onUseAsContext, onOpenRun }: Props) {
                     </time>
                     <span className={styles.fileSize}>{asset.size}</span>
                     <div className={styles.rowActions}>
+                      {draftReceipts[asset.id]?.status === 'success' ? (
+                        <button
+                          type="button"
+                          aria-label={`${asset.name}前往 TeacherIn`}
+                          title="前往 TeacherIn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            const receipt = draftReceipts[asset.id];
+                            if (receipt?.status === 'success') onOpenTeacherIn(receipt.draft.editorPath);
+                          }}
+                        >
+                          <BookOpen aria-hidden="true" size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          aria-label={`${asset.name}创建草稿到 TeacherIn`}
+                          title="创建草稿到 TeacherIn"
+                          onClick={(event) => createTeacherInDraft(asset, event)}
+                        >
+                          <BookOpen aria-hidden="true" size={16} />
+                        </button>
+                      )}
                       <button
                         type="button"
                         aria-label={`${asset.name}收藏`}
@@ -478,7 +517,35 @@ export function FileLibrary({ onUseAsContext, onOpenRun }: Props) {
                 。
               </p>
             </section>
+            <section className={styles.detailSection}>
+              <h3>TeacherIn 作品</h3>
+              {selectedReceipt?.status === 'success' ? (
+                <p>已创建草稿 · {selectedReceipt.draft.createdAt} · 来源版本 {selectedReceipt.draft.sourceArtifactRef.version}</p>
+              ) : selectedReceipt ? (
+                <p>{selectedReceipt.result}</p>
+              ) : (
+                <p>尚未创建 TeacherIn 草稿。</p>
+              )}
+            </section>
             <div className={styles.detailActions}>
+              {selectedReceipt?.status === 'success' ? (
+                <button
+                  className={styles.teacherInButton}
+                  type="button"
+                  onClick={() => {
+                    const receipt = selectedReceipt;
+                    if (receipt?.status === 'success') onOpenTeacherIn(receipt.draft.editorPath);
+                  }}
+                >
+                  <BookOpen aria-hidden="true" size={16} />
+                  前往 TeacherIn
+                </button>
+              ) : (
+                <button className={styles.teacherInButton} type="button" onClick={() => createTeacherInDraft(selected)}>
+                  <BookOpen aria-hidden="true" size={16} />
+                  创建草稿到 TeacherIn
+                </button>
+              )}
               <button
                 className={styles.contextButton}
                 type="button"
@@ -504,6 +571,10 @@ export function FileLibrary({ onUseAsContext, onOpenRun }: Props) {
               >
                 <Download aria-hidden="true" size={16} />
                 下载
+              </button>
+              <button type="button" onClick={() => onLocateInSpace(selected)}>
+                <ExternalLink aria-hidden="true" size={16} />
+                在空间中定位
               </button>
               {selected.project.runId ? (
                 <button type="button" onClick={() => openRun(selected)}>

@@ -15,7 +15,7 @@ import styles from './SpaceWorkspace.module.css';
 const SURFACE_ICONS: Record<SpaceSurface, LucideIcon> = {
   'my-drive': Folder,
   'organization-drive': LibraryBig,
-  'resource-center': Archive,
+  teacherin: Archive,
   'question-bank': FileQuestion,
 };
 

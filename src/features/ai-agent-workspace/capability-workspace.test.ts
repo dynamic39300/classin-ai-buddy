@@ -12,9 +12,10 @@ import {
   surfaceItems,
   validateSkillImport,
 } from "./capability-workspace";
+import { WORKBUDDY_VISIBLE_CAPABILITIES, getWorkBuddyCapability } from './capability-registry';
 
 describe("WorkBuddy capability workspace model", () => {
-  it("exposes the six approved secondary destinations in order", () => {
+  it("keeps all six module configurations, including the dormant content module", () => {
     expect(CAPABILITY_SURFACE_CONFIGS.map(({ id }) => id)).toEqual([
       "skills",
       "tools",
@@ -31,6 +32,13 @@ describe("WorkBuddy capability workspace model", () => {
       "定时任务",
       "设置",
     ]);
+  });
+
+  it('exposes only active destinations while retaining the dormant content module', () => {
+    expect(WORKBUDDY_VISIBLE_CAPABILITIES.map(({ id }) => id)).toEqual([
+      'skills', 'tools', 'files', 'schedules', 'settings',
+    ]);
+    expect(getWorkBuddyCapability('content')?.availability).toBe('dormant');
   });
 
   it("keeps a stable surface configuration and first tab", () => {

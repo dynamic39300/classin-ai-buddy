@@ -26,12 +26,14 @@ import {
 } from '@mocks/scenarios/workbuddy-course-production';
 import { MockClassInWritebackAdapter } from '@mocks/adapters/workbuddy-classin-writeback';
 import { MockPackageWritebackAdapter } from '@mocks/adapters/workbuddy-package-writeback';
+import { MockTeacherInAdapter } from '@mocks/adapters/workbuddy-teacherin';
 import { OperationGuardProvider } from './shell/operation-guard';
 import { RootRouter } from './router/RootRouter';
 
 const OPEN_COURSE_SESSION = createOpenCourseSessionStore(['open-reading']);
 const WORKBUDDY_WRITEBACK_ADAPTER = new MockClassInWritebackAdapter();
 const WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER = new MockPackageWritebackAdapter();
+const WORKBUDDY_TEACHERIN_ADAPTER = new MockTeacherInAdapter();
 WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER.setScenario('success');
 
 function removeHomeworkProjection(courses: ReadonlyArray<ClassCourse>, activityId: string): ClassCourse[] {
@@ -96,6 +98,7 @@ export function App() {
                     writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
                     packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
                     packageWritebackScenarioController={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
+                    teacherInAdapter={WORKBUDDY_TEACHERIN_ADAPTER}
                   >
                     <BrowserRouter>
                       <RootRouter />

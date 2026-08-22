@@ -50,6 +50,8 @@ import {
   type SkillImportValidation,
 } from "./capability-workspace";
 import { FileLibrary } from "./FileLibrary";
+import { getFileAssetReference } from './file-library';
+import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from "./CapabilityWorkspace.module.css";
 
 type Props = Readonly<{ surface: CapabilitySurfaceId }>;
@@ -78,6 +80,7 @@ const SKILL_ICONS = [BookOpen, Boxes, TestTube2, Sparkles];
 const COVERS = ["geometry", "wave", "inquiry", "momentum"];
 
 export function CapabilityWorkspace({ surface }: Props) {
+  const workspace = useWorkBuddyWorkspace();
   const config = getCapabilitySurface(surface);
   const [tab, setTab] = useState(config.tabs[0]?.id ?? "general");
   const [query, setQuery] = useState("");
@@ -226,15 +229,36 @@ export function CapabilityWorkspace({ surface }: Props) {
       ) : null}
       {surface === "files" ? (
         <FileLibrary
-          onUseAsContext={(asset) =>
+          draftReceipts={workspace.teacherIn.draftReceipts}
+          onUseAsContext={(asset) => {
+            const reference = getFileAssetReference(asset);
+            workspace.context.addReference({
+              id: `space:${asset.id}`, section: 'resources_input', kind: 'space_file', label: asset.name,
+              source: 'workbuddy-artifact', sourceVersion: reference.artifactRef.version, permission: 'read',
+              sensitivity: 'personal', selection: 'suggested',
+              reference: { system: 'classin-space', objectId: reference.spaceFileRef.id, version: reference.spaceFileRef.version },
+            });
             navigate("/teacher/ai-agent/new", {
               state: {
                 capabilityId: asset.id,
                 capabilityTitle: asset.name,
-                intent: "context",
+                intent: "context-attached",
               },
-            })
-          }
+            });
+          }}
+          onCreateTeacherInDraft={(asset) => {
+            const reference = getFileAssetReference(asset);
+            return workspace.teacherIn.createDraft({
+              runRef: asset.project.runId ?? asset.project.id,
+              artifactRef: reference.artifactRef,
+              spaceFileRef: reference.spaceFileRef,
+              title: asset.name.replace(/\.[^.]+$/, ''),
+              permission: reference.teacherInPermission,
+              proposedAt: '2026-08-22T10:10:00+08:00',
+            });
+          }}
+          onOpenTeacherIn={(path) => navigate(path)}
+          onLocateInSpace={(asset) => navigate(`/teacher/space?parentId=my-workbuddy-artifacts&file=${getFileAssetReference(asset).spaceFileRef.id}`)}
           onOpenRun={(runId) => navigate(`/teacher/ai-agent/runs/${runId}`)}
         />
       ) : null}

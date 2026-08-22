@@ -21,7 +21,6 @@ async function openSurface(page: Page, label: string) {
 for (const label of [
   "技能市场",
   "工具连接",
-  "内容资源",
   "我的文件",
   "定时任务",
   "设置",
@@ -109,7 +108,7 @@ test("我的工具 management fidelity", async ({ page }) => {
   );
 });
 
-test("内容详情 modal fidelity", async ({ page }) => {
+test.skip("Dormant Module：内容详情 modal fidelity", async ({ page }) => {
   await openSurface(page, "内容资源");
   await page.getByRole("button", { name: "查看机械波概念演示" }).click();
   await expect(
@@ -117,7 +116,7 @@ test("内容详情 modal fidelity", async ({ page }) => {
   ).toHaveScreenshot("workbuddy-内容详情.png", { animations: "disabled" });
 });
 
-test("我的作品 dashboard fidelity", async ({ page }) => {
+test.skip("Dormant Module：我的作品 dashboard fidelity", async ({ page }) => {
   await openSurface(page, "内容资源");
   await page.getByRole("tab", { name: "我的作品" }).click();
   await expect(page.getByTestId("ai-agent-workspace-layout")).toHaveScreenshot(
@@ -172,7 +171,7 @@ test("我的文件 type filter fidelity", async ({ page }) => {
   );
 });
 
-test("发布作品 workspace fidelity", async ({ page }) => {
+test.skip("Dormant Module：发布作品 workspace fidelity", async ({ page }) => {
   await openSurface(page, "内容资源");
   await page.getByRole("button", { name: "发布作品" }).click();
   await expect(page.getByRole("dialog", { name: "发布作品" })).toHaveScreenshot(
@@ -272,7 +271,6 @@ test("模型设置 split view fidelity", async ({ page }) => {
 for (const label of [
   "技能市场",
   "工具连接",
-  "内容资源",
   "我的文件",
   "定时任务",
   "设置",

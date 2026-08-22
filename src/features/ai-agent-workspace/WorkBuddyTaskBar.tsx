@@ -9,7 +9,6 @@ import {
   Pencil,
   Plus,
   Search,
-  SquarePen,
   X,
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
@@ -151,6 +150,23 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
     navigate(taskRoute(taskId));
   };
 
+  const switchCurrentTask = (taskId: string) => {
+    setOpenTaskIds((current) => {
+      const withActive = activeTaskId && !current.includes(activeTaskId) ? [...current, activeTaskId] : [...current];
+      if (!activeTaskId || activeTaskId === taskId) return withActive;
+      const withoutTarget = withActive.filter((id) => id !== taskId);
+      const activeIndex = withoutTarget.indexOf(activeTaskId);
+      if (activeIndex < 0) return withoutTarget.includes(taskId) ? withoutTarget : [...withoutTarget, taskId];
+      withoutTarget[activeIndex] = taskId;
+      return withoutTarget;
+    });
+    setSelectorOpen(false);
+    setOpenMenuId(null);
+    setRenamingId(null);
+    setRenameOrigin(null);
+    navigate(taskRoute(taskId));
+  };
+
   const closeSelector = (restoreFocus = true) => {
     setSelectorOpen(false);
     setOpenMenuId(null);
@@ -274,12 +290,11 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
         <button
           className={styles.newTaskButton}
           type="button"
-          aria-label="新建任务页面"
+          aria-label="添加新任务"
           title="新建任务"
           onClick={() => openTask(NEW_TASK_ID)}
         >
-          <Plus className={styles.newTaskPlusIcon} aria-hidden="true" size={17} />
-          <SquarePen className={styles.newTaskComposeIcon} aria-hidden="true" size={16} />
+          <Plus aria-hidden="true" size={17} />
         </button>
       </nav>
       {contextPanel ? (
@@ -314,7 +329,7 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
               <Search aria-hidden="true" size={15} />
               <input ref={searchRef} aria-label="搜索全部任务" placeholder="搜索任务" value={query} onChange={(event) => setQuery(event.target.value)} />
             </div>
-            <button className={styles.selectorNewTask} type="button" onClick={() => openTask(NEW_TASK_ID)}>
+            <button className={styles.selectorNewTask} type="button" onClick={() => switchCurrentTask(NEW_TASK_ID)}>
               <Plus aria-hidden="true" size={16} />
               <span>新建任务</span>
             </button>
@@ -340,7 +355,7 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
                         onKeyDown={(event) => handleRenameKeyDown(event, run)}
                       />
                     ) : (
-                      <button className={styles.taskChoice} type="button" onClick={() => openTask(run.id)} title={run.title}>
+                      <button className={styles.taskChoice} type="button" onClick={() => switchCurrentTask(run.id)} title={run.title}>
                         <StatusIcon className={styles.statusIcon} data-status={run.runState.status} aria-label={WORKBUDDY_HISTORY_STATUS_LABELS[run.runState.status]} size={14} />
                         <span className={styles.taskTitle}>{run.title}</span>
                         {opened ? <span className={styles.openedLabel}>已打开</span> : null}

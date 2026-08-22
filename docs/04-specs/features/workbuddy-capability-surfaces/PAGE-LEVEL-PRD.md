@@ -1,7 +1,7 @@
 ---
 title: WorkBuddy 能力与资源页面高保真规格
-status: IMPLEMENTED_REVIEW_PENDING
-version: v0.3
+status: IMPLEMENTING_V04
+version: v0.4
 date: 2026-08-22
 ---
 
@@ -36,10 +36,10 @@ date: 2026-08-22
 
 ## 内容资源
 
-- 顶部 Tabs：内容广场、我的作品、收藏。
-- 筛选：内容类型、学段、学科、教材、排序；卡片展示封面、标题、作者、版本、授权状态、收藏。
-- 详情页/抽屉展示预览、来源、标签、适用建议、收藏和“改编到新任务”。
-- 改编保留来源引用并把目标写入新任务草稿，不直接执行。
+- 当前 WorkBuddy 内容广场转为 Dormant Module，不进入默认导航和公开业务路径。
+- TeacherIn 是 Space 下唯一可见的内容市场、作品管理、授权和发布入口。
+- WorkBuddy 在 Core Context 提供 TeacherIn 资源选择，在 Artifact/“我的文件”提供“创建草稿到 TeacherIn”。
+- 完整行为和兼容迁移见 `CONTENT-RESOURCE-ARCHITECTURE-UPGRADE.md`。
 
 ## 我的文件
 
@@ -48,6 +48,7 @@ date: 2026-08-22
 - 默认按最近生成时间排序，并以任务 / Session 聚合文件。任务标题、教学范围与文件数构成归属锚点；文件行只保留名称、类型、生成时间和大小，其中时间是稳定列但不作为主视觉轴。
 - 任务 / Session 使用独立的块级分组标题：标题加粗、教学上下文换行；所属文件整体缩进，文件名降低字重，任务图标与文件类型图标不得复用同一种底座。正文不重复标准 Topbar 已呈现的页面标题和说明。
 - 文件详情展示版本、解析状态、权限、复用 / 分享记录和关联 Run；动作是预览、作为 Context、分享、下载与定位来源。
+- 可发布类型增加“创建草稿到 TeacherIn”；成功后持久显示草稿关联和“前往 TeacherIn”。
 - 不复制 ClassIn Space 的文件所有权；无权文件显示可解释的不可用状态。
 
 ## 定时任务

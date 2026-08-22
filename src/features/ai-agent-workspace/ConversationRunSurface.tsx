@@ -4,7 +4,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { ConversationRunEvent, ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
+import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
 import { CoreContextPanel } from './CoreContextPanel';
+import { RunProgressDock } from './RunProgressDock';
 import { WorkBuddyModalDialog } from './WorkBuddyModalDialog';
 import { CONVERSATION_RUN_TIMING } from './conversation-run-module';
 import type { CoursewareExperienceState } from './conversation-run-experience';
@@ -192,6 +194,7 @@ export function ConversationRunSurface() {
             timelineRef.current?.scrollTo({ top: timelineRef.current.scrollHeight, behavior: 'smooth' });
           }}>新增 {newEventCount} 条</button></article> : null}
         </div>
+        <RunProgressDock progress={progress} steps={coursewareView.run.plan} />
         <div className={styles.runComposer} role="group" aria-label="任务补充输入">
           <textarea aria-label="向 Agent 补充要求" value={composerDraft} disabled={experience.status === 'cancelled'} placeholder="补充要求、调整任务或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
           <div><span>{canStop && progress.status === 'running' ? <>任务执行中，第 {progress.activeIndex + 1}/{progress.totalCount} 步{overallRemainingSeconds !== null ? <span aria-hidden="true">，预计还需 {Math.max(1, overallRemainingSeconds)} 秒</span> : null}</> : canResume ? '任务已停止，可继续执行' : experience.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}</span>
@@ -227,6 +230,19 @@ export function ConversationRunSurface() {
               hasReceipt={Boolean(coursewareView.receipt)}
               derivedPackageRunRef={coursewareView.run.derivedPackageRunRef}
               onApproveArtifact={() => dispatch({ type: 'approve_artifact' })}
+              teacherInReceipt={workspace.teacherIn.draftReceipts[coursewareView.run.artifact.id] ?? null}
+              onCreateTeacherInDraft={() => workspace.teacherIn.createDraft({
+                runRef: coursewareView.run.id,
+                artifactRef: { id: coursewareView.run.artifact!.id, version: coursewareView.run.artifact!.version },
+                spaceFileRef: {
+                  id: `space-file-${coursewareView.run.artifact!.id.replace(/^artifact-/, '')}`,
+                  version: coursewareView.run.artifact!.version,
+                  pathLabel: `我的云盘 / WorkBuddy 产物 / ${coursewareView.run.artifact!.title}.pptx`,
+                },
+                title: coursewareView.run.artifact!.title,
+                permission: 'allowed',
+                proposedAt: '2026-08-22T10:10:00+08:00',
+              })}
               onProposeSave={() => dispatch({ type: 'propose_action' })}
               onDerivePackage={() => {
                 const result = dispatch({ type: 'derive_package' });
@@ -304,7 +320,7 @@ function coursewarePreviewPage(pageNumber: number): CoursewarePreviewPage {
 
 function CoursewareOutput({
   artifact, artifactHistory, sourceStepLabel, inspectorState, reviewStatus, hasAction, hasReceipt, derivedPackageRunRef,
-  onApproveArtifact, onProposeSave, onDerivePackage, onInspectorStateChange,
+  teacherInReceipt, onCreateTeacherInDraft, onApproveArtifact, onProposeSave, onDerivePackage, onInspectorStateChange,
 }: Readonly<{
   artifact: CoursewareArtifactDraft;
   artifactHistory: readonly CoursewareArtifactDraft[];
@@ -314,6 +330,8 @@ function CoursewareOutput({
   hasAction: boolean;
   hasReceipt: boolean;
   derivedPackageRunRef: string | null;
+  teacherInReceipt: TeacherInDraftReceipt | null;
+  onCreateTeacherInDraft: () => TeacherInDraftReceipt;
   onApproveArtifact: () => void;
   onProposeSave: () => void;
   onDerivePackage: () => void;
@@ -363,6 +381,12 @@ function CoursewareOutput({
     event.preventDefault();
     goToPage(nextPage);
   };
+  const createTeacherInDraft = () => {
+    const receipt = onCreateTeacherInDraft();
+    setToolStatus(receipt.status === 'success'
+      ? '已在 TeacherIn 创建草稿。你可以前往 TeacherIn 继续编辑作品信息、设置授权并发布。'
+      : receipt.result);
+  };
   return (
     <section ref={outputRef} tabIndex={focused ? -1 : undefined} className={styles.output} role="region" aria-label="智能课件产出" data-focus={focused} onKeyDown={handlePreviewKeyDown} onScroll={(event) => onInspectorStateChange({ scrollTop: event.currentTarget.scrollTop })}>
       <header><div><span>只读课件</span><h2>{artifact.title}</h2></div><div className={styles.outputTools}>
@@ -403,6 +427,8 @@ function CoursewareOutput({
       {toolStatus ? <p className={styles.toolStatus} role="status">{toolStatus}</p> : null}
       <footer className={styles.outputActions}>
         {reviewStatus === 'pending' ? <button className={styles.primary} type="button" onClick={onApproveArtifact}>确认课件可用于后续任务</button> : null}
+        {reviewStatus === 'approved' && teacherInReceipt?.status !== 'success' ? <button className={styles.primary} type="button" onClick={createTeacherInDraft}>创建草稿到 TeacherIn</button> : null}
+        {teacherInReceipt?.status === 'success' ? <Link to={teacherInReceipt.draft.editorPath}>前往 TeacherIn</Link> : null}
         {reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
         {reviewStatus === 'approved' && derivedPackageRunRef ? <Link to={`/teacher/ai-agent/runs/${derivedPackageRunRef}`}>打开已派生课程方案包</Link> : null}
         {reviewStatus === 'approved' && !derivedPackageRunRef ? <button type="button" onClick={onDerivePackage}>基于此课件生成课程方案包</button> : null}

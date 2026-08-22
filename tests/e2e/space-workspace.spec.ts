@@ -19,15 +19,15 @@ test('teacher manages personal files and acquires a selected resource @a11y', as
   await expect(page).toHaveURL(/\/teacher\/space$/);
   await expect(page.getByRole('heading', { name: '我的云盘' })).toBeVisible();
   await expect(page.getByRole('tab')).toHaveCount(4);
-  await expect(page.getByText('TeacherIn')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'TeacherIn' })).toBeVisible();
   await page.getByRole('button', { name: /新建/ }).click();
   await page.getByRole('menuitem', { name: '新建文件夹' }).click();
   await page.getByRole('textbox', { name: '文件夹名称' }).fill('课堂演示资料');
   await page.getByRole('button', { name: '创建' }).click();
   await expect(page.getByText('课堂演示资料')).toBeVisible();
 
-  await page.getByRole('tab', { name: '资源中心' }).click();
-  await expect(page).toHaveURL(/\/teacher\/space\/resource-center$/);
+  await page.getByRole('tab', { name: 'TeacherIn' }).click();
+  await expect(page).toHaveURL(/\/teacher\/space\/teacherin$/);
   await expect(page.getByRole('tab', { name: '全部资源' })).toHaveAttribute('aria-selected', 'true');
   const resource = page.getByText('动量守恒模型课件').locator('xpath=ancestor::article');
   await resource.getByRole('button', { name: '获取' }).click();

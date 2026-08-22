@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { WORKBUDDY_CAPABILITIES } from './capability-registry';
+import { WORKBUDDY_VISIBLE_CAPABILITIES } from './capability-registry';
 import styles from './AgentSecondaryNav.module.css';
 
 export function AgentSecondaryNav() {
-  const resourceCapabilities = WORKBUDDY_CAPABILITIES.filter(({ placement }) => placement === 'resource');
-  const systemCapabilities = WORKBUDDY_CAPABILITIES.filter(({ placement }) => placement === 'system');
+  const resourceCapabilities = WORKBUDDY_VISIBLE_CAPABILITIES.filter(({ placement }) => placement === 'resource');
+  const systemCapabilities = WORKBUDDY_VISIBLE_CAPABILITIES.filter(({ placement }) => placement === 'system');
 
   return (
     <div className={styles.panel} role="group" aria-label="Work Buddy 二级导航">

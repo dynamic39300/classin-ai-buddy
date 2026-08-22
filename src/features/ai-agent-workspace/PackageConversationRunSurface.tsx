@@ -5,6 +5,7 @@ import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writ
 import type { ConversationRunEvent, ConversationRunEventState, ConversationRunPackageConfiguration } from '@contracts/workbuddy/conversation-run';
 import type { PackageArtifact, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import { CoreContextPanel } from './CoreContextPanel';
+import { RunProgressDock, type RunProgressStep } from './RunProgressDock';
 import { WorkBuddyModalDialog } from './WorkBuddyModalDialog';
 import { CONVERSATION_RUN_TIMING } from './conversation-run-module';
 import { useConversationRun } from './use-conversation-run';
@@ -16,6 +17,11 @@ import styles from './PackageConversationRunSurface.module.css';
 
 const KIND_LABELS = { courseware: '课件', homework: '作业', quiz: '测验', 'recording-script': '录播脚本' } as const;
 const RESULT_LABELS = { succeeded: '已执行', failed: '执行失败', not_executed: '未执行', waiting: '等待依赖' } as const;
+const PACKAGE_PROGRESS_STEPS: readonly RunProgressStep[] = Object.freeze([
+  Object.freeze({ id: 'package-structure', title: '形成课程目标与课件结构' }),
+  Object.freeze({ id: 'package-artifacts', title: '生成配套课程产物' }),
+  Object.freeze({ id: 'package-review', title: '检查并整理课程方案包' }),
+]);
 
 export function PackageConversationRunSurface() {
   const workspace = useWorkBuddyWorkspace();
@@ -91,6 +97,7 @@ export function PackageConversationRunSurface() {
           return <TimelineEvent key={event.id} icon={iconForEvent(event)} state={event.state} title={event.title} summary={event.summary}>{sourceLink}</TimelineEvent>;
         })}
       </div>
+      <RunProgressDock progress={progress} steps={PACKAGE_PROGRESS_STEPS} />
       <div className={conversationStyles.runComposer} role="group" aria-label="任务补充输入">
         <textarea aria-label="向 Agent 补充要求" value={composerDraft} disabled={progress.status === 'cancelled'} placeholder="补充要求、调整方案包或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
         <div><span>{canStop && progress.status === 'running' ? <>方案包生成中，第 {progress.activeIndex + 1}/{progress.totalCount} 步{overallRemainingSeconds !== null ? <span aria-hidden="true">，预计还需 {Math.max(1, overallRemainingSeconds)} 秒</span> : null}</> : canResume ? '任务已停止，可从当前位置继续' : progress.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}</span>

@@ -4,8 +4,9 @@ import { SpaceWorkspace } from '@features/space-workspace/SpaceWorkspace';
 
 export function TeacherSpacePage() {
   const { spaceSurface } = useParams();
-  const surface = SPACE_SURFACES.includes(spaceSurface as SpaceSurface)
-    ? spaceSurface as SpaceSurface
+  const compatibleSurface = spaceSurface === 'resource-center' ? 'teacherin' : spaceSurface;
+  const surface = SPACE_SURFACES.includes(compatibleSurface as SpaceSurface)
+    ? compatibleSurface as SpaceSurface
     : 'my-drive';
   return <SpaceWorkspace key={surface} role="teacher" surface={surface} />;
 }

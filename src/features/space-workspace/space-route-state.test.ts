@@ -18,7 +18,7 @@ describe('space route state', () => {
 
   it('restores the resource view without accepting drive-only values', () => {
     expect(parseSpaceRouteState(
-      'resource-center',
+      'teacherin',
       new URLSearchParams('parentId=my-root-folder&q=动量&sort=name&view=grid&resourceTab=mine'),
     )).toEqual({
       parentId: null,
