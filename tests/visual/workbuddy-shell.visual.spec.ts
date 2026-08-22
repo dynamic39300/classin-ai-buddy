@@ -127,6 +127,18 @@ test('WorkBuddy current Session uses an inline rename field at 1440x900', async 
   await expect(page).toHaveScreenshot('workbuddy-task-tab-rename-1440x900.png', { fullPage: true });
 });
 
+test('WorkBuddy all-task selector anchors to the current task tab at 1440x900', async ({ page }) => {
+  await openTeacherAgent(page);
+  await switchTask(page, '函数单元课程方案包');
+  const currentTab = page
+    .getByRole('navigation', { name: '已打开的 Work Buddy 任务' })
+    .getByRole('button', { name: '函数单元课程方案包', exact: true });
+  await currentTab.click();
+  await expect(page.getByRole('dialog', { name: '全部任务选择器' })).toBeVisible();
+
+  await expect(page).toHaveScreenshot('workbuddy-task-selector-anchored-1440x900.png', { fullPage: true });
+});
+
 test('WorkBuddy M4 courseware ArtifactDraft at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
   await expectWorkbenchGeometry(page);
