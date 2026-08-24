@@ -1,11 +1,15 @@
 ---
 title: WorkBuddy IM + Multi-Agent Channel Framework Implementation Review
-status: V19_REVIEWED_APPROVED
-version: v0.19
+status: V20_USER_ACCEPTED
+version: v0.20
 date: 2026-08-24
 ---
 
 # WorkBuddy IM + Multi-Agent Channel Framework Implementation Review
+
+> M4.2-12 补充结论：WB-06 已统一为“可编辑最终发送话术 + 可预览文字链接”，学生只需提供作业题号和卡点，完整题目由受治理 Context 定位。IM 条目不再重复显示模拟身份和 H5 格式标签；场景级真值、Domain、Receipt、Evaluation 与审计证据保持不变。
+>
+> v0.20 结论继续有效：教师/学生 Agent 私聊目录、授权优先搜索、稳定身份、角色隔离历史、向上分页、阅读锚点和两阶段响应已经实现。Picker、首次发送与撤权后重试共用权威授权校验。
 
 ## 1. Outcome
 
@@ -68,7 +72,7 @@ date: 2026-08-24
 - WorkBuddy 不再以贴边满高白栏与聊天等权竞争：Message Workspace 提供浅灰辅助托盘，Sidecar 作为四周内缩的白色工作台浮在其上，并以克制描边、阴影和安全边距表达辅助属性。
 - Header 与 Context Bar 收紧为同一信息带；Run 保留完整事件语义，只降低 Run Header 的卡片重量，不建立另一套压缩版流程。
 - WorkBuddy Composer 成为面板内独立 Dock；长 Run 只滚动 Body，任务输入始终可达。1024px 下沿用相同 Surface，转为距视口边缘 12px 的 Overlay。
-- Surface 进入使用 180ms 横向淡入；Reduced Motion 下取消该动画。容器使用 `overflow: clip` 阻止焦点恢复导致隐藏父容器偏移，从而稳定保持四周安全间距。
+- Shell 与 Surface 进入/退出统一使用 320ms ease-out；内容以克制的透明度和微量缩放缓冲布局换帧，退出引导在标准 Shell 完成后再出现。Reduced Motion 下取消空间动画。容器使用 `overflow: clip` 阻止焦点恢复导致隐藏父容器偏移，从而稳定保持四周安全间距。
 - 左侧装饰细条已经移除，浮层仅以托盘、内缩、边界与阴影表达辅助层级。
 - WorkBuddy 输入框从单行按真实 `scrollHeight` 自动增长，达到 10rem（默认字号约 7 行）后固定并开启内部滚动；单次输入上限为 4,000 字符，3,200 字符后才显示计数。
 - 沉浸消息中心把会话列表与当前聊天合并为一个 8px 圆角通信主 Surface；内部保持 280px 列表与 1px 分隔。单班入口复用同款主 Surface，但不渲染会话列表。
@@ -146,10 +150,11 @@ MessageWorkspace (page composition)
 | Compact Execution Receipt | PASS：Integration、focused E2E/a11y、Build、全仓 Check 与新增视觉契约通过；回执高度不超过 136px，无边框和阴影 |
 | Aligned Conversation Header | PASS：Integration、measured E2E/a11y、Build、全仓 Check 与 3 个 scoped visual 通过；左右底边误差不超过 1px |
 | Single-class Header reuse | PASS：单班级沉浸群聊、WorkBuddy 默认显示与返回班级路由的 focused E2E 通过 |
-| Immersive exit consistency | PASS：Integration 覆盖 WorkBuddy 预先打开后进入/退出；E2E 覆盖按钮与 `Esc Esc` 退出，并监测“已收起”提示不会与 Sidecar 同时存在 |
+| Immersive exit consistency | PASS：Integration 覆盖 WorkBuddy 预先打开后进入/退出；消息中心 E2E 覆盖按钮与 `Esc Esc` 退出、提示与 Sidecar 互斥、仅真实 WorkBuddy Session 显示引导、桌面/紧凑宽度视口正中心、原会话/Run/Composer 状态重开、约 6 秒停留、悬停/键盘焦点暂停、显式关闭、同页“不再显示”、整页刷新恢复及 a11y；独立 1440×900 视觉基线通过 |
 | Shared Class Agent Domain / Adapter / Integration | PASS：5 个 focused test files、33 tests；覆盖同一 Agent 定义、公开 `@` Gate、教师/学生独立私聊、隐私拒绝、失败与重试 |
 | Shared Class Agent E2E + a11y | PASS：6 条 Chromium tests；覆盖教师/学生公开群聊、教师/学生私聊隔离、WorkBuddy IM 回归及 serious/critical axe 检查 |
 | Shared Class Agent visual | PASS：3 个 1440×900 scoped snapshots；公开群聊保留 WorkBuddy，教师/学生私聊身份和可见性清晰，无横向溢出 |
+| Agent Direct Experience v0.20 | PASS：纳入 M4.2 最终 `npm run check` 84 files / 555 tests；教师/学生关键 Chromium E2E/a11y 通过；教师、学生与 processing 3 个 scoped visual 基线通过；双轴 Review PASS；用户验收通过 |
 
 视觉基线：
 
@@ -159,6 +164,7 @@ MessageWorkspace (page composition)
 - `tests/visual/workbuddy-im-assistance.visual.spec.ts-snapshots/workbuddy-im-sent-receipt-1440x900-chromium-darwin.png`
 - `tests/visual/workbuddy-im-assistance.visual.spec.ts-snapshots/workbuddy-im-sent-receipt-384px-1440x900-chromium-darwin.png`
 - `tests/visual/app-shell.visual.spec.ts-snapshots/teacher-direct-message-header-1440x900-chromium-darwin.png`
+- `tests/visual/app-shell.visual.spec.ts-snapshots/teacher-workbuddy-exit-guidance-1440x900-chromium-darwin.png`
 - `tests/visual/app-shell.visual.spec.ts-snapshots/teacher-class-agent-public-reply-1440x900-chromium-darwin.png`
 - `tests/visual/app-shell.visual.spec.ts-snapshots/teacher-class-agent-direct-1440x900-chromium-darwin.png`
 - `tests/visual/app-shell.visual.spec.ts-snapshots/student-class-agent-direct-1440x900-chromium-darwin.png`
@@ -166,6 +172,8 @@ MessageWorkspace (page composition)
 ## 5. Requirement Verdict
 
 `IM-PRD-001`—`IM-PRD-059` 保持既有 `PASS`；`IM-PRD-060`—`IM-PRD-063` 保持 `PASS_SCOPED`；`IM-PRD-064`—`IM-PRD-078` 保持 `PASS`。`IM-PRD-079`—`IM-PRD-088` 已覆盖同一班级 Agent 的共享定义、公开 `@` 触发、教师/学生群聊入口、教师/学生隔离私聊、隐私边界、身份与真值标签、进行中反馈、可恢复失败和自动化证据，判定为 `PASS_SCOPED`：渠道骨架达到本轮定义，完整教学 Case Library 与生产治理不在本次完成声明内。用户于 2026-08-24 完成 v0.19 实机评审并确认验收通过。
+
+`IM-PRD-101`—`IM-PRD-108` 已覆盖授权优先目录与搜索、稳定 Agent 身份、角色隔离历史与向上分页、阅读位置/新消息锚点、理解/整理/完成/失败状态，以及 Picker、发送和重试的权威授权重验，判定为 `PASS`；用户于 2026-08-24 完成 v0.20 页面验收。
 
 ## 6. Known Limits and Risks
 
@@ -196,4 +204,4 @@ MessageWorkspace (page composition)
 4. 回复进行中、完成、失败和重试反馈是否平滑，最新结果是否始终可见；
 5. 教师侧是否完全无法发现学生 Agent 私聊，同时不影响教师进入自己的 Agent 私聊。
 
-`IM-CHANNEL-CASE-LIBRARY` 已建立并完成三渠道 Case 盘点；下一条推荐业务纵向切片为 `WB-03 / M5 作业批改 → 错因分析 → 订正任务`，其产品规格仍需独立 Review Gate。
+`IM-CHANNEL-CASE-LIBRARY` 已建立并完成三渠道 Case 盘点。根据 D-077，下一阶段改为 M4.2“IM AI 入口地图与业务 Case 矩阵”，先补齐角色、渠道、入口、AI 身份与 L1/L2/L3 能力覆盖；M5–M10 暂停，`WB-03` 规格作为可恢复资产保留。

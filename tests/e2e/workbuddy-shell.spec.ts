@@ -28,6 +28,21 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   const workBuddyEntry = primaryNavigation.getByRole('link', { name: 'Work Buddy' });
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
   await expect(workBuddyEntry).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
+  const avatar = page.locator('[data-workbuddy-avatar="true"]');
+  await expect(avatar).toBeVisible();
+  const playback = await avatar.locator('video').evaluate((element) => {
+    const video = element as HTMLVideoElement;
+    return {
+      autoplay: video.autoplay,
+      loop: video.loop,
+      muted: video.muted,
+      playsInline: video.playsInline,
+      source: video.currentSrc,
+    };
+  });
+  expect(playback).toMatchObject({ autoplay: true, loop: true, muted: true, playsInline: true });
+  expect(playback.source).toContain('/brand/workbuddy-avatar-loop.mp4');
   const extensionToggle = primaryNavigation.getByRole('button', { name: '收起 Work Buddy 二级导航' });
   await extensionToggle.hover();
   await expect.poll(() => extensionToggle.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
@@ -78,6 +93,37 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
+});
+
+test('WorkBuddy welcome avatar uses one green circular border', async ({ page }) => {
+  await openTeacherWorkBuddy(page);
+
+  const ringLayers = await page.locator('[data-workbuddy-avatar="true"]').evaluate((element) => {
+    const style = getComputedStyle(element);
+    const afterStyle = getComputedStyle(element, '::after');
+    const hasOuterSpreadRing = /0px 0px 0px [1-9]/.test(style.boxShadow);
+    return [
+      Number.parseFloat(style.borderTopWidth) > 0,
+      hasOuterSpreadRing,
+      afterStyle.content !== 'none' && Number.parseFloat(afterStyle.borderTopWidth) > 0,
+    ].filter(Boolean).length;
+  });
+
+  expect(ringLayers).toBe(1);
+});
+
+test('WorkBuddy welcome title types on page entry and replays after refresh', async ({ page }) => {
+  await openTeacherWorkBuddy(page);
+  let typewriter = page.locator('[data-workbuddy-typewriter="true"]');
+
+  await expect(typewriter).toHaveAttribute('data-state', 'typing', { timeout: 300 });
+  await expect(typewriter).toHaveAttribute('data-state', 'complete');
+
+  await page.reload();
+  typewriter = page.locator('[data-workbuddy-typewriter="true"]');
+  await expect(typewriter).toHaveAttribute('data-state', 'typing', { timeout: 300 });
+  await expect(typewriter).toHaveAttribute('data-state', 'complete');
+  await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
 });
 
 test('new task keeps a Codex-style right auxiliary panel compact, aligned and stateful', async ({ page }) => {
@@ -253,6 +299,26 @@ test('current-tab selector replaces the active tab instead of opening another ta
   await switchTask(page, '分析三班作业共性问题');
   await expect(taskTabs.getByRole('button', { name: '分析三班作业共性问题', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(taskTabs.getByRole('button', { name: '函数单元课程方案包', exact: true })).toHaveCount(0);
+});
+
+test('every WorkBuddy Session keeps a bottom conversation composer available', async ({ page }) => {
+  await openTeacherWorkBuddy(page);
+
+  const sessions = [
+    '生成函数单调性课件',
+    '函数单元课程方案包',
+    '分析三班作业共性问题',
+    '设计二次函数随堂测验',
+    '整理本周学情沟通要点',
+    '制作导数概念微课脚本',
+    '生成探究任务评价量规',
+    '规划期中复习任务清单',
+  ];
+
+  for (const title of sessions) {
+    await switchTask(page, title);
+    await expect(page.locator('[data-workspace-composer="true"]'), `${title} should keep its conversation composer`).toBeVisible();
+  }
 });
 
 test('teacher renames the current Session inline from its active tab', async ({ page }) => {

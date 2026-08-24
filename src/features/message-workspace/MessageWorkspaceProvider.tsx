@@ -3,11 +3,13 @@ import {
   appendLocalMessage,
   markCategoryRead,
   markThreadRead,
+  prependOlderMessagePage,
   recallClassMessage,
   togglePinnedMessage,
   type MessageThread,
 } from '@domain/message/message';
 import { MESSAGE_THREADS } from '@mocks/scenarios/messages';
+import { isVerifiedGuidedExplanationContentReference } from '@domain/workbuddy/guided-explanation';
 import {
   MessageWorkspaceContext,
   type MessageWorkspaceActions,
@@ -58,7 +60,14 @@ export function MessageWorkspaceProvider({ children, scenario = DEFAULT_SCENARIO
     setThreads((current) => markCategoryRead(role, current, category));
   }, []);
 
+  const loadOlderMessages = useCallback<MessageWorkspaceActions['loadOlderMessages']>((threadId) => {
+    setThreads((current) => current.map((thread) => (
+      thread.id === threadId ? prependOlderMessagePage(thread) : thread
+    )));
+  }, []);
+
   const appendMessage = useCallback<MessageWorkspaceActions['appendMessage']>((options) => {
+    if (options.contentReference && !isVerifiedGuidedExplanationContentReference(options.contentReference)) return;
     setThreads((current) => current.map((thread) => thread.id === options.threadId
       ? appendLocalMessage(
         options.role,
@@ -70,6 +79,7 @@ export function MessageWorkspaceProvider({ children, scenario = DEFAULT_SCENARIO
         options.messageId,
         options.authorRole,
         options.classAgent,
+        options.contentReference,
       )
       : thread));
   }, []);
@@ -103,11 +113,12 @@ export function MessageWorkspaceProvider({ children, scenario = DEFAULT_SCENARIO
   const actions = useMemo<MessageWorkspaceActions>(() => ({
     readThread,
     readCategory,
+    loadOlderMessages,
     appendMessage,
     togglePin,
     recallMessage,
     toggleMute,
-  }), [appendMessage, readCategory, readThread, recallMessage, toggleMute, togglePin]);
+  }), [appendMessage, loadOlderMessages, readCategory, readThread, recallMessage, toggleMute, togglePin]);
 
   return <MessageWorkspaceContext.Provider value={{ state, actions }}>{children}</MessageWorkspaceContext.Provider>;
 }

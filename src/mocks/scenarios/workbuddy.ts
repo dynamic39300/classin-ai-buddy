@@ -24,13 +24,13 @@ export const WORKBUDDY_HISTORY: readonly WorkBuddyRunViewModel[] = [
     artifact: { title: '函数单元课程方案包', version: '方案 · v1', progress: '4 类课程对象', eyebrow: '函数单元 · 6 课时', heading: '课程对象组合方案', summary: '课件、作业、测验与录播脚本将共享同一课程目标。', truthLabel: '方案结构为本地固定数据，确认操作不会写入 ClassIn。' },
   },
   {
-    fixtureVersion: 'workbuddy-m3-v1', id: 'run-homework-review', title: '分析三班作业共性问题', relativeTime: '昨天', runState: { status: 'completed', allowedCommands: ['review-artifact'], recovery: null },
+    fixtureVersion: 'workbuddy-m3-v1', id: 'run-homework-review', title: '分析三班作业共性问题', relativeTime: '昨天', runState: { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null },
     goal: '分析高一（3）班函数作业，归纳共性问题并形成下一课教学建议。', contextLabels: ['高一（3）班', '函数作业 #4', '42 份提交'],
     steps: [{ title: '作业分析已完成', summary: '已归纳三个高频错误并生成分层教学建议。', time: '昨天', state: 'completed' }],
     artifact: { title: '三班作业诊断报告', version: '完成 · v1', progress: '42 / 42 份', eyebrow: '班级学情', heading: '函数作业共性问题', summary: '定义域判断与单调区间表达是本次主要失分点。', truthLabel: '诊断内容为本地固定示例，不代表真实学生数据。' },
   },
   {
-    fixtureVersion: 'workbuddy-m3-v1', id: 'run-quiz', title: '设计二次函数随堂测验', relativeTime: '昨天', runState: { status: 'completed', allowedCommands: ['review-artifact'], recovery: null },
+    fixtureVersion: 'workbuddy-m3-v1', id: 'run-quiz', title: '设计二次函数随堂测验', relativeTime: '昨天', runState: { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null },
     goal: '设计一份 10 分钟的二次函数随堂测验，并附答案与评分说明。', contextLabels: ['高一（3）班', '二次函数', '10 分钟'],
     steps: [{ title: '测验与答案已生成', summary: '完成 5 道题及逐题评分说明。', time: '昨天', state: 'completed' }],
     artifact: { title: '二次函数随堂测验', version: '完成 · v1', progress: '5 道题', eyebrow: '课堂测验', heading: '二次函数即时检测', summary: '覆盖图像、顶点、开口方向与参数判断。', truthLabel: '测验为本地固定示例，尚未发布到班级。' },
@@ -42,19 +42,19 @@ export const WORKBUDDY_HISTORY: readonly WorkBuddyRunViewModel[] = [
     artifact: { title: '本周学情沟通要点', version: '未完成', progress: '0 / 1 份', eyebrow: '可恢复失败', heading: '等待重新生成', summary: '当前没有可供复查的正式产物。', truthLabel: '失败状态为本地模拟，重试不会访问真实业务数据。' },
   },
   {
-    fixtureVersion: 'workbuddy-m3-v1', id: 'run-video', title: '制作导数概念微课脚本', relativeTime: '3 天', runState: { status: 'completed', allowedCommands: ['review-artifact'], recovery: null },
+    fixtureVersion: 'workbuddy-m3-v1', id: 'run-video', title: '制作导数概念微课脚本', relativeTime: '3 天', runState: { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null },
     goal: '制作一份 5 分钟导数概念微课脚本。', contextLabels: ['高中数学', '导数', '5 分钟'],
     steps: [{ title: '微课脚本已完成', summary: '旁白、画面与时间轴已经生成。', time: '3 天', state: 'completed' }],
     artifact: { title: '导数概念微课脚本', version: '完成 · v1', progress: '5 分钟', eyebrow: '录播脚本', heading: '从平均变化率到瞬时变化率', summary: '用运动情境引出导数概念。', truthLabel: '脚本为本地固定示例，尚未生成真实视频。' },
   },
   {
-    fixtureVersion: 'workbuddy-m3-v1', id: 'run-rubric', title: '生成探究任务评价量规', relativeTime: '5 天', runState: { status: 'completed', allowedCommands: ['review-artifact'], recovery: null },
+    fixtureVersion: 'workbuddy-m3-v1', id: 'run-rubric', title: '生成探究任务评价量规', relativeTime: '5 天', runState: { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null },
     goal: '为函数探究任务生成四级评价量规。', contextLabels: ['高一（3）班', '探究任务', '过程评价'],
     steps: [{ title: '评价量规已完成', summary: '形成四个维度与四级表现描述。', time: '5 天', state: 'completed' }],
     artifact: { title: '函数探究任务评价量规', version: '完成 · v1', progress: '4 个维度', eyebrow: '评价工具', heading: '探究任务四级量规', summary: '覆盖问题理解、推理过程、表达与协作。', truthLabel: '量规为本地固定示例，尚未关联真实任务。' },
   },
   {
-    fixtureVersion: 'workbuddy-m3-v1', id: 'run-review-plan', title: '规划期中复习任务清单', relativeTime: '1 周', runState: { status: 'completed', allowedCommands: ['review-artifact'], recovery: null },
+    fixtureVersion: 'workbuddy-m3-v1', id: 'run-review-plan', title: '规划期中复习任务清单', relativeTime: '1 周', runState: { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null },
     goal: '根据期中范围规划两周复习任务清单。', contextLabels: ['高一（3）班', '期中复习', '2 周'],
     steps: [{ title: '复习计划已完成', summary: '按知识模块和课时生成两周任务清单。', time: '1 周', state: 'completed' }],
     artifact: { title: '期中复习任务清单', version: '完成 · v1', progress: '10 项任务', eyebrow: '复习计划', heading: '两周期中复习安排', summary: '从集合、函数到指数与对数分阶段复习。', truthLabel: '计划为本地固定示例，尚未写入课程表。' },

@@ -5,6 +5,19 @@ async function openTeacherAgent(page: Page) {
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  const avatarVideo = page.locator('[data-workbuddy-avatar="true"] video');
+  if (await avatarVideo.count()) {
+    await avatarVideo.evaluate(async (element) => {
+      const video = element as HTMLVideoElement;
+      if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
+        await new Promise<void>((resolve) => video.addEventListener('loadedmetadata', () => resolve(), { once: true }));
+      }
+      video.pause();
+      video.currentTime = 0;
+    });
+  }
+  const typewriter = page.locator('[data-workbuddy-typewriter="true"]');
+  if (await typewriter.count()) await expect(typewriter).toHaveAttribute('data-state', 'complete');
 }
 
 async function switchTask(page: Page, title: string) {
@@ -97,6 +110,20 @@ test('WorkBuddy new task at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
   await expectWorkbenchGeometry(page);
 
+  await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
+  const avatar = page.locator('[data-workbuddy-avatar="true"]');
+  await expect(avatar).toBeVisible();
+  const playback = await avatar.locator('video').evaluate((element) => {
+    const video = element as HTMLVideoElement;
+    return {
+      autoplay: video.autoplay,
+      loop: video.loop,
+      muted: video.muted,
+      playsInline: video.playsInline,
+    };
+  });
+  expect(playback).toEqual({ autoplay: true, loop: true, muted: true, playsInline: true });
+
   const secondaryNavigation = page.getByRole('group', { name: 'Work Buddy 二级导航' });
   for (const title of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await expect(secondaryNavigation.getByRole('link', { name: title, exact: true })).toBeVisible();
@@ -148,6 +175,14 @@ test('WorkBuddy Run with one Artifact panel at 1440x900', async ({ page }) => {
   await expectWorkbenchGeometry(page);
   await expect(page.getByRole('complementary', { name: '当前任务产物' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-run-artifact-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy completed Session keeps its follow-up composer at 1440x900', async ({ page }) => {
+  await openTeacherAgent(page);
+  await switchTask(page, '分析三班作业共性问题');
+  await expectWorkbenchGeometry(page);
+  await expect(page.getByRole('textbox', { name: '继续追问当前任务' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-completed-session-composer-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy current Session uses an inline rename field at 1440x900', async ({ page }) => {

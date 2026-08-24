@@ -98,3 +98,9 @@ export function createDirectClassAgentBinding(
 export const PUBLIC_CLASS_AGENT_BINDINGS: readonly ClassAgentThreadBinding[] = Object.freeze(
   CLASS_AGENT_DEFINITIONS.map(createPublicClassAgentBinding),
 );
+
+export const DIRECT_CLASS_AGENT_BINDINGS: readonly ClassAgentThreadBinding[] = Object.freeze(
+  CLASS_AGENT_DEFINITIONS.flatMap((agent) => (
+    (['teacher', 'student-family'] as const).map((role) => createDirectClassAgentBinding(agent, role))
+  )),
+);

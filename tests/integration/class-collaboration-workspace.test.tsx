@@ -18,7 +18,7 @@ function TestStore({ children, initialClasses }: { children: ReactNode; initialC
   const [classes, setClasses] = useState(initialClasses);
   const [openCourses, setOpenCourses] = useState<ReadonlyArray<OpenCourseRecord>>([]);
   return (
-    <ClassWorkspaceContext.Provider value={{ classes, openCourses, setClasses, setOpenCourses }}>
+    <ClassWorkspaceContext.Provider value={{ classes, openCourses, getClasses: () => classes, setClasses, setOpenCourses }}>
       {children}
     </ClassWorkspaceContext.Provider>
   );

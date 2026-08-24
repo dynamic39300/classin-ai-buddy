@@ -74,6 +74,20 @@ export type PrepareClassAgentRequestResult =
   | Readonly<{ status: 'ready'; request: ClassAgentReplyRequest }>
   | Readonly<{ status: 'ignored'; reason: 'missing-mention' | 'not-authorized' | 'stale-authorization' | 'empty-message' }>;
 
+export function hasCurrentClassAgentAuthorization(
+  binding: ClassAgentThreadBinding,
+  authoritativeBindings: readonly ClassAgentThreadBinding[],
+): boolean {
+  return authoritativeBindings.some((current) => (
+    current.authorizationId === binding.authorizationId
+    && current.authorizationVersion === binding.authorizationVersion
+    && current.agentId === binding.agentId
+    && current.classId === binding.classId
+    && current.channel === binding.channel
+    && current.participantRole === binding.participantRole
+  ));
+}
+
 function normalizeMention(value: string): string {
   return value.trim().replace(/^@/, '').toLocaleLowerCase();
 }

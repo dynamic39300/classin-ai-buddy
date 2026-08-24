@@ -155,7 +155,6 @@ export function WorkBuddyImRunTimeline({ run }: Readonly<{ run: WorkBuddyImRunPr
           );
         })}
       </div>
-      <small className={styles.runTruth}>{run.truthLabel}</small>
     </section>
   );
 }

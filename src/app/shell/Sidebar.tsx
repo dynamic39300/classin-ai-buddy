@@ -65,7 +65,7 @@ export function Sidebar({ role, inactive = false, navigationExtension, onOpenSet
       inert={inactive || undefined}
     >
       <div className={styles.brand}>
-        <span className={styles.brandMark} aria-hidden="true">C</span>
+        <span className={styles.brandMark} aria-hidden="true"><img alt="" src="/brand/classin-wing-mark.png" /></span>
         <span className={styles.wordmark}>ClassIn</span>
       </div>
 

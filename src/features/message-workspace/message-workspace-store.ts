@@ -6,6 +6,7 @@ import type {
   MessageCategory,
   MessageThread,
 } from '@domain/message/message';
+import type { GuidedExplanationContentReference } from '@domain/workbuddy/guided-explanation';
 
 export type MessageWorkspaceState =
   | { status: 'loading' }
@@ -19,6 +20,7 @@ export type MessageWorkspaceState =
 export type MessageWorkspaceActions = {
   readThread: (role: AppRole, threadId: string) => void;
   readCategory: (role: AppRole, category: MessageCategory) => void;
+  loadOlderMessages: (threadId: string) => void;
   appendMessage: (options: {
     role: AppRole;
     authorName: string;
@@ -29,6 +31,7 @@ export type MessageWorkspaceActions = {
     messageId?: string;
     authorRole?: MessageAuthorRole;
     classAgent?: ClassAgentMessageMetadata;
+    contentReference?: GuidedExplanationContentReference;
   }) => void;
   togglePin: (threadId: string, messageId: string) => void;
   recallMessage: (role: AppRole, threadId: string, messageId: string, recalledAt: string) => void;

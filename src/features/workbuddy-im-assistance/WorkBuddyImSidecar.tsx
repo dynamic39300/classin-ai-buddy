@@ -9,10 +9,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
-import { useWorkBuddyIm, WORKBUDDY_IM_DIRECT_REFERENCE_TASK, WORKBUDDY_IM_REFERENCE_TASK, WORKBUDDY_IM_TASKS } from './workbuddy-im-store';
+import { useWorkBuddyIm, WORKBUDDY_IM_DIRECT_REFERENCE_TASK, WORKBUDDY_IM_GUIDED_EXPLANATION_TASK, WORKBUDDY_IM_REFERENCE_TASK, WORKBUDDY_IM_TASKS } from './workbuddy-im-store';
 import { WorkBuddyImRunTimeline } from './WorkBuddyImRunTimeline';
 import { WorkBuddyReviewArtifact } from './WorkBuddyReviewArtifact';
 import { WorkBuddyWeeklyPlanReviewArtifact } from './WorkBuddyWeeklyPlanReviewArtifact';
+import { WorkBuddyGuidedExplanationReview } from './WorkBuddyGuidedExplanationReview';
 import styles from './WorkBuddyImSidecar.module.css';
 
 type WorkBuddyImSidecarProps = Readonly<{
@@ -33,6 +34,7 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
     if (!onClose) return;
     const closeOnEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
       if (event.target instanceof HTMLElement && event.target.matches('input, textarea, [contenteditable="true"]')) return;
       onClose();
     };
@@ -41,10 +43,10 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
   }, [onClose]);
 
   useLayoutEffect(() => {
-    if (state.run.status !== 'generating' && state.run.status !== 'draft-ready' && state.run.status !== 'direct-draft-ready' && state.run.status !== 'empty') return;
+    if (state.run.status !== 'generating' && state.run.status !== 'draft-ready' && state.run.status !== 'direct-draft-ready' && state.run.status !== 'explanation-draft-ready' && state.run.status !== 'empty') return;
     const body = bodyRef.current;
     if (!body) return;
-    if (state.run.status === 'draft-ready' || state.run.status === 'direct-draft-ready') {
+    if (state.run.status === 'draft-ready' || state.run.status === 'direct-draft-ready' || state.run.status === 'explanation-draft-ready') {
       const reviewArtifact = body.querySelector<HTMLElement>('[data-review-artifact="true"]');
       if (!reviewArtifact) return;
       const bodyRect = body.getBoundingClientRect();
@@ -58,7 +60,7 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
   if (!state.isOpen || !state.target) return null;
   const { run, target } = state;
   const directContext = target.kind === 'direct';
-  const composerDisabled = run.status === 'sending';
+  const composerDisabled = run.status === 'sending' || run.status === 'explanation-sending';
   const composerActionLabel = run.status === 'ready'
     ? directContext ? '生成回复建议' : '生成消息草稿'
     : run.status === 'generating' ? '发送补充要求' : '发送给 WorkBuddy';
@@ -113,9 +115,10 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
             </div>
             <div className={styles.taskSuggestions} aria-label="模拟任务" role="group">
               {directContext ? (
-                <button className={styles.suggestion} type="button" onClick={() => actions.editComposerDraft(WORKBUDDY_IM_DIRECT_REFERENCE_TASK)}>
-                  <span>回复辅助</span><strong>根据当前对话拟写回复</strong>
-                </button>
+                <>
+                  <button className={styles.suggestion} type="button" onClick={() => actions.editComposerDraft(WORKBUDDY_IM_DIRECT_REFERENCE_TASK)}><span>回复辅助</span><strong>根据当前对话拟写回复</strong></button>
+                  <button className={styles.suggestion} type="button" onClick={() => actions.editComposerDraft(WORKBUDDY_IM_GUIDED_EXPLANATION_TASK)}><span>单题讲解</span><strong>生成可打开的分步讲题内容</strong></button>
+                </>
               ) : WORKBUDDY_IM_TASKS.map((task) => (
                   <button className={styles.suggestion} key={task.id} type="button" onClick={() => actions.editComposerDraft(task.prompt)}>
                     <span>{task.label}</span><strong>{task.suggestionTitle}</strong>
@@ -127,7 +130,7 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
 
         {run.status === 'direct-draft-ready' ? (
           <section className={styles.directDraft} data-review-artifact="true" aria-label="私聊回复建议">
-            <header><span>回复建议 · {run.draft.truthLabel}</span><strong>未发送</strong></header>
+            <header><span>回复建议</span><strong>未发送</strong></header>
             <label>
               <span>确认或修改后插入回复框</span>
               <textarea aria-label="私聊回复建议正文" value={run.draft.body} onChange={(event) => actions.editBody(event.target.value)} />
@@ -137,6 +140,14 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
               <button className={styles.primaryButton} type="button" onClick={() => onInsertDirectReply?.(run.draft.body)}>插入回复框</button>
             </footer>
           </section>
+        ) : null}
+
+        {run.status === 'explanation-needs-input' ? (
+          <section className={styles.centerState} role="status"><AlertTriangle aria-hidden="true" size={24} /><strong>还需要题目内容</strong><span>{run.message}</span></section>
+        ) : null}
+
+        {run.status === 'explanation-generation-failure' ? (
+          <section className={styles.centerState} role="alert"><AlertTriangle aria-hidden="true" size={24} /><strong>讲题内容生成暂时失败</strong><span>{run.message}</span><button className={styles.primaryButton} type="button" onClick={() => void actions.generate(run.goal)}><RotateCcw aria-hidden="true" size={14} />重新生成</button></section>
         ) : null}
 
         {state.conversation ? <WorkBuddyImRunTimeline run={state.conversation} /> : null}
@@ -173,6 +184,22 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
           />
         ) : null}
 
+        {run.status === 'explanation-draft-ready' ? (
+          <WorkBuddyGuidedExplanationReview key={`${run.artifact.id}:v${run.artifact.version}`} artifact={run.artifact} targetLabel={target.kind === 'direct' ? `当前学生私聊（${target.classLabel}）` : `${target.classLabel}群聊`} onRevise={actions.reviseExplanation} onApprove={() => void actions.approveAndSend()} />
+        ) : null}
+
+        {run.status === 'explanation-sending' ? (
+          <section className={styles.centerState} aria-live="polite" aria-busy="true"><LoaderCircle className={styles.spinner} aria-hidden="true" size={24} /><strong>正在保存并分发交互讲题内容</strong><span>保存与发送完成前不会显示成功回执。</span></section>
+        ) : null}
+
+        {run.status === 'explanation-sent' ? (
+          <section aria-label="讲题内容发送成功" className={styles.receipt} role="status"><CheckCircle2 aria-hidden="true" className={styles.receiptIcon} size={20} /><div className={styles.receiptSummary}><span>发送成功</span><strong>学生已可打开分步讲解</strong><small>{run.receipt.message.authorName} → {target.classLabel}</small></div><button className={styles.secondaryButton} type="button" onClick={() => onLocateMessage(run.receipt.message.id)}>查看消息</button></section>
+        ) : null}
+
+        {run.status === 'explanation-failure' ? (
+          <section className={styles.centerState} role="alert"><AlertTriangle aria-hidden="true" size={24} /><strong>{run.kind === 'permission_denied' ? '当前没有分发权限' : run.kind === 'evidence_mismatch' ? '执行证据需要人工复查' : '保存或发送暂时失败'}</strong><span>{run.message}</span>{run.kind === 'recoverable_failure' ? <button className={styles.primaryButton} type="button" onClick={() => void actions.retryExplanation()}><RotateCcw aria-hidden="true" size={14} />重试保存并发送</button> : run.kind === 'evidence_mismatch' ? <button className={styles.secondaryButton} type="button" onClick={actions.close}>关闭并人工复查</button> : <button className={styles.secondaryButton} type="button" onClick={actions.close}>关闭并联系管理员申请权限</button>}</section>
+        ) : null}
+
         {run.status === 'sending' ? (
           <section className={styles.centerState} aria-live="polite" aria-busy="true">
             <LoaderCircle className={styles.spinner} aria-hidden="true" size={24} />
@@ -187,7 +214,7 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
             <div className={styles.receiptSummary}>
               <span>发送成功</span>
               <strong>已发送 1 条班级群消息</strong>
-              <small>{run.receipt.message.authorName} → {target.classLabel} · {run.receipt.truthLabel}</small>
+              <small>{run.receipt.message.authorName} → {target.classLabel}</small>
             </div>
             <button className={styles.secondaryButton} type="button" onClick={() => onLocateMessage(run.receipt.message.id)}>查看群消息</button>
           </section>

@@ -1,8 +1,8 @@
 ---
 title: WorkBuddy IM 人机协作产品需求文档
-status: LOCKED_FOR_MULTI_AGENT_DISCOVERY_V19
-version: v0.19
-date: 2026-08-23
+status: LOCKED_FOR_AGENT_DIRECT_EXPERIENCE_V20
+version: v0.20
+date: 2026-08-24
 owner: ClassIn AI Native Product Design
 ---
 
@@ -117,7 +117,7 @@ IM 是合适的首个现场：教师原本就在班级群和一对一聊天中�
 - `IM-PRD-024`：沉浸态必须提供可识别的显式退出动作；键盘采用 `Esc Esc` 退出，单次 `Esc` 优先交给输入框、菜单、Overlay 与其他局部 Surface。
 - `IM-PRD-025`：文件预览和深度确认使用 Overlay / Focus Surface，不增加第四个持久栏。
 - `IM-PRD-026`：紧凑宽度优先收起会话列表，再把 WorkBuddy 转为 Overlay；不得通过删减 Agent Run 事件语义解决空间不足。
-- `IM-PRD-027`：进入与退出使用 160—220ms 的同源布局过渡并尊重 Reduced Motion；隐藏的 ClassIn 导航必须同时退出指针、键盘和辅助技术可达树。
+- `IM-PRD-027`：点击一级“消息”进入沉浸与退出沉浸使用 320ms 的同源 ease-out 布局过渡；Sidebar、Topbar、Stage 与 WorkBuddy Surface 同步变化，内容只使用克制的透明度和微量缩放缓冲换帧。退出引导必须在标准 Shell 完成后出现。Reduced Motion 下取消空间动画但保持相同语义状态与时序；隐藏的 ClassIn 导航必须同时退出指针、键盘和辅助技术可达树。
 - `IM-PRD-028`：WorkBuddy 栏底部必须持续提供教师任务输入区；Ready 时发起任务，Run 中发送的补充内容作为私密教师消息进入当前 Run，生成结果不得自动进入公开群聊 Composer。
 - `IM-PRD-029`：Run 的 Header、当前 Capability 与执行计划必须持续显示旋转运行标识、`进行中`、当前步骤、已进行秒数与预计剩余秒数；所有时间信息来自同一运行时钟。
 - `IM-PRD-030`：Reduced Motion 下停止旋转、脉冲和扫光，但保留运行状态文字、步骤与秒数；完成后以确定性已完成状态替换运行反馈。
@@ -198,7 +198,7 @@ IM 是合适的首个现场：教师原本就在班级群和一对一聊天中�
 - `IM-PRD-075`：教师在消息中心或单班级入口进入沉浸态后，只要当前对象是可交互的班级群聊或 1v1 私聊，WorkBuddy 必须自动打开并持续显示；切换聊天对象只更新当前上下文，不允许出现仅剩会话列表与聊天正文的空旷沉浸态。
 - `IM-PRD-076`：沉浸态不显示 Conversation Header 的 WorkBuddy 开关、不显示 WorkBuddy Header 的关闭按钮，也不通过 Splitter Enter 或其他命令折叠辅助区。标准 Shell 只保留 WorkBuddy 入口，点击后直接进入三栏沉浸，不再同时显示独立“进入沉浸模式”按钮，也不得在标准 Shell 内形成第四栏。退出沉浸不得清空 Run、Artifact、私密 Composer 或当前目标状态。
 - `IM-PRD-077`：低于并排阈值时 WorkBuddy 继续作为默认可见 Overlay，不恢复关闭命令；学生、只读、嵌入态、系统通知和官方公告继续不显示 WorkBuddy。Overlay 必须保留安全边距、完整输入与退出沉浸路径。
-- `IM-PRD-078`：退出沉浸时必须用非阻塞状态提示说明“WorkBuddy 已收起，再次打开会进入沉浸工作区”。该提示是事实回执：无论 WorkBuddy 进入前是否已打开，提示可见时标准 Shell 都不得继续挂载 Sidecar；退出只收起 Surface，不清空 Target、Run、Artifact 或 Composer。提示短暂保留、不拦截操作、不要求确认，并在 Reduced Motion 下取消位移动画。
+- `IM-PRD-078`：教师消息中心中真实展示过 WorkBuddy 的会话退出沉浸时，必须以整个应用视口为坐标系，在水平与垂直几何中心显示可操作的非阻塞过渡卡，明确说明“已退出沉浸模式，WorkBuddy 已收起”，并说明当前会话与 WorkBuddy 任务状态已保留。卡片宽度约 460–520px，使用中性浅灰 Surface、灰色边界和克制阴影，只在图标与主动作保留品牌绿；默认停留约 6 秒，悬停或键盘焦点进入时暂停倒计时，支持显式关闭，并提供“重新打开 WorkBuddy”主动作及“点击右上角 WorkBuddy”辅助引导。卡片同时提供“不再显示此提示”勾选项：勾选后保留当前卡片，从下一次退出开始在当前页面文档生命周期内停止显示；当前卡片内取消勾选则恢复后续引导。站内路由切换不重置该选择，浏览器整页刷新会清除偏好并恢复引导，以便相同模拟数据重复验收。该偏好是可失败的本机 UI 状态，不进入 Run 或会话。该提示是事实回执：无论 WorkBuddy 进入前是否已打开，提示可见时标准 Shell 都不得继续挂载 Sidecar；退出只收起 Surface，不清空 Target、Run、Artifact 或 Composer。卡片不夺取焦点、不阻断消息操作、不要求确认，并在 Reduced Motion 下取消位移动画。系统通知、官方公告及教师/学生单班群聊的返回班级路径因没有 WorkBuddy Surface，不显示该引导。
 
 ### 同一班级 Agent 的公开群聊与隔离私聊骨架
 
@@ -230,6 +230,25 @@ IM 是合适的首个现场：教师原本就在班级群和一对一聊天中�
 
 - `IM-PRD-099`：教师私密 WorkBuddy 产生 ExecutionReceipt 后，必须生成独立 EvaluationEvent，并关联 Run、ContextSnapshot、ArtifactDraft 版本、ProposedAction、Approval 和 Receipt；任一引用不一致时失败关闭，不生成孤立评价。
 - `IM-PRD-100`：EvaluationEvent 只记录教师采纳与执行结果。发送成功不得推导为教学有效，权限拒绝、事实过期和可恢复失败也必须记录为“尚未采纳”，且继续保留原始 Receipt。
+
+### Agent 私聊发现、历史与响应体验
+
+- `IM-PRD-101`：教师与学生的私聊目录必须先按当前 Actor、当前班级、私聊渠道和授权版本过滤，再执行搜索。默认显示“全部”，并提供“班级 Agent”和“联系人”范围；未授权 Agent 不进入列表、数量或无结果状态。
+- `IM-PRD-102`：同一搜索框必须支持 Agent 名称、短名、课程和公开能力关键词，以及联系人名称、关系和最近消息摘要。全部范围中 Agent 独立分组并优先于联系人，排序必须稳定且可解释。
+- `IM-PRD-103`：Agent 在列表、会话 Header、每条 Agent 消息和处理中状态中均使用同一稳定定义，并通过专属头像语义和名称与人类区分；颜色不得成为唯一身份信号。模拟属性由场景级边界统一说明，不在每个条目重复。
+- `IM-PRD-104`：点击 Agent 必须恢复当前 Actor 的同一条隔离 Thread。每个历史页同时保留人类与 Agent 消息；教师与学生不得因为引用同一 Agent 而共享 Thread、历史或草稿。
+- `IM-PRD-105`：Agent Thread 支持向上加载更早消息。prepend 后保持视觉锚点和线程滚动位置；用户阅读历史时新消息不得强制滚到底部，必须提供可操作的新消息锚点。
+- `IM-PRD-106`：私聊回复状态细化为 `idle → replying.understanding → replying.composing → replied` 或 `recoverable_failure`。用户消息立即写入，等待占位显示 Agent 身份与可理解的工作阶段；失败保留用户消息并允许原线程重试。
+- `IM-PRD-107`：当前 Mock Adapter 使用固定、可重置的约 1.8 秒响应时序以稳定展示两个处理阶段；真实 Runtime 不得继承人工 sleep，必须由真实事件驱动。界面不得展示隐藏思维链、虚假百分比或虚假精确 ETA。
+- `IM-PRD-108`：上述目录、历史、身份和响应行为同时覆盖教师与学生，保持场景级模拟真值边界并满足键盘、状态播报和 Reduced Motion 要求；真实 Directory、生产历史存储和真实流式 Runtime 仍属于后续 Gate。
+
+### WorkBuddy 最终发送话术与内容引用
+
+- `IM-PRD-109`：WorkBuddy 对即将发往群聊或私聊的生成内容统一产出可编辑的最终发送话术；若结果包含讲解、图片或网页等内容，话术内使用可理解的文字链接引用，不把底层格式作为主交付物。
+- `IM-PRD-110`：WB-06 的教师审核面必须支持发送前打开文字链接预览，并允许修改最终话术和链接内讲解；任意修改只有应用为新 Artifact version 后才能批准，接收端必须打开同一批准版本。
+- `IM-PRD-111`：学生可用课程/单元/作业/题号与卡点指代题目，完整题目由受治理 Context 定位；不能唯一定位时要求补充。IM 条目不重复显示 `[模拟] AI Agent`、`[模拟] Agent` 或 `H5`，但 Domain、Receipt、Evaluation、审计字段及 WorkBuddy 场景级 `[模拟] 数据` 边界不得删除。
+- `IM-PRD-112`：所有进入消息时间线的纯文本正文必须逐字保留发送值中的换行、空行与缩进，并在气泡宽度内安全折行；该规则统一覆盖手动消息、WorkBuddy 作业催交、课前通知、单题讲解最终话术和班级 Agent 回复。界面不得折叠结构化空白，也不得自行解析 Markdown 或改写已批准正文。
+- `IM-PRD-113`：作业催交群消息、课前通知和单题讲解最终发送话术必须共用可发现的“展开编辑 / 收起编辑”命令。命令只在 WorkBuddy Sidecar 内增加同一个受控 Textarea 的高度，宽度保持不变且不打开 Dialog；展开后聚焦正文并提供字数反馈，收起后把焦点还给入口。内联展开不得复制 Artifact、绕过空正文校验、移动底部 Composer Dock 或改变发送前审批规则。
 
 ## 8. 关键页面与交互
 

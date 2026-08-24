@@ -1,7 +1,7 @@
 ---
 title: ClassIn 教师 WorkBuddy 当前状态与下一阶段计划
-status: READY_FOR_VERSION_SEAL
-version: v0.3
+status: M4_2_COMPLETE_M4_3_READY_FOR_REVIEW
+version: v0.12
 date: 2026-08-24
 ---
 
@@ -17,7 +17,12 @@ date: 2026-08-24
 | 能力管理页面 | Skills、Tools、Files、Schedules、Settings 已实现；Content 按 D-051 Dormant | 2026-08-24 用户确认五个可见页面验收完成 |
 | WorkBuddy IM | 作业催交、课前准备通知、沉浸消息工作台和显式审批发送已实现 | 2026-08-24 用户确认 v0.19 验收完成 |
 | 班级多 Agent 渠道 | 公开结构化 `@Agent`、教师/学生隔离私聊、授权重验、目标撤销与可恢复失败已实现 | 随 IM v0.19 验收通过 |
-| M5 作业订正 | Feature Spec、ConversationRun PRD 和 Ticket Proposal 已就绪 | 待用户批准进入实施 |
+| M4.2 IM AI 入口地图与 Case 矩阵 | M4.2-01～16 已完成：五个 P0 Case、最终发送话术、真实题号 Context、Agent 私聊发现/历史/响应、共享消息编辑与 WorkBuddy 统一体验均已闭环 | 2026-08-24 用户验收通过 |
+| 一级 WorkBuddy 测验活动草稿（纳入 M4.2 扩展交付） | PRD、Spec、Tickets 与纵向闭环已完成：连续生成并审阅试卷、确认后交互填写参数、draft-only 写回、课程详情逐题编辑、独立发布及学生可见性 | 2026-08-24 用户验收通过 |
+| M4.3 ClassIn 内嵌 MVP 入口 | 已锁定先于外部入口梳理内部 AI 能力、角色与入口 | M4.2 已过 Gate，可进入 Product/UX Review；尚未启动 Implementation |
+| M4.4 独立 To-Teacher / To-C 入口 | 从已验证的 ClassIn 内部能力抽取外部产品体验 | 待 M4.3 Review Gate 后进入 |
+| M4.5 全局 Demo 体验收口 | IA、UI、交互、引导和 Demo Release Gate | 待 M4.4 Review Gate 后进入 |
+| M5–M10 | M5 规格已就绪；后续生产交付路线保留 | `PARKED`，待 M4.5 后独立恢复 |
 
 所有当前运行结果均为固定、脱敏、可重置的 `[模拟]` 数据；没有真实 ClassIn API、模型 Runtime、生产授权或长期记忆。
 
@@ -26,9 +31,9 @@ date: 2026-08-24
 1. 阶段一——实现审计与稳定化：硬性 Standards/Spec 缺口已修复；终局双轴复审均 all-clear；静态、单元/集成、关键 E2E 和范围视觉复验已完成。
 2. 阶段二——能力页与 IM v0.19 Review Gate：五个可见能力页面及 IM v0.19 已于 2026-08-24 完成用户验收。
 3. 阶段三——事实源与 Evaluation 收口：旧 workspace 决策已标为被 D-023 替代；单课件、方案包和 IM 已接入 EvaluationEvent；完整证据链失败关闭，失败/重试历史不被覆盖，也不把执行成功解释为教学效果。
-4. 阶段四——三渠道 Case Library 与下一阶段：Case 已分渠道盘点并给出优先级；建议下一条实施 `WB-03 / M5 作业订正`。
+4. 阶段四——三渠道 Case Library 与下一阶段：Case 已分渠道盘点并给出优先级；后续路线经用户修订为先进入 M4.2–M4.5 Demo 完善阶段，M5–M10 暂停。
 
-## 3. 封存与开启下一阶段
+## 3. 已封存基线
 
 ### 3.1 已完成的技术 Gate
 
@@ -47,4 +52,19 @@ date: 2026-08-24
 - 五个可见能力页面完成用户 Review Gate；Content 继续按 D-051 保持 Dormant；
 - WorkBuddy IM 与班级多 Agent 渠道 v0.19 完成用户 Review Gate。
 
-当前可在 `codex/workbuddy-m3-shell` 分支提交本轮全部已核验变更并推送远端，形成版本封存。M5 仍处于产品规格 Review Gate；用户批准其 PRD、Feature Spec 与 Ticket 粒度后，再建立新的 `codex/` 开发分支进入实施。
+已在 `codex/workbuddy-m3-shell` 分支以提交 `4c43c49` 封存并推送能力页面、IM v0.19、Evaluation 和阶段收尾基线。
+
+## 4. 当前路线：M4.2–M4.5
+
+正式顺序：
+
+1. **M4.2 — IM AI 入口地图与业务 Case 矩阵**：以角色、渠道、入口、AI 身份和 L1/L2/L3 能力层次补齐 Demo 场景表达；
+2. **M4.3 — ClassIn 内嵌 MVP 入口与角色引导**：先理顺 ClassIn 内部的 WorkBuddy、班级 Agent、权限、入口和 MVP 能力范围；
+3. **M4.4 — 独立 To-Teacher / To-C 产品入口**：再从内部已验证能力抽取外部获客与独立价值闭环；
+4. **M4.5 — 全局 IA、UI、交互与 Demo Release Gate**：在结构稳定后统一收口体验和发布质量。
+
+M4.3 先于 M4.4，避免外部产品入口在内部能力和角色体系未稳定时形成第二套模型。完整范围、依赖和 Gate 见 [M4.2–M4.5 Demo 完善路线](../04-specs/features/workbuddy-m4-demo-completion/README.md)。
+
+M5–M10 保持 `PARKED`，已有文档和实现基础不删除；只有在 M4.5 完成后，经用户独立确认才恢复。
+
+M4.2 最终工程证据：`npm run check` 84 个测试文件 / 555 项测试全通过；production build 通过；讲题最终话术、发送前预览、批准后链接、文件库、PA-01/DA-01、Agent 私聊授权目录/隔离历史/两阶段响应与新消息锚点，以及测验生成→试卷审阅→活动参数→草稿写回→课程详情编辑/发布的关键 E2E/a11y 均通过；受影响范围视觉基线通过并经人工复核。用户已于 2026-08-24 完成 M4.2 页面验收并授权版本封存；M4.3 只进入 Product/UX Review 就绪态，不自动启动 Implementation。

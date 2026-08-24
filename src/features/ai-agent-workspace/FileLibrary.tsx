@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
+import { useOptionalWorkBuddyArtifactLibrary } from '@features/workbuddy-artifact-library';
 import {
   FILE_ASSET_FIXTURES,
   FILE_ASSET_KIND_OPTIONS,
@@ -92,9 +93,22 @@ function AssetIcon({
 export function FileLibrary({
   onUseAsContext, onOpenRun, draftReceipts, onCreateTeacherInDraft, onOpenTeacherIn, onLocateInSpace,
 }: Props) {
+  const generatedLibrary = useOptionalWorkBuddyArtifactLibrary();
   const [assets, setAssets] = useState<FileAsset[]>(() =>
     FILE_ASSET_FIXTURES.map((asset) => ({ ...asset })),
   );
+  const libraryAssets = useMemo(() => {
+    const generated = (generatedLibrary?.artifacts ?? []).map((artifact): FileAsset => ({
+        id: artifact.id, name: artifact.title, extension: '链接', kind: '交互讲解',
+        summary: artifact.summary, size: '交互内容', version: `v${artifact.version}`,
+        createdAt: artifact.generatedAt, createdLabel: '刚刚', status: '可使用',
+        favorite: assets.find(({ id }) => id === artifact.id)?.favorite ?? false,
+        reuseCount: 0, sharedTargets: [],
+        project: { id: artifact.runRef, title: 'IM 单题讲解', context: artifact.question, runId: artifact.runRef },
+        canUseAsContext: true, canShare: false,
+      }));
+    return [...assets.filter(({ id }) => !generated.some((candidate) => candidate.id === id)), ...generated];
+  }, [assets, generatedLibrary?.artifacts]);
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<"all" | FileAssetKind>("all");
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
@@ -110,8 +124,8 @@ export function FileLibrary({
   const typeMenuRef = useRef<HTMLDivElement>(null);
 
   const view = useMemo(
-    () => buildFileAssetView(assets, { query, kind, favoriteOnly }),
-    [assets, favoriteOnly, kind, query],
+    () => buildFileAssetView(libraryAssets, { query, kind, favoriteOnly }),
+    [favoriteOnly, kind, libraryAssets, query],
   );
 
   const selectedTypeLabel =
@@ -155,7 +169,7 @@ export function FileLibrary({
   const toggleFavorite = (asset: FileAsset, event?: MouseEvent) => {
     event?.stopPropagation();
     setAssets((current) =>
-      current.map((candidate) =>
+      (current.some(({ id }) => id === asset.id) ? current : [...current, asset]).map((candidate) =>
         candidate.id === asset.id
           ? { ...candidate, favorite: !candidate.favorite }
           : candidate,

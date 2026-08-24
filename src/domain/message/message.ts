@@ -1,5 +1,6 @@
 import type { AppRole } from '@domain/account/role';
 import type { ClassAgentChannel, ClassAgentThreadBinding, ClassAgentTruthLabel } from '@domain/class-agent/class-agent';
+import type { GuidedExplanationContentReference } from '@domain/workbuddy/guided-explanation';
 
 export type MessageCategory = 'direct' | 'class' | 'system' | 'official';
 export type MessageAuthorRole = AppRole | 'system' | 'official' | 'class-agent';
@@ -20,6 +21,7 @@ export type MessageEntry = {
   kind: 'text' | 'emoji' | 'system' | 'retracted';
   retractedAt?: string;
   classAgent?: ClassAgentMessageMetadata;
+  contentReference?: GuidedExplanationContentReference;
 };
 
 export type MessageNotice = {
@@ -50,9 +52,21 @@ export type MessageThread = {
   classAgentBinding?: ClassAgentThreadBinding;
   classAgentBindings?: readonly ClassAgentThreadBinding[];
   entries: MessageEntry[];
+  olderEntries?: MessageEntry[];
   notice?: MessageNotice;
   pinnedMessageId?: string | null;
 };
+
+export function prependOlderMessagePage(thread: MessageThread, pageSize = 6): MessageThread {
+  if (!thread.olderEntries?.length || pageSize <= 0) return thread;
+  const pageStart = Math.max(0, thread.olderEntries.length - pageSize);
+  const page = thread.olderEntries.slice(pageStart);
+  return {
+    ...thread,
+    entries: [...page, ...thread.entries],
+    olderEntries: thread.olderEntries.slice(0, pageStart),
+  };
+}
 
 export type MessageContact = {
   id: string;
@@ -184,6 +198,7 @@ export function appendLocalMessage(
   messageId?: string,
   authorRole: MessageAuthorRole = role,
   classAgent?: ClassAgentMessageMetadata,
+  contentReference?: GuidedExplanationContentReference,
 ): MessageThread {
   const content = body.trim();
   if (!content || !isWritableMessageThread(thread)) return thread;
@@ -201,6 +216,7 @@ export function appendLocalMessage(
         sentAt,
         kind,
         classAgent,
+        contentReference,
       },
     ],
   };

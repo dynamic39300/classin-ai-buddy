@@ -4,6 +4,7 @@ import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixtu
 import type { ContextSnapshot } from '@domain/workbuddy/core-context';
 import type { CoursePackageRun } from '@domain/workbuddy/course-package';
 import type { SingleCoursewareRun } from '@domain/workbuddy/course-production';
+import type { QuizActivityCreationRun } from '@domain/workbuddy/quiz-activity-creation';
 import type { WorkBuddyHistory } from './workbuddy-workspace';
 
 type HistoryOverride = Readonly<{ title?: string; pinned?: boolean; removed?: boolean }>;
@@ -13,7 +14,7 @@ function projectCoursewareHistory(current: readonly WorkBuddyRunViewModel[], run
   const item: WorkBuddyRunViewModel = {
     fixtureVersion: run.fixtureVersion, id: run.id, title: run.title, relativeTime: fixture.history.relativeTime, pinned: existing?.pinned,
     runState: run.stage === 'artifact_ready'
-      ? { status: 'completed', allowedCommands: ['review-artifact'], recovery: null }
+      ? { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null }
       : { status: 'waiting', allowedCommands: ['confirm', 'revise'], recovery: 'confirm-or-revise' },
     goal: run.goal,
     contextLabels: existing?.contextLabels ?? [],
@@ -35,7 +36,7 @@ function projectPackageHistory(current: readonly WorkBuddyRunViewModel[], run: C
   const item: WorkBuddyRunViewModel = {
     fixtureVersion: run.fixtureVersion, id: run.id, title: run.title, relativeTime: fixture.history.relativeTime, pinned: existing?.pinned,
     runState: completed
-      ? { status: 'completed', allowedCommands: ['review-artifact'], recovery: null }
+      ? { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null }
       : run.stage === 'generating'
         ? { status: 'running', allowedCommands: ['supplement', 'stop'], recovery: 'stop-or-wait' }
         : run.stage === 'partial_success' || failedCount
@@ -51,10 +52,25 @@ function projectPackageHistory(current: readonly WorkBuddyRunViewModel[], run: C
   return [item, ...current.filter(({ id }) => id !== run.id)];
 }
 
+function projectQuizHistory(current: readonly WorkBuddyRunViewModel[], run: QuizActivityCreationRun, fixture: WorkBuddyRuntimeFixture): readonly WorkBuddyRunViewModel[] {
+  const existing = current.find(({ id }) => id === run.id);
+  const completed = run.stage === 'draft_created';
+  const failed = ['permission_denied', 'version_conflict', 'recoverable_failure', 'timeout', 'evidence_mismatch'].includes(run.stage);
+  const item: WorkBuddyRunViewModel = {
+    fixtureVersion: run.fixtureVersion, id: run.id, title: run.settings.title || '生成测验并创建活动草稿', relativeTime: fixture.history.relativeTime, pinned: existing?.pinned,
+    runState: completed ? { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null } : failed ? { status: 'failed', allowedCommands: ['retry', 'revise'], recovery: 'retry-or-revise' } : { status: 'waiting', allowedCommands: ['confirm', 'revise'], recovery: 'confirm-or-revise' },
+    goal: run.goal, contextLabels: existing?.contextLabels ?? [],
+    steps: [{ title: completed ? '测验活动草稿已创建' : run.artifact ? '测验试卷已生成' : '等待确认试卷结构', summary: completed ? '请前往班级课程详情审阅并发布。' : 'WorkBuddy 只会创建草稿，不会发布。', time: fixture.history.currentStepTime, state: completed ? 'completed' : failed ? 'failed' : 'waiting' }],
+    artifact: run.artifact ? { title: run.artifact.title, version: run.artifact.version, progress: `${run.artifact.questions.length} 题 · ${run.artifact.totalScore} 分`, eyebrow: '[模拟]测验生产', heading: run.artifact.title, summary: run.artifact.validation.summary, truthLabel: run.artifact.truthLabel } : { title: '测验试卷', version: '尚未生成', progress: '等待参数确认', eyebrow: '[模拟]测验生产', heading: '尚未生成试卷', summary: '确认试卷结构后生成。', truthLabel: '[模拟]当前没有已生成的测验试卷。' },
+  };
+  return [item, ...current.filter(({ id }) => id !== run.id)];
+}
+
 export function useWorkBuddyHistory(
   initialRuns: readonly WorkBuddyRunViewModel[],
   coursewareRun: SingleCoursewareRun | null,
   packageRun: CoursePackageRun | null,
+  quizRun: QuizActivityCreationRun | null,
   snapshotsById: Readonly<Record<string, ContextSnapshot>>,
   fixture: WorkBuddyRuntimeFixture,
 ): WorkBuddyHistory & Readonly<{ resetHistory: () => void }> {
@@ -69,10 +85,14 @@ export function useWorkBuddyHistory(
       const labels = packageRun.contextSnapshotId ? snapshotsById[packageRun.contextSnapshotId]?.items.filter(({ kind }) => fixture.contextSummaryKinds.includes(kind)).map(({ label }) => label) ?? [] : [];
       projected = projectPackageHistory(projected, packageRun, fixture).map((item) => item.id === packageRun.id ? { ...item, contextLabels: labels } : item);
     }
+    if (quizRun) {
+      const labels = snapshotsById[quizRun.contextSnapshotId]?.items.filter(({ kind }) => fixture.contextSummaryKinds.includes(kind)).map(({ label }) => label) ?? [];
+      projected = projectQuizHistory(projected, quizRun, fixture).map((item) => item.id === quizRun.id ? { ...item, contextLabels: labels } : item);
+    }
     return Object.freeze(projected
       .filter(({ id }) => !overrides[id]?.removed)
       .map((run) => Object.freeze({ ...run, title: overrides[run.id]?.title ?? run.title, pinned: overrides[run.id]?.pinned ?? run.pinned })));
-  }, [coursewareRun, fixture, initialRuns, overrides, packageRun, snapshotsById]);
+  }, [coursewareRun, fixture, initialRuns, overrides, packageRun, quizRun, snapshotsById]);
 
   return useMemo(() => Object.freeze({
     runs,

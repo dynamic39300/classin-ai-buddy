@@ -6,6 +6,8 @@ export type ClassAccountPlan = 'free' | 'trial' | 'pro';
 export type ClassActivityType = 'lesson' | 'homework' | 'quiz' | 'reading' | 'exercise' | 'livestream';
 export type ClassActivityStatus = 'completed' | 'active' | 'upcoming' | 'pending';
 export type ClassActivityReplayAvailability = 'available' | 'unavailable';
+export type ClassActivityPublication = 'draft' | 'published';
+export type ClassQuizScoringScheme = 'score' | 'percentage' | 'excellent-good' | 'abcd' | 'unscored';
 export type ClassActivityActionId =
   | 'open-homework'
   | 'enter-classroom'
@@ -33,14 +35,83 @@ export type ClassActivity = {
   type: ClassActivityType;
   title: string;
   status: ClassActivityStatus;
+  publication?: ClassActivityPublication;
   homeworkId?: string;
   scheduledAt?: string;
   replayAvailability?: ClassActivityReplayAvailability;
   detail: string;
+  quiz?: Readonly<{
+    version: string;
+    paperArtifactId: string;
+    paperArtifactVersion: string;
+    questionCount: number;
+    totalScore: number;
+    description: string;
+    startAt: string;
+    endAt: string;
+    durationMinutes: number | null;
+    scoring: ClassQuizScoringScheme;
+    questions?: readonly Readonly<{
+      id: string;
+      type: string;
+      prompt: string;
+      options?: readonly string[];
+      answer: string;
+      explanation: string;
+      difficulty: string;
+      score: number;
+    }>[];
+    publicationEvidence?: Readonly<{
+      idempotencyKey: string;
+      requestFingerprint: string;
+      receipt: QuizActivityPublicationReceipt;
+    }>;
+  }>;
 };
+
+export type QuizActivityPublicationAction = Readonly<{
+  id: string;
+  kind: 'publish-quiz-activity';
+  status: 'proposed' | 'approved';
+  courseId: string;
+  unitId: string | null;
+  activityId: string;
+  expectedVersion: string;
+  actorId: string;
+  permission: 'allowed' | 'denied';
+  risk: 'medium';
+  reversible: false;
+  idempotencyKey: string;
+  requestedAt: string;
+}>;
+
+export type QuizActivityPublicationApproval = Readonly<{
+  id: string;
+  actionId: string;
+  decision: 'approved';
+  decidedBy: string;
+  decidedAt: string;
+}>;
+
+export type QuizActivityPublicationReceipt = Readonly<{
+  id: string;
+  actionId: string;
+  approvalId: string;
+  idempotencyKey: string;
+  activityId: string;
+  actorId: string;
+  objectVersion: string;
+  executedAt: string;
+  truthLabel: '[模拟] ClassIn 测验发布回执';
+  result: string;
+}> & (
+  | Readonly<{ status: 'success'; publication: 'published' }>
+  | Readonly<{ status: 'permission_denied' | 'target_not_found' | 'version_conflict' | 'validation_failed' | 'evidence_mismatch'; publication: 'draft' }>
+);
 
 export type ClassUnit = {
   id: string;
+  sourceVersion?: string;
   title: string;
   description: string;
   status: ClassUnitStatus;
@@ -203,15 +274,181 @@ export function addClassActivity(
   unitId: string | null,
   activity: ClassActivity,
 ): ClassCourse[] {
+  const upsert = (activities: ReadonlyArray<ClassActivity>): ClassActivity[] => activities.some(({ id }) => id === activity.id)
+    ? activities.map((current) => current.id === activity.id ? activity : current)
+    : [...activities, activity];
   return courses.map((course) => {
     if (course.id !== courseId) return course;
-    if (!unitId) return { ...course, activities: [...(course.activities ?? []), activity] };
+    if (!unitId) return { ...course, activities: upsert(course.activities ?? []) };
     return {
       ...course,
       units: course.units.map((unit) => unit.id === unitId
-        ? { ...unit, activities: [...unit.activities, activity] }
+        ? { ...unit, activities: upsert(unit.activities) }
         : unit),
     };
+  });
+}
+
+function updateClassActivity(
+  courses: ReadonlyArray<ClassCourse>,
+  courseId: string,
+  unitId: string | null,
+  activityId: string,
+  update: (activity: ClassActivity) => ClassActivity,
+): ClassCourse[] {
+  return courses.map((course) => {
+    if (course.id !== courseId) return course;
+    if (unitId === null) return { ...course, activities: course.activities?.map((activity) => activity.id === activityId ? update(activity) : activity) };
+    return { ...course, units: course.units.map((unit) => unit.id === unitId ? { ...unit, activities: unit.activities.map((activity) => activity.id === activityId ? update(activity) : activity) } : unit) };
+  });
+}
+
+export function editQuizActivityDraft(
+  courses: ReadonlyArray<ClassCourse>,
+  courseId: string,
+  unitId: string | null,
+  activityId: string,
+  patch: Readonly<{
+    title?: string;
+    description?: string;
+    startAt?: string;
+    endAt?: string;
+    durationMinutes?: number | null;
+    scoring?: ClassQuizScoringScheme;
+    questions?: NonNullable<NonNullable<ClassActivity['quiz']>['questions']>;
+  }>,
+): ClassCourse[] {
+  return updateClassActivity(courses, courseId, unitId, activityId, (activity) => {
+    if (activity.type !== 'quiz' || activity.publication !== 'draft' || !activity.quiz) return activity;
+    const title = patch.title === undefined ? activity.title : patch.title.trim();
+    if (!title) return activity;
+    const startAt = patch.startAt ?? activity.quiz.startAt;
+    const endAt = patch.endAt ?? activity.quiz.endAt;
+    const questions = patch.questions ?? activity.quiz.questions;
+    if (!Number.isFinite(new Date(startAt).getTime()) || !Number.isFinite(new Date(endAt).getTime()) || new Date(endAt).getTime() <= new Date(startAt).getTime()) return activity;
+    if (patch.durationMinutes !== undefined && patch.durationMinutes !== null && (!Number.isInteger(patch.durationMinutes) || patch.durationMinutes <= 0)) return activity;
+    if (questions && validateClassQuizQuestions(questions)) return activity;
+    const totalScore = questions?.reduce((sum, question) => sum + question.score, 0) ?? activity.quiz.totalScore;
+    return {
+      ...activity,
+      title,
+      scheduledAt: startAt,
+      detail: `测验 · 草稿 · ${questions?.length ?? activity.quiz.questionCount} 题 · ${totalScore} 分`,
+      quiz: Object.freeze({
+        ...activity.quiz,
+        version: incrementObjectVersion(activity.quiz.version),
+        description: patch.description === undefined ? activity.quiz.description : patch.description.trim(),
+        startAt,
+        endAt,
+        durationMinutes: patch.durationMinutes === undefined ? activity.quiz.durationMinutes : patch.durationMinutes,
+        scoring: patch.scoring ?? activity.quiz.scoring,
+        questions,
+        questionCount: questions?.length ?? activity.quiz.questionCount,
+        totalScore,
+      }),
+    };
+  });
+}
+
+function incrementObjectVersion(version: string): string {
+  const revision = Number(version.match(/(\d+)$/)?.[1] ?? 0);
+  return `v${revision + 1}`;
+}
+
+export function validateClassQuizQuestions(questions: NonNullable<NonNullable<ClassActivity['quiz']>['questions']>): string | null {
+  for (const question of questions) {
+    if (!question.prompt.trim() || !question.answer.trim() || !question.explanation.trim() || question.score <= 0) return '每道题都必须包含题干、答案、解析和正分值。';
+    if (question.type === 'single-choice' && (!question.options?.length || !question.options.includes(question.answer))) return '单选题答案必须属于当前选项。';
+    if (question.type === 'multiple-choice') {
+      if (!question.options?.length) return '多选题必须包含选项。';
+      const answers = question.answer.split(/[、,，;；]/).map((answer) => answer.trim()).filter(Boolean);
+      if (answers.length < 2 || !answers.every((answer) => question.options!.includes(answer))) return '多选题答案必须由两个或以上当前选项组成。';
+    }
+    if (question.type === 'judgement' && !['正确', '错误', 'true', 'false'].includes(question.answer.trim().toLocaleLowerCase())) return '判断题答案必须是“正确”或“错误”。';
+  }
+  return null;
+}
+
+function findQuizActivity(courses: ReadonlyArray<ClassCourse>, input: Readonly<{ courseId: string; unitId: string | null; activityId: string }>): ClassActivity | undefined {
+  const course = courses.find(({ id }) => id === input.courseId);
+  return input.unitId === null
+    ? course?.activities?.find(({ id }) => id === input.activityId)
+    : course?.units.find(({ id }) => id === input.unitId)?.activities.find(({ id }) => id === input.activityId);
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => [key, canonicalize(item)]));
+}
+
+export function proposeQuizActivityPublication(
+  courses: ReadonlyArray<ClassCourse>,
+  input: Readonly<{ courseId: string; unitId: string | null; activityId: string; actorId: string; canPublish: boolean; requestedAt: string }>,
+): QuizActivityPublicationAction | null {
+  const activity = findQuizActivity(courses, input);
+  if (!activity || activity.type !== 'quiz' || activity.publication !== 'draft' || !activity.quiz) return null;
+  return Object.freeze({
+    id: `action-publish-${activity.id}-${activity.quiz.version}`,
+    kind: 'publish-quiz-activity',
+    status: 'proposed',
+    courseId: input.courseId,
+    unitId: input.unitId,
+    activityId: input.activityId,
+    expectedVersion: activity.quiz.version,
+    actorId: input.actorId,
+    permission: input.canPublish ? 'allowed' : 'denied',
+    risk: 'medium',
+    reversible: false,
+    idempotencyKey: `publish-${activity.id}-${activity.quiz.version}`,
+    requestedAt: input.requestedAt,
+  });
+}
+
+export function approveQuizActivityPublication(action: QuizActivityPublicationAction, approverId: string, decidedAt: string): Readonly<{ action: QuizActivityPublicationAction; approval: QuizActivityPublicationApproval }> {
+  const approvedAction = Object.freeze({ ...action, status: 'approved' as const });
+  return Object.freeze({
+    action: approvedAction,
+    approval: Object.freeze({ id: `approval-${action.id}`, actionId: action.id, decision: 'approved' as const, decidedBy: approverId, decidedAt }),
+  });
+}
+
+export function executeQuizActivityPublication(
+  courses: ReadonlyArray<ClassCourse>,
+  action: QuizActivityPublicationAction,
+  approval: QuizActivityPublicationApproval,
+): Readonly<{ courses: ClassCourse[]; receipt: QuizActivityPublicationReceipt }> {
+  const activity = findQuizActivity(courses, action);
+  const requestFingerprint = JSON.stringify(canonicalize({ action, approval }));
+  const common = { id: `receipt-${action.id}`, actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, activityId: action.activityId, actorId: action.actorId, objectVersion: action.expectedVersion, executedAt: approval.decidedAt, truthLabel: '[模拟] ClassIn 测验发布回执' as const };
+  const existingEvidence = activity?.quiz?.publicationEvidence;
+  if (existingEvidence?.idempotencyKey === action.idempotencyKey) {
+    if (existingEvidence.requestFingerprint === requestFingerprint) return Object.freeze({ courses: [...courses], receipt: existingEvidence.receipt });
+    return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, id: `${common.id}-evidence-mismatch`, status: 'evidence_mismatch', publication: 'draft', result: '同一幂等键已绑定到不同的发布请求，未重复执行。' }) });
+  }
+  if (action.kind !== 'publish-quiz-activity' || action.status !== 'approved' || approval.decision !== 'approved' || approval.actionId !== action.id || approval.decidedBy !== action.actorId) return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, status: 'evidence_mismatch', publication: 'draft', result: '发布审批证据与当前动作不一致，未执行发布。' }) });
+  if (action.permission !== 'allowed') return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, status: 'permission_denied', publication: 'draft', result: '当前教师无权发布该测验。' }) });
+  if (!activity || activity.type !== 'quiz' || !activity.quiz) return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, status: 'target_not_found', publication: 'draft', result: '待发布的测验草稿已不存在。' }) });
+  if (activity.quiz.version !== action.expectedVersion) return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, status: 'version_conflict', publication: 'draft', result: '测验草稿版本已变化，请重新审阅并确认。' }) });
+  if (activity.publication === 'published') return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, status: 'target_not_found', publication: 'draft', result: '测验已经发布，但当前请求没有匹配的幂等证据。' }) });
+  if (!activity.quiz.questions || validateClassQuizQuestions(activity.quiz.questions)) return Object.freeze({ courses: [...courses], receipt: Object.freeze({ ...common, status: 'validation_failed', publication: 'draft', result: '测验题目或答案校验未通过，未执行发布。' }) });
+  const receipt = Object.freeze({ ...common, status: 'success' as const, publication: 'published' as const, result: '测验已发布，学生课程目录现在可见。' });
+  return Object.freeze({
+    courses: publishQuizActivityDraft(courses, action.courseId, action.unitId, action.activityId, { idempotencyKey: action.idempotencyKey, requestFingerprint, receipt }),
+    receipt,
+  });
+}
+
+export function publishQuizActivityDraft(
+  courses: ReadonlyArray<ClassCourse>,
+  courseId: string,
+  unitId: string | null,
+  activityId: string,
+  publicationEvidence?: NonNullable<NonNullable<ClassActivity['quiz']>['publicationEvidence']>,
+): ClassCourse[] {
+  return updateClassActivity(courses, courseId, unitId, activityId, (activity) => {
+    if (activity.type !== 'quiz' || activity.publication !== 'draft' || !activity.quiz) return activity;
+    return { ...activity, publication: 'published', detail: `测验 · 已发布 · ${activity.quiz.questionCount} 题 · ${activity.quiz.totalScore} 分`, quiz: { ...activity.quiz, publicationEvidence } };
   });
 }
 
@@ -239,12 +476,12 @@ export function getVisibleClassCourses(role: AppRole, courses: ReadonlyArray<Cla
   return courses
     .map((course) => ({
       ...course,
-      activities: [...(course.activities ?? [])],
+      activities: (course.activities ?? []).filter(({ publication }) => publication !== 'draft'),
       units: course.units
         .filter(({ status }) => status === 'published')
         .map((unit) => ({
           ...unit,
-          activities: [...unit.activities],
+          activities: unit.activities.filter(({ publication }) => publication !== 'draft'),
         })),
     }))
     .filter(({ units, activities }) => units.length > 0 || (activities?.length ?? 0) > 0);

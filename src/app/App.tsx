@@ -8,6 +8,7 @@ import { MessageWorkspaceProvider, useMessageWorkspaceStore } from '@features/me
 import { WorkBuddyImProvider } from '@features/workbuddy-im-assistance';
 import { ClassAgentConversationProvider } from '@features/class-agent-conversation';
 import { WorkBuddyWorkspaceProvider } from '@features/ai-agent-workspace';
+import { WorkBuddyArtifactLibraryProvider, useWorkBuddyArtifactLibrary } from '@features/workbuddy-artifact-library';
 import { OpenCourseWorkspaceProvider, createOpenCourseSessionStore } from '@features/open-course-workspace';
 import { SpaceWorkspaceProvider } from '@features/space-workspace/SpaceWorkspaceProvider';
 import { addClassActivity, type ClassCourse } from '@domain/class/class';
@@ -29,11 +30,14 @@ import {
   WORKBUDDY_RUNTIME_FIXTURE,
 } from '@mocks/scenarios/workbuddy-course-production';
 import { MockClassInWritebackAdapter } from '@mocks/adapters/workbuddy-classin-writeback';
+import { MockQuizActivityDraftAdapter } from '@mocks/adapters/workbuddy-quiz-activity-draft';
 import { MockPackageWritebackAdapter } from '@mocks/adapters/workbuddy-package-writeback';
 import { MockTeacherInAdapter } from '@mocks/adapters/workbuddy-teacherin';
 import { MockWorkBuddyImHomeworkReminderAdapter } from '@mocks/adapters/workbuddy-im-homework-reminder';
+import { MockGuidedExplanationDistributionAdapter } from '@mocks/adapters/workbuddy-guided-explanation';
 import { MockClassAgentConversationAdapter } from '@mocks/adapters/class-agent/class-agent-conversation';
-import { CLASS_AGENT_DEFINITIONS } from '@mocks/scenarios/class-agent';
+import { CLASS_AGENT_DEFINITIONS, DIRECT_CLASS_AGENT_BINDINGS } from '@mocks/scenarios/class-agent';
+import { WORKBUDDY_QUIZ_PAPER } from '@mocks/scenarios/workbuddy-quiz-activity';
 import { OperationGuardProvider } from './shell/operation-guard';
 import { RootRouter } from './router/RootRouter';
 
@@ -81,6 +85,7 @@ function ClassHomeworkBridge({ children }: { children: ReactNode }) {
 function WorkBuddyImBridge({ children }: { children: ReactNode }) {
   const homework = useHomeworkWorkspace();
   const { actions: messageActions } = useMessageWorkspaceStore();
+  const artifactLibrary = useWorkBuddyArtifactLibrary();
   const adapter = useMemo(() => new MockWorkBuddyImHomeworkReminderAdapter({
     readSnapshot: ({ classId, classLabel }) => ({
       classId,
@@ -93,8 +98,11 @@ function WorkBuddyImBridge({ children }: { children: ReactNode }) {
       role: 'teacher', authorName, threadId, body, sentAt, messageId: id,
     }),
   }), [homework.homeworks, homework.students, homework.submissions, messageActions]);
+  const guidedExplanationAdapter = useMemo(() => new MockGuidedExplanationDistributionAdapter({
+    appendTeacherMessage: ({ id, threadId, authorName, body, sentAt, contentReference }) => messageActions.appendMessage({ role: 'teacher', authorName, threadId, body, sentAt, messageId: id, contentReference }),
+  }), [messageActions]);
   return (
-    <WorkBuddyImProvider adapter={adapter} teacher={{ id: 'teacher-001', name: '王老师' }} now={() => HOMEWORK_NOW}>
+    <WorkBuddyImProvider adapter={adapter} guidedExplanationAdapter={guidedExplanationAdapter} onArtifactCreated={artifactLibrary.add} teacher={{ id: 'teacher-001', name: '王老师' }} now={() => HOMEWORK_NOW}>
       {children}
     </WorkBuddyImProvider>
   );
@@ -123,9 +131,61 @@ function ClassAgentBridge({ children }: { children: ReactNode }) {
     });
   }, [messageActions]);
   return (
-    <ClassAgentConversationProvider adapter={adapter} definitions={CLASS_AGENT_DEFINITIONS} onReply={onReply}>
+    <ClassAgentConversationProvider
+      adapter={adapter}
+      definitions={CLASS_AGENT_DEFINITIONS}
+      directAuthorizationBindings={DIRECT_CLASS_AGENT_BINDINGS}
+      onReply={onReply}
+    >
       {children}
     </ClassAgentConversationProvider>
+  );
+}
+
+function WorkBuddyBridge({ children }: { children: ReactNode }) {
+  const { getClasses, setClasses } = useClassWorkspaceStore();
+  const quizActivityDraftAdapter = useMemo(() => new MockQuizActivityDraftAdapter({
+    targetReader: {
+      read: (target) => {
+        const record = getClasses().find(({ id }) => id === target.classId);
+        const course = record?.courses.find(({ id }) => id === target.courseId);
+        const unit = course?.units.find(({ id }) => id === target.unitId);
+        if (!record || !course || !unit) return null;
+        return { classId: record.id, courseId: course.id, unitId: unit.id, version: unit.sourceVersion ?? `${unit.id}-unversioned`, canCreateDraft: record.roleByAppRole.teacher === 'headmaster' || record.roleByAppRole.teacher === 'teacher' };
+      },
+    },
+    onDraftCreated: (activity, target) => setClasses((current) => current.map((record) => {
+      if (record.id !== target.classId) return record;
+      return { ...record, courses: addClassActivity(record.courses, target.courseId, target.unitId, activity) };
+    })),
+  }), [getClasses, setClasses]);
+
+  return (
+    <WorkBuddyWorkspaceProvider
+      initialRuns={WORKBUDDY_HISTORY}
+      initialContextItems={WORKBUDDY_CONTEXT_ITEMS}
+      recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
+      coursewareDefinition={WORKBUDDY_COURSEWARE_DEFINITION}
+      coursewareOutput={WORKBUDDY_COURSEWARE_OUTPUT}
+      replannedCoursewareOutput={WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT}
+      capabilityManifests={WORKBUDDY_CAPABILITY_MANIFESTS}
+      coursewareActionInput={WORKBUDDY_COURSEWARE_SAVE_ACTION}
+      packageDefinition={WORKBUDDY_COURSE_PACKAGE_DEFINITION}
+      packageActionInput={WORKBUDDY_PACKAGE_ACTION_INPUT}
+      packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
+      runtimeFixture={WORKBUDDY_RUNTIME_FIXTURE}
+      clock={WORKBUDDY_FIXED_CLOCK}
+      writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
+      writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
+      packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
+      packageWritebackScenarioController={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
+      teacherInAdapter={WORKBUDDY_TEACHERIN_ADAPTER}
+      quizPaper={WORKBUDDY_QUIZ_PAPER}
+      quizActivityDraftAdapter={quizActivityDraftAdapter}
+      quizActivityDraftScenarioController={quizActivityDraftAdapter}
+    >
+      {children}
+    </WorkBuddyWorkspaceProvider>
   );
 }
 
@@ -136,38 +196,21 @@ export function App() {
         <ClassWorkspaceProvider>
           <ClassHomeworkBridge>
             <OpenCourseWorkspaceProvider store={OPEN_COURSE_SESSION}>
+              <WorkBuddyArtifactLibraryProvider>
               <MessageWorkspaceProvider>
                 <ClassAgentBridge>
                   <WorkBuddyImBridge>
                     <SpaceWorkspaceProvider>
-                      <WorkBuddyWorkspaceProvider
-                        initialRuns={WORKBUDDY_HISTORY}
-                        initialContextItems={WORKBUDDY_CONTEXT_ITEMS}
-                        recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
-                        coursewareDefinition={WORKBUDDY_COURSEWARE_DEFINITION}
-                        coursewareOutput={WORKBUDDY_COURSEWARE_OUTPUT}
-                        replannedCoursewareOutput={WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT}
-                        capabilityManifests={WORKBUDDY_CAPABILITY_MANIFESTS}
-                        coursewareActionInput={WORKBUDDY_COURSEWARE_SAVE_ACTION}
-                        packageDefinition={WORKBUDDY_COURSE_PACKAGE_DEFINITION}
-                        packageActionInput={WORKBUDDY_PACKAGE_ACTION_INPUT}
-                        packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
-                        runtimeFixture={WORKBUDDY_RUNTIME_FIXTURE}
-                        clock={WORKBUDDY_FIXED_CLOCK}
-                        writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
-                        writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
-                        packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
-                        packageWritebackScenarioController={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
-                        teacherInAdapter={WORKBUDDY_TEACHERIN_ADAPTER}
-                      >
+                      <WorkBuddyBridge>
                         <BrowserRouter>
                           <RootRouter />
                         </BrowserRouter>
-                      </WorkBuddyWorkspaceProvider>
+                      </WorkBuddyBridge>
                     </SpaceWorkspaceProvider>
                   </WorkBuddyImBridge>
                 </ClassAgentBridge>
               </MessageWorkspaceProvider>
+              </WorkBuddyArtifactLibraryProvider>
             </OpenCourseWorkspaceProvider>
           </ClassHomeworkBridge>
         </ClassWorkspaceProvider>

@@ -1,12 +1,14 @@
 ---
 title: WorkBuddy M5 作业订正 Feature Spec
-status: READY_FOR_USER_REVIEW
-triage: ready-for-agent
+status: PARKED_READY_FOR_USER_REVIEW
+triage: parked
 version: v0.1
 date: 2026-08-22
 ---
 
 # WorkBuddy M5 作业订正 Feature Spec
+
+> 路线状态（D-077）：本 Spec 的内容和成熟度保留；M4.2–M4.5 完成并经用户独立恢复 M5 前，不进入 Agent 实施。
 
 ## 1. Feature Boundary
 

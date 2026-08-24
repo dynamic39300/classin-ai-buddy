@@ -25,6 +25,14 @@ async function openWeeklyPreparationDraft(page: Page, viewport: { width: number;
   await expect(sidecar.getByRole('heading', { name: '课前准备通知已生成' })).toBeVisible({ timeout: 12_000 });
 }
 
+async function openGuidedExplanationDraft(page: Page, viewport: { width: number; height: number }) {
+  await openWorkBuddyReady(page, viewport);
+  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  await sidecar.locator('button').filter({ hasText: '单题讲解' }).click();
+  await sidecar.getByRole('button', { name: '生成消息草稿' }).click();
+  await expect(sidecar.getByLabel('单题交互讲解待审核')).toBeVisible({ timeout: 12_000 });
+}
+
 async function sendReminder(page: Page, viewport: { width: number; height: number }) {
   await openReminderDraft(page, viewport);
   const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
@@ -144,6 +152,20 @@ test('WorkBuddy IM reminder draft at 1440x900', async ({ page }) => {
   await expect(page).toHaveScreenshot('workbuddy-im-reminder-draft-1440x900.png', { fullPage: true });
 });
 
+test('WorkBuddy IM expanded editor keeps its shell fixed after scrolling at 1440x900', async ({ page }) => {
+  await openReminderDraft(page, { width: 1440, height: 900 });
+  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const body = sidecar.locator('[data-scrolled]');
+  await sidecar.getByRole('button', { name: '展开编辑群消息正文' }).click();
+  await body.hover();
+  await page.mouse.wheel(0, 2_400);
+  await expect.poll(() => sidecar.evaluate((element) => element.scrollTop)).toBe(0);
+  await expect(sidecar.getByText('WorkBuddy', { exact: true })).toBeVisible();
+  await expect(sidecar.getByRole('textbox', { name: '向 WorkBuddy 输入要求' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page).toHaveScreenshot('workbuddy-im-expanded-editor-scrolled-1440x900.png', { fullPage: true });
+});
+
 test('WorkBuddy IM scrollbars stay quiet until hover or keyboard focus', async ({ page }) => {
   await openReminderDraft(page, { width: 1440, height: 900 });
   await expectScrollbarsDisclosedOnInteraction(page);
@@ -157,10 +179,10 @@ test('WorkBuddy IM scrollbars stay quiet until hover or keyboard focus', async (
   await expect.poll(() => scrollbarThumbColor(body)).not.toBe('rgba(0, 0, 0, 0)');
 });
 
-test('WorkBuddy IM ready state exposes two simulated class tasks', async ({ page }) => {
+test('WorkBuddy IM ready state exposes the available simulated class tasks', async ({ page }) => {
   await openWorkBuddyReady(page, { width: 1440, height: 900 });
   const taskGroup = page.getByRole('group', { name: '模拟任务' });
-  await expect(taskGroup.getByRole('button')).toHaveCount(2);
+  await expect(taskGroup.getByRole('button')).toHaveCount(3);
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('workbuddy-im-two-simulated-tasks-1440x900.png', { fullPage: true });
 });
@@ -171,6 +193,42 @@ test('WorkBuddy IM weekly preparation notice draft at 1440x900', async ({ page }
   await expectFloatingAssistantWorkbench(page);
   await expectBorderLightReviewCanvas(page, '群通知正文', 'workbuddy-weekly-review-artifact');
   await expect(page).toHaveScreenshot('workbuddy-im-weekly-preparation-draft-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy IM weekly notice expands inside the sidecar at 1440x900', async ({ page }) => {
+  await openWeeklyPreparationDraft(page, { width: 1440, height: 900 });
+  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecarBefore = await sidecar.boundingBox();
+  await sidecar.getByRole('button', { name: '展开编辑群通知正文' }).click();
+  const editor = sidecar.locator('[data-focused-message-editor="true"]');
+  const sidecarAfter = await sidecar.boundingBox();
+  await expect(page.getByRole('dialog', { name: '编辑群通知正文' })).toHaveCount(0);
+  await expect(sidecar.getByRole('textbox', { name: '群通知正文' })).toBeFocused();
+  await expect(editor).toHaveAttribute('data-expanded', 'true');
+  expect(sidecarBefore).not.toBeNull();
+  expect(sidecarAfter).not.toBeNull();
+  expect(Math.abs(sidecarAfter!.width - sidecarBefore!.width)).toBeLessThanOrEqual(1);
+  await expectNoHorizontalOverflow(page);
+  await expect(page).toHaveScreenshot('workbuddy-im-weekly-focused-editor-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy IM weekly notice keeps its sidecar width while expanding at 1024x640', async ({ page }) => {
+  await openWeeklyPreparationDraft(page, { width: 1024, height: 640 });
+  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecarBefore = await sidecar.boundingBox();
+  await sidecar.getByRole('button', { name: '展开编辑群通知正文' }).click();
+  const sidecarAfter = await sidecar.boundingBox();
+  const editor = sidecar.getByRole('textbox', { name: '群通知正文' });
+  const editorBox = await editor.boundingBox();
+  expect(sidecarBefore).not.toBeNull();
+  expect(sidecarAfter).not.toBeNull();
+  expect(editorBox).not.toBeNull();
+  expect(Math.abs(sidecarAfter!.x - sidecarBefore!.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(sidecarAfter!.width - sidecarBefore!.width)).toBeLessThanOrEqual(1);
+  expect(editorBox!.height).toBeGreaterThanOrEqual(350);
+  await expect(sidecar.getByRole('button', { name: '收起群通知正文' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page).toHaveScreenshot('workbuddy-im-weekly-focused-editor-1024x640.png', { fullPage: true });
 });
 
 test('WorkBuddy IM edited checklist exposes an inline restore action', async ({ page }) => {
@@ -194,6 +252,50 @@ test('WorkBuddy IM three-pane workspace at 1280x800', async ({ page }) => {
   expect(box?.width).toBeGreaterThanOrEqual(384);
   expect(box?.width).toBeLessThanOrEqual(520);
   await expect(page).toHaveScreenshot('workbuddy-im-three-pane-1280x800.png', { fullPage: true });
+});
+
+test('WorkBuddy guided explanation review at 1440x900', async ({ page }) => {
+  await openGuidedExplanationDraft(page, { width: 1440, height: 900 });
+  await expectNoHorizontalOverflow(page);
+  await expectFloatingAssistantWorkbench(page);
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1440x900.png', { fullPage: true });
+});
+
+test('WorkBuddy guided explanation review remains reachable at 1024x640', async ({ page }) => {
+  await openGuidedExplanationDraft(page, { width: 1024, height: 640 });
+  await page.waitForTimeout(800);
+  await expectNoHorizontalOverflow(page);
+  const review = page.getByLabel('单题交互讲解待审核');
+  await expect(review).toBeVisible();
+  await review.getByRole('textbox', { name: '教师审核版完整答案' }).scrollIntoViewIfNeeded();
+  await expect(review.getByRole('textbox', { name: '教师审核版完整答案' })).toBeVisible();
+  await review.getByRole('textbox', { name: '学生题目' }).scrollIntoViewIfNeeded();
+  const sidecarBody = page.getByLabel('WorkBuddy 私密协作窗口').locator('[data-scrolled]');
+  await sidecarBody.evaluate((element) => { element.scrollTop = Math.min(420, element.scrollHeight - element.clientHeight); });
+  await expect.poll(() => sidecarBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1024x640.png', { fullPage: true });
+});
+
+test('WorkBuddy guided explanation exposes editable process and answer controls', async ({ page }) => {
+  await openGuidedExplanationDraft(page, { width: 1440, height: 900 });
+  const review = page.getByLabel('单题交互讲解待审核');
+  const answer = review.getByRole('textbox', { name: '教师审核版完整答案' });
+  await answer.fill('教师修订答案：小球 B 碰后以 4.0 m/s 向右运动。');
+  await review.getByRole('button', { name: '应用修改' }).scrollIntoViewIfNeeded();
+  await expect(review.getByRole('button', { name: '应用修改' })).toBeVisible();
+  await expect(review.getByRole('button', { name: '确认保存并发送' })).toBeDisabled();
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-editable-answer-1440x900.png', { fullPage: true });
+});
+
+test('guided explanation message opens as a focused student-facing viewer', async ({ page }) => {
+  await openGuidedExplanationDraft(page, { width: 1440, height: 900 });
+  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  await sidecar.getByRole('button', { name: '确认保存并发送' }).click();
+  await expect(sidecar.getByLabel('讲题内容发送成功')).toBeVisible();
+  await sidecar.getByRole('button', { name: '查看消息' }).click();
+  await page.getByRole('button', { name: '查看分步讲解' }).click();
+  await expect(page.getByRole('dialog', { name: '小球正碰：用动量守恒求碰后速度' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-viewer-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy IM reminder overlay at 1024x640', async ({ page }) => {

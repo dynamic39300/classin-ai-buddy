@@ -22,8 +22,11 @@ import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
 import { ConversationRunSurface } from './ConversationRunSurface';
 import { PackageConversationRunSurface } from './PackageConversationRunSurface';
+import { QuizActivityConversationRunSurface } from './QuizActivityConversationRunSurface';
 import { CapabilityWorkspace } from './CapabilityWorkspace';
 import { TASK_SKILL_OPTIONS, type TaskSkillOption } from './capability-workspace';
+import { TypewriterGreeting } from './TypewriterGreeting';
+import { WorkBuddyAvatar } from './WorkBuddyAvatar';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import styles from './AiAgentWorkSurface.module.css';
 import type { WorkBuddyTaskLayoutContext } from './AiAgentWorkspaceLayout';
@@ -33,9 +36,11 @@ export function AiAgentWorkSurface() {
   const { runId, section } = useParams();
   const { coursewareView } = useWorkBuddyWorkspace().courseware;
   const { packageView } = useWorkBuddyWorkspace().coursePackage;
+  const quizRun = useWorkBuddyWorkspace().quizActivity.view?.run;
 
   if (runId && coursewareView?.run.id === runId) return <ConversationRunSurface />;
   if (runId && packageView?.run.id === runId) return <PackageConversationRunSurface />;
+  if (runId && quizRun?.id === runId) return <QuizActivityConversationRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
   if (section === 'content') return <Navigate to="/teacher/space/teacherin" replace />;
   const capability = section ? getVisibleWorkBuddyCapability(section) : undefined;
@@ -84,6 +89,7 @@ function NewTaskSkeleton() {
   const { contextView, taskType, setTaskType } = useWorkBuddyWorkspace().context;
   const { createCoursewareTask } = useWorkBuddyWorkspace().courseware;
   const { createPackageTask } = useWorkBuddyWorkspace().coursePackage;
+  const { createTask: createQuizActivityTask } = useWorkBuddyWorkspace().quizActivity;
   const contextItems = contextView.items.filter(({ included }) => included);
   useEffect(() => {
     const state = location.state as NewTaskNavigationState | null;
@@ -130,9 +136,14 @@ function NewTaskSkeleton() {
       <div className={styles.newTaskLayout} data-panel-open={contextPanelOpen}>
       <section className={styles.newTaskMain}>
       <section className={styles.composerShell}>
-        <span className={styles.eyebrow}><Sparkles aria-hidden="true" size={15} />Work Buddy</span>
-        <h1 id="workbuddy-new-task-title">今天想完成什么教学任务？</h1>
-        <p className={styles.lead}>描述目标即可。Work Buddy 会检查教学上下文、拆解任务并交付可复查的产物。</p>
+        <div className={styles.welcomeHeader}>
+          <WorkBuddyAvatar size="welcome" />
+          <div>
+            <span className={styles.eyebrow}>WorkBuddy</span>
+            <h1 id="workbuddy-new-task-title"><TypewriterGreeting text="老师好，有什么能帮您的？" /></h1>
+          </div>
+        </div>
+        <p className={styles.lead}>告诉我您想完成的教学工作，我会结合已授权的教学上下文，生成可检查、可修改的结果。</p>
 
         <WorkspaceComposer
           ariaLabel="描述教学任务"
@@ -140,7 +151,7 @@ function NewTaskSkeleton() {
           className={styles.goalComposerDock}
           mode="task"
           onSubmit={() => {
-            const runId = taskType === 'course-package' ? createPackageTask(goal) : createCoursewareTask(goal);
+            const runId = taskType === 'course-package' ? createPackageTask(goal) : taskType === 'quiz-activity-creation' ? createQuizActivityTask(goal) : createCoursewareTask(goal);
             if (runId) {
               clearGoal();
               navigate(`/teacher/ai-agent/runs/${runId}`);
@@ -239,6 +250,7 @@ function NewTaskSkeleton() {
         <div className={styles.shortcuts} aria-label="快捷任务">
           <button type="button" onClick={() => { setTaskType('single-courseware'); setGoal('为高一（3）班生成一份函数单调性智能课件，包含概念讲解、例题和课堂练习'); }}>生成单个课件</button>
           <button type="button" onClick={() => { setTaskType('course-package'); setGoal('从函数单调性课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包'); }}>生成课程方案包</button>
+          <button type="button" onClick={() => { setTaskType('quiz-activity-creation'); setGoal('为高二物理 3 班当前单元生成一份动量守恒诊断测验，并创建为教学活动草稿'); }}>生成测验并创建活动草稿</button>
           <button type="button" onClick={() => setGoal('分析高一（3）班最近一次作业，归纳共性问题并给出教学建议')}>分析班级学情</button>
         </div>
         {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}
@@ -276,6 +288,7 @@ function RunSkeleton({ runId }: { runId: string }) {
   const composerCommand = allowsWorkBuddyRunCommand(item.runState, 'supplement')
     ? 'supplement'
     : allowsWorkBuddyRunCommand(item.runState, 'revise') ? 'revise' : null;
+  const isCompletedFollowUp = item.runState.status === 'completed' && composerCommand === 'supplement';
 
   const focusArtifact = () => {
     setPanelOpen(true);
@@ -340,19 +353,22 @@ function RunSkeleton({ runId }: { runId: string }) {
 
         {composerCommand ? (
           <WorkspaceComposer
-            ariaLabel={composerCommand === 'supplement' ? '向 Agent 补充要求' : '修改任务要求'}
+            ariaLabel={isCompletedFollowUp ? '继续追问当前任务' : composerCommand === 'supplement' ? '向 Agent 补充要求' : '修改任务要求'}
             className={styles.runComposerDock}
-            hint={composerCommand === 'supplement' ? '补充内容会记录在当前任务中' : '修改内容会记录到当前任务'}
+            groupLabel="任务补充输入"
+            hint={isCompletedFollowUp ? '追问会记录在当前任务中' : composerCommand === 'supplement' ? '补充内容会记录在当前任务中' : '修改内容会记录到当前任务'}
             onSubmit={() => {
               setSupplements((current) => [...current, supplement.trim()]);
-              setFeedback(composerCommand === 'supplement'
+              setFeedback(isCompletedFollowUp
+                ? '追问已记录到当前任务。'
+                : composerCommand === 'supplement'
                 ? '补充要求已记录到当前任务。'
                 : '修改要求已记录到当前任务。');
               setSupplement('');
             }}
             onValueChange={setSupplement}
-            placeholder={composerCommand === 'supplement' ? '补充要求或调整当前任务…' : '修改要求后可重新确认或重试…'}
-            submitLabel={composerCommand === 'supplement' ? '发送补充要求' : '保存修改要求'}
+            placeholder={isCompletedFollowUp ? '继续追问、补充修改或发起关联任务…' : composerCommand === 'supplement' ? '补充要求或调整当前任务…' : '修改要求后可重新确认或重试…'}
+            submitLabel={isCompletedFollowUp ? '发送追问' : composerCommand === 'supplement' ? '发送补充要求' : '保存修改要求'}
             value={supplement}
           />
         ) : null}

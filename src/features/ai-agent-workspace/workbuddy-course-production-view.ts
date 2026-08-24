@@ -4,6 +4,7 @@ import { getPackageApprovableArtifactIds, type CoursePackageRun, type PackageExe
 import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 import { EvaluationModule, type EvaluationEvent } from '@domain/workbuddy/evaluation';
+import type { QuizActivityCreationRun } from '@domain/workbuddy/quiz-activity-creation';
 
 type CoursewarePresentation = Readonly<{
   id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string; stage: SingleCoursewareRun['stage'];
@@ -82,6 +83,31 @@ export type CoreContextView = Readonly<{
     permissionLabel: string; sensitivity: string; included: boolean; locked: boolean; selectable: boolean;
   }>[];
 }>;
+
+export type QuizActivityRunView = Readonly<{
+  run: Readonly<Pick<QuizActivityCreationRun, 'id' | 'goal' | 'stage' | 'target' | 'brief' | 'artifact' | 'paperReview' | 'settings' | 'settingsRevision' | 'action' | 'receipt' | 'allowedCommands' | 'recovery'>>;
+}>;
+
+export function projectQuizActivityRunView(run: QuizActivityCreationRun | null): QuizActivityRunView | null {
+  if (!run) return null;
+  return Object.freeze({
+    run: Object.freeze({
+      id: run.id,
+      goal: run.goal,
+      stage: run.stage,
+      target: run.target,
+      brief: run.brief,
+      artifact: run.artifact,
+      paperReview: run.paperReview,
+      settings: run.settings,
+      settingsRevision: run.settingsRevision,
+      action: run.action,
+      receipt: run.receipt,
+      allowedCommands: run.allowedCommands,
+      recovery: run.recovery,
+    }),
+  });
+}
 
 const SOURCE_LABELS = {
   classin: 'ClassIn 业务事实', 'teacher-input': '教师输入', 'institution-rule': '机构规则', 'domain-knowledge': '受版本治理的知识',

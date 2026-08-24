@@ -28,6 +28,12 @@ describe('CoreContext Module', () => {
     expect(proposal.items.filter(({ included }) => included).map(({ id }) => id)).toEqual(['teacher', 'org']);
   });
 
+  it('requires an exact class, course, and unit before a quiz activity task can confirm Context', () => {
+    const proposal = createContextProposal(ITEMS, 'quiz-activity-creation');
+    expect(selectContextItems(proposal, ['class-a', 'course-a']).status).toBe('needs_attention');
+    expect(selectContextItems(proposal, ['class-a', 'course-a', 'unit-a']).status).toBe('ready_to_confirm');
+  });
+
   it('rejects duplicate, missing-parent and cyclic context hierarchies at the proposal boundary', () => {
     expect(() => createContextProposal([...ITEMS, ITEMS[0]!], 'single-courseware')).toThrow(/Duplicate/);
     expect(() => createContextProposal([{ ...ITEMS[2]!, parentId: 'missing-class' }], 'single-courseware')).toThrow(/Unknown Core Context parent/);

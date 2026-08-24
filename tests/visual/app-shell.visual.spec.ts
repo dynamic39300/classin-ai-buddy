@@ -667,7 +667,7 @@ test('teacher public class Agent reply at 1440x900', async ({ page }) => {
   await conversation.getByRole('option', { name: /物理学习助手.*Agent/ }).click();
   await conversation.getByRole('textbox', { name: '输入消息' }).fill('第 5 题的方向怎么判断？');
   await conversation.getByRole('button', { name: '发送', exact: true }).click();
-  await expect(conversation.getByText(/先确定研究对象，再把碰撞前后的动量方向/)).toBeVisible({ timeout: 3_000 });
+  await expect(conversation.getByText(/先做第一步：统一规定正方向/)).toBeVisible({ timeout: 3_000 });
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-class-agent-public-reply-1440x900.png', {
     fullPage: true,
@@ -695,11 +695,26 @@ for (const agentDirectCase of [
     await page.getByRole('button', { name: '私聊', exact: true }).click();
     await page.locator(`[data-thread-id="${agentDirectCase.threadId}"]`).click();
     const conversation = page.getByRole('region', { name: '物理学习助手会话' });
-    await expect(conversation.getByText('仅你与班级 Agent 可见 · 体验数据')).toBeVisible();
+    await expect(conversation.getByRole('heading', { name: '物理学习助手' })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expect(page).toHaveScreenshot(`${agentDirectCase.label}-class-agent-direct-1440x900.png`, { fullPage: true });
   });
 }
+
+test('teacher private class Agent processing state at 1440x900', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await selectRole(page, /老师视角/);
+  await page.getByRole('link', { name: /消息/ }).click();
+  await page.getByRole('button', { name: '私聊', exact: true }).click();
+  await page.locator('[data-thread-id="direct-class-agent-physics-3-teacher"]').click();
+  const conversation = page.getByRole('region', { name: '物理学习助手会话' });
+  await conversation.getByRole('textbox', { name: '输入消息' }).fill('请帮我检查这道题的方向判断');
+  await page.clock.install();
+  await conversation.getByRole('button', { name: '发送', exact: true }).click();
+  await expect(conversation.getByRole('status').filter({ hasText: '正在理解你的问题' })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page).toHaveScreenshot('teacher-class-agent-direct-processing-1440x900.png', { fullPage: true });
+});
 
 test('student direct messages at 1440x900', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -711,11 +726,27 @@ test('student direct messages at 1440x900', async ({ page }) => {
   await expect(page).toHaveScreenshot('student-messages-1440x900.png', { fullPage: true });
 });
 
+test('teacher WorkBuddy exit guidance at 1440x900', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await selectRole(page, /老师视角/);
+  await page.getByRole('link', { name: /消息/ }).click();
+  await page.getByRole('button', { name: '退出沉浸模式' }).click();
+  await expect(page.getByRole('region', { name: 'WorkBuddy 退出引导' })).toBeVisible();
+  await expect(page.getByLabel('WorkBuddy 私密协作窗口')).toHaveCount(0);
+  await page.waitForTimeout(300);
+  await expectNoHorizontalOverflow(page);
+  await expect(page).toHaveScreenshot('teacher-workbuddy-exit-guidance-1440x900.png', {
+    animations: 'allow',
+    fullPage: true,
+  });
+});
+
 test('teacher direct message header at 1440x900', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await selectRole(page, /老师视角/);
   await page.getByRole('link', { name: /消息/ }).click();
   await page.getByRole('button', { name: '退出沉浸模式' }).click();
+  await page.getByRole('button', { name: '关闭退出引导' }).click();
   await page.getByRole('button', { name: '私聊', exact: true }).click();
   await page.locator('[data-thread-id="direct-teacher-zhang"]').click();
   await expect(page.getByRole('heading', { name: '张老师' })).toBeVisible();

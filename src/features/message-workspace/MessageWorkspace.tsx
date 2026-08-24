@@ -7,7 +7,7 @@ import {
   FileText,
   Files,
   Image,
-  LoaderCircle,
+  Link2,
   Megaphone,
   MessageCircle,
   MessagesSquare,
@@ -32,6 +32,7 @@ import {
 import {
   useLayoutEffect,
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -57,9 +58,11 @@ import {
   type MessageCategory,
   type MessageThread,
 } from '@domain/message/message';
+import type { GuidedExplanationContentReference } from '@domain/workbuddy/guided-explanation';
+import type { DirectConversationScope } from '@domain/message/direct-conversation-directory';
 import { MESSAGE_CONTACTS, MESSAGE_NOW } from '@mocks/scenarios/messages';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
-import { WorkBuddyImSidecar, useOptionalWorkBuddyIm, type WorkBuddyImTarget } from '@features/workbuddy-im-assistance';
+import { GuidedExplanationPreviewDialog, WorkBuddyImSidecar, useOptionalWorkBuddyIm, type WorkBuddyImTarget } from '@features/workbuddy-im-assistance';
 import {
   AgentMentionPicker,
   projectAgentPickerOptions,
@@ -79,7 +82,7 @@ const CATEGORY_ICONS: Record<MessageCategory, LucideIcon> = {
 };
 
 const CATEGORY_ORDER: MessageCategory[] = ['direct', 'class', 'system', 'official'];
-const CLASS_AGENT_PENDING_FEEDBACK = '消息已发送，班级 Agent 正在生成模拟回复。';
+const CLASS_AGENT_PENDING_FEEDBACK = '消息已发送，班级 Agent 正在处理你的问题。';
 const ATTACHMENT_ACTIONS: ReadonlyArray<{ Icon: LucideIcon; label: string }> = [
   { Icon: Image, label: '照片' },
   { Icon: Camera, label: '拍摄' },
@@ -165,9 +168,7 @@ function createWorkBuddyTarget(role: AppRole, thread: MessageThread): WorkBuddyI
     classLabel: getMessageThreadTitle(role, thread),
     threadId: thread.id,
     memberCount: thread.memberCount,
-    recentMessages: thread.category === 'direct'
-      ? thread.entries.slice(-6).map(({ authorName, body }) => Object.freeze({ authorName, body }))
-      : undefined,
+    recentMessages: thread.entries.slice(-6).map(({ authorRole, authorName, body }) => Object.freeze({ authorRole, authorName, body })),
   };
 }
 
@@ -184,10 +185,10 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     ? threads.find((thread) => thread.category === 'class' && thread.classId === fixedClassId && thread.visibleTo.includes(role)) ?? null
     : null;
   const [query, setQuery] = useState('');
+  const [directScope, setDirectScope] = useState<DirectConversationScope>('all');
   const [composerByThread, setComposerByThread] = useState<Readonly<Record<string, string>>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
-  const [contactMode, setContactMode] = useState<'all' | 'agent-only'>('all');
   const [attachmentOpen, setAttachmentOpen] = useState(false);
   const [listMenuOpen, setListMenuOpen] = useState(false);
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
@@ -197,20 +198,44 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
   const [primaryAgentTarget, setPrimaryAgentTarget] = useState<PrimaryAgentTarget | null>(null);
   const [agentTargetUndo, setAgentTargetUndo] = useState<AgentTargetUndo | null>(null);
   const [pendingContactThreadId, setPendingContactThreadId] = useState<string | null>(null);
+  const [openExplanation, setOpenExplanation] = useState<GuidedExplanationContentReference | null>(null);
+  const [historyLoadingThreadId, setHistoryLoadingThreadId] = useState<string | null>(null);
+  const [hasUnreadArrival, setHasUnreadArrival] = useState(false);
   const contactTriggerRef = useRef<HTMLButtonElement | null>(null);
   const listMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const contextMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const listMenuRef = useRef<HTMLDivElement | null>(null);
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const contactDialogRef = useRef<HTMLDialogElement | null>(null);
+  const explanationTriggerRef = useRef<HTMLButtonElement | null>(null);
   const immersiveForcedThreadRef = useRef<string | null>(null);
   const agentPickerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+  const timelineScrollByThread = useRef(new Map<string, number>());
+  const historyHeightAnchorRef = useRef<{ threadId: string; scrollHeight: number } | null>(null);
+  const latestEntryIdByThread = useRef(new Map<string, string>());
+  const activeTimelineThreadId = useRef<string | null>(null);
 
   const category = fixedClassId ? 'class' : parseCategory(searchParams.get('category')) ?? 'class';
-  const categoryThreads = useMemo(
-    () => filterMessageThreads(role, threads, category, query),
-    [category, query, role, threads],
-  );
+  const directDirectoryClassId = threads.find((thread) => (
+    thread.visibleTo.includes(role) && thread.classAgentBinding?.channel === 'private-direct'
+  ))?.classAgentBinding?.classId ?? 'physics-3';
+  const directDirectory = useMemo(() => (
+    category === 'direct' && classAgentConversation
+      ? classAgentConversation.projectDirectDirectory({
+        role,
+        classId: directDirectoryClassId,
+        query,
+        scope: directScope,
+        threads,
+      })
+      : null
+  ), [category, classAgentConversation, directDirectoryClassId, directScope, query, role, threads]);
+  const categoryThreads = useMemo(() => (
+    directDirectory
+      ? directDirectory.sections.flatMap(({ rows }) => rows.map(({ thread }) => thread))
+      : filterMessageThreads(role, threads, category, query)
+  ), [category, directDirectory, query, role, threads]);
   const categoryHasThreads = useMemo(
     () => filterMessageThreads(role, threads, category, '').length > 0,
     [category, role, threads],
@@ -259,10 +284,73 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
   }, [agentTargetUndo]);
 
   useLayoutEffect(() => {
-    if (latestSelectedEntry?.authorRole !== 'class-agent') return;
-    const timeline = document.querySelector<HTMLElement>('[data-message-conversation] [data-message-timeline]');
-    if (timeline) timeline.scrollTop = timeline.scrollHeight;
-  }, [latestSelectedEntry?.authorRole, latestSelectedEntry?.id]);
+    if (!selectedId || !timelineRef.current) {
+      activeTimelineThreadId.current = null;
+      return;
+    }
+    if (activeTimelineThreadId.current === selectedId) return;
+    activeTimelineThreadId.current = selectedId;
+    const timeline = timelineRef.current;
+    const saved = timelineScrollByThread.current.get(selectedId);
+    timeline.scrollTop = saved ?? timeline.scrollHeight;
+    setHasUnreadArrival(false);
+    latestEntryIdByThread.current.set(selectedId, latestSelectedEntry?.id ?? '');
+  }, [latestSelectedEntry?.id, selectedId]);
+
+  useLayoutEffect(() => {
+    if (!selectedId || !timelineRef.current) return;
+    const timeline = timelineRef.current;
+    const historyAnchor = historyHeightAnchorRef.current;
+    if (historyAnchor?.threadId === selectedId) {
+      timeline.scrollTop += timeline.scrollHeight - historyAnchor.scrollHeight;
+      timelineScrollByThread.current.set(selectedId, timeline.scrollTop);
+      historyHeightAnchorRef.current = null;
+      setHistoryLoadingThreadId(null);
+      return;
+    }
+    const previousId = latestEntryIdByThread.current.get(selectedId);
+    if (!latestSelectedEntry || previousId === latestSelectedEntry.id) return;
+    latestEntryIdByThread.current.set(selectedId, latestSelectedEntry.id);
+    if (latestSelectedEntry.authorRole === role) {
+      timeline.scrollTop = timeline.scrollHeight;
+      timelineScrollByThread.current.set(selectedId, timeline.scrollTop);
+      return;
+    }
+    if (latestSelectedEntry.authorRole !== 'class-agent') return;
+    const nearBottom = timeline.scrollHeight - timeline.scrollTop - timeline.clientHeight <= 128;
+    if (nearBottom) {
+      timeline.scrollTop = timeline.scrollHeight;
+      timelineScrollByThread.current.set(selectedId, timeline.scrollTop);
+      setHasUnreadArrival(false);
+    } else {
+      setHasUnreadArrival(true);
+    }
+  }, [latestSelectedEntry, role, selectedId, selectedThread?.entries.length]);
+
+  const loadOlderSelectedMessages = useCallback(() => {
+    const timeline = timelineRef.current;
+    if (!timeline || !selectedThread?.olderEntries?.length || historyLoadingThreadId === selectedThread.id) return;
+    historyHeightAnchorRef.current = { threadId: selectedThread.id, scrollHeight: timeline.scrollHeight };
+    setHistoryLoadingThreadId(selectedThread.id);
+    actions.loadOlderMessages(selectedThread.id);
+  }, [actions, historyLoadingThreadId, selectedThread]);
+
+  const handleSelectedTimelineScroll = useCallback(() => {
+    const timeline = timelineRef.current;
+    if (!timeline || !selectedThread) return;
+    timelineScrollByThread.current.set(selectedThread.id, timeline.scrollTop);
+    const nearBottom = timeline.scrollHeight - timeline.scrollTop - timeline.clientHeight <= 48;
+    if (nearBottom) setHasUnreadArrival(false);
+    if (timeline.scrollTop <= 24 && selectedThread.olderEntries?.length) loadOlderSelectedMessages();
+  }, [loadOlderSelectedMessages, selectedThread]);
+
+  const jumpToLatestSelectedMessage = useCallback(() => {
+    const timeline = timelineRef.current;
+    if (!timeline || !selectedThread) return;
+    timeline.scrollTop = timeline.scrollHeight;
+    timelineScrollByThread.current.set(selectedThread.id, timeline.scrollTop);
+    setHasUnreadArrival(false);
+  }, [selectedThread]);
 
   const immersiveWorkBuddyThread = immersive
     && workBuddyIm !== null
@@ -310,7 +398,6 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     const normalized = contactQuery.trim().toLocaleLowerCase();
     return visibleContacts.filter((contact) => {
       if (contact.agentId) return visibleAgentIds.has(contact.agentId);
-      if (contactMode === 'agent-only') return false;
       return !normalized || `${contact.name} ${contact.relationship}`.toLocaleLowerCase().includes(normalized);
     });
   })();
@@ -372,6 +459,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     setListMenuOpen(false);
     setContextMenuOpen(false);
     setAttachmentOpen(false);
+    setHasUnreadArrival(false);
     actions.readThread(role, thread.id);
     setSearchParams({ category: thread.category, thread: thread.id }, { replace: true });
   };
@@ -379,6 +467,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
   const changeCategory = (nextCategory: MessageCategory) => {
     const nextThread = filterMessageThreads(role, threads, nextCategory, '')[0] ?? null;
     setQuery('');
+    setDirectScope('all');
     setFeedback(null);
     setAgentPicker(null);
     setPrimaryAgentTarget(null);
@@ -466,6 +555,11 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     setAgentPicker(null);
     setPrimaryAgentTarget(null);
     setAgentTargetUndo(null);
+    window.requestAnimationFrame(() => {
+      if (!timelineRef.current) return;
+      timelineRef.current.scrollTop = timelineRef.current.scrollHeight;
+      timelineScrollByThread.current.set(selectedThread.id, timelineRef.current.scrollTop);
+    });
     setFeedback(agentResult?.status === 'accepted'
       ? CLASS_AGENT_PENDING_FEEDBACK
       : '消息已在本地 Demo 中发送。');
@@ -523,7 +617,6 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     contactDialogRef.current?.close();
     setContactOpen(false);
     setContactQuery('');
-    setContactMode('all');
     setPendingContactThreadId(null);
     window.requestAnimationFrame(() => contactTriggerRef.current?.focus());
   };
@@ -792,7 +885,10 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
         <section className={styles.conversation} aria-label={`${getMessageThreadTitle(role, thread)}会话`} data-message-conversation tabIndex={-1}>
         <header className={styles.contentHeader} data-message-header="conversation">
           <div className={styles.contentIdentity}>
-            <h2>{getMessageThreadTitle(role, thread)}</h2>
+            <h2 data-agent={classAgent !== null}>
+              {classAgent ? <Sparkles aria-hidden="true" size={14} /> : null}
+              <span>{getMessageThreadTitle(role, thread)}</span>
+            </h2>
             {subtitle ? <p>{subtitle}</p> : null}
           </div>
           <div className={styles.contextActions}>
@@ -867,22 +963,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
               <strong>班级 Agents · {publicAgentProjection.totalAuthorized} 个可用</strong>
               <small>老师已授权 · 当前班级范围 · 群内公开回复</small>
             </span>
-            <span className={styles.classAgentTruth}>[模拟] Agent</span>
             <button type="button" onClick={() => openAgentPicker('agent-only')}>查看 Agents</button>
-          </div>
-        ) : classAgent ? (
-          <div className={styles.classAgentContext} data-agent-channel={thread.classAgentBinding?.channel}>
-            <span className={styles.classAgentIcon}><Sparkles aria-hidden="true" size={15} /></span>
-            <span className={styles.classAgentIdentity}>
-              <strong>{classAgent.name}</strong>
-              <small>同一班级 Agent · {classAgent.contextScopeLabel} · 仅当前会话可见</small>
-            </span>
-            <span className={styles.classAgentTruth}>[模拟] Agent</span>
-            <button type="button" onClick={() => {
-              contactTriggerRef.current = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
-              setContactMode('agent-only');
-              setContactOpen(true);
-            }}>切换 Agent</button>
           </div>
         ) : null}
 
@@ -893,7 +974,25 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
           </div>
         ) : null}
 
-        <div className={styles.timeline} aria-label="消息记录" data-message-timeline>
+        <div
+          className={styles.timeline}
+          aria-label="消息记录"
+          aria-live={historyLoadingThreadId === thread.id ? 'off' : 'polite'}
+          data-message-timeline
+          onScroll={handleSelectedTimelineScroll}
+          ref={timelineRef}
+          role="log"
+          tabIndex={0}
+        >
+          {thread.classAgentBinding?.channel === 'private-direct' ? (
+            <div className={styles.historyControl} role="status">
+              {thread.olderEntries?.length ? (
+                <button type="button" disabled={historyLoadingThreadId === thread.id} onClick={loadOlderSelectedMessages}>
+                  {historyLoadingThreadId === thread.id ? '正在加载更早消息…' : '加载更早消息'}
+                </button>
+              ) : <span>已显示全部历史消息</span>}
+            </div>
+          ) : null}
           <div className={styles.dateMarker}>今天</div>
           {thread.entries.map((entry, index) => {
             if (entry.kind === 'system') {
@@ -912,9 +1011,16 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
               <article className={styles.messageEntry} data-agent={isClassAgentEntry} data-grouped={grouped} data-message-id={entry.id} data-own={own} data-retracted={entry.kind === 'retracted'} key={entry.id} tabIndex={entry.id.startsWith('workbuddy-reminder-') ? -1 : undefined}>
                 {!own && !grouped ? <span className={styles.messageAvatar}>{isClassAgentEntry ? <Sparkles aria-hidden="true" size={15} /> : entry.authorName.slice(0, 1)}</span> : null}
                 <div>
-                  {!grouped ? <span className={styles.messageAuthor}>{own ? '我' : entry.authorName}{isClassAgentEntry ? <em>[模拟] Agent</em> : null} · {formatEntryTime(entry.sentAt)}</span> : null}
-                  <p>{entry.body}</p>
-                  {entry.classAgent ? <small className={styles.classAgentMessageMeta}>{entry.classAgent.visibilityLabel} · [模拟]</small> : null}
+                  {!grouped ? <span className={styles.messageAuthor}>{own ? '我' : entry.authorName} · {formatEntryTime(entry.sentAt)}</span> : null}
+                  <p className={entry.contentReference?.kind === 'guided-explanation' ? styles.messageWithLink : undefined}>
+                    <span>{entry.body}</span>
+                  {entry.contentReference?.kind === 'guided-explanation' ? (
+                    <button className={styles.explanationLink} type="button" onClick={(event) => { explanationTriggerRef.current = event.currentTarget; setOpenExplanation(entry.contentReference ?? null); }}>
+                      <Link2 aria-hidden="true" size={14} />{entry.contentReference.linkLabel}
+                    </button>
+                  ) : null}
+                  </p>
+                  {entry.classAgent ? <small className={styles.classAgentMessageMeta}>{entry.classAgent.visibilityLabel}</small> : null}
                   {canRecall || canPin ? <div className={styles.messageActions}>
                     {canPin ? <button type="button" onClick={() => togglePin(entry.id)}><Pin aria-hidden="true" size={13} />{thread.pinnedMessageId === entry.id ? '取消置顶' : '置顶'}</button> : null}
                     {canRecall ? <button type="button" onClick={() => recallMessage(entry.id)}><Undo2 aria-hidden="true" size={13} />撤回</button> : null}
@@ -924,17 +1030,29 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
             );
           })}
           {classAgentStatus.status === 'replying' ? (
-            <div className={styles.classAgentStatus} role="status">
-              <LoaderCircle aria-hidden="true" size={15} />
-              <span>{statusAgent?.name ?? '班级 Agent'} 正在生成模拟回复…</span>
+            <div className={styles.classAgentStatus} data-phase={classAgentStatus.phase} role="status" aria-live="polite">
+              <span className={styles.classAgentThinkingAvatar}><Sparkles aria-hidden="true" size={14} /></span>
+              <span className={styles.classAgentThinkingCopy}>
+                <strong>{statusAgent?.name ?? '班级 Agent'}</strong>
+                <small>{classAgentStatus.phase === 'understanding' ? '正在理解你的问题' : '正在整理可检查的回复步骤'}</small>
+              </span>
+              <span className={styles.classAgentThinkingDots} aria-hidden="true"><i /><i /><i /></span>
             </div>
           ) : null}
-          {classAgentStatus.status === 'recoverable_failure' ? (
+          {classAgentStatus.status === 'recoverable_failure' || classAgentStatus.status === 'authorization_failure' ? (
             <div className={styles.classAgentFailure} role="alert">
+              <span className={styles.classAgentThinkingAvatar}><Sparkles aria-hidden="true" size={14} /></span>
+              <span className={styles.classAgentThinkingCopy}>
+                <strong>{statusAgent?.name ?? '班级 Agent'}</strong>
+                <small>回复未完成</small>
+              </span>
               <span>{classAgentStatus.message}</span>
-              <button type="button" onClick={() => classAgentConversation?.retry(thread.id)}>重试</button>
+              {classAgentStatus.status === 'recoverable_failure'
+                ? <button type="button" onClick={() => classAgentConversation?.retry(thread.id)}>重试</button>
+                : null}
             </div>
           ) : null}
+          {hasUnreadArrival ? <button className={styles.newMessageAnchor} type="button" onClick={jumpToLatestSelectedMessage}>1 条新消息</button> : null}
         </div>
 
         {composerBlocked ? (
@@ -964,7 +1082,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
               ? activeTarget
                 ? `将由 ${activeTarget.agent.name} 在群内公开回复`
                 : '输入 @ 选择班级 Agent 或成员；也可点击 @Agent 快速选择'
-              : classAgent ? '仅你与班级 Agent 可见 · 体验对话按治理规则留存' : undefined}
+              : classAgent ? '仅你与班级 Agent 可见 · 对话按治理规则留存' : undefined}
             tools={<>
               {agentPicker && publicAgentProjection ? (
                 <AgentMentionPicker
@@ -1081,8 +1199,45 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     );
   }
 
+  const renderThreadRow = (thread: MessageThread) => {
+    const unread = thread.unreadByRole[role] ?? 0;
+    const lastEntry = getLastMessageEntry(thread);
+    const preview = lastEntry?.body ?? thread.notice?.body[0] ?? '';
+    const directAgent = thread.classAgentBinding?.channel === 'private-direct'
+      ? classAgentConversation?.getAgent(thread.classAgentBinding.agentId) ?? null
+      : null;
+    return (
+      <button
+        type="button"
+        aria-current={selectedId === thread.id ? 'true' : undefined}
+        className={styles.threadRow}
+        data-agent={directAgent !== null}
+        data-highlighted={isHomeArrival && selectedId === thread.id}
+        data-thread-id={thread.id}
+        data-unread={unread > 0}
+        key={thread.id}
+        onClick={() => selectThread(thread)}
+      >
+        <span className={styles.threadAvatar} data-agent={directAgent !== null} data-source={thread.category === 'system' || thread.category === 'official'}>
+          {thread.category === 'system' || thread.category === 'official' ? (() => {
+            const Icon = CATEGORY_ICONS[thread.category];
+            return <Icon aria-hidden="true" size={17} />;
+          })() : directAgent ? <Sparkles aria-hidden="true" size={16} /> : thread.avatarByRole[role] ?? '?'}
+        </span>
+        <span className={styles.threadCopy}>
+          <span>
+            <strong><span>{getMessageThreadTitle(role, thread)}</span></strong>
+            <time>{formatMessageListTime(thread.updatedAt, MESSAGE_NOW)}</time>
+          </span>
+          <small>{preview}</small>
+        </span>
+        {unread > 0 ? (category === 'direct' || category === 'class' ? <b>{formatUnreadCount(unread)}</b> : <i />) : null}
+      </button>
+    );
+  };
+
   const threadPanel = (
-    <section className={styles.threadPanel} aria-label={`${MESSAGE_CATEGORY_LABELS[category]}列表`}>
+    <section className={styles.threadPanel} data-direct={category === 'direct'} aria-label={`${MESSAGE_CATEGORY_LABELS[category]}列表`}>
         <div className={styles.categoryTabs} role="group" aria-label="消息分类">
           {CATEGORY_ORDER.map((item) => {
             const count = unreadCounts[item];
@@ -1105,8 +1260,8 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
         <div className={styles.searchActions}>
           <label className={styles.searchBox}>
             <Search aria-hidden="true" size={15} />
-            <span className={styles.srOnly}>搜索当前分类</span>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`搜索${MESSAGE_CATEGORY_LABELS[category]}`} />
+            <span className={styles.srOnly}>{category === 'direct' ? '搜索私聊和班级 Agent' : '搜索当前分类'}</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={category === 'direct' ? '搜索姓名、Agent 或能力' : `搜索${MESSAGE_CATEGORY_LABELS[category]}`} />
           </label>
           <div className={styles.threadCommands}>
             {category === 'direct' ? (
@@ -1115,7 +1270,6 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
                 aria-label="发起私聊"
                 onClick={() => {
                   contactTriggerRef.current = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
-                  setContactMode('all');
                   setContactOpen(true);
                 }}
                 ref={contactTriggerRef}
@@ -1156,42 +1310,37 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
             ) : null}
           </div>
         </div>
-        <div className={styles.threadList}>
-          {categoryThreads.map((thread) => {
-            const unread = thread.unreadByRole[role] ?? 0;
-            const lastEntry = getLastMessageEntry(thread);
-            const preview = lastEntry?.body ?? thread.notice?.body[0] ?? '';
-            return (
-              <button
-                type="button"
-                aria-current={selectedId === thread.id ? 'true' : undefined}
-                className={styles.threadRow}
-                data-highlighted={isHomeArrival && selectedId === thread.id}
-                data-thread-id={thread.id}
-                data-unread={unread > 0}
-                key={thread.id}
-                onClick={() => selectThread(thread)}
-              >
-                <span className={styles.threadAvatar} data-source={thread.category === 'system' || thread.category === 'official'}>
-                  {thread.category === 'system' || thread.category === 'official' ? (() => {
-                    const Icon = CATEGORY_ICONS[thread.category];
-                    return <Icon aria-hidden="true" size={17} />;
-                  })() : thread.avatarByRole[role] ?? '?'}
-                </span>
-                <span className={styles.threadCopy}>
-                  <span><strong>{getMessageThreadTitle(role, thread)}</strong><time>{formatMessageListTime(thread.updatedAt, MESSAGE_NOW)}</time></span>
-                  <small>{preview}</small>
-                </span>
-                {unread > 0 ? (category === 'direct' || category === 'class' ? <b>{formatUnreadCount(unread)}</b> : <i />) : null}
-              </button>
-            );
-          })}
+        {category === 'direct' && directDirectory ? (
+          <div className={styles.directScopeBar} aria-label="私聊范围">
+            <button type="button" aria-pressed={directScope === 'all'} onClick={() => setDirectScope('all')}>全部</button>
+            <button type="button" aria-pressed={directScope === 'agents'} onClick={() => setDirectScope('agents')}>
+              <Sparkles aria-hidden="true" size={13} />班级 Agent <strong>{directDirectory.totalAuthorizedAgents}</strong>
+            </button>
+            <button type="button" aria-pressed={directScope === 'people'} onClick={() => setDirectScope('people')}>
+              联系人 <strong>{directDirectory.totalPeople}</strong>
+            </button>
+            {query ? <span role="status">{directDirectory.resultCount} 个结果</span> : null}
+          </div>
+        ) : null}
+        <div className={styles.threadList} data-thread-list>
+          {directDirectory
+            ? directDirectory.sections.map((section) => (
+              <section className={styles.threadSection} aria-labelledby={`direct-section-${section.id}`} key={section.id}>
+                <h3 id={`direct-section-${section.id}`}>{section.label}</h3>
+                {section.rows.map(({ thread }) => renderThreadRow(thread))}
+              </section>
+            ))
+            : categoryThreads.map(renderThreadRow)}
           {categoryThreads.length === 0 ? (
             <div className={styles.emptyState}>
               {query ? <Search aria-hidden="true" size={20} /> : <MessagesSquare aria-hidden="true" size={20} />}
-              <strong>{query ? '没有匹配的消息' : `暂无${MESSAGE_CATEGORY_LABELS[category]}`}</strong>
+              <strong>{query ? '没有匹配的私聊或 Agent' : directScope === 'agents' ? '当前没有可用的班级 Agent' : directScope === 'people' ? '当前没有联系人' : `暂无${MESSAGE_CATEGORY_LABELS[category]}`}</strong>
               {query
                 ? <button type="button" onClick={() => setQuery('')}>清除搜索</button>
+                : directScope === 'agents'
+                  ? <button type="button" onClick={() => setDirectScope('all')}>查看全部私聊</button>
+                  : directScope === 'people'
+                    ? <button type="button" onClick={() => setDirectScope('all')}>查看全部私聊</button>
                 : <span>此分类暂时没有消息</span>}
             </div>
           ) : null}
@@ -1235,13 +1384,13 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
         >
           <div className={styles.contactContent}>
           <header>
-            <h2 id="contact-dialog-title">{contactMode === 'agent-only' ? '切换班级 Agent' : '发起私聊'}</h2>
+            <h2 id="contact-dialog-title">发起私聊</h2>
             <button type="button" onClick={closeContacts} aria-label="关闭联系人"><X aria-hidden="true" size={18} /></button>
           </header>
           <label className={styles.contactSearch}>
             <Search aria-hidden="true" size={15} />
             <span className={styles.srOnly}>搜索联系人</span>
-            <input autoFocus value={contactQuery} onChange={(event) => setContactQuery(event.target.value)} placeholder={contactMode === 'agent-only' ? '搜索名称、学科或能力' : '搜索姓名、Agent 或能力'} />
+            <input autoFocus value={contactQuery} onChange={(event) => setContactQuery(event.target.value)} placeholder="搜索姓名、Agent 或能力" />
           </label>
           <div className={styles.contactList}>
             {pendingContactThreadId ? <div className={styles.contactSwitchNotice} role="status">切换后草稿会保留在当前会话；再次选择目标 Agent 以确认。</div> : null}
@@ -1261,6 +1410,14 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     </dialog>
   ) : null;
 
+  const explanationDialog = (
+    <GuidedExplanationPreviewDialog
+      content={openExplanation}
+      onClose={() => setOpenExplanation(null)}
+      returnFocusRef={explanationTriggerRef}
+    />
+  );
+
   if (immersive) {
     const assistantAvailable = selectedThread !== null && isWorkBuddyAvailable(selectedThread);
     return (
@@ -1268,11 +1425,13 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
         <MessageWorkspaceResizableLayout
           assistant={assistantAvailable ? <WorkBuddyImSidecar onInsertDirectReply={(body) => insertWorkBuddyDirectReply(selectedThread, body)} onLocateMessage={locateWorkBuddyMessage} /> : null}
           scope="messages-global"
+          wideNavigation={category === 'direct'}
         >
           {threadPanel}
           {contentWorkspace}
         </MessageWorkspaceResizableLayout>
         {contactDialog}
+        {explanationDialog}
       </>
     );
   }
@@ -1282,6 +1441,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
       {threadPanel}
       {contentWorkspace}
       {contactDialog}
+      {explanationDialog}
     </div>
   );
 }

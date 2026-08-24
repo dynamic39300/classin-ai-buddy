@@ -14,6 +14,7 @@ import {
   hasHomeworkReminderScopeChanges,
   type HomeworkReminderPreparation,
 } from '@domain/workbuddy/im-homework-reminder';
+import { FocusedMessageEditor } from './FocusedMessageEditor';
 import styles from './WorkBuddyImSidecar.module.css';
 
 type ReadyPreparation = Extract<HomeworkReminderPreparation, { status: 'ready' }>;
@@ -154,27 +155,26 @@ export function WorkBuddyReviewArtifact({
         </div>
 
         <div className={styles.reviewEditor} data-editor-state={editorState}>
-          <div className={styles.editorHeading}>
-            <label htmlFor="workbuddy-review-message">群消息正文</label>
-            <span aria-live="polite">
-              {editorState === 'saved' ? <Check aria-hidden="true" size={13} /> : <PencilLine aria-hidden="true" size={13} />}
-              {EDITOR_STATUS[editorState]}
-            </span>
-          </div>
-          <textarea
+          <FocusedMessageEditor
+            error={isEmpty ? '正文不能为空' : undefined}
             id="workbuddy-review-message"
-            aria-describedby={isEmpty ? 'workbuddy-review-error' : undefined}
-            aria-invalid={isEmpty}
+            invalid={isEmpty}
+            label="群消息正文"
+            status={
+              <span aria-live="polite" className={styles.editorStatus}>
+                {editorState === 'saved' ? <Check aria-hidden="true" size={13} /> : <PencilLine aria-hidden="true" size={13} />}
+                {EDITOR_STATUS[editorState]}
+              </span>
+            }
+            value={body}
             onBlur={commitBody}
-            onChange={(event) => {
-              setBody(event.target.value);
+            onChange={(value) => {
+              setBody(value);
               setEditorState('modified');
             }}
+            onComplete={commitBody}
             onFocus={() => setEditorState('editing')}
-            rows={4}
-            value={body}
           />
-          {isEmpty ? <strong className={styles.editorError} id="workbuddy-review-error">正文不能为空</strong> : null}
         </div>
       </div>
 

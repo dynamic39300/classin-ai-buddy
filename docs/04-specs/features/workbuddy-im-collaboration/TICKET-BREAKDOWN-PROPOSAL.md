@@ -246,7 +246,7 @@ IM-001 产品与规格冻结
 
 - 需求：`IM-PRD-080`—`IM-PRD-082`、`IM-PRD-085`—`IM-PRD-087`
 - Write Set：共享消息 Store / Provider、`MessageWorkspace`、`MessageWorkspace.module.css`、固定消息 Scenario 与范围内 Integration/E2E。
-- 交付：教师/学生群聊的 `@班级 Agent` 插入入口、公开触发、Agent 身份消息、回复中状态、可见范围与模拟标签。
+- 交付：教师/学生群聊的 `@班级 Agent` 插入入口、公开触发、Agent 身份消息、回复中状态、可见范围与场景级模拟真值边界。
 - 明确不改变：普通群消息、教师 WorkBuddy 私密生成与审批链、其他未授权班级。
 - 完成条件：两种角色显式 mention 均公开回复；普通群消息无 Agent 回复；固定班级入口和消息中心复用同一实现；键盘与屏幕阅读器可操作。
 - 当前状态：`COMPLETED`
@@ -290,7 +290,7 @@ IM-001 产品与规格冻结
 ## IM-029 Teacher/Student Direct Agent Discovery v0.19
 
 - 需求：`IM-PRD-091`、`IM-PRD-095`—`IM-PRD-098`
-- Write Set：固定 Direct Threads/Contacts、消息搜索/新建对话 Surface、Agent Thread Header 切换与 Integration/E2E。
+- Write Set：固定 Direct Threads/Contacts、消息搜索/新建对话 Surface、Agent 持久目录切换与 Integration/E2E。
 - 交付：师生相同 Agent 目录、分组搜索、按能力定位、Actor 隔离线程导航和 Agent 间切换。
 - 明确不改变：教师查看学生 Agent 私聊、跨线程草稿迁移和生产留存后台。
 - 完成条件：师生均能按名称/能力进入自己的四个 Agent 线程，无法发现对方线程，切换不串线。

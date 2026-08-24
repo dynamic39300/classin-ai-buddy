@@ -1,11 +1,13 @@
 ---
 title: WorkBuddy M5 作业订正 Ticket 拆分
-status: READY_FOR_USER_REVIEW
+status: PARKED_READY_FOR_USER_REVIEW
 version: v0.1
 date: 2026-08-22
 ---
 
 # WorkBuddy M5 作业订正 Ticket 拆分
+
+> 路线状态（D-077）：Ticket 粒度保留供未来恢复；M4.2–M4.5 完成并经用户独立恢复 M5 前，不发布逐票文件或进入实施。
 
 > 本地仓库未配置外部 issue tracker，因此先按 To Tickets 规则记录在本文件；用户确认粒度后，再生成 `.scratch/workbuddy-m5-homework-correction/issues/` 的逐票文件。
 

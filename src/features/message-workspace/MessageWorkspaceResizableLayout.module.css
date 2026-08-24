@@ -33,6 +33,10 @@
   grid-template-columns: 17.5rem minmax(0, 1fr);
 }
 
+.layout[data-layout-scope='messages-global'][data-wide-navigation='true'] .communicationSurface {
+  grid-template-columns: 20rem minmax(0, 1fr);
+}
+
 .separator {
   position: relative;
   z-index: var(--z-base);
@@ -96,7 +100,8 @@
 }
 
 @media (max-width: 56rem) {
-  .layout[data-layout-scope='messages-global'] .communicationSurface {
+  .layout[data-layout-scope='messages-global'] .communicationSurface,
+  .layout[data-layout-scope='messages-global'][data-wide-navigation='true'] .communicationSurface {
     grid-template-columns: 4.5rem minmax(0, 1fr);
   }
 }

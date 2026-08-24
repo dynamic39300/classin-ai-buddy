@@ -9,8 +9,9 @@ import type { HomeworkReminderArtifactDraft, HomeworkReminderExecutionReceipt } 
 import { getWorkBuddyImTaskDefinition } from './im-task-catalog';
 import type { WeeklyPreparationNoticeArtifactDraft } from './im-weekly-preparation-notice';
 import type { EvaluationEvent } from './evaluation';
+import type { GuidedExplanationArtifact, GuidedExplanationReceipt } from './guided-explanation';
 
-type WorkBuddyImArtifactDraft = HomeworkReminderArtifactDraft | WeeklyPreparationNoticeArtifactDraft;
+type WorkBuddyImArtifactDraft = HomeworkReminderArtifactDraft | WeeklyPreparationNoticeArtifactDraft | GuidedExplanationArtifact;
 
 function event(
   runRef: string,
@@ -76,9 +77,10 @@ export function createWorkBuddyImConversationRun(input: Readonly<{
   startedAt: number;
   occurredAt: string;
   organizeEndsAt: number;
+  runInstanceId?: string;
 }>): WorkBuddyImRunProjection {
   const definition = getWorkBuddyImTaskDefinition(input.taskId);
-  const runRef = `run-im-${input.taskId}-${input.target.classId}`;
+  const runRef = `run-im-${input.taskId}-${input.target.classId}${input.runInstanceId ? `-${input.runInstanceId}` : ''}`;
   return Object.freeze({
     runRef,
     taskId: input.taskId,
@@ -194,12 +196,17 @@ export function completeWorkBuddyImConversationRun(
   draft: WorkBuddyImArtifactDraft,
   occurredAt: string,
 ): WorkBuddyImRunProjection {
-  const isWeeklyPreparation = draft.kind === 'weekly-preparation-notice';
-  const artifact = event(run.runRef, run.events.length + 1, {
-    id: `${run.runRef}:artifact`, actor: 'system', kind: 'artifact', state: 'completed', title: isWeeklyPreparation ? '课前准备通知已生成' : '提醒草稿已生成',
-    summary: isWeeklyPreparation
+  const artifactTitle = 'presentation' in draft
+    ? '交互讲题内容已生成'
+    : draft.kind === 'weekly-preparation-notice' ? '课前准备通知已生成' : '提醒草稿已生成';
+  const artifactSummary = 'presentation' in draft
+    ? `${draft.steps.length} 个讲解步骤 · 待教师审核 · 版本 v${draft.version}`
+    : draft.kind === 'weekly-preparation-notice'
       ? `${draft.planItems.length} 节教学安排 · 1 条待审阅群通知 · 草稿 v${draft.version}`
-      : `${draft.groups.length} 项作业 · 1 条待审阅群消息 · 草稿 v${draft.version}`,
+      : `${draft.groups.length} 项作业 · 1 条待审阅群消息 · 草稿 v${draft.version}`;
+  const artifact = event(run.runRef, run.events.length + 1, {
+    id: `${run.runRef}:artifact`, actor: 'system', kind: 'artifact', state: 'completed', title: artifactTitle,
+    summary: artifactSummary,
     occurredAt,
     objectRefs: [{ type: 'artifact', id: draft.id, version: `v${draft.version}` }],
   });
@@ -250,7 +257,9 @@ export function reviseWorkBuddyImArtifactEvent(
   run: WorkBuddyImRunProjection,
   draft: WorkBuddyImArtifactDraft,
 ): WorkBuddyImRunProjection {
-  const summary = draft.kind === 'weekly-preparation-notice'
+  const summary = 'presentation' in draft
+    ? `${draft.steps.length} 个讲解步骤 · 待教师审核 · 版本 v${draft.version}`
+    : draft.kind === 'weekly-preparation-notice'
     ? `${draft.planItems.length} 节教学安排 · 1 条待审阅群通知 · 草稿 v${draft.version}`
     : `${draft.groups.length} 项作业 · 1 条待审阅群消息 · 草稿 v${draft.version}`;
   return Object.freeze({
@@ -267,7 +276,7 @@ export function reviseWorkBuddyImArtifactEvent(
 
 export function appendWorkBuddyImEvaluationEvent(
   run: WorkBuddyImRunProjection,
-  receipt: HomeworkReminderExecutionReceipt,
+  receipt: HomeworkReminderExecutionReceipt | GuidedExplanationReceipt,
   evaluation: EvaluationEvent,
 ): WorkBuddyImRunProjection {
   if (run.events.some(({ id }) => id === evaluation.id)) return run;

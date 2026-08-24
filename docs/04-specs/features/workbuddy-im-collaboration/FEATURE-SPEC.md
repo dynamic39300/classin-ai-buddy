@@ -1,8 +1,8 @@
 ---
 title: WorkBuddy IM 人机协作 Feature Spec
-status: MULTI_AGENT_DISCOVERY_V19_IMPLEMENTED
+status: AGENT_DIRECT_EXPERIENCE_V20_IMPLEMENTED_PENDING_ACCEPTANCE
 triage: active
-version: v0.19
+version: v0.20
 date: 2026-08-24
 ---
 
@@ -166,9 +166,11 @@ IM Run 必须复用 `ConversationRunEvent`、`ConversationRunEventDetail` 与 `C
 - 教师一级消息路由 `/teacher/messages` 首次进入时切换为 `entering → immersive`；班级详情内的嵌入聊天不自动沉浸。
 - `entering / immersive` 隐藏全局 Sidebar 与 Topbar，并从指针、键盘和辅助技术可达树中移除；消息工作区最多三栏。
 - `exit` 执行 `immersive → exiting → standard`，不改变当前 URL、query 中的会话引用或 Feature Provider 实例。
+- 一级“消息”入口、标准页 WorkBuddy 入口和退出沉浸统一使用 320ms 的同源 ease-out 过渡；Sidebar、Topbar、Stage 几何和 WorkBuddy Surface 同步变化，内容只以 `opacity 0.82 → 1`、`scale 0.996 → 1` 缓冲布局换帧。
+- WorkBuddy 退出引导只在 `standard` 状态建立后出现，不得提前覆盖 Shell 收起过程；进入和退出不得逐栏飞入、弹簧反弹或重建 Workspace。
 - 显式退出按钮是主退出方式；非编辑状态连续两次 `Esc` 可以退出。输入框、菜单、Dialog 或 Overlay 存在时，单次 `Esc` 先交给局部 Surface。
 - 切换 Shell Mode 不允许 remount `MessageWorkspace`；Composer 草稿、当前会话、Run 和滚动状态由原 Feature 实例继续拥有。
-- `prefers-reduced-motion: reduce` 下取消位移动画但保留相同状态迁移、焦点与可达性结果。
+- `prefers-reduced-motion: reduce` 下取消 Transition 与 Animation，但保留相同状态迁移、320ms 语义时序、焦点与可达性结果。
 
 ### 6.2 Persistent WorkBuddy Composer and Live Run Feedback
 
@@ -197,7 +199,7 @@ IM Run 必须复用 `ConversationRunEvent`、`ConversationRunEventDetail` 与 `C
 - Header 和 Context 保持稳定尺寸；Context 使用紧凑白底行，不再形成贯穿辅助区的重灰横带。
 - Run Header 从大面积灰卡调整为紧凑状态块；Timeline 继续以垂直事件语言呈现，只有当前运行步骤使用强调 Surface。
 - Composer 使用面板内缩 Dock，依靠完整边界、`focus-within` 与轻微顶部阴影表达持续输入能力；Textarea 本身不再重复绘制第二圈重边框。
-- 打开时使用 `translateX + opacity` 的 180ms Surface 进入反馈，不改变布局语义；Reduced Motion 关闭该动效及既有循环动效。
+- 打开时使用 `translateX + opacity` 的 320ms Surface 进入反馈，与 Message Shell 使用同一时长和 easing，不改变布局语义；Reduced Motion 关闭该动效及既有循环动效。
 - 小于现有三栏阈值时，Sidecar 采用四周安全边距的 Overlay；不得贴满视口，也不得遮断关闭动作或聊天主输入。
 
 ### 6.5 Auto-growing WorkBuddy Composer
@@ -291,7 +293,7 @@ WorkBuddy 的沉浸态可见性由 `MessageWorkspace` 的 Shell Policy 派生，
 - 退出沉浸时统一调用 `close()` 恢复标准 Shell 的按需状态；提示“WorkBuddy 已收起”出现时 Sidecar 必须已经卸载。`close()` 只改变 `isOpen`，不得清空 Target、Run、Artifact、Receipt 或 Composer。
 - 1024px 等紧凑宽度继续使用默认可见 Overlay；关闭 WorkBuddy 的替代路径是退出沉浸，而不是在 Overlay 内制造第二套显示开关。
 - 标准 Shell 不渲染独立“进入沉浸模式”按钮，也不把 WorkBuddy 内联为第四栏；WorkBuddy 按钮直接调用 `open(target)` 与 `enterImmersive()`，恢复同一三栏现场。
-- 退出动作同时触发一条短时、非阻塞状态提示，解释 WorkBuddy 已随沉浸模式收起及再次打开的结果；Reduced Motion 下保留文字并取消位移动画。
+- 教师消息中心中真实展示过 WorkBuddy 的班级群或 1v1 会话退出时，同时触发以整个应用视口为坐标系的正中心可操作过渡卡：明确 WorkBuddy 已随沉浸模式收起、当前状态已保留，提供“重新打开 WorkBuddy”主动作和右上角入口引导。卡片约 460–520px，使用中性浅灰 Surface、灰色边界与克制阴影，只在图标和主动作保留品牌绿；默认停留约 6 秒，悬停或键盘焦点进入时暂停倒计时。它不夺焦点、不阻断消息操作，支持显式关闭，并提供“不再显示此提示”原生 Checkbox。勾选只写入可失败的本机 UI 偏好，当前卡片继续可操作，从下一次退出开始在同一 Document 内抑制引导；当前卡片内取消勾选会删除偏好。站内 Route 切换保留偏好，整页 `reload` 在当前 Document 首次挂载 Frame 前清除偏好并恢复引导。Reduced Motion 下保留文字并取消位移动画。重开复用同一 `enterImmersive()` / `open(target)` 链路，不创建新 Run。系统通知、官方公告和单班群聊返回班级路径不显示该引导。
 
 ### 6.13 Multi-Agent Discovery and Primary Target
 
@@ -302,9 +304,45 @@ WorkBuddy 的沉浸态可见性由 `MessageWorkspace` 的 Shell Policy 派生，
 - Agent Candidate 显示名称、文字 `Agent` 类型和一行课程/能力差异；同名时增加短名或课程范围，不允许静默选错。
 - `WorkspaceComposer` 新增可选 Target Slot。选择 Agent 后把活动查询片段从正文移除，在 Target Lane 投影结构化 `AgentMentionEntity`；发送显示 `@名称`，触发只读取 Entity。
 - 一条公开消息最多一个 Primary Agent Target。替换仅改变 Target，正文保持；发送前 Definition、Binding、Authorization ID 与 Version 必须再次匹配。
-- 新建私聊 Surface 将 Agent 与联系人分组；Agent 查询同时匹配名称、短名、课程和公开 Capability。选中后导航到当前 Actor 的既有隔离线程；当前 Agent Thread 的 Header 可用同一 Surface 切换 Agent。
+- 新建私聊 Surface 将 Agent 与联系人分组；Agent 查询同时匹配名称、短名、课程和公开 Capability。选中后导航到当前 Actor 的既有隔离线程；已进入 Agent Thread 后通过左侧持久目录切换 Agent，不在 Conversation Header 下重复身份与切换 Surface。
 - Discovery、Target 与 Reply 各自拥有显式状态，不复用一个 `isAgentOpen`。目录失败、无结果、stale Target 和回复失败分别恢复。
 - 当前固定 Adapter 提供四个可重置体验 Agent；不声明真实 Directory、授权或模型 Runtime。
+
+### 6.14 Agent Direct Directory, History and Response Experience
+
+`DirectConversationDirectoryModule` 组合 `AgentDiscoveryModule` 与 MessageThread 事实，为教师和学生返回同一形状的私聊目录 Projection。Interface 只接收 Actor、Class、Query、Scope 和当前 Threads；Implementation 隐藏授权优先过滤、Agent/联系人分组、能力搜索、稳定排序和计数。
+
+- `scope` 是 `all / agents / people` 的判别值。默认 `all`，Agent 分组在联系人之前；范围切换不清空搜索。
+- 持久目录搜索属于列表过滤，不伪装成弹出 Combobox；Tab、Enter/Space 与状态播报完成键盘路径。新建私聊继续复用既有 Combobox Picker；进入会话后的 Agent 切换统一回到持久目录。
+- Agent 行、Header、Agent 消息和处理中占位都由稳定 Agent Definition 投影专属头像语义与名称，不能只用颜色区分；模拟属性由 WorkBuddy 场景级边界统一说明，不在每个 IM 条目重复。
+- `MessageThread.olderEntries` 是当前固定 Scenario 的旧页输入；`loadOlderMessages(threadId)` 通过 Message Domain prepend 一页。页面仅管理 DOM 滚动锚点、线程滚动位置和新消息锚点，不复制分页或授权规则。
+- `ClassAgentThreadStatus.replying` 细化为 `understanding / composing`。Provider 只管理 Thread scoped 生命周期，Adapter 决定响应完成时机；切换线程或卸载不会把结果写到错误 Thread。
+- Mock Adapter 默认约 1.8 秒并保持确定性，目的是提供可观察体验。真实 Adapter 不加人工延时，后续以 Runtime 的 accepted/processing/streaming/completed 事件替换。
+- 失败保留用户消息和 Agent 身份并允许重试；UI 不展示隐藏思维链、虚假进度百分比或不可执行 Stop。
+
+详细交互、师生矩阵和生产 Gate 见 `AGENT-DIRECT-CONVERSATION-EXPERIENCE-DESIGN.md`。
+
+### 6.15 Final Delivery Message and Guided Content Reference
+
+`GuidedExplanationModule` 独占最终发送话术、讲解版本和 ContentReference 的一致性。页面提交原始 Revision，并只编排 Module 返回的 Artifact/Action；UI 不自行规范化或复制版本规则。
+
+- 学生触发消息可以只包含课程、作业、题号和卡点；Context Snapshot 负责解析完整题目，不能唯一定位时进入 `needs_input`。
+- `GuidedExplanationArtifact.delivery` 保存 `body/linkLabel`；`ProposedAction.body` 必须与批准版本的 `delivery.body` 一致。
+- 审核面首先展示可编辑话术及可点击文字链接；发送前预览当前草稿，发送后预览批准版本。详细题目、步骤、检查点和完整答案按需展开编辑。
+- 消息时间线以教师身份展示最终话术和文字链接，不增加格式卡片。文件库显示“交互讲解”，不显示 `H5` 扩展名。
+- 所有可见聊天正文统一按纯文本结构化排版：保留发送内容中的换行、空行与缩进，同时允许长行和长词在气泡宽度内自然折行。课前通知、作业催交、单题讲解话术、手动消息和班级 Agent 回复共用同一正文规则；不因来源不同折叠空白，也不把 Markdown 符号解释为富文本。
+- `truthLabel`、Adapter 类型和证据引用继续留在 Domain/Receipt/Evaluation；IM 条目不重复投影 `[模拟] AI Agent`、`[模拟] Agent` 或 `H5`，WorkBuddy Surface 保留一次清晰的 `[模拟] 数据` 边界。
+
+### 6.16 Inline Expanded Final Message Editor
+
+`FocusedMessageEditor` 是 WorkBuddy 最终发送正文的共用 UI Module。它只接收正文值、字段名称、编辑状态和变更命令，隐藏侧栏内联展开、焦点管理、响应式高度与字数反馈，不拥有 Artifact、Approval 或发送状态。
+
+- “展开编辑 / 收起编辑”位于正文标题与编辑状态同一工具行，使用可读文字与展开图标，不依赖 Hover 才可发现。
+- 展开不打开 Dialog、不增加遮罩、不改变 WorkBuddy Sidecar 宽度；只把当前 Textarea 高度提升到约 58dvh，并继续使用 WorkBuddy 自有滚动区。底部 Composer Dock 不随成果内容滚走。
+- Sidecar 根 Surface 只做圆角裁剪，不形成可滚动容器；下滑到正文底部时，仅中间 `.body` 改变 `scrollTop`，Header、Context Bar 与 Composer Dock 始终保持在各自固定网格行内，Composer 下方不得出现异常留白。
+- 展开前后始终是同一个受控 Textarea 和同一份草稿，不复制字段或 Artifact。收起不会创建额外版本；Artifact 版本仍只由既有应用修改或审批命令推进。
+- 展开后焦点进入正文并把编辑区滚到 Sidecar 可见位置；按钮提供 `aria-expanded` 与 `aria-controls`。显式收起后焦点返回按钮，字数只在展开态显示。Escape 保持文本编辑和 WorkBuddy 既有快捷键语义，不承担关闭弹层职责。
+- 空正文错误、字数和发送按钮禁用状态持续同步。作业催交、课前通知和单题讲解最终发送话术使用同一 Module；讲解步骤、题干、导读及完整答案等内容字段维持当前局部编辑方式。
 
 ## 7. Acceptance Criteria
 
@@ -326,7 +364,12 @@ WorkBuddy 的沉浸态可见性由 `MessageWorkspace` 的 Shell Policy 派生，
 - [ ] Capability 展开信息显示目的、输入 Context、输出摘要与能力名称，不显示隐藏思维链或原始敏感数据。
 - [ ] Artifact 只在全部 Capability 完成后出现；读取失败时当前调用进入 failed，后续调用保持 queued。
 - [ ] Integration、E2E、视觉和可访问性测试只通过公开 Interface 验收，不读取 React 私有状态。
+- [ ] 教师和学生私聊目录先按当前班级授权过滤，并可在“全部 / 班级 Agent / 联系人”之间切换；搜索名称、课程或能力得到稳定结果。
+- [ ] Agent 在列表、Header、历史消息和处理中状态都以文字与专属头像语义区别于人类；教师与学生的同名 Agent Thread 继续隔离。
+- [ ] Agent 历史可向上分页，prepend 保持视觉锚点；读历史时新回复不强制贴底，并提供新消息锚点。
+- [ ] 私聊回复依次投影理解、整理、完成或可恢复失败；1.8 秒人工时序只存在于 Mock Adapter，界面不暴露思维链或虚假 ETA。
 - [ ] 教师点击一级“消息”后进入沉浸式工作区，全局 Sidebar 与 Topbar 不再可见或可聚焦。
+- [ ] 一级“消息”进入与显式退出都使用 320ms 同源过渡；Shell 几何、WorkBuddy Surface 与内容缓冲同步，退出引导只在标准 Shell 完成后出现。Reduced Motion 下无空间动画但到达相同终态。
 - [ ] 教师实时会话进入沉浸态后 WorkBuddy 默认常驻，最多三栏，并继续渲染同一完整 Conversation Run，不出现压缩投影。
 - [ ] 显式退出和 `Esc Esc` 均只恢复标准 Shell，URL、当前会话、Composer 草稿与 Run 状态保持。
 - [ ] 标准 Shell 只通过 WorkBuddy Header 入口再次进入三栏沉浸，不出现重复“进入沉浸模式”按钮或四栏布局；沉浸态进入后 WorkBuddy 常驻。Reduced Motion、紧凑宽度、焦点恢复与 Overlay 优先级通过浏览器验收。
@@ -351,11 +394,14 @@ WorkBuddy 的沉浸态可见性由 `MessageWorkspace` 的 Shell Policy 派生，
 - [ ] Run 完成后出现一个明确的“待你审阅”成果面；老师可区分“Agent 已生成”和“消息尚未发送”。
 - [ ] 成果面同区展示目标群、教师身份、全群可见、作业数和唯一学生数，正文持续表达可编辑状态。
 - [ ] 教师不失焦直接点击确认时，当前可见正文形成新版本并作为实际发送正文；空正文禁止发送。
+- [ ] 手动消息、作业催交、课前通知、单题讲解话术和班级 Agent 回复在消息时间线中保留原始换行、空行与缩进，并在气泡内安全折行；不得因来源不同改变正文结构。
+- [ ] 作业催交、课前通知和单题讲解最终发送话术均提供同一“展开编辑 / 收起编辑”入口；展开只增加 Sidecar 内同一个 Textarea 的高度，不改变宽度、不打开 Dialog，并支持自动聚焦、字数、焦点返回和紧凑视口内部滚动，且不改变版本及审批 Gate。
+- [ ] 展开正文后继续下滑只滚动 WorkBuddy `.body`；Sidecar 根节点 `scrollTop` 保持 0，顶部身份与上下文不离开 Surface，Composer Dock 不上移且底部不出现异常空白。
 - [ ] 单群单消息不额外弹出确认 Modal；主动作明确包含目标班级，发送中不可重复触发。
 - [ ] 成功后原位显示 Receipt 并可定位群消息；事实过期、权限拒绝和可恢复失败均保留草稿且不显示成功。
 - [ ] 教师从 1v1、消息中心班级群或单班级群聊进入沉浸态时，无需点击入口即可看到 WorkBuddy；切换实时会话后辅助区持续存在并更新当前上下文。
 - [ ] 沉浸态没有 WorkBuddy Toggle、关闭按钮或 Splitter 折叠命令；退出沉浸恢复标准 Shell 按需逻辑，既有 Run、Artifact 和 Composer 不丢失。
-- [ ] 退出沉浸时出现短时非阻塞提示，明确 WorkBuddy 已收起且再次打开会进入沉浸工作区；提示不拦截后续消息操作。
+- [ ] 教师消息中心退出沉浸时出现以整个应用视口为坐标系的水平/垂直正中心可操作过渡卡，使用中性 Surface 并仅保留单一品牌强调；卡片明确 WorkBuddy 已收起且状态已保留，约 6 秒后消失，悬停/焦点暂停，支持显式关闭、“重新打开 WorkBuddy”、右上角入口引导与“不再显示此提示”，不夺焦点、不拦截后续消息操作。同一页面内勾选后续退出不再出现引导；整页刷新清除偏好，并可再次复现弹窗。
 - [ ] 1024px WorkBuddy 默认以 Overlay 可见，学生、只读、嵌入和通知详情仍不可发现教师 WorkBuddy。
 - [ ] 384px WorkBuddy 宽度下成果面无横向溢出、CTA 不截断，键盘焦点和状态通知可访问。
 - [ ] 待审成果面稳定呈现四层，状态、发送影响和核验发送各为单行，核心审阅区获得最大面积与最高视觉权重。

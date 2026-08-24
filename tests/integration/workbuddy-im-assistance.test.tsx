@@ -7,9 +7,11 @@ import { MessageWorkspace, MessageWorkspaceProvider, useMessageWorkspaceStore } 
 import { WorkBuddyImProvider, createImmediateWorkBuddyImExperienceScheduler } from '@features/workbuddy-im-assistance';
 import { createHomeworkScenario, HOMEWORK_NOW } from '@mocks/scenarios/homework';
 import { MockWorkBuddyImHomeworkReminderAdapter } from '@mocks/adapters/workbuddy-im-homework-reminder';
+import { MockGuidedExplanationDistributionAdapter } from '@mocks/adapters/workbuddy-guided-explanation';
 import type { HomeworkReminderAdapterScenario } from '@contracts/workbuddy/im-homework-reminder';
+import type { GuidedExplanationScenario } from '@contracts/workbuddy/guided-explanation';
 
-function TestWorkBuddyBridge({ children, mode = 'success' }: { children: ReactNode; mode?: HomeworkReminderAdapterScenario | 'empty' }) {
+function TestWorkBuddyBridge({ children, mode = 'success', guidedMode = 'success' }: { children: ReactNode; mode?: HomeworkReminderAdapterScenario | 'empty'; guidedMode?: GuidedExplanationScenario }) {
   const { actions } = useMessageWorkspaceStore();
   const adapter = useMemo(() => {
     const scenario = createHomeworkScenario();
@@ -27,19 +29,25 @@ function TestWorkBuddyBridge({ children, mode = 'success' }: { children: ReactNo
     if (mode !== 'empty') instance.setScenario(mode);
     return instance;
   }, [actions, mode]);
+  const guidedExplanationAdapter = useMemo(() => {
+    const instance = new MockGuidedExplanationDistributionAdapter({ appendTeacherMessage: ({ id, threadId, authorName, body, sentAt, contentReference }) => actions.appendMessage({ role: 'teacher', authorName, threadId, body, sentAt, messageId: id, contentReference }) });
+    instance.setScenario(guidedMode);
+    return instance;
+  }, [actions, guidedMode]);
   const scheduler = useMemo(() => createImmediateWorkBuddyImExperienceScheduler(), []);
-  return <WorkBuddyImProvider adapter={adapter} experienceScheduler={scheduler} teacher={{ id: 'teacher-001', name: '王老师' }} now={() => HOMEWORK_NOW}>{children}</WorkBuddyImProvider>;
+  return <WorkBuddyImProvider adapter={adapter} guidedExplanationAdapter={guidedExplanationAdapter} experienceScheduler={scheduler} teacher={{ id: 'teacher-001', name: '王老师' }} now={() => HOMEWORK_NOW}>{children}</WorkBuddyImProvider>;
 }
 
 function createWorkspaceTree(
   role: 'teacher' | 'student-family',
   mode?: HomeworkReminderAdapterScenario | 'empty',
   immersive = false,
+  guidedMode: GuidedExplanationScenario = 'success',
 ) {
   return (
     <MemoryRouter>
       <MessageWorkspaceProvider>
-        <TestWorkBuddyBridge mode={mode}>
+        <TestWorkBuddyBridge mode={mode} guidedMode={guidedMode}>
           <MessageWorkspace immersive={immersive} role={role} />
         </TestWorkBuddyBridge>
       </MessageWorkspaceProvider>
@@ -51,11 +59,135 @@ function renderWorkspace(
   role: 'teacher' | 'student-family',
   mode?: HomeworkReminderAdapterScenario | 'empty',
   immersive = false,
+  guidedMode: GuidedExplanationScenario = 'success',
 ) {
-  return render(createWorkspaceTree(role, mode, immersive));
+  return render(createWorkspaceTree(role, mode, immersive, guidedMode));
 }
 
 describe('WorkBuddy IM assistance', () => {
+  it('generates, approves, distributes and opens a format-neutral guided explanation', async () => {
+    const user = userEvent.setup();
+    renderWorkspace('teacher');
+    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
+    await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
+
+    const review = await within(sidecar).findByLabelText('单题交互讲解待审核');
+    expect((within(review).getByRole('textbox', { name: '学生题目' }) as HTMLTextAreaElement).value).toContain('0.20 kg');
+    expect((within(review).getByRole('textbox', { name: '最终发送话术' }) as HTMLTextAreaElement).value).toContain('练习单第 5 题');
+    const previewLink = within(review).getByRole('button', { name: '查看分步讲解' });
+    await user.click(previewLink);
+    expect(screen.getByRole('dialog', { name: '小球正碰：用动量守恒求碰后速度' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(previewLink).toHaveFocus());
+    expect((within(review).getByRole('textbox', { name: '第 2 步讲解' }) as HTMLTextAreaElement).value).toContain('m_Av_A + m_Bv_B');
+    expect((within(review).getByRole('textbox', { name: '教师审核版完整答案' }) as HTMLTextAreaElement).value).toContain('4.0 m/s');
+    const questionEditor = within(review).getByRole('textbox', { name: '学生题目' });
+    const stepTitleEditor = within(review).getByRole('textbox', { name: '第 3 步标题' });
+    const processEditor = within(review).getByRole('textbox', { name: '第 3 步讲解' });
+    const checkpointEditor = within(review).getByRole('textbox', { name: '第 3 步检查点' });
+    const answerEditor = within(review).getByRole('textbox', { name: '教师审核版完整答案' });
+    const messageEditor = within(review).getByRole('textbox', { name: '最终发送话术' });
+    await user.clear(messageEditor);
+    await user.type(messageEditor, '同学们，第 5 题的分步解法已经整理好，请打开链接查看。');
+    await user.clear(questionEditor);
+    await user.type(questionEditor, '教师核对后的完整碰撞题目：A 与 B 正碰，求 B 碰后速度。');
+    await user.clear(processEditor);
+    await user.type(processEditor, "教师修订计算：0.30×v'_B = 1.20，所以 v'_B = 4.0 m/s。");
+    await user.clear(stepTitleEditor);
+    await user.type(stepTitleEditor, '教师修订后的计算步骤');
+    await user.clear(checkpointEditor);
+    await user.type(checkpointEditor, '检查单位与方向。');
+    await user.clear(answerEditor);
+    await user.type(answerEditor, '教师修订答案：小球 B 碰后以 4.0 m/s 向右运动。');
+    expect(within(review).getByRole('button', { name: '确认保存并发送' })).toBeDisabled();
+    await user.click(within(review).getByRole('button', { name: '应用修改' }));
+    await waitFor(() => expect(within(sidecar).getByText('v2 · 未发送')).toBeInTheDocument());
+    const revisedReview = within(sidecar).getByLabelText('单题交互讲解待审核');
+    await user.click(within(revisedReview).getByRole('button', { name: '确认保存并发送' }));
+
+    expect(await within(sidecar).findByLabelText('讲题内容发送成功')).toBeInTheDocument();
+    await user.click(within(sidecar).getByRole('button', { name: '查看消息' }));
+    expect(screen.getAllByText('同学们，第 5 题的分步解法已经整理好，请打开链接查看。').length).toBeGreaterThanOrEqual(1);
+    const openButton = await screen.findByRole('button', { name: '查看分步讲解' });
+    await user.click(openButton);
+    const viewer = screen.getByRole('dialog', { name: '小球正碰：用动量守恒求碰后速度' });
+    expect(within(viewer).getByText('完整答案')).toBeInTheDocument();
+    expect(within(viewer).getByText(/教师修订计算/)).toBeInTheDocument();
+    expect(within(viewer).getByText('教师修订后的计算步骤')).toBeInTheDocument();
+    expect(within(viewer).getByText(/检查单位与方向/)).toBeInTheDocument();
+    expect(within(viewer).getByText(/教师修订答案/)).toBeInTheDocument();
+    expect(within(viewer).getAllByRole('listitem')).toHaveLength(4);
+    expect(within(viewer).getByRole('button', { name: '关闭讲题内容' })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: '小球正碰：用动量守恒求碰后速度' })).not.toBeInTheDocument();
+    expect(openButton).toHaveFocus();
+  });
+
+  it('limits direct guided explanation distribution to the current student thread', async () => {
+    const user = userEvent.setup();
+    renderWorkspace('teacher');
+    await user.click(screen.getByRole('button', { name: '私聊' }));
+    await user.click(screen.getByRole('button', { name: /李明.*明白了，我重新画一下过程图/ }));
+    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
+    await user.click(within(sidecar).getByRole('button', { name: '生成回复建议' }));
+    const review = await within(sidecar).findByLabelText('单题交互讲解待审核');
+    expect(within(review).getByText(/发送到：当前学生私聊（李明）/)).toBeInTheDocument();
+    expect((within(review).getByRole('textbox', { name: '第 3 步讲解' }) as HTMLTextAreaElement).value).toContain('1.20÷0.30 = 4.0 m/s');
+    const directAnswer = within(review).getByRole('textbox', { name: '教师审核版完整答案' });
+    await user.clear(directAnswer);
+    await user.type(directAnswer, '私聊教师修订答案：B 以 4.0 m/s 向右运动。');
+    await user.click(within(review).getByRole('button', { name: '应用修改' }));
+    await waitFor(() => expect(within(sidecar).getByText('v2 · 未发送')).toBeInTheDocument());
+    const revisedReview = within(sidecar).getByLabelText('单题交互讲解待审核');
+    await user.click(within(revisedReview).getByRole('button', { name: '确认保存并发送' }));
+    expect(await within(sidecar).findByLabelText('讲题内容发送成功')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '查看分步讲解' })).toBeInTheDocument();
+  });
+
+  it('preserves the guided artifact and recovers with the same approved action after a transient failure', async () => {
+    const user = userEvent.setup();
+    renderWorkspace('teacher', undefined, false, 'recoverable_failure');
+    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
+    await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
+    await user.click(await within(sidecar).findByRole('button', { name: '确认保存并发送' }));
+    expect(await within(sidecar).findByRole('alert')).toHaveTextContent('尚未保存或发送');
+    await user.click(within(sidecar).getByRole('button', { name: '重试保存并发送' }));
+    expect(await within(sidecar).findByLabelText('讲题内容发送成功')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['permission_denied', '当前没有分发权限'],
+    ['evidence_mismatch', '执行证据需要人工复查'],
+  ] as const)('projects %s as a non-retry guided explanation terminal state', async (guidedMode, heading) => {
+    const user = userEvent.setup();
+    renderWorkspace('teacher', undefined, false, guidedMode);
+    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
+    await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
+    await user.click(await within(sidecar).findByRole('button', { name: '确认保存并发送' }));
+    expect(await within(sidecar).findByRole('alert')).toHaveTextContent(heading);
+    expect(within(sidecar).queryByRole('button', { name: '重试保存并发送' })).not.toBeInTheDocument();
+    if (guidedMode === 'permission_denied') expect(within(sidecar).getByRole('button', { name: '关闭并联系管理员申请权限' })).toBeInTheDocument();
+  });
+
+  it('projects a generation failure with a fresh-run recovery command', async () => {
+    const user = userEvent.setup();
+    renderWorkspace('teacher', undefined, false, 'generation_failure');
+    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
+    await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
+    const alert = await within(sidecar).findByRole('alert');
+    expect(alert).toHaveTextContent('讲题内容生成暂时失败');
+    expect(within(alert).getByRole('button', { name: '重新生成' })).toBeInTheDocument();
+  });
   it('keeps WorkBuddy private to teachers in class chat', () => {
     const { unmount } = renderWorkspace('teacher');
     expect(screen.getByRole('button', { name: 'WorkBuddy' })).toBeInTheDocument();
@@ -185,7 +317,7 @@ describe('WorkBuddy IM assistance', () => {
     await user.click(within(sidecar).getByRole('button', { name: '确认并发送至高二物理 3 班' }));
     await waitFor(() => expect(within(sidecar).getByText('已发送 1 条班级群消息')).toBeInTheDocument());
     const receipt = within(sidecar).getByRole('status', { name: '班级群消息发送成功' });
-    expect(within(receipt).getByText('王老师 → 高二物理 3 班 · [模拟] ClassIn 群消息执行回执')).toBeInTheDocument();
+    expect(within(receipt).getByText('王老师 → 高二物理 3 班')).toBeInTheDocument();
     expect(within(receipt).getByRole('button', { name: '查看群消息' })).toBeInTheDocument();
     expect(within(receipt).queryByText('发送身份')).not.toBeInTheDocument();
     expect(within(sidecar).getByText('已记录教师采纳结果')).toBeInTheDocument();
@@ -195,7 +327,7 @@ describe('WorkBuddy IM assistance', () => {
     const sentMessage = within(timeline).getByText('请以下同学今天完成作业。');
     expect(sentMessage.closest('article')).toHaveTextContent('我 ·');
     expect(sentMessage).not.toHaveTextContent('WorkBuddy');
-    expect(within(sidecar).getAllByText(/\[模拟\] ClassIn 群消息执行回执/).length).toBeGreaterThanOrEqual(2);
+    expect(within(sidecar).getAllByText(/\[模拟\] ClassIn 群消息执行回执/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('creates a second simulated task from the weekly teaching plan and sends one teacher notice', async () => {

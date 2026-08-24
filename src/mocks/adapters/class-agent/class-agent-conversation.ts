@@ -3,6 +3,7 @@ import {
   type ClassAgentConversationAdapter,
 } from '@contracts/class-agent/class-agent-conversation';
 import type { ClassAgentDefinition, ClassAgentReplyRequest } from '@domain/class-agent/class-agent';
+import { GuidedTutoringModule } from '@domain/class-agent/guided-tutoring';
 
 export type MockClassAgentConversationScenario = 'success' | 'recoverable-failure' | 'recoverable-failure-once';
 
@@ -26,7 +27,7 @@ export class MockClassAgentConversationAdapter implements ClassAgentConversation
 
   async reply(request: ClassAgentReplyRequest) {
     await (this.options.delay ?? ((milliseconds) => new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds))))(
-      this.options.delayMs ?? 760,
+      this.options.delayMs ?? 1_800,
     );
     if (this.scenario === 'recoverable-failure'
       || (this.scenario === 'recoverable-failure-once' && !this.hasFailedOnce)) {
@@ -41,7 +42,7 @@ export class MockClassAgentConversationAdapter implements ClassAgentConversation
       ? `@${request.requesterName} `
       : '';
     const answerByCapability: Record<string, string> = {
-      'explain-physics-reasoning': '先确定研究对象，再把碰撞前后的动量方向都投影到同一条正方向上：与正方向一致取正，反向取负。这样列动量守恒式时，方向已经包含在正负号里。',
+      'explain-physics-reasoning': GuidedTutoringModule.projectReply(request.channel),
       'homework-correction-guidance': '先把原答案与条件逐项对照，标出“研究对象、正方向、初末状态”三处证据，再只修改发生偏差的步骤。订正时保留原错误旁注，方便复盘。',
       'experiment-inquiry-guidance': '先明确自变量、因变量和需要保持不变的条件，再设计至少三组可比较数据。记录测量误差来源后，再判断结论是否由数据充分支持。',
       'learning-plan-guidance': '可以按“概念复习—典型题—错题复盘”拆成三个 20 分钟单元，每个单元只设一个可检查结果，完成后再决定是否进入下一步。',

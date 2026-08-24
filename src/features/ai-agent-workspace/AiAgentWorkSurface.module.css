@@ -41,6 +41,17 @@
   min-width: 0;
 }
 
+.welcomeHeader {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.welcomeHeader > div {
+  min-width: 0;
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -51,14 +62,14 @@
 }
 
 .composerShell h1 {
-  margin: var(--space-sm) 0 var(--space-xs);
+  margin: var(--space-2xs) 0 0;
   font-size: var(--text-display);
   letter-spacing: -0.035em;
   line-height: 1.2;
 }
 
 .lead {
-  margin: 0 0 var(--space-lg);
+  margin: var(--space-sm) 0 var(--space-lg);
   color: var(--color-ink-muted);
 }
 

@@ -9,6 +9,7 @@ import {
   getVisibleMessageThreads,
   markCategoryRead,
   markThreadRead,
+  prependOlderMessagePage,
   recallClassMessage,
   togglePinnedMessage,
   type MessageThread,
@@ -81,6 +82,21 @@ describe('message mutations', () => {
     expect(appendLocalMessage('teacher', '王老师', makeThread(), '  ', '2026-08-08T10:05:00+08:00')).toBeDefined();
     expect(appendLocalMessage('teacher', '王老师', makeThread({ category: 'system' }), '收到', '2026-08-08T10:05:00+08:00').entries).toHaveLength(1);
     expect(appendLocalMessage('teacher', '王老师', makeThread(), '🙂', '2026-08-08T10:05:00+08:00', 'emoji').entries.at(-1)?.kind).toBe('emoji');
+  });
+
+  it('prepends one stable older page without replacing current messages', () => {
+    const olderEntries = Array.from({ length: 8 }, (_, index) => ({
+      id: `old-${index}`,
+      authorRole: index % 2 === 0 ? 'teacher' as const : 'class-agent' as const,
+      authorName: index % 2 === 0 ? '王老师' : '物理学习助手',
+      body: `历史消息 ${index}`,
+      sentAt: `2026-08-08T09:0${index}:00+08:00`,
+      kind: 'text' as const,
+    }));
+    const next = prependOlderMessagePage(makeThread({ olderEntries }), 3);
+
+    expect(next.entries.map(({ id }) => id)).toEqual(['old-5', 'old-6', 'old-7', 'm1']);
+    expect(next.olderEntries?.map(({ id }) => id)).toEqual(['old-0', 'old-1', 'old-2', 'old-3', 'old-4']);
   });
 
   it('pins one valid class message and toggles it off', () => {

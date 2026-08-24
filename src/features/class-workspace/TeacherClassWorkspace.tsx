@@ -48,6 +48,9 @@ import {
   createClassCourse,
   deleteClassCourse,
   deleteClassUnit,
+  editQuizActivityDraft,
+  approveQuizActivityPublication,
+  executeQuizActivityPublication,
   filterClassRecords,
   getActiveClassMembers,
   getClassActivityAction,
@@ -59,15 +62,20 @@ import {
   renameClassCourse,
   saveClassUnit,
   setClassHeadmaster,
+  proposeQuizActivityPublication,
+  validateClassQuizQuestions,
   validateCourseName,
   validateUnitInput,
   type ClassActivity,
   type ClassActivityAction,
   type ClassActivityType,
   type ClassCourse,
+  type ClassQuizScoringScheme,
   type ClassRecord,
   type ClassUnit,
   type ClassUnitStatus,
+  type QuizActivityPublicationReceipt,
+  type QuizActivityPublicationAction,
 } from '@domain/class/class';
 import type { MessageThread } from '@domain/message/message';
 import { getClassActivityTeachingObjectKind } from '@domain/teaching-object/teaching-object';
@@ -101,7 +109,8 @@ type EditorState =
   | { kind: 'class'; name: string }
   | { kind: 'course'; courseId: string | null; name: string }
   | { kind: 'unit'; courseId: string; unitId: string | null; title: string; description: string; status: ClassUnitStatus }
-  | { kind: 'activity-name'; courseId: string; unitId: string | null; activityId: string; title: string }
+  | { kind: 'activity-name'; courseId: string; unitId: string | null; activityId: string; title: string; description?: string }
+  | { kind: 'quiz-activity'; courseId: string; unitId: string | null; activityId: string; title: string; description: string; startAt: string; endAt: string; durationMinutes: string; scoring: ClassQuizScoringScheme; questions: NonNullable<NonNullable<ClassActivity['quiz']>['questions']> }
   | { kind: 'activity'; courseId: string; unitId: string | null; activityType: ClassActivityType; title: string; startsAt: string };
 type DeleteTarget =
   | { kind: 'course'; courseId: string; label: string }
@@ -131,6 +140,13 @@ function formatUpdatedAt(value: string): string {
     minute: '2-digit',
     hour12: false,
   }).format(date);
+}
+
+function toDatetimeLocalValue(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const part = (number: number) => String(number).padStart(2, '0');
+  return `${date.getFullYear()}-${part(date.getMonth() + 1)}-${part(date.getDate())}T${part(date.getHours())}:${part(date.getMinutes())}`;
 }
 
 function parseDialog(value: string | null): DialogKind | null {
@@ -380,6 +396,8 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [courseToComplete, setCourseToComplete] = useState<ClassCourse | null>(null);
   const [activityDetail, setActivityDetail] = useState<ActivityDetail | null>(null);
+  const [quizPublishTarget, setQuizPublishTarget] = useState<Readonly<{ detail: ActivityDetail; action: QuizActivityPublicationAction }> | null>(null);
+  const [quizPublicationReceipt, setQuizPublicationReceipt] = useState<QuizActivityPublicationReceipt | null>(null);
   const [activityDialogView, setActivityDialogView] = useState<'detail' | 'operation'>('detail');
   const [activityDialogAction, setActivityDialogAction] = useState<ClassActivityAction | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -533,18 +551,35 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
       setFeedback(status === 'published' ? '单元已发布，学生课程目录现在可见。' : '单元草稿已保存，仅老师可见。');
       return;
     }
+    if (editor.kind === 'quiz-activity') {
+      const title = editor.title.trim();
+      if (!title) return setEditorErrors({ title: '请输入活动标题。' });
+      if (!editor.startAt || !editor.endAt || new Date(editor.endAt).getTime() <= new Date(editor.startAt).getTime()) return setEditorErrors({ endAt: '截止时间必须晚于开始时间。' });
+      const durationMinutes = editor.durationMinutes === '' ? null : Number(editor.durationMinutes);
+      if (durationMinutes !== null && (!Number.isInteger(durationMinutes) || durationMinutes <= 0)) return setEditorErrors({ duration: '答题限时必须为正整数。' });
+      const questionError = validateClassQuizQuestions(editor.questions);
+      if (questionError) return setEditorErrors({ questions: questionError });
+      updateClassCourses(selectedClass.id, (courses) => editQuizActivityDraft(courses, editor.courseId, editor.unitId, editor.activityId, {
+        title,
+        description: editor.description,
+        startAt: new Date(editor.startAt).toISOString(),
+        endAt: new Date(editor.endAt).toISOString(),
+        durationMinutes,
+        scoring: editor.scoring,
+        questions: editor.questions,
+      }));
+      closeEditor();
+      setFeedback('测验题目、答案和活动参数已更新，仍未发布。');
+      return;
+    }
     if (editor.kind === 'activity-name') {
       const title = editor.title.trim();
       if (!title) return setEditorErrors({ title: '请输入活动标题。' });
-      updateClassCourses(selectedClass.id, (courses) => renameActivity(
-        courses,
-        editor.courseId,
-        editor.unitId,
-        editor.activityId,
-        title,
-      ));
+      updateClassCourses(selectedClass.id, (courses) => editor.description === undefined
+        ? renameActivity(courses, editor.courseId, editor.unitId, editor.activityId, title)
+        : editQuizActivityDraft(courses, editor.courseId, editor.unitId, editor.activityId, { title, description: editor.description }));
       closeEditor();
-      setFeedback('活动名称已更新。');
+      setFeedback(editor.description === undefined ? '活动名称已更新。' : '测验活动草稿已更新，仍未发布。');
       return;
     }
     if (editor.kind === 'activity') {
@@ -744,10 +779,11 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
     const title = editor.kind === 'class' ? '新建班级'
       : editor.kind === 'course' ? (editor.courseId ? '编辑课程' : '创建课程')
         : editor.kind === 'unit' ? (editor.unitId ? '编辑单元' : '创建单元')
+          : editor.kind === 'quiz-activity' ? '编辑测验草稿'
           : editor.kind === 'activity-name' ? '编辑活动'
             : '创建活动';
     return (
-      <WorkspaceDialog title={title} description="保存后立即更新本地 Demo 数据。" onClose={closeEditor}>
+      <WorkspaceDialog title={title} description={editor.kind === 'quiz-activity' ? '可复核题目、答案、解析、时间和评分；保存后仍是草稿。' : '保存后立即更新本地 Demo 数据。'} onClose={closeEditor} wide={editor.kind === 'quiz-activity'}>
         <form className={styles.editorForm} onSubmit={(event) => { event.preventDefault(); commitEditor(); }}>
           {editor.kind === 'class' ? (
             <label>班级名称<input aria-label="班级名称" autoFocus value={editor.name} aria-invalid={Boolean(editorErrors.name)} onChange={(event) => setEditor({ ...editor, name: event.target.value })} />{editorErrors.name ? <small role="alert">{editorErrors.name}</small> : null}</label>
@@ -762,7 +798,24 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
             </>
           ) : null}
           {editor.kind === 'activity-name' ? (
-            <label>活动名称<input aria-label="活动名称" autoFocus maxLength={100} value={editor.title} aria-invalid={Boolean(editorErrors.title)} onChange={(event) => setEditor({ ...editor, title: event.target.value })} />{editorErrors.title ? <small role="alert">{editorErrors.title}</small> : null}</label>
+            <><label>活动名称<input aria-label="活动名称" autoFocus maxLength={100} value={editor.title} aria-invalid={Boolean(editorErrors.title)} onChange={(event) => setEditor({ ...editor, title: event.target.value })} />{editorErrors.title ? <small role="alert">{editorErrors.title}</small> : null}</label>{editor.description !== undefined ? <label>活动说明<textarea aria-label="活动说明" value={editor.description} onChange={(event) => setEditor({ ...editor, description: event.target.value })} /></label> : null}</>
+          ) : null}
+          {editor.kind === 'quiz-activity' ? (
+            <>
+              <label>活动名称<input aria-label="活动名称" autoFocus maxLength={100} value={editor.title} aria-invalid={Boolean(editorErrors.title)} onChange={(event) => setEditor({ ...editor, title: event.target.value })} />{editorErrors.title ? <small role="alert">{editorErrors.title}</small> : null}</label>
+              <label>活动说明<textarea aria-label="活动说明" value={editor.description} onChange={(event) => setEditor({ ...editor, description: event.target.value })} /></label>
+              <div className={styles.quizEditorGrid}>
+                <label>开始时间<input aria-label="开始时间" type="datetime-local" value={editor.startAt} onChange={(event) => setEditor({ ...editor, startAt: event.target.value })} /></label>
+                <label>截止时间<input aria-label="截止时间" type="datetime-local" value={editor.endAt} aria-invalid={Boolean(editorErrors.endAt)} onChange={(event) => setEditor({ ...editor, endAt: event.target.value })} />{editorErrors.endAt ? <small role="alert">{editorErrors.endAt}</small> : null}</label>
+                <label>答题限时（分钟，留空为不限时）<input aria-label="答题限时" type="number" min="1" step="1" value={editor.durationMinutes} aria-invalid={Boolean(editorErrors.duration)} onChange={(event) => setEditor({ ...editor, durationMinutes: event.target.value })} />{editorErrors.duration ? <small role="alert">{editorErrors.duration}</small> : null}</label>
+                <label>评分方案<select aria-label="评分方案" value={editor.scoring} onChange={(event) => setEditor({ ...editor, scoring: event.target.value as ClassQuizScoringScheme })}><option value="score">分数制</option><option value="percentage">百分比</option><option value="excellent-good">优良评分</option><option value="abcd">ABCD</option><option value="unscored">不评分</option></select></label>
+              </div>
+              <section className={styles.quizQuestionEditor} aria-labelledby="quiz-question-editor-title">
+                <header><h3 id="quiz-question-editor-title">逐题复核</h3><span>{editor.questions.length} 题</span></header>
+                {editor.questions.map((question, index) => <fieldset key={question.id}><legend>第 {index + 1} 题 · {question.type}</legend><label>题干<textarea aria-label={`第 ${index + 1} 题题干`} value={question.prompt} onChange={(event) => setEditor({ ...editor, questions: editor.questions.map((item) => item.id === question.id ? { ...item, prompt: event.target.value } : item) })} /></label><label>标准答案<textarea aria-label={`第 ${index + 1} 题标准答案`} value={question.answer} onChange={(event) => setEditor({ ...editor, questions: editor.questions.map((item) => item.id === question.id ? { ...item, answer: event.target.value } : item) })} /></label><label>解析<textarea aria-label={`第 ${index + 1} 题解析`} value={question.explanation} onChange={(event) => setEditor({ ...editor, questions: editor.questions.map((item) => item.id === question.id ? { ...item, explanation: event.target.value } : item) })} /></label><label>分值<input aria-label={`第 ${index + 1} 题分值`} type="number" min="1" value={question.score} onChange={(event) => setEditor({ ...editor, questions: editor.questions.map((item) => item.id === question.id ? { ...item, score: Number(event.target.value) } : item) })} /></label></fieldset>)}
+                {editorErrors.questions ? <small role="alert">{editorErrors.questions}</small> : null}
+              </section>
+            </>
           ) : null}
           {editor.kind === 'activity' ? (
             <>
@@ -930,9 +983,22 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
             onClick={(event) => openActivityDetail(detail, event.currentTarget)}
           >
             <strong>{activity.title}</strong>
-            <small>{activity.detail}</small>
+            <small>{activity.detail}{activity.publication === 'draft' ? ' · 仅老师可见' : ''}</small>
           </button>
-          <ClassActivityActionGroup activityTitle={activity.title} actions={actions} onAction={(action) => executeActivityAction(detail, action)} />
+          {activity.type === 'quiz' && activity.publication === 'draft' && activity.quiz && canEditActiveCourse ? <div className={styles.draftActivityActions}><button type="button" onClick={() => openEditor({ kind: 'quiz-activity', courseId, unitId, activityId: activity.id, title: activity.title, description: activity.quiz!.description, startAt: toDatetimeLocalValue(activity.quiz!.startAt), endAt: toDatetimeLocalValue(activity.quiz!.endAt), durationMinutes: activity.quiz!.durationMinutes === null ? '' : String(activity.quiz!.durationMinutes), scoring: activity.quiz!.scoring, questions: activity.quiz!.questions ?? [] })}>编辑测验</button><button type="button" onClick={() => {
+            if (!selectedClass) return;
+            const actorId = selectedClass.members.find(({ isCurrentUser }) => isCurrentUser)?.id ?? 'teacher-wang';
+            const action = proposeQuizActivityPublication(selectedClass.courses, {
+              courseId,
+              unitId,
+              activityId: activity.id,
+              actorId,
+              canPublish: canManage && selectedClass.courses.find(({ id }) => id === courseId)?.status === 'active',
+              requestedAt: CLASS_NOW.toISOString(),
+            });
+            setQuizPublicationReceipt(null);
+            if (action) setQuizPublishTarget({ detail, action });
+          }}>发布</button></div> : <ClassActivityActionGroup activityTitle={activity.title} actions={actions} onAction={(action) => executeActivityAction(detail, action)} />}
         </div>
       );
     });
@@ -1082,9 +1148,18 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
         </aside>
       </div>
 
-      {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : null}
+      {quizPublicationReceipt ? <p className={styles.feedback} role="status" aria-label="测验发布回执">{quizPublicationReceipt.truthLabel} {quizPublicationReceipt.result}（{quizPublicationReceipt.id}）</p> : feedback ? <p className={styles.feedback} role="status">{feedback}</p> : null}
       {renderEditor()}
       {courseToComplete ? <WorkspaceDialog title="确认课程结课" description={`结课后，“${courseToComplete.name}”的目录和活动将转为只读。`} onClose={() => setCourseToComplete(null)}><div className={styles.confirmBody}><p>班级本身不会结课，其他课程、成员、公告和群聊不受影响。</p><div className={styles.confirmActions}><button type="button" onClick={() => setCourseToComplete(null)}>取消</button><button className={styles.primaryButton} type="button" onClick={confirmCourseCompletion}>确认结课</button></div></div></WorkspaceDialog> : null}
+      {quizPublishTarget ? <WorkspaceDialog title="确认发布测验" description={`“${quizPublishTarget.detail.activity.title}”当前是教师可见草稿。`} onClose={() => setQuizPublishTarget(null)}><div className={styles.confirmBody}><p>发布后学生将在课程目录中看到该测验。请确认你已经完成题目、答案、时间和评分方案的复查。</p><dl><div><dt>对象版本</dt><dd>{quizPublishTarget.action.expectedVersion}</dd></div><div><dt>风险</dt><dd>中；发布后学生立即可见</dd></div><div><dt>可逆性</dt><dd>本次发布不可由此操作撤销</dd></div></dl><div className={styles.confirmActions}><button type="button" onClick={() => setQuizPublishTarget(null)}>继续审阅</button><button className={styles.primaryButton} type="button" onClick={() => {
+        if (!selectedClass) return;
+        const evidence = approveQuizActivityPublication(quizPublishTarget.action, quizPublishTarget.action.actorId, CLASS_NOW.toISOString());
+        const publication = executeQuizActivityPublication(selectedClass.courses, evidence.action, evidence.approval);
+        updateClass(selectedClass.id, (record) => ({ ...record, courses: publication.courses, updatedAt: CLASS_NOW.toISOString() }));
+        setQuizPublicationReceipt(publication.receipt);
+        setQuizPublishTarget(null);
+        setFeedback(`${publication.receipt.truthLabel} ${publication.receipt.result}（${publication.receipt.id}）`);
+      }}>确认发布</button></div></div></WorkspaceDialog> : null}
       {activityDetail ? (
         <HomeActivityDialog
           item={toActivityDialogItem(activityDetail, activityDialogAction ?? getClassActivityAction('teacher', activityDetail.activity, CLASS_NOW))}

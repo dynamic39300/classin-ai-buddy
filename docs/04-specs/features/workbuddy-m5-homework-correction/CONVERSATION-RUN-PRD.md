@@ -1,11 +1,13 @@
 ---
 title: 作业批改、错因分析与订正对话式 Run PRD
-status: READY_FOR_USER_REVIEW
+status: PARKED_READY_FOR_USER_REVIEW
 version: v0.1
 date: 2026-08-22
 ---
 
 # 作业批改、错因分析与订正对话式 Run PRD
+
+> 路线状态（D-077）：本 PRD 保留为已就绪资产；M4.2–M4.5 完成并经用户独立恢复 M5 前，不进入实施。
 
 ## Problem Statement
 

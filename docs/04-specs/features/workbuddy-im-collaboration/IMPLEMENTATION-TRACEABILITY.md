@@ -1,7 +1,7 @@
 ---
 title: WorkBuddy IM 人机协作 Implementation Traceability
-status: MULTI_AGENT_DISCOVERY_V19_PASS
-version: v0.19
+status: AGENT_DIRECT_EXPERIENCE_V20_PASS
+version: v0.20
 date: 2026-08-24
 ---
 
@@ -18,7 +18,7 @@ date: 2026-08-24
 | IM-PRD-010—012 | Feature Spec §2—§7 | IM-003—IM-005 | Approval + teacher message writeback | Adapter + Integration + E2E | PASS |
 | IM-PRD-013—015 | Feature Spec §3—§7 | IM-003—IM-006 | Revalidation, idempotency, permission and retry recovery | Adapter + Integration + E2E | PASS |
 | IM-PRD-016—020 | Feature Spec §4.1、§5、§7 | IM-008 | Sidecar Conversation Run Projection、Experience Scheduler 与 Timeline | Projection + Integration + E2E + Visual | PASS |
-| IM-PRD-021—027 | Feature Spec §6.1、§7 | IM-009 | Message Workspace Shell Mode、Immersive Frame 与三栏响应式布局 | Static + E2E + a11y + 3 visual sizes | PASS |
+| IM-PRD-021—027 | Feature Spec §6.1、§7 | IM-009 | Message Workspace Shell Mode、Immersive Frame、320ms 同源进退动效、终态后退出引导与三栏响应式布局 | Static + 进入/退出时序 E2E + Reduced Motion + a11y + 3 visual sizes | PASS |
 | IM-PRD-028—030 | Feature Spec §6.2、§7 | IM-010 | Persistent WorkBuddy Composer、Supplement Event、Live Run Clock 与 Motion | Domain + E2E + a11y + 3 visual sizes | PASS |
 | IM-PRD-031—034 | Feature Spec §6.3、§7 | IM-011 | Class-context Route、可配置 Immersive Frame、固定班级双栏与确定性返回 | Integration + 20 relevant E2E + a11y + scoped visual | PASS |
 | IM-PRD-035—038 | Feature Spec §6.4、§7 | IM-012 | Floating Assistant Surface、辅助托盘、固定 Composer Dock 与响应式 Overlay | Static + 21 relevant E2E + a11y + 4 scoped visual | PASS |
@@ -32,15 +32,21 @@ date: 2026-08-24
 | IM-PRD-067—069 | Feature Spec §6.9、§7 | IM-019 | 共用 2.5rem Conversation Header、单行 Identity、教师/学生/班级复用 | Full check + Integration + measured E2E/a11y + 3 scoped visual baselines | PASS |
 | IM-PRD-070—071 | Feature Spec §6.10、§7 | IM-020 | 教师群聊/私聊共用“管理”入口，会话类型化菜单与学生权限隔离 | Type/Lint + Integration + 26 relevant E2E/a11y + 9 scoped visual checks | PASS |
 | IM-PRD-072—074 | Feature Spec §6.11、§7 | IM-021 | 教师私聊 WorkBuddy 入口、对话上下文回复建议与手动插入 Gate | Type/Lint + Integration + 27 relevant E2E/a11y + 2 direct-message visual baselines | PASS |
-| IM-PRD-075—078 | Feature Spec §6.12、§7 | IM-022 | 沉浸 Shell 常驻 Policy、标准 Shell 单一 WorkBuddy 入口、无四栏回退、原子退出引导、持续会话上下文与紧凑 Overlay | Type/Lint + 预先打开回归 Integration + 提示/Sidecar 互斥 E2E/a11y + scoped visual checks | PASS |
+| IM-PRD-075—078 | Feature Spec §6.12、§7 | IM-022 | 沉浸 Shell 常驻 Policy、标准 Shell 单一 WorkBuddy 入口、无四栏回退、原子退出引导、可操作的 6 秒重开过渡卡、持续会话上下文与紧凑 Overlay | Lint + 预先打开回归 Integration + 提示/Sidecar 互斥、原状态重开、悬停/焦点暂停 E2E/a11y + scoped visual checks | PASS |
 | IM-PRD-079、085—087 | Feature Spec §2.2、§3、§5 | IM-023 | `ClassAgentDefinition`、渠道策略、mention 解析、显式回复状态与 `ClassAgentConversationAdapter` | Domain + Adapter contract + Integration | PASS |
-| IM-PRD-080—082 | Feature Spec §2.2、§6、§8 | IM-024 | 教师/学生公开 `@班级 Agent`、Agent 身份消息、可见范围、加载/恢复状态与模拟标签 | Integration + E2E/a11y + 1440×900 visual | PASS |
+| IM-PRD-080—082 | Feature Spec §2.2、§6、§8 | IM-024 | 教师/学生公开 `@班级 Agent`、Agent 身份消息、可见范围、加载/恢复状态与场景级模拟真值边界 | Integration + E2E/a11y + 1440×900 visual | PASS |
 | IM-PRD-083—087 | Feature Spec §2.2、§3、§8 | IM-025 | 教师/学生各自独立的同一 Agent 私聊、无需 mention、联系人和线程隔离 | Integration + E2E/a11y + 2 visual baselines | PASS |
 | IM-PRD-088 | Feature Spec §1、§8 | IM-026 | 教师 WorkBuddy 群聊/1v1 回归与两类 Agent 渠道联合验收 | 33 focused tests + 6 E2E/a11y regressions + 3 visual baselines | PASS |
 | IM-PRD-089、091、094、096 | Feature Spec §2.2、§3、§6.13 | IM-027 | `AgentDiscoveryModule`、四个固定 Agent、授权 Binding Snapshot、稳定搜索排序、结构化 `AgentMentionEntity` 与发送前 stale 校验 | 4 Discovery Domain + 5 Channel Policy tests | PASS |
 | IM-PRD-090、092—094、097 | Feature Spec §6.13、§8 | IM-028 | typed `@` mixed Picker、`@Agent` Agent-only Picker、Composer Target Lane、唯一主响应 Agent 与公开回复反馈 | 9 Integration + focused E2E/a11y + picker/public-reply visual | PASS |
-| IM-PRD-091、095—098 | Feature Spec §3、§6.13、§8 | IM-029 | 教师/学生 Agent Direct Directory、能力搜索、分组联系人、四 Agent 隔离线程和 Header 切换入口 | Integration + direct-switch E2E + 2 direct visual baselines | PASS |
+| IM-PRD-091、095—098 | Feature Spec §3、§6.13、§8 | IM-029 | 教师/学生 Agent Direct Directory、能力搜索、分组联系人、四 Agent 隔离线程和目录切换入口 | Integration + direct-directory-switch E2E + 2 direct visual baselines | PASS |
 | IM-PRD-089—098 | Feature Spec §1、§8 | IM-030 | 师生公共群聊与私聊多 Agent 联合回归、WorkBuddy 并存、真值与权限边界 | Type/Lint + 480 Vitest + focused Playwright/axe + 5 scoped visual baselines | PASS |
+| IM-PRD-101—103、108 | Feature Spec §6.14 | M4.2-11 | `DirectConversationDirectoryModule`、全部/Agent/联系人范围、授权优先搜索、Picker/发送授权重验与显式 Agent 身份 | Domain + Integration + E2E/a11y + scoped visual | PASS |
+| IM-PRD-104—105、108 | Feature Spec §6.14 | M4.2-11 | Actor-isolated fixed history、Message Domain prepend、滚动锚点/线程位置/新消息锚点 | Domain + Integration + E2E | PASS |
+| IM-PRD-106—108 | Feature Spec §6.14 | M4.2-11 | Thread scoped `understanding/composing` 状态、Mock Adapter 1.8s 时序、可恢复重试、撤权失败关闭与 Reduced Motion | Integration + E2E/a11y + scoped visual | PASS |
+| IM-PRD-109—111 | Feature Spec §6.15 | M4.2-12 | `GuidedExplanationArtifact.delivery`、可编辑最终发送话术、发送前/后共享 Viewer、Context 题目定位及 IM 身份/格式标签收敛 | Domain + Adapter + 5-file Integration + E2E/a11y + 8 scoped visual | PASS |
+| IM-PRD-112 | Feature Spec §6.15、§7 | M4.2-13 | Message Timeline 统一 `pre-wrap` 纯文本正文排版，保留换行、空行和缩进并安全折行 | Manual + homework reminder + weekly notice + guided explanation E2E/visual | PASS |
+| IM-PRD-113 | Feature Spec §6.16、§7 | M4.2-14 | 共用 `FocusedMessageEditor`、Sidecar 内联增高、宽度锁定、单一受控 Textarea、根 Surface 非滚动裁剪、Header/Composer 固定与紧凑视口内部滚动 | Unit + E2E/a11y + 展开滚底回归 + 1440×900 / 1024×640 visual | PASS |
 
 ## 代码证据
 
@@ -71,7 +77,9 @@ date: 2026-08-24
 - Class Agent Controller / UI：`src/features/class-agent-conversation/`、`src/features/message-workspace/MessageWorkspace.tsx`；页面只提交消息意图并投影身份、范围、真值和显式状态。
 - Multi-Agent Discovery Deep Module：`src/domain/class-agent/agent-discovery.ts` 隐藏角色/班级/渠道授权过滤、关键词匹配、稳定排序与选择时再校验；页面只消费 Projection 与 Selection，不自行拼接权限判断。
 - Multi-Agent Picker / Primary Target：`AgentMentionPicker.tsx` 与 `WorkspaceComposer` Target Slot 共用同一 Projection；typed `@` 与 `@Agent` 两个入口共享 Agent 数据和搜索语义，发送使用结构化 `AgentMentionEntity`，普通文字 `@` 不触发 Agent。
-- Agent Direct Directory：固定 Agent Direct Threads 按 Actor 隔离；联系人目录和 Header“切换 Agent”共用 `direct-agent` Projection，可按名称、别名、班级和能力搜索。
+- Agent Direct Directory：固定 Agent Direct Threads 按 Actor 隔离；左侧持久目录承担 Agent 会话切换，新建私聊 Surface 复用 `direct-agent` Projection，可按名称、别名、班级和能力搜索；Conversation Header 下不重复投影身份栏。
+- Agent Direct Experience：`DirectConversationDirectoryModule` 先过滤当前 Actor/班级/渠道授权再搜索并投影范围；`prependOlderMessagePage` 与 Workspace 滚动锚点恢复固定历史；Conversation Provider 按 Thread 投影理解/整理阶段，1.8 秒仅由 Mock Adapter 提供。
+- Final Delivery Message：`GuidedExplanationModule` 统一生成和修订 `delivery.body/linkLabel`，审核 Surface 以最终话术为主并复用 `GuidedExplanationPreviewDialog`；Message Workspace 只投影带完整执行证据的批准版本链接，文件格式和重复模拟身份不进入 IM 条目。
 - Evaluation Module：`src/domain/workbuddy/evaluation.ts` 校验执行证据链并记录采纳信号；`appendWorkBuddyImEvaluationEvent` 只把稳定事件投影进私密 Timeline，不改变 ClassIn 消息事实。
 
 ## 测试证据
@@ -91,7 +99,8 @@ date: 2026-08-24
 - Teacher Management Verification：Integration 验证群聊/私聊菜单分流和消息免打扰状态；E2E 覆盖消息中心班级群、消息中心 1v1 与班级详情沉浸群聊，并确认学生视角无教师“管理”入口；三类入口视觉基线通过
 - Direct WorkBuddy Verification：Integration 验证私聊回复建议只插入 Composer、不产生消息；E2E 覆盖私聊入口、辅助 Surface、回复建议与插入闭环，并保持学生端不可见；`teacher-direct-message-header-1440x900` 与 `teacher-direct-message-workbuddy-1440x900` 视觉基线通过
 - Persistent Immersive Verification：Integration 覆盖教师班级群/1v1 自动显示、不可关闭和会话切换上下文更新；Message 与单班级 focused E2E 覆盖无 Toggle、无关闭按钮、Enter 不折叠、退出/重进状态保持、1024px 常驻 Overlay；3 个 App Shell 与 9 个 WorkBuddy IM scoped visual 通过
-- Unified Entry Verification：focused E2E 覆盖标准 Shell 无重复“进入沉浸模式”按钮、无 Sidecar 第四栏、WorkBuddy 单一入口重进三栏沉浸、退出引导可感知且消息与 WorkBuddy 草稿保持；MutationObserver 回归断言覆盖全部退出过渡帧，禁止“已收起”提示与 Sidecar 同时存在，几何断言约束提示不遮挡 WorkBuddy / 管理操作；App Shell 视觉基线校验提示结束后的标准 Header 稳态。
+- Unified Entry Verification：focused E2E 覆盖标准 Shell 无重复“进入沉浸模式”按钮、无 Sidecar 第四栏、WorkBuddy 单一入口重进三栏沉浸、退出引导可感知且消息与 WorkBuddy 草稿保持；MutationObserver 回归断言覆盖全部退出过渡帧，禁止“已收起”提示与 Sidecar 同时存在。几何断言以整个视口中心点为基准，同时校验固定定位、中性背景、可见边界与主动作可交互；计时断言覆盖约 6 秒停留、悬停与键盘焦点暂停；偏好断言覆盖勾选、同页后续退出抑制、整页刷新清理与再次显示；独立 App Shell 视觉基线覆盖卡片显示，Header 基线覆盖显式关闭后的标准稳态。
+- Shell Motion Verification：focused E2E 使用可控时钟分别覆盖一级“消息”进入、显式退出和标准页 WorkBuddy 重开，断言 320ms Shell / 内容同步时长、退出引导只在 `standard` 后出现；Reduced Motion 断言空间动效降至全局 1ms 上限且内容动画关闭，并到达相同沉浸终态。
 - Class Agent Verification：`src/domain/class-agent/class-agent.test.ts`、`src/mocks/adapters/class-agent/class-agent-conversation.test.ts` 和 `tests/integration/class-agent-conversation.test.tsx` 覆盖 mention / 非 mention、师生私聊隔离、失败重试、完成反馈和同一 Agent 定义。
 - Four-entry Browser Verification：`tests/e2e/message-workspace.spec.ts` 覆盖师生公开 mention、双方独立私聊、隐藏对方线程、教师 WorkBuddy 群聊/1v1 回归和学生不可发现；axe 无 serious / critical violation。
 - Class Agent Visual：`teacher-class-agent-public-reply-1440x900`、`teacher-class-agent-direct-1440x900`、`student-class-agent-direct-1440x900` 均无横向溢出、遮挡或不可达操作。

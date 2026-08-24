@@ -2,6 +2,7 @@ import { Check, CircleAlert, FileCheck2, PencilLine, SendHorizontal, ShieldCheck
 import { useEffect, useRef, useState } from 'react';
 import type { WorkBuddyImTarget } from '@contracts/workbuddy/im-conversation-run';
 import type { WeeklyPreparationNoticePreparation } from '@domain/workbuddy/im-weekly-preparation-notice';
+import { FocusedMessageEditor } from './FocusedMessageEditor';
 import styles from './WorkBuddyImSidecar.module.css';
 
 type ReadyPreparation = Extract<WeeklyPreparationNoticePreparation, { status: 'ready' }>;
@@ -85,24 +86,24 @@ export function WorkBuddyWeeklyPlanReviewArtifact({ preparation, target, onEditB
         </div>
 
         <div className={styles.reviewEditor} data-editor-state={editorState}>
-          <div className={styles.editorHeading}>
-            <label htmlFor="workbuddy-weekly-review-message">群通知正文</label>
-            <span aria-live="polite">
-              {editorState === 'saved' ? <Check aria-hidden="true" size={13} /> : <PencilLine aria-hidden="true" size={13} />}
-              {EDITOR_STATUS[editorState]}
-            </span>
-          </div>
-          <textarea
+          <FocusedMessageEditor
+            error={isEmpty ? '正文不能为空' : undefined}
             id="workbuddy-weekly-review-message"
-            aria-describedby={isEmpty ? 'workbuddy-weekly-review-error' : undefined}
-            aria-invalid={isEmpty}
-            onBlur={commitBody}
-            onChange={(event) => { setBody(event.target.value); setEditorState('modified'); }}
-            onFocus={() => setEditorState('editing')}
+            invalid={isEmpty}
+            label="群通知正文"
             rows={5}
+            status={
+              <span aria-live="polite" className={styles.editorStatus}>
+                {editorState === 'saved' ? <Check aria-hidden="true" size={13} /> : <PencilLine aria-hidden="true" size={13} />}
+                {EDITOR_STATUS[editorState]}
+              </span>
+            }
             value={body}
+            onBlur={commitBody}
+            onChange={(value) => { setBody(value); setEditorState('modified'); }}
+            onComplete={commitBody}
+            onFocus={() => setEditorState('editing')}
           />
-          {isEmpty ? <strong className={styles.editorError} id="workbuddy-weekly-review-error">正文不能为空</strong> : null}
         </div>
       </div>
 

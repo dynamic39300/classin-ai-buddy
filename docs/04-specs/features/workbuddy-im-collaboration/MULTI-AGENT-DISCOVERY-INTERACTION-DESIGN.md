@@ -135,9 +135,8 @@ depends-on:
 
 ### 6.4 已进入 Agent 单聊后的切换
 
-- Header 可提供低权重“切换 Agent”入口，打开 Agent-only Picker。
-- 选择另一个 Agent 时导航到另一个独立线程，不迁移当前消息和 Composer 草稿。
-- 如果当前 Composer 有未发送草稿，先在原位提示“切换后草稿会保留在当前会话”，不使用阻断 Modal；确认切换后草稿仍属于原线程。
+- 通过左侧持久目录选择另一个 Agent，并导航到对应的独立线程；Conversation Header 下不再重复身份信息或提供第二套切换入口。
+- 不迁移当前消息和 Composer 草稿；再次进入原线程时恢复该线程自己的草稿。
 - 当前 Agent 单聊 Composer 不显示 `@Agent` 工具。
 
 ## 7. Picker 详细设计
@@ -149,7 +148,7 @@ depends-on:
 | Composer 输入 `@` | `mixed-mention` | `@` 后至光标的字符 | 班级 Agent / 班级成员分组 |
 | 点击 `@Agent` / `查看 Agents` | `agent-only` | Picker 内自动聚焦的 Combobox Query | 最近使用 + 全部 Agent |
 | 新建对话 / 搜索 | `direct-agent` 或混合搜索 | 消息搜索 Query | Agent / 联系人分组 |
-| Agent Header“切换 Agent” | `agent-only-direct` | Picker Session Query | 支持 private-direct 的 Agent |
+| Agent 私聊持久目录 | `direct-agent` | 消息目录 Query | 支持 private-direct 的 Agent 与联系人 |
 
 两种 Composer 打开方式共用候选和排序 Module，但焦点行为确定且不混用：
 
@@ -540,7 +539,7 @@ type AgentDirectory = Readonly<{
 - [ ] 输入 `@` 显示 Agent / 成员分组；点击按钮只显示 Agent。
 - [ ] 教师和学生的全员可见 Agent 身份、能力和稳定顺序来自同一 Agent 定义。
 - [ ] 教师/学生单聊入口都能搜索 Agent 并进入各自隔离线程。
-- [ ] 已进入 Agent 私聊后无需 mention；切换 Agent 打开另一个线程。
+- [ ] 已进入 Agent 私聊后无需 mention；从左侧持久目录切换 Agent 并打开另一个线程。
 - [ ] 未授权、其他班级、其他角色私有和 private-only 对象不泄露。
 - [ ] 选中 Agent 形成结构化 Target；普通同名文字不触发。
 - [ ] 一条群消息只能有一个主 Agent，第二次选择原位替换且可撤销。

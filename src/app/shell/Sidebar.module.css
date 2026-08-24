@@ -31,6 +31,11 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.brandMark img {
+  width: 1.25rem;
+  height: auto;
+}
+
 .wordmark {
   font-family: var(--font-display);
   font-size: var(--text-md);

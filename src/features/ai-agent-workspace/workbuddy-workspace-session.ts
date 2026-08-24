@@ -5,6 +5,8 @@ import type { SingleCoursewareRun } from '@domain/workbuddy/course-production';
 import type { CoursePackageRun, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
 import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
 import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
+import type { QuizActivityCreationRun } from '@domain/workbuddy/quiz-activity-creation';
+import type { QuizActivityDraftScenario } from '@contracts/workbuddy/quiz-activity-draft';
 import type { CoursewarePanel, PackagePanel } from './workbuddy-workspace';
 
 const STORAGE_KEY = 'workbuddy:workspace-session:v3';
@@ -31,6 +33,8 @@ export type WorkBuddyWorkspaceSession = Readonly<{
   packageWritebackScenario: PackageWritebackScenario;
   activePackagePanel: PackagePanel;
   activePackageArtifactId: string | null;
+  quizRun: QuizActivityCreationRun | null;
+  quizScenario: QuizActivityDraftScenario;
   draftGoal: string;
 }>;
 
@@ -51,7 +55,7 @@ function isNullable<T>(value: unknown, guard: (candidate: unknown) => candidate 
 }
 
 const CONTEXT_SECTIONS = new Set(['actor_organization', 'teaching_scope', 'learner_scope', 'time_schedule', 'resources_input', 'teaching_evidence', 'domain_knowledge']);
-const TASK_TYPES = new Set(['single-courseware', 'course-package']);
+const TASK_TYPES = new Set(['single-courseware', 'course-package', 'quiz-activity-creation']);
 
 function isContextItem(value: unknown): boolean {
   return isRecord(value)
@@ -192,12 +196,102 @@ function isPackageRun(value: unknown): value is CoursePackageRun {
   return Object.hasOwn(recoveries, String(value.stage)) && value.recovery === recoveries[String(value.stage)];
 }
 
+function isQuizArtifact(value: unknown): boolean {
+  if (!isRecord(value) || !hasStrings(value, ['id', 'version', 'title', 'description', 'truthLabel'])
+    || !Array.isArray(value.questions) || typeof value.totalScore !== 'number'
+    || !isRecord(value.validation) || value.validation.status !== 'passed' || typeof value.validation.summary !== 'string') return false;
+  const validQuestions = value.questions.every((question) => isRecord(question)
+    && hasStrings(question, ['id', 'type', 'prompt', 'answer', 'explanation', 'difficulty'])
+    && typeof question.score === 'number' && question.score > 0
+    && (question.options === undefined || isStringArray(question.options)));
+  return validQuestions && value.questions.reduce((sum: number, question) => sum + Number((question as Record<string, unknown>).score), 0) === value.totalScore;
+}
+
+function isQuizReceipt(value: unknown): boolean {
+  if (!isRecord(value) || !hasStrings(value, ['id', 'actionId', 'approvalId', 'idempotencyKey', 'executedAt', 'truthLabel', 'result'])) return false;
+  if (value.status === 'success') return isRecord(value.object) && value.object.publication === 'draft' && hasStrings(value.object, ['id', 'version', 'label', 'returnUrl']);
+  if (value.status === 'evidence_mismatch') return value.recovery === 'manual-review';
+  if (!hasStrings(value, ['unexecutedTarget'])) return false;
+  if (value.status === 'permission_denied') return value.recovery === 'choose-another-target';
+  if (value.status === 'version_conflict') return value.recovery === 'compare-and-reconfirm' && hasStrings(value, ['expectedVersion', 'currentVersion']);
+  return (value.status === 'recoverable_failure' || value.status === 'timeout') && value.recovery === 'retry';
+}
+
+function isQuizPaperReview(value: unknown, artifact: unknown): boolean {
+  if (!isRecord(value) || value.status !== 'approved' || !hasStrings(value, ['reviewedBy', 'reviewedAt'])
+    || !isObjectRef(value.artifactRef) || !isRecord(artifact)) return false;
+  const artifactRef = value.artifactRef as Record<string, unknown>;
+  return artifactRef.id === artifact.id && artifactRef.version === artifact.version;
+}
+
+function isQuizRun(value: unknown): value is QuizActivityCreationRun {
+  if (!isRecord(value) || value.fixtureVersion !== 'workbuddy-quiz-activity-v1' || value.taskType !== 'quiz-activity-creation'
+    || !hasStrings(value, ['id', 'goal', 'contextSnapshotId', 'createdAt']) || !isTarget(value.target) || typeof value.settingsRevision !== 'number'
+    || !isRecord(value.brief) || typeof value.brief.questionCount !== 'number' || typeof value.brief.totalScore !== 'number' || !isStringArray(value.brief.questionTypes)
+    || !isRecord(value.settings) || !hasStrings(value.settings, ['title', 'description', 'startAt', 'endAt', 'scoring']) || !isRecord(value.settings.duration)
+    || !isStringArray(value.allowedCommands) || (value.recovery !== null && typeof value.recovery !== 'string')) return false;
+  if (value.artifact !== null && !isQuizArtifact(value.artifact)) return false;
+  if (value.paperReview !== null && !isQuizPaperReview(value.paperReview, value.artifact)) return false;
+  if (value.action !== null) {
+    if (!isRecord(value.action) || value.action.kind !== 'create-quiz-activity-draft'
+      || !hasStrings(value.action, ['id', 'runRef', 'contextSnapshotId', 'difference', 'impact', 'expiresAt', 'idempotencyKey'])
+      || value.action.runRef !== value.id || value.action.contextSnapshotId !== value.contextSnapshotId || !isObjectRef(value.action.artifactRef)
+      || !isQuizArtifact(value.action.paper) || !isTarget(value.action.target) || value.action.publication !== 'draft'
+      || JSON.stringify(value.action.target) !== JSON.stringify(value.target) || !isRecord(value.artifact)) return false;
+    const artifactRef = value.action.artifactRef as Record<string, unknown>;
+    const paper = value.action.paper as Record<string, unknown>;
+    if (artifactRef.id !== value.artifact.id || artifactRef.version !== value.artifact.version
+      || paper.id !== value.artifact.id || paper.version !== value.artifact.version) return false;
+  }
+  if (value.approval !== null && (!isRecord(value.approval) || value.approval.decision !== 'approved'
+    || !hasStrings(value.approval, ['id', 'actionId', 'decidedBy', 'decidedAt']) || !isRecord(value.action) || value.approval.actionId !== value.action.id)) return false;
+  if (value.receipt !== null && (!isRecord(value.receipt) || !isQuizReceipt(value.receipt))) return false;
+  if (value.receipt !== null && value.stage !== 'evidence_mismatch' && (!isRecord(value.action) || !isRecord(value.approval)
+    || value.receipt.actionId !== value.action.id || value.receipt.approvalId !== value.approval.id || value.receipt.idempotencyKey !== value.action.idempotencyKey)) return false;
+  if (value.evaluation !== null) {
+    if (!isRecord(value.evaluation) || !isRecord(value.artifact) || !isRecord(value.action) || !isRecord(value.approval) || !isRecord(value.receipt)
+      || value.evaluation.runRef !== value.id || value.evaluation.contextSnapshotRef !== value.contextSnapshotId
+      || !isObjectRef(value.evaluation.artifactRef)
+      || value.evaluation.actionRef !== value.action.id || value.evaluation.approvalRef !== value.approval.id || value.evaluation.receiptRef !== value.receipt.id) return false;
+    const evaluationArtifactRef = value.evaluation.artifactRef as Record<string, unknown>;
+    if (evaluationArtifactRef.id !== value.artifact.id || evaluationArtifactRef.version !== value.artifact.version) return false;
+  }
+
+  const emptyEvidence = value.action === null && value.approval === null && value.receipt === null && value.evaluation === null;
+  const stateRule = {
+    needs_parameters: { commands: ['update-paper-brief', 'generate-paper'], recovery: 'complete-paper-parameters' },
+    plan_ready: { commands: ['begin-generation'], recovery: 'start-or-revise-paper-plan' },
+    generating: { commands: ['complete-generation'], recovery: 'wait-for-generation' },
+    awaiting_paper_review: { commands: ['approve-paper'], recovery: 'review-and-approve-paper' },
+    awaiting_activity_parameters: { commands: ['update-activity-settings', 'propose-draft'], recovery: 'complete-activity-parameters' },
+    awaiting_approval: { commands: ['approve-draft', 'update-activity-settings'], recovery: 'approve-or-revise-draft' },
+    creating_draft: { commands: ['execute-draft'], recovery: 'execute-approved-draft' },
+    draft_created: { commands: ['open-class-detail'], recovery: null },
+    permission_denied: { commands: ['close-and-request-permission'], recovery: 'choose-another-target' },
+    version_conflict: { commands: ['refresh-target'], recovery: 'compare-and-reconfirm' },
+    recoverable_failure: { commands: ['retry-draft'], recovery: 'retry' },
+    timeout: { commands: ['retry-draft'], recovery: 'retry' },
+    evidence_mismatch: { commands: ['manual-review'], recovery: 'manual-review' },
+  }[String(value.stage) as QuizActivityCreationRun['stage']];
+  if (!stateRule || JSON.stringify(value.allowedCommands) !== JSON.stringify(stateRule.commands) || value.recovery !== stateRule.recovery) return false;
+  if (['needs_parameters', 'plan_ready', 'generating'].includes(String(value.stage))) return value.artifact === null && value.paperReview === null && emptyEvidence;
+  if (value.stage === 'awaiting_paper_review') return value.artifact !== null && value.paperReview === null && emptyEvidence;
+  const reviewed = isQuizPaperReview(value.paperReview, value.artifact);
+  if (value.stage === 'awaiting_activity_parameters') return value.artifact !== null && reviewed && emptyEvidence;
+  if (value.stage === 'awaiting_approval') return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'proposed' && value.approval === null && value.receipt === null && value.evaluation === null;
+  if (value.stage === 'creating_draft') return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'approved' && isRecord(value.approval) && value.receipt === null && value.evaluation === null;
+  if (value.stage === 'draft_created') return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'approved' && isRecord(value.approval) && isRecord(value.receipt) && value.receipt.status === 'success' && isRecord(value.evaluation);
+  if (value.stage === 'evidence_mismatch') return value.artifact !== null && reviewed && isRecord(value.action) && isRecord(value.approval) && isRecord(value.receipt) && value.receipt.status === 'evidence_mismatch' && value.evaluation === null;
+  if (['permission_denied', 'version_conflict', 'recoverable_failure', 'timeout'].includes(String(value.stage))) return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'approved' && isRecord(value.approval) && isRecord(value.receipt) && value.receipt.status === value.stage && isRecord(value.evaluation);
+  return false;
+}
+
 function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession {
   if (!isRecord(value) || value.version !== 3) return false;
   const shapeValid = isContextProposal(value.contextProposal)
     && isNullable(value.contextSnapshot, isContextSnapshot)
     && isRecord(value.snapshotsById) && Object.values(value.snapshotsById).every(isContextSnapshot)
-    && (value.taskType === 'single-courseware' || value.taskType === 'course-package')
+    && TASK_TYPES.has(String(value.taskType))
     && isNullable(value.coursewareRun, isCoursewareRun)
     && isNullable(value.coursewareAction, isAction)
     && isNullable(value.coursewareApproval, isApproval)
@@ -214,6 +308,8 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
     && ['success', 'partial_success'].includes(String(value.packageWritebackScenario))
     && ['navigator', 'approval', 'receipt', 'core_context', 'none'].includes(String(value.activePackagePanel))
     && (value.activePackageArtifactId === null || typeof value.activePackageArtifactId === 'string')
+    && isNullable(value.quizRun, isQuizRun)
+    && ['success', 'permission_denied', 'version_conflict', 'recoverable_failure', 'timeout'].includes(String(value.quizScenario))
     && typeof value.draftGoal === 'string';
   if (!shapeValid || !isRecord(value.snapshotsById)) return false;
   const snapshots = value.snapshotsById;
@@ -265,6 +361,17 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
   if (packageReceiptHistory.some((receipt) => !isRecord(receipt) || !Array.isArray(receipt.items)
     || receipt.items.some((item) => !isRecord(item) || !packageArtifactIds.has(String(item.artifactId))))) return false;
   if (typeof value.activePackageArtifactId === 'string' && (!packageRun || !Array.isArray(packageRun.artifacts) || !packageRun.artifacts.some((artifact) => isRecord(artifact) && artifact.id === value.activePackageArtifactId))) return false;
+  if (isRecord(value.quizRun)) {
+    const snapshot = snapshots[String(value.quizRun.contextSnapshotId)];
+    if (!isRecord(snapshot) || snapshot.taskType !== 'quiz-activity-creation' || !Array.isArray(snapshot.items) || !isRecord(value.quizRun.target)) return false;
+    const quizTarget = value.quizRun.target;
+    const classItem = snapshot.items.find((item) => isRecord(item) && item.id === quizTarget.classId);
+    const courseItem = snapshot.items.find((item) => isRecord(item) && item.id === quizTarget.courseId);
+    const unitItem = snapshot.items.find((item) => isRecord(item) && item.id === quizTarget.unitId);
+    if (!isRecord(classItem) || !isRecord(courseItem) || !isRecord(unitItem)
+      || courseItem.parentId !== classItem.id || unitItem.parentId !== courseItem.id
+      || unitItem.sourceVersion !== value.quizRun.target.expectedVersion) return false;
+  }
   return true;
 }
 

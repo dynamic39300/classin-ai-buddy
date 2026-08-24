@@ -11,12 +11,18 @@ import type {
   AgentDiscoveryRequest,
   AgentDiscoverySelection,
 } from '@domain/class-agent/agent-discovery';
+import type {
+  DirectConversationDirectoryProjection,
+  DirectConversationScope,
+} from '@domain/message/direct-conversation-directory';
+import type { MessageThread } from '@domain/message/message';
 
 export type ClassAgentThreadStatus =
   | Readonly<{ status: 'idle' }>
-  | Readonly<{ status: 'replying'; agentId: string }>
+  | Readonly<{ status: 'replying'; agentId: string; phase: 'understanding' | 'composing' }>
   | Readonly<{ status: 'replied'; messageId: string; agentId: string }>
-  | Readonly<{ status: 'recoverable_failure'; message: string; agentId: string }>;
+  | Readonly<{ status: 'recoverable_failure'; message: string; agentId: string }>
+  | Readonly<{ status: 'authorization_failure'; message: string; agentId: string }>;
 
 export type SubmitClassAgentMessageResult =
   | Readonly<{ status: 'accepted' }>
@@ -35,6 +41,13 @@ export type SubmitClassAgentMessageOptions = Readonly<{
 export type ClassAgentConversationStore = Readonly<{
   getAgent: (agentId: string) => ClassAgentDefinition | null;
   projectAgents: (request: Omit<AgentDiscoveryRequest, 'definitions'>) => AgentDiscoveryProjection;
+  projectDirectDirectory: (request: Readonly<{
+    role: AppRole;
+    classId: string;
+    query: string;
+    scope: DirectConversationScope;
+    threads: readonly MessageThread[];
+  }>) => DirectConversationDirectoryProjection;
   selectAgent: (options: Readonly<{
     projection: AgentDiscoveryProjection;
     agentId: string;

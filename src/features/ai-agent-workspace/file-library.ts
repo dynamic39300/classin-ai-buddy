@@ -1,5 +1,5 @@
 export type FileAssetKind =
-  "课件" | "教案" | "练习" | "学情报告" | "表格" | "素材包";
+  "课件" | "教案" | "练习" | "学情报告" | "表格" | "素材包" | "交互讲解";
 
 export type FileAssetProject = Readonly<{
   id: string;
@@ -58,6 +58,7 @@ export const FILE_ASSET_KIND_OPTIONS: readonly FileAssetKind[] = [
   "练习",
   "学情报告",
   "表格",
+  "交互讲解",
   "素材包",
 ];
 

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { beginPackageGeneration, completePackageGeneration, createCoursePackageRun } from '@domain/workbuddy/course-package';
 import { WORKBUDDY_COURSE_PACKAGE_DEFINITION } from '@mocks/scenarios/workbuddy-course-production';
+import { WORKBUDDY_QUIZ_PAPER } from '@mocks/scenarios/workbuddy-quiz-activity';
+import { QuizActivityCreationModule } from '@domain/workbuddy/quiz-activity-creation';
 import { loadWorkBuddyWorkspaceSession } from './workbuddy-workspace-session';
 import { loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
 
@@ -33,6 +35,8 @@ function validSession() {
     packageWritebackScenario: 'success',
     activePackagePanel: 'none',
     activePackageArtifactId: null,
+    quizRun: null,
+    quizScenario: 'success',
     draftGoal: '',
   };
 }
@@ -90,6 +94,44 @@ describe('WorkBuddy workspace session boundary', () => {
       items: [{ artifactId: 'foreign-artifact', result: 'succeeded', objectId: 'foreign-object' }],
     };
     Object.assign(session, { snapshotsById: { [snapshot.id]: snapshot }, packageRun, packageReceiptHistory: [unrelatedReceipt] });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()).toBeNull();
+  });
+
+  it('restores a quiz Run by stable Run and ContextSnapshot identity', () => {
+    const session = validSession();
+    const classItem = { ...session.contextProposal.items[0]!, id: 'physics-3', kind: 'class', label: '高二物理 3 班', sourceVersion: 'class-v1', selection: 'suggested' };
+    const courseItem = { ...classItem, id: 'course-momentum', parentId: classItem.id, kind: 'course', label: '动量与碰撞', sourceVersion: 'course-v1' };
+    const unitItem = { ...classItem, id: 'unit-momentum-1', parentId: courseItem.id, kind: 'unit', label: '第一单元 受力与动量', sourceVersion: 'unit-momentum-1-v1' };
+    const snapshot = { id: 'context-quiz-1', version: 'workbuddy-m4-context-v1', taskType: 'quiz-activity-creation', confirmedAt: '2026-08-24T17:40:00+08:00', items: [classItem, courseItem, unitItem] };
+    const created = QuizActivityCreationModule.create({
+      runId: 'run-quiz-activity-1', contextSnapshotId: snapshot.id, goal: '生成动量守恒诊断测验',
+      target: { classId: classItem.id, courseId: courseItem.id, unitId: unitItem.id, expectedVersion: unitItem.sourceVersion, label: '高二物理 3 班 / 动量与碰撞 / 第一单元 受力与动量' },
+      now: '2026-08-24T17:40:00+08:00',
+    });
+    const quizRun = QuizActivityCreationModule.generatePaper(QuizActivityCreationModule.beginGeneration(QuizActivityCreationModule.confirmPaperBrief(created)), WORKBUDDY_QUIZ_PAPER);
+    Object.assign(session, { taskType: 'quiz-activity-creation', contextProposal: { taskType: 'quiz-activity-creation', status: 'ready_to_confirm', items: snapshot.items }, contextSnapshot: snapshot, snapshotsById: { [snapshot.id]: snapshot }, quizRun });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()?.quizRun).toMatchObject({ id: 'run-quiz-activity-1', stage: 'awaiting_paper_review', paperReview: null });
+
+    const reviewedRun = QuizActivityCreationModule.approvePaper(quizRun, { teacherId: 'teacher-wang', reviewedAt: '2026-08-24T17:44:00+08:00' });
+    Object.assign(session, { quizRun: reviewedRun });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()?.quizRun).toMatchObject({ stage: 'awaiting_activity_parameters', paperReview: { status: 'approved', artifactRef: { id: reviewedRun.artifact?.id, version: 'v1' } } });
+
+    Object.assign(session, { quizRun: { ...reviewedRun, paperReview: { ...reviewedRun.paperReview, artifactRef: { id: 'artifact-from-another-run', version: 'v1' } } } });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()).toBeNull();
+  });
+
+  it('fails closed when a quiz stage claims completion without its evidence chain', () => {
+    const session = validSession();
+    const classItem = { ...session.contextProposal.items[0]!, id: 'physics-3', kind: 'class', sourceVersion: 'class-v1' };
+    const courseItem = { ...classItem, id: 'course-momentum', parentId: classItem.id, kind: 'course', sourceVersion: 'course-v1' };
+    const unitItem = { ...classItem, id: 'unit-momentum-1', parentId: courseItem.id, kind: 'unit', sourceVersion: 'unit-v1' };
+    const snapshot = { id: 'context-quiz-invalid', version: 'workbuddy-m4-context-v1', taskType: 'quiz-activity-creation', confirmedAt: '2026-08-24T17:40:00+08:00', items: [classItem, courseItem, unitItem] };
+    const run = QuizActivityCreationModule.create({ runId: 'run-invalid', contextSnapshotId: snapshot.id, goal: '生成测验', target: { classId: classItem.id, courseId: courseItem.id, unitId: unitItem.id, expectedVersion: unitItem.sourceVersion, label: '目标' }, now: snapshot.confirmedAt });
+    Object.assign(session, { taskType: 'quiz-activity-creation', contextProposal: { taskType: 'quiz-activity-creation', status: 'ready_to_confirm', items: snapshot.items }, contextSnapshot: snapshot, snapshotsById: { [snapshot.id]: snapshot }, quizRun: { ...run, stage: 'draft_created' } });
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     expect(loadWorkBuddyWorkspaceSession()).toBeNull();
   });

@@ -10,7 +10,7 @@ export const CLASS_RECORDS: ReadonlyArray<ClassRecord> = [
     nextActivity: { title: '动量守恒模型', startsAt: '2026-08-08T14:30:00+08:00', detail: '线上课堂' }, updatedAt: '2026-08-08T14:08:00+08:00',
     courses: [
       { id: 'course-momentum', name: '动量与碰撞', description: '建立动量守恒模型，完成课堂练习与订正。', status: 'active', units: [
-        { id: 'unit-momentum-1', title: '第一单元 受力与动量', description: '从研究对象开始，统一正方向。', status: 'published', activities: [
+        { id: 'unit-momentum-1', sourceVersion: 'unit-momentum-1-v1', title: '第一单元 受力与动量', description: '从研究对象开始，统一正方向。', status: 'published', activities: [
           { id: 'activity-momentum-lesson', type: 'lesson', title: '动量守恒模型', status: 'active', scheduledAt: '2026-08-08T14:30:00+08:00', detail: '课堂 · 40 分钟 · 30 位成员' },
           { id: 'activity-momentum-homework', type: 'homework', homeworkId: 'homework-momentum-a', title: '动量守恒作业 A 组', status: 'upcoming', scheduledAt: '2026-08-08T18:00:00+08:00', detail: '作业 · 今天 18:00 截止' },
         ] },

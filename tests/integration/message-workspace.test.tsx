@@ -172,10 +172,10 @@ describe('message workspace', () => {
     renderWorkspace('teacher');
 
     await user.click(screen.getByRole('button', { name: /私聊/ }));
-    await user.type(screen.getByRole('textbox', { name: '搜索当前分类' }), '不存在');
-    expect(screen.getByText('没有匹配的消息')).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: '搜索私聊和班级 Agent' }), '不存在');
+    expect(screen.getByText('没有匹配的私聊或 Agent')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '清除搜索' }));
-    expect(screen.getByRole('textbox', { name: '搜索当前分类' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: '搜索私聊和班级 Agent' })).toHaveValue('');
     const menuTrigger = screen.getByRole('button', { name: '私聊列表操作' });
     await user.click(menuTrigger);
     const menu = screen.getByRole('menu', { name: '私聊列表操作' });

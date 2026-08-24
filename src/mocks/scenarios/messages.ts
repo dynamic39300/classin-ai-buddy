@@ -1,4 +1,5 @@
-import type { MessageContact, MessageThread } from '@domain/message/message';
+import type { MessageContact, MessageEntry, MessageThread } from '@domain/message/message';
+import type { ClassAgentDefinition } from '@domain/class-agent/class-agent';
 import {
   CLASS_AGENT_DEFINITIONS,
   PUBLIC_CLASS_AGENT_BINDINGS,
@@ -35,8 +36,83 @@ function getAgentDirectThreadId(agentId: string, role: 'teacher' | 'student-fami
   return `direct-${agentId.replace('class-agent-', 'class-agent-')}-${role === 'teacher' ? 'teacher' : 'student'}`;
 }
 
+const AGENT_HISTORY_COPY: Record<string, Readonly<{
+  prompts: readonly string[];
+  replies: readonly string[];
+}>> = {
+  'explain-physics-reasoning': {
+    prompts: ['动量方向的正负号应该先看什么？', '如果物体反弹，速度怎么写？', '列式后我总怕单位漏掉。', '能给我一个检查守恒式的方法吗？', '我重新算完了，下一步怎么自检？'],
+    replies: ['先规定同一条直线上的正方向，再给每个速度带上方向符号。', '反弹说明速度方向改变；若原方向为正，反弹后的速度就写成负值。', '先统一质量和速度单位，再检查等式两边是否都是 kg·m/s。', '分别算碰撞前后的总动量；数值相等且方向符号一致，才说明列式自洽。', '最后把结果代回原式，并用正负号解释实际运动方向。'],
+  },
+  'homework-correction-guidance': {
+    prompts: ['订正时先抄正确答案吗？', '怎么找出我真正错在哪一步？', '原来的错误过程要删掉吗？', '订正完成后怎么检查？', '我已经标出正方向错误了。'],
+    replies: ['先保留原答案，逐项对照题目条件，不要直接抄结论。', '按研究对象、已知条件、公式和代入四项定位第一个偏差点。', '建议保留原错误并在旁边写出原因，这样复盘时能看到变化。', '遮住标准答案，重新独立完成关键步骤，再核对单位和方向。', '很好，接下来只重做受影响的列式和计算，不必整题机械重抄。'],
+  },
+  'experiment-inquiry-guidance': {
+    prompts: ['实验方案先确定什么？', '控制变量太多怎么办？', '只测一组数据可以吗？', '误差分析应该写哪些内容？', '我已经画好数据表了。'],
+    replies: ['先写清自变量、因变量和需要保持不变的条件。', '一次只改变一个关键变量，其余条件用清单固定。', '至少准备三组可比较数据，才能观察趋势并识别异常点。', '区分仪器精度、操作过程和环境条件，并说明它们会让结果偏大还是偏小。', '下一步检查表头是否包含物理量、单位和重复测量位置。'],
+  },
+  'learning-plan-guidance': {
+    prompts: ['今晚复习从哪里开始？', '我容易在一道题上花太久。', '错题应该怎么安排？', '计划没完成时怎么办？', '今天三个单元都做完了。'],
+    replies: ['先用 20 分钟复习概念，再做一题典型题，最后复盘一处错因。', '给每题设一个时间上限；到点先标记卡点，再进入下一任务。', '按错因而不是题号分类，每次只选一类做针对性复盘。', '保留最重要的一个结果，缩短任务数量，不用把未完成全部挤到明天。', '记录每个单元的可检查结果，再决定明天是巩固还是进入新内容。'],
+  },
+};
+
+function createAgentDirectHistory(agent: ClassAgentDefinition, role: 'teacher' | 'student-family') {
+  const authorName = role === 'teacher' ? '王老师' : '李明';
+  const copy = AGENT_HISTORY_COPY[agent.capabilityIds[0] ?? ''] ?? AGENT_HISTORY_COPY['explain-physics-reasoning'];
+  const entries: MessageEntry[] = [{
+    id: `${agent.id}-${role}-welcome`,
+    authorRole: 'class-agent' as const,
+    authorName: agent.name,
+    body: role === 'teacher'
+      ? `我是本班已授权的${agent.name}。这条教师私聊与学生线程互相隔离，你可以直接描述需要协助的任务。`
+      : `我是本班已授权的${agent.name}。你可以直接提问；这条私聊只对你和当前 Agent 可见。`,
+    sentAt: '2026-08-08T08:50:00+08:00',
+    kind: 'text' as const,
+    classAgent: {
+      agentId: agent.id,
+      channel: 'private-direct' as const,
+      visibilityLabel: '仅你与班级 Agent 可见',
+      truthLabel: agent.truthLabel,
+    },
+  }];
+  const hours = ['09:10', '10:05', '11:20', '12:35', '13:50'];
+  for (const [index, prompt] of (copy?.prompts ?? []).entries()) {
+    entries.push({
+      id: `${agent.id}-${role}-history-user-${index + 1}`,
+      authorRole: role,
+      authorName,
+      body: prompt,
+      sentAt: `2026-08-08T${hours[index]}:00+08:00`,
+      kind: 'text' as const,
+      classAgent: undefined,
+    });
+    entries.push({
+      id: `${agent.id}-${role}-history-agent-${index + 1}`,
+      authorRole: 'class-agent' as const,
+      authorName: agent.name,
+      body: copy?.replies[index] ?? '我会根据当前班级范围给出可检查的步骤建议。',
+      sentAt: `2026-08-08T${hours[index]}:02+08:00`,
+      kind: 'text' as const,
+      classAgent: {
+        agentId: agent.id,
+        channel: 'private-direct' as const,
+        visibilityLabel: '仅你与班级 Agent 可见',
+        truthLabel: agent.truthLabel,
+      },
+    });
+  }
+  return {
+    olderEntries: entries.slice(0, 6),
+    entries: entries.slice(6),
+  };
+}
+
 const CLASS_AGENT_DIRECT_THREADS: ReadonlyArray<MessageThread> = CLASS_AGENT_DEFINITIONS.flatMap((agent) => (
-  (['teacher', 'student-family'] as const).map((role) => ({
+  (['teacher', 'student-family'] as const).map((role) => {
+    const history = createAgentDirectHistory(agent, role);
+    return ({
     id: getAgentDirectThreadId(agent.id, role),
     category: 'direct' as const,
     visibleTo: [role],
@@ -48,23 +124,10 @@ const CLASS_AGENT_DIRECT_THREADS: ReadonlyArray<MessageThread> = CLASS_AGENT_DEF
     classId: agent.classId,
     peerId: agent.id,
     classAgentBinding: createDirectClassAgentBinding(agent, role),
-    entries: [{
-      id: `${agent.id}-${role}-welcome`,
-      authorRole: 'class-agent' as const,
-      authorName: agent.name,
-      body: role === 'teacher'
-        ? `我是本班已授权的${agent.name}。这条教师私聊与学生线程互相隔离，你可以直接描述需要协助的任务。`
-        : `我是本班已授权的${agent.name}。你可以直接提问；这条私聊只对你和当前 Agent 可见。`,
-      sentAt: '2026-08-08T13:50:00+08:00',
-      kind: 'text' as const,
-      classAgent: {
-        agentId: agent.id,
-        channel: 'private-direct' as const,
-        visibilityLabel: '仅你与班级 Agent 可见',
-        truthLabel: agent.truthLabel,
-      },
-    }],
-  }))
+    entries: history.entries,
+    olderEntries: history.olderEntries,
+  });
+  })
 ));
 
 export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
@@ -79,8 +142,8 @@ export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
     updatedAt: '2026-08-08T14:02:00+08:00',
     unreadByRole: { teacher: 2, 'student-family': 0 },
     entries: [
-      { id: 'dwl-1', authorRole: 'student-family', authorName: '李明', body: '王老师，动量作业第 5 题的方向怎么判断？', sentAt: '2026-08-08T13:54:00+08:00', kind: 'text' },
-      { id: 'dwl-2', authorRole: 'teacher', authorName: '王老师', body: '先确定研究对象，再按初末状态统一正方向。', sentAt: '2026-08-08T13:58:00+08:00', kind: 'text' },
+      { id: 'dwl-1', authorRole: 'student-family', authorName: '李明', body: '王老师，今天动量守恒练习单第 5 题我不会，特别是碰后速度的正负号总写反，能讲一下吗？', sentAt: '2026-08-08T13:54:00+08:00', kind: 'text' },
+      { id: 'dwl-2', authorRole: 'teacher', authorName: '王老师', body: '我去练习单里找到第 5 题，把正方向、守恒公式和代入计算整理成一份完整讲解。', sentAt: '2026-08-08T13:58:00+08:00', kind: 'text' },
       { id: 'dwl-3', authorRole: 'student-family', authorName: '李明', body: '明白了，我重新画一下过程图。', sentAt: '2026-08-08T14:02:00+08:00', kind: 'text' },
     ],
   },
@@ -141,6 +204,7 @@ export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
       { id: 'cp3-1', authorRole: 'system', authorName: '系统', body: '动量守恒模型课堂将在 14:30 开始', sentAt: '2026-08-08T13:40:00+08:00', kind: 'system' },
       { id: 'cp3-2', authorRole: 'teacher', authorName: '王老师', body: '请大家课前准备好课堂练习单，作业仍在今天 18:00 截止。', sentAt: '2026-08-08T13:48:00+08:00', kind: 'text' },
       { id: 'cp3-3', authorRole: 'student-family', authorName: '李明', body: '练习单已经准备好了。', sentAt: '2026-08-08T14:08:00+08:00', kind: 'text' },
+      { id: 'cp3-4', authorRole: 'student-family', authorName: '李明', body: '王老师，今天动量守恒练习单第 5 题我不会，特别是碰后速度的正负号总写反，能在群里讲一下吗？', sentAt: '2026-08-08T14:09:00+08:00', kind: 'text' },
     ],
   },
   {

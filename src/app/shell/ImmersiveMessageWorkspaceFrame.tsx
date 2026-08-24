@@ -1,4 +1,4 @@
-import { ArrowLeft, Minimize2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Minimize2, Sparkles, X } from 'lucide-react';
 import {
   useEffect,
   useRef,
@@ -7,6 +7,11 @@ import {
   type ReactNode,
 } from 'react';
 import { useMessageWorkspaceShell } from './MessageWorkspaceShellContext';
+import {
+  readWorkBuddyExitGuidanceSuppressed,
+  resetWorkBuddyExitGuidanceOnFullPageReload,
+  writeWorkBuddyExitGuidanceSuppressed,
+} from './workbuddy-exit-guidance-preference';
 import styles from './ImmersiveMessageWorkspaceFrame.module.css';
 
 type ImmersiveMessageWorkspaceFrameProps = {
@@ -17,10 +22,11 @@ type ImmersiveMessageWorkspaceFrameProps = {
   exitHint?: string;
   exitIcon?: 'back' | 'minimize';
   onExit?: () => void;
+  showWorkBuddyExitGuidance?: boolean;
 };
 
 const ESCAPE_CONFIRMATION_WINDOW_MS = 800;
-const EXIT_GUIDANCE_DURATION_MS = 3_600;
+const EXIT_GUIDANCE_DURATION_MS = 6_000;
 
 function isEditingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -49,14 +55,24 @@ export function ImmersiveMessageWorkspaceFrame({
   exitHint = '退出后仍停留在当前会话',
   exitIcon = 'minimize',
   onExit,
+  showWorkBuddyExitGuidance = false,
 }: ImmersiveMessageWorkspaceFrameProps) {
   const shell = useMessageWorkspaceShell();
   const exitButtonRef = useRef<HTMLButtonElement>(null);
   const escapeTimerRef = useRef<number | null>(null);
   const exitGuidanceTimerRef = useRef<number | null>(null);
+  const exitGuidanceDeadlineRef = useRef<number | null>(null);
+  const exitGuidanceRemainingRef = useRef(EXIT_GUIDANCE_DURATION_MS);
+  const exitGuidancePauseReasonsRef = useRef(new Set<'focus' | 'pointer'>());
+  const exitGuidancePendingRef = useRef(false);
   const previousModeRef = useRef(shell.mode);
   const [escapeArmed, setEscapeArmed] = useState(false);
   const [exitGuidanceVisible, setExitGuidanceVisible] = useState(false);
+  const [exitGuidancePaused, setExitGuidancePaused] = useState(false);
+  const [exitGuidanceSuppressed, setExitGuidanceSuppressed] = useState(() => {
+    resetWorkBuddyExitGuidanceOnFullPageReload();
+    return readWorkBuddyExitGuidanceSuppressed();
+  });
   const shellVisible = shell.mode !== 'standard';
   const requestExit = onExit ?? shell.exitImmersive;
   const ExitIcon = exitIcon === 'back' ? ArrowLeft : Minimize2;
@@ -73,21 +89,98 @@ export function ImmersiveMessageWorkspaceFrame({
     if (exitGuidanceTimerRef.current !== null) window.clearTimeout(exitGuidanceTimerRef.current);
   }, []);
 
+  useEffect(() => {
+    if (shell.mode !== 'standard' || !exitGuidancePendingRef.current) return;
+    exitGuidancePendingRef.current = false;
+    if (exitGuidanceTimerRef.current !== null) window.clearTimeout(exitGuidanceTimerRef.current);
+    exitGuidancePauseReasonsRef.current.clear();
+    exitGuidanceRemainingRef.current = EXIT_GUIDANCE_DURATION_MS;
+    exitGuidanceDeadlineRef.current = Date.now() + EXIT_GUIDANCE_DURATION_MS;
+    setExitGuidancePaused(false);
+    setExitGuidanceVisible(true);
+    exitGuidanceTimerRef.current = window.setTimeout(() => {
+      exitGuidanceTimerRef.current = null;
+      exitGuidanceDeadlineRef.current = null;
+      exitGuidanceRemainingRef.current = EXIT_GUIDANCE_DURATION_MS;
+      exitGuidancePauseReasonsRef.current.clear();
+      setExitGuidancePaused(false);
+      setExitGuidanceVisible(false);
+    }, EXIT_GUIDANCE_DURATION_MS);
+  }, [shell.mode]);
+
   const resetEscape = () => {
     setEscapeArmed(false);
     if (escapeTimerRef.current !== null) window.clearTimeout(escapeTimerRef.current);
     escapeTimerRef.current = null;
   };
 
+  const clearExitGuidanceTimer = () => {
+    if (exitGuidanceTimerRef.current !== null) window.clearTimeout(exitGuidanceTimerRef.current);
+    exitGuidanceTimerRef.current = null;
+    exitGuidanceDeadlineRef.current = null;
+  };
+
+  const dismissExitGuidance = (restoreFocus = false) => {
+    exitGuidancePendingRef.current = false;
+    clearExitGuidanceTimer();
+    exitGuidancePauseReasonsRef.current.clear();
+    exitGuidanceRemainingRef.current = EXIT_GUIDANCE_DURATION_MS;
+    setExitGuidancePaused(false);
+    setExitGuidanceVisible(false);
+    if (restoreFocus) focusCurrentThread();
+  };
+
+  const scheduleExitGuidanceDismissal = (duration: number) => {
+    clearExitGuidanceTimer();
+    exitGuidanceRemainingRef.current = duration;
+    exitGuidanceDeadlineRef.current = Date.now() + duration;
+    exitGuidanceTimerRef.current = window.setTimeout(() => {
+      dismissExitGuidance();
+    }, duration);
+  };
+
+  const pauseExitGuidance = (reason: 'focus' | 'pointer') => {
+    if (exitGuidancePauseReasonsRef.current.has(reason)) return;
+    exitGuidancePauseReasonsRef.current.add(reason);
+    if (exitGuidancePauseReasonsRef.current.size > 1) return;
+    if (exitGuidanceDeadlineRef.current !== null) {
+      exitGuidanceRemainingRef.current = Math.max(0, exitGuidanceDeadlineRef.current - Date.now());
+    }
+    clearExitGuidanceTimer();
+    setExitGuidancePaused(true);
+  };
+
+  const resumeExitGuidance = (reason: 'focus' | 'pointer') => {
+    exitGuidancePauseReasonsRef.current.delete(reason);
+    if (exitGuidancePauseReasonsRef.current.size > 0 || !exitGuidanceVisible) return;
+    setExitGuidancePaused(false);
+    scheduleExitGuidanceDismissal(exitGuidanceRemainingRef.current);
+  };
+
   const requestExitWithGuidance = () => {
     resetEscape();
-    setExitGuidanceVisible(true);
-    if (exitGuidanceTimerRef.current !== null) window.clearTimeout(exitGuidanceTimerRef.current);
-    exitGuidanceTimerRef.current = window.setTimeout(() => {
+    const workBuddyWasVisible = Boolean(document.querySelector('[aria-label="WorkBuddy 私密协作窗口"]'));
+    if (showWorkBuddyExitGuidance && workBuddyWasVisible && !exitGuidanceSuppressed) {
+      clearExitGuidanceTimer();
+      exitGuidancePendingRef.current = true;
+      exitGuidancePauseReasonsRef.current.clear();
+      exitGuidanceRemainingRef.current = EXIT_GUIDANCE_DURATION_MS;
+      setExitGuidancePaused(false);
       setExitGuidanceVisible(false);
-      exitGuidanceTimerRef.current = null;
-    }, EXIT_GUIDANCE_DURATION_MS);
+    } else {
+      dismissExitGuidance();
+    }
     requestExit();
+  };
+
+  const reopenWorkBuddy = () => {
+    dismissExitGuidance();
+    shell.enterImmersive();
+  };
+
+  const updateExitGuidancePreference = (suppressed: boolean) => {
+    setExitGuidanceSuppressed(suppressed);
+    writeWorkBuddyExitGuidanceSuppressed(suppressed);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -117,7 +210,7 @@ export function ImmersiveMessageWorkspaceFrame({
       {shellVisible ? (
         <header className={styles.toolbar} aria-label={`${title}沉浸工作区导航`}>
           <div className={styles.location}>
-            <span className={styles.brandMark} aria-hidden="true">C</span>
+            <span className={styles.brandMark} aria-hidden="true"><img alt="" src="/brand/classin-wing-mark.png" /></span>
             <h1>{title}</h1>
             <span className={styles.modeLabel}>{modeLabel}</span>
           </div>
@@ -144,15 +237,43 @@ export function ImmersiveMessageWorkspaceFrame({
           </div>
         </header>
       ) : null}
-      <div className={styles.content}>{children}</div>
+      <div className={styles.content} data-message-shell-content>{children}</div>
       {exitGuidanceVisible ? (
-        <div className={styles.exitGuidance} role="status" aria-live="polite">
-          <span className={styles.exitGuidanceIcon} aria-hidden="true"><Sparkles size={16} /></span>
-          <span>
-            <strong>已退出沉浸模式，WorkBuddy 已收起</strong>
-            <small>再次打开 WorkBuddy 会重新进入沉浸工作区。</small>
-          </span>
-        </div>
+        <section
+          aria-label="WorkBuddy 退出引导"
+          className={styles.exitGuidance}
+          data-paused={exitGuidancePaused || undefined}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) resumeExitGuidance('focus');
+          }}
+          onFocusCapture={() => pauseExitGuidance('focus')}
+          onPointerEnter={() => pauseExitGuidance('pointer')}
+          onPointerLeave={() => resumeExitGuidance('pointer')}
+          role="region"
+        >
+          <span className={styles.exitGuidanceIcon} aria-hidden="true"><Sparkles size={19} /></span>
+          <div className={styles.exitGuidanceContent}>
+            <span className={styles.exitGuidanceCopy} role="status" aria-live="polite">
+              <strong>已退出沉浸模式，WorkBuddy 已收起</strong>
+              <small>当前会话和 WorkBuddy 任务状态均已保留。</small>
+            </span>
+            <div className={styles.exitGuidanceActions}>
+              <button type="button" onClick={reopenWorkBuddy}><Sparkles aria-hidden="true" size={14} />重新打开 WorkBuddy</button>
+              <small>也可以点击右上角“WorkBuddy”再次打开。</small>
+            </div>
+            <label className={styles.exitGuidancePreference}>
+              <input
+                checked={exitGuidanceSuppressed}
+                onChange={(event) => updateExitGuidancePreference(event.target.checked)}
+                type="checkbox"
+              />
+              <span>不再显示此提示</span>
+            </label>
+          </div>
+          <button className={styles.exitGuidanceClose} type="button" aria-label="关闭退出引导" onClick={() => dismissExitGuidance(true)}>
+            <X aria-hidden="true" size={15} />
+          </button>
+        </section>
       ) : null}
     </div>
   );

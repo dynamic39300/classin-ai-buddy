@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WorkBuddy 动态头像素材预览</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #222727;
+      background: #f3f5f4;
+    }
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; }
+    button { font: inherit; }
+    .page { width: min(1120px, calc(100% - 48px)); margin: 0 auto; padding: 56px 0 120px; }
+    .intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 32px; margin-bottom: 32px; }
+    .eyebrow { margin: 0 0 8px; color: #087657; font-size: 13px; font-weight: 700; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.035em; }
+    .intro p:last-child { max-width: 640px; margin: 14px 0 0; color: #64706d; font-size: 15px; line-height: 1.7; }
+    .media-facts { display: grid; grid-template-columns: repeat(3, auto); gap: 16px; margin: 0; }
+    .media-facts div { display: grid; gap: 2px; padding-left: 16px; border-left: 1px solid #d8dedc; }
+    .media-facts dt { color: #7b8582; font-size: 11px; }
+    .media-facts dd { margin: 0; font-size: 13px; font-weight: 700; }
+    .stage { min-height: 560px; border: 1px solid #d8dedc; border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 18px 48px rgb(26 45 39 / .08); }
+    .variant { display: none; min-height: 560px; }
+    body[data-variant="standard"] .variant-standard,
+    body[data-variant="header"] .variant-header,
+    body[data-variant="nudge"] .variant-nudge { display: grid; }
+    .avatar-shell { position: relative; display: inline-grid; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 50%; background: #f7f9f8; }
+    .avatar-shell video { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(.96); }
+    .avatar-shell::after { position: absolute; inset: 0; border: 2px solid #05a878; border-radius: inherit; content: ""; pointer-events: none; }
+    .size-32 { width: 32px; height: 32px; }
+    .size-40 { width: 40px; height: 40px; }
+    .size-56 { width: 56px; height: 56px; }
+    .size-80 { width: 80px; height: 80px; }
+    .size-112 { width: 112px; height: 112px; }
+
+    .variant-standard { grid-template-columns: 1.1fr .9fr; }
+    .standard-focus { display: grid; place-items: center; padding: 56px; background: #f6faf8; }
+    .standard-focus > div { display: grid; justify-items: center; gap: 18px; text-align: center; }
+    .standard-focus h2, .standard-focus p { margin: 0; }
+    .standard-focus p { max-width: 36ch; color: #69736f; line-height: 1.6; }
+    .scale-board { display: grid; align-content: center; gap: 28px; padding: 56px; }
+    .scale-board h3 { margin: 0; font-size: 16px; }
+    .scale-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: end; }
+    .scale-item { display: grid; justify-items: center; gap: 10px; color: #69736f; font-size: 12px; }
+    .note { padding: 16px; border-left: 3px solid #05a878; background: #f5f8f7; color: #5f6966; font-size: 13px; line-height: 1.6; }
+
+    .variant-header { align-content: start; background: #f4f6f5; }
+    .mock-window { margin: 52px; overflow: hidden; border: 1px solid #d8dedc; border-radius: 12px; background: #fff; box-shadow: 0 12px 32px rgb(26 45 39 / .07); }
+    .mock-topbar { display: flex; height: 64px; align-items: center; justify-content: space-between; padding: 0 22px; border-bottom: 1px solid #e5e9e7; }
+    .identity { display: flex; align-items: center; gap: 12px; }
+    .identity span { display: grid; gap: 3px; }
+    .identity small { color: #7b8582; }
+    .mock-action { padding: 8px 12px; border: 1px solid #cbd2cf; border-radius: 6px; background: #fff; color: #087657; font-weight: 700; }
+    .mock-body { display: grid; grid-template-columns: 1fr 360px; min-height: 380px; }
+    .message-space { padding: 38px; background: #fff; }
+    .message-space p { width: 68%; margin: 96px 0 0 auto; padding: 16px; border-radius: 8px; background: #dcf4e9; line-height: 1.6; }
+    .buddy-space { padding: 20px; border-left: 1px solid #e5e9e7; background: #f7f9f8; }
+    .buddy-space h3 { margin: 0 0 8px; font-size: 16px; }
+    .buddy-space p { margin: 0; color: #69736f; font-size: 13px; line-height: 1.6; }
+
+    .variant-nudge { place-items: center; padding: 56px; background: linear-gradient(135deg, #f6f8f7, #eef5f2); }
+    .nudge-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; width: min(600px, 100%); align-items: center; gap: 18px; padding: 20px; border: 1px solid #ced8d4; border-radius: 12px; background: #fff; box-shadow: 0 18px 44px rgb(35 62 53 / .12); }
+    .nudge-card h2 { margin: 0 0 6px; font-size: 18px; }
+    .nudge-card p { margin: 0; color: #69736f; font-size: 14px; line-height: 1.6; }
+    .nudge-card button { min-height: 38px; padding: 0 16px; border: 0; border-radius: 6px; background: #087657; color: #fff; cursor: pointer; font-weight: 700; white-space: nowrap; }
+    body[data-variant="nudge"] .nudge-card .avatar-shell::before { position: absolute; inset: -6px; border: 2px solid rgb(5 168 120 / .28); border-radius: inherit; content: ""; animation: attention 2.8s ease-out infinite; }
+    @keyframes attention { 0%, 45% { opacity: 0; transform: scale(.92); } 55% { opacity: 1; } 90%, 100% { opacity: 0; transform: scale(1.18); } }
+
+    .prototype-bar { position: fixed; z-index: 10; bottom: 22px; left: 50%; display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 999px; background: #202423; color: #fff; box-shadow: 0 12px 32px rgb(0 0 0 / .22); transform: translateX(-50%); }
+    .prototype-bar button { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: #343a38; color: #fff; cursor: pointer; }
+    .variant-label { min-width: 190px; text-align: center; font-size: 13px; font-weight: 700; }
+    .play-toggle { position: fixed; top: 20px; right: 20px; min-height: 36px; padding: 0 14px; border: 1px solid #cbd2cf; border-radius: 6px; background: #fff; color: #2c3532; cursor: pointer; box-shadow: 0 6px 20px rgb(26 45 39 / .08); }
+    button:focus-visible { outline: 2px solid #05a878; outline-offset: 2px; }
+    @media (max-width: 760px) {
+      .page { width: min(100% - 24px, 1120px); padding-top: 72px; }
+      .intro { grid-template-columns: 1fr; }
+      .media-facts { grid-template-columns: repeat(3, 1fr); }
+      .variant-standard { grid-template-columns: 1fr; }
+      .standard-focus, .scale-board { padding: 32px 24px; }
+      .scale-row { grid-template-columns: repeat(2, 1fr); }
+      .mock-window { margin: 20px; }
+      .mock-body { grid-template-columns: 1fr; }
+      .buddy-space { border-top: 1px solid #e5e9e7; border-left: 0; }
+      .nudge-card { grid-template-columns: auto 1fr; }
+      .nudge-card button { grid-column: 1 / -1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body[data-variant="nudge"] .nudge-card .avatar-shell::before { animation: none; }
+    }
+  </style>
+</head>
+<body data-variant="standard">
+  <button class="play-toggle" type="button" aria-pressed="false">暂停循环</button>
+  <main class="page">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">WorkBuddy 动态头像素材预览</p>
+        <h1>同一段视频，适配不同页面尺寸</h1>
+        <p>视频保留完整发型与面部，使用圆形容器和品牌绿边框裁剪。默认静音、自动播放、5.09 秒循环，不进入现有产品页面。</p>
+      </div>
+      <dl class="media-facts">
+        <div><dt>源尺寸</dt><dd>720 × 720</dd></div>
+        <div><dt>时长</dt><dd>5.09 秒</dd></div>
+        <div><dt>体积</dt><dd>379 KB</dd></div>
+      </dl>
+    </section>
+
+    <section class="stage" aria-live="polite">
+      <article class="variant variant-standard">
+        <div class="standard-focus">
+          <div>
+            <span class="avatar-shell size-112"><video data-avatar autoplay loop muted playsinline poster="assets/workbuddy-avatar-poster.png"><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span>
+            <h2>标准圆形裁剪</h2>
+            <p>完整保留头发轮廓，圆环只负责建立 WorkBuddy 身份，不额外叠加装饰。</p>
+          </div>
+        </div>
+        <div class="scale-board">
+          <h3>常用尺寸预览</h3>
+          <div class="scale-row">
+            <div class="scale-item"><span class="avatar-shell size-32"><video data-avatar autoplay loop muted playsinline><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span><span>32px</span></div>
+            <div class="scale-item"><span class="avatar-shell size-40"><video data-avatar autoplay loop muted playsinline><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span><span>40px</span></div>
+            <div class="scale-item"><span class="avatar-shell size-56"><video data-avatar autoplay loop muted playsinline><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span><span>56px</span></div>
+            <div class="scale-item"><span class="avatar-shell size-80"><video data-avatar autoplay loop muted playsinline><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span><span>80px</span></div>
+          </div>
+          <div class="note">建议：导航和消息身份使用 32–40px；WorkBuddy 侧栏 Header 使用 40–56px；首次引导或空状态使用 80px。</div>
+        </div>
+      </article>
+
+      <article class="variant variant-header">
+        <div class="mock-window">
+          <header class="mock-topbar">
+            <div class="identity"><span class="avatar-shell size-40"><video data-avatar autoplay loop muted playsinline><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span><span><strong>WorkBuddy</strong><small>仅你可见</small></span></div>
+            <button class="mock-action" type="button">收起</button>
+          </header>
+          <div class="mock-body">
+            <div class="message-space"><p>请帮我根据本周教学计划整理一条课前通知。</p></div>
+            <aside class="buddy-space"><h3>真实 Header 尺寸感</h3><p>40px 头像不会挤压工具栏，也能在高密度消息页面中保持清楚的身份辨识。</p></aside>
+          </div>
+        </div>
+      </article>
+
+      <article class="variant variant-nudge">
+        <div class="nudge-card">
+          <span class="avatar-shell size-56"><video data-avatar autoplay loop muted playsinline><source src="assets/workbuddy-avatar-loop.mp4" type="video/mp4" /></video></span>
+          <div><h2>需要我帮你整理这条通知吗？</h2><p>头像视频持续轻量循环，外圈只在引导场景中低频提示一次注意力。</p></div>
+          <button type="button">打开 WorkBuddy</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="prototype-bar" aria-label="头像预览变体">
+    <button type="button" data-direction="previous" aria-label="上一个变体">←</button>
+    <span class="variant-label"></span>
+    <button type="button" data-direction="next" aria-label="下一个变体">→</button>
+  </nav>
+
+  <script>
+    const variants = [
+      { key: 'standard', label: 'A · 尺寸与裁剪' },
+      { key: 'header', label: 'B · WorkBuddy Header' },
+      { key: 'nudge', label: 'C · 引导提示' },
+    ];
+    const parameters = new URLSearchParams(location.search);
+    let current = Math.max(0, variants.findIndex(({ key }) => key === parameters.get('variant')));
+    const variantLabel = document.querySelector('.variant-label');
+    const applyVariant = (index) => {
+      current = (index + variants.length) % variants.length;
+      const variant = variants[current];
+      document.body.dataset.variant = variant.key;
+      variantLabel.textContent = variant.label;
+      parameters.set('variant', variant.key);
+      history.replaceState(null, '', `${location.pathname}?${parameters.toString()}`);
+    };
+    document.querySelectorAll('[data-direction]').forEach((button) => button.addEventListener('click', () => {
+      applyVariant(current + (button.dataset.direction === 'next' ? 1 : -1));
+    }));
+    window.addEventListener('keydown', (event) => {
+      if (event.target instanceof HTMLElement && event.target.matches('input, textarea, [contenteditable="true"]')) return;
+      if (event.key === 'ArrowLeft') applyVariant(current - 1);
+      if (event.key === 'ArrowRight') applyVariant(current + 1);
+    });
+    const playToggle = document.querySelector('.play-toggle');
+    playToggle.addEventListener('click', () => {
+      const videos = [...document.querySelectorAll('[data-avatar]')];
+      const shouldPause = playToggle.getAttribute('aria-pressed') === 'false';
+      videos.forEach((video) => shouldPause ? video.pause() : video.play());
+      playToggle.setAttribute('aria-pressed', String(shouldPause));
+      playToggle.textContent = shouldPause ? '继续播放' : '暂停循环';
+    });
+    applyVariant(current);
+  </script>
+</body>
+</html>

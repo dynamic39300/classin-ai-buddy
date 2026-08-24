@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 export type MessageWorkspaceShellMode = 'standard' | 'entering' | 'immersive' | 'exiting';
 
-export const MESSAGE_WORKSPACE_SHELL_TRANSITION_MS = 180;
+export const MESSAGE_WORKSPACE_SHELL_TRANSITION_MS = 320;
 
 export type MessageWorkspaceShellController = {
   available: boolean;

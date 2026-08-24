@@ -18,7 +18,7 @@ export function TeacherMessagesPage() {
     : { title: '消息' }, [fromHome, target, title]);
   usePageHeader(pageHeader);
   return (
-    <ImmersiveMessageWorkspaceFrame>
+    <ImmersiveMessageWorkspaceFrame showWorkBuddyExitGuidance>
       <MessageWorkspace
         immersive={messageShell.immersive}
         onEnterImmersive={messageShell.available ? messageShell.enterImmersive : undefined}

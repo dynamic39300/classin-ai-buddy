@@ -10,10 +10,10 @@ export type WorkBuddyImTarget = Readonly<{
   classLabel: string;
   threadId: string;
   memberCount?: number;
-  recentMessages?: readonly Readonly<{ authorName: string; body: string }>[];
+  recentMessages?: readonly Readonly<{ authorRole: 'teacher' | 'student-family' | 'class-agent' | 'system' | 'official'; authorName: string; body: string }>[];
 }>;
 
-export type WorkBuddyImTaskId = 'homework-reminder' | 'weekly-preparation-notice';
+export type WorkBuddyImTaskId = 'homework-reminder' | 'weekly-preparation-notice' | 'guided-explanation';
 
 export type WorkBuddyImRunPlanStep = Readonly<{
   id: string;

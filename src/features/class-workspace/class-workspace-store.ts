@@ -4,6 +4,7 @@ import type { ClassRecord, OpenCourseRecord } from '@domain/class/class';
 export type ClassWorkspaceStore = {
   classes: ReadonlyArray<ClassRecord>;
   openCourses: ReadonlyArray<OpenCourseRecord>;
+  getClasses: () => ReadonlyArray<ClassRecord>;
   setClasses: Dispatch<SetStateAction<ReadonlyArray<ClassRecord>>>;
   setOpenCourses: Dispatch<SetStateAction<ReadonlyArray<OpenCourseRecord>>>;
 };

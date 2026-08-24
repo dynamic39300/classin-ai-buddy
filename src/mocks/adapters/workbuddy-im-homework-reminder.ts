@@ -128,4 +128,5 @@ implements ClassInHomeworkReminderAdapter, HomeworkReminderAdapterScenarioContro
     this.receipts.set(action.idempotencyKey, receipt);
     return receipt;
   }
+
 }

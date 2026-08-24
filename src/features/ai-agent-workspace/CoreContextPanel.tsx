@@ -35,6 +35,7 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
     confirmCoreContext,
     resetCoreContext,
   } = workspace.context;
+  const quizTask = workspace.context.taskType === 'quiz-activity-creation';
   const view = mode === 'courseware' ? coursewareContextView ?? contextView : contextView;
   const status = view.status === 'confirmed' ? '上下文已冻结' : view.status === 'ready_to_confirm' ? '可以确认上下文' : '需要补充教学范围';
   const parentIds = useMemo(() => new Set(view.items.flatMap((item) => item.parentId ? [item.parentId] : [])), [view.items]);
@@ -134,7 +135,7 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
 
         {!readOnly ? <button className={styles.recommendation} type="button" onClick={applyRecommendedContext}>
           <Database aria-hidden="true" size={16} />
-          <span><strong>应用函数单调性课程建议</strong><small>高一（3）班 · 高中数学 · 函数的性质</small></span>
+          <span><strong>{quizTask ? '应用动量守恒测验建议' : '应用函数单调性课程建议'}</strong><small>{quizTask ? '高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量' : '高一（3）班 · 高中数学 · 函数的性质'}</small></span>
         </button> : null}
 
         <label className={styles.search}><Search aria-hidden="true" size={14} /><span className={styles.srOnly}>搜索上下文</span><input aria-label="搜索上下文" value={query} placeholder="搜索班级、课程、单元或资源" onChange={(event) => onInspectorStateChange ? onInspectorStateChange({ query: event.target.value }) : setLocalQuery(event.target.value)} /></label>

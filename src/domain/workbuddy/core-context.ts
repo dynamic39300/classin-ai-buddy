@@ -9,7 +9,7 @@ export const CORE_CONTEXT_SECTIONS = [
 ] as const;
 
 export type CoreContextSection = typeof CORE_CONTEXT_SECTIONS[number];
-export type WorkBuddyTaskType = 'single-courseware' | 'course-package';
+export type WorkBuddyTaskType = 'single-courseware' | 'course-package' | 'quiz-activity-creation';
 export type CoreContextSource = 'classin' | 'teacher-input' | 'institution-rule' | 'domain-knowledge' | 'workbuddy-artifact' | 'teacherin';
 export type CoreContextSensitivity = 'public' | 'organization' | 'class' | 'personal' | 'student_sensitive';
 export type CoreContextPermission = 'read' | 'restricted';
@@ -73,7 +73,8 @@ function proposalStatus(taskType: WorkBuddyTaskType, items: readonly ProposedCon
   if (taskType === 'single-courseware') return hasTeachingScope ? 'ready_to_confirm' : 'needs_attention';
   const hasClass = included.some(({ kind }) => kind === 'class');
   const hasCourse = included.some(({ kind }) => kind === 'course');
-  return hasClass && hasCourse ? 'ready_to_confirm' : 'needs_attention';
+  const hasUnit = included.some(({ kind }) => kind === 'unit');
+  return hasClass && hasCourse && (taskType !== 'quiz-activity-creation' || hasUnit) ? 'ready_to_confirm' : 'needs_attention';
 }
 
 function buildProposal(taskType: WorkBuddyTaskType, items: readonly ProposedContextItem[]): ContextProposal {

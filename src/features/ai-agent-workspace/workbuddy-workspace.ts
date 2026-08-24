@@ -7,7 +7,9 @@ import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
 import type { CoreContextItem } from '@domain/workbuddy/core-context';
 import type { CreateTeacherInDraftInput, TeacherInDraftReceipt, TeacherInResource } from '@domain/workbuddy/teacherin';
 import type { CoursewareArtifactRevisionInput, CoursewareBrief } from '@domain/workbuddy/course-production';
-import type { CoreContextView, CoursewareRunView, PackageRunView } from './workbuddy-course-production-view';
+import type { QuizActivitySettings, QuizPaperBrief } from '@domain/workbuddy/quiz-activity-creation';
+import type { QuizActivityDraftScenario } from '@contracts/workbuddy/quiz-activity-draft';
+import type { CoreContextView, CoursewareRunView, PackageRunView, QuizActivityRunView } from './workbuddy-course-production-view';
 
 export type CoursewarePanel = 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'replan' | 'none';
 export type PackagePanel = 'navigator' | 'approval' | 'receipt' | 'core_context' | 'none';
@@ -89,6 +91,25 @@ export type WorkBuddyCoursePackage = Readonly<{
   setActivePackageArtifactId: (artifactId: string) => void;
 }>;
 
+export type WorkBuddyQuizActivity = Readonly<{
+  view: QuizActivityRunView | null;
+  createTask: (goal: string) => string | null;
+  updatePaperBrief: (patch: Partial<QuizPaperBrief>) => void;
+  confirmPaperBrief: (patch?: Partial<QuizPaperBrief>) => void;
+  beginGeneration: () => void;
+  generatePaper: () => void;
+  approvePaper: () => void;
+  updateActivitySettings: (patch: Partial<QuizActivitySettings>) => void;
+  prepareDraft: (patch: Partial<QuizActivitySettings>) => string | null;
+  proposeDraft: () => void;
+  approveDraft: () => void;
+  executeDraft: () => void;
+  retryDraft: () => void;
+  refreshTarget: () => void;
+  scenario: QuizActivityDraftScenario;
+  setScenario: (scenario: QuizActivityDraftScenario) => void;
+}>;
+
 export type WorkBuddyWorkspace = Readonly<{
   conversationRun: ConversationRunModule;
   history: WorkBuddyHistory;
@@ -97,6 +118,7 @@ export type WorkBuddyWorkspace = Readonly<{
   teacherIn: WorkBuddyTeacherIn;
   courseware: WorkBuddyCourseware;
   coursePackage: WorkBuddyCoursePackage;
+  quizActivity: WorkBuddyQuizActivity;
 }>;
 
 export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);

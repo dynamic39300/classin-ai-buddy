@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   addClassActivity,
+  approveQuizActivityPublication,
+  editQuizActivityDraft,
+  executeQuizActivityPublication,
+  proposeQuizActivityPublication,
   canEditClassNickname,
   canCompleteClassCourse,
   canManageClass,
@@ -121,6 +125,69 @@ describe('class content commands', () => {
     expect(unitActivity[0]?.activities?.map(({ id }) => id)).toEqual(['a-1']);
     expect(unitActivity[0]?.units[0]?.activities.map(({ id }) => id)).toEqual(['a-2']);
     expect(deleteClassUnit(unitActivity, 'course-1', 'unit-1')[0]?.units).toEqual([]);
+  });
+
+  it('keeps a WorkBuddy quiz activity draft teacher-only until an explicit ClassIn publication', () => {
+    const source = [{ id: 'course-1', name: '课程', description: '', status: 'active' as const, units: [{ id: 'unit-1', title: '单元', description: '', status: 'published' as const, activities: [] }] }];
+    const withDraft = addClassActivity(source, 'course-1', 'unit-1', {
+      id: 'quiz-draft-1', type: 'quiz', title: '单元诊断测验', status: 'pending', publication: 'draft', detail: '测验 · 草稿 · 5 题 · 100 分',
+      quiz: { version: 'v1', paperArtifactId: 'artifact-quiz-1', paperArtifactVersion: 'v1', questionCount: 1, totalScore: 100, description: '初稿', startAt: '2026-08-25T09:00:00+08:00', endAt: '2026-08-26T22:00:00+08:00', durationMinutes: 40, scoring: 'score', questions: [{ id: 'q1', type: 'short-answer', prompt: '原题', answer: '原答案', explanation: '原解析', difficulty: 'medium', score: 100 }] },
+    });
+
+    expect(getVisibleClassCourses('teacher', withDraft)[0]?.units[0]?.activities).toHaveLength(1);
+    expect(getVisibleClassCourses('student-family', withDraft)[0]?.units[0]?.activities).toEqual([]);
+
+    const edited = editQuizActivityDraft(withDraft, 'course-1', 'unit-1', 'quiz-draft-1', {
+      title: '动量守恒诊断测验', description: '教师已复核', startAt: '2026-08-27T09:00:00+08:00', endAt: '2026-08-28T22:00:00+08:00', durationMinutes: 60, scoring: 'percentage',
+      questions: [{ id: 'q1', type: 'short-answer', prompt: '教师修改后的题目', answer: '新答案', explanation: '新解析', difficulty: 'medium', score: 100 }],
+    });
+    expect(edited[0]?.units[0]?.activities[0]).toMatchObject({ title: '动量守恒诊断测验', publication: 'draft', quiz: { description: '教师已复核', durationMinutes: 60, scoring: 'percentage', questions: [{ prompt: '教师修改后的题目' }] } });
+
+    const deniedAction = proposeQuizActivityPublication(edited, { courseId: 'course-1', unitId: 'unit-1', activityId: 'quiz-draft-1', actorId: 'teacher-wang', canPublish: false, requestedAt: '2026-08-24T18:00:00+08:00' })!;
+    const deniedEvidence = approveQuizActivityPublication(deniedAction, 'teacher-wang', '2026-08-24T18:00:01+08:00');
+    const denied = executeQuizActivityPublication(edited, deniedEvidence.action, deniedEvidence.approval);
+    expect(denied.receipt.status).toBe('permission_denied');
+    expect(denied.courses[0]?.units[0]?.activities[0]?.publication).toBe('draft');
+
+    const action = proposeQuizActivityPublication(edited, { courseId: 'course-1', unitId: 'unit-1', activityId: 'quiz-draft-1', actorId: 'teacher-wang', canPublish: true, requestedAt: '2026-08-24T18:00:00+08:00' })!;
+    const evidence = approveQuizActivityPublication(action, 'teacher-wang', '2026-08-24T18:00:01+08:00');
+    const publication = executeQuizActivityPublication(edited, evidence.action, evidence.approval);
+    expect(publication.receipt).toMatchObject({ status: 'success', publication: 'published', truthLabel: '[模拟] ClassIn 测验发布回执' });
+    expect(publication.courses[0]?.units[0]?.activities[0]?.publication).toBe('published');
+    expect(getVisibleClassCourses('student-family', publication.courses)[0]?.units[0]?.activities[0]?.title).toBe('动量守恒诊断测验');
+    expect(executeQuizActivityPublication(publication.courses, evidence.action, evidence.approval).receipt).toEqual(publication.receipt);
+    const reorderedAction = Object.freeze({
+      requestedAt: evidence.action.requestedAt, idempotencyKey: evidence.action.idempotencyKey, reversible: evidence.action.reversible,
+      risk: evidence.action.risk, permission: evidence.action.permission, actorId: evidence.action.actorId, expectedVersion: evidence.action.expectedVersion,
+      activityId: evidence.action.activityId, unitId: evidence.action.unitId, courseId: evidence.action.courseId, status: evidence.action.status,
+      kind: evidence.action.kind, id: evidence.action.id,
+    });
+    const reorderedApproval = Object.freeze({ decidedAt: evidence.approval.decidedAt, decidedBy: evidence.approval.decidedBy, decision: evidence.approval.decision, actionId: evidence.approval.actionId, id: evidence.approval.id });
+    expect(executeQuizActivityPublication(publication.courses, reorderedAction, reorderedApproval).receipt).toEqual(publication.receipt);
+    const conflictingApproval = { ...evidence.approval, decidedAt: '2026-08-24T18:00:02+08:00' };
+    expect(executeQuizActivityPublication(publication.courses, evidence.action, conflictingApproval).receipt.status).toBe('evidence_mismatch');
+  });
+
+  it('upserts a stable activity identity when a write is replayed after reload', () => {
+    const source = [{ id: 'course-1', name: '课程', description: '', status: 'active' as const, units: [{ id: 'unit-1', title: '单元', description: '', status: 'published' as const, activities: [] }] }];
+    const activity = { id: 'stable-activity', type: 'quiz' as const, title: '第一次写入', status: 'pending' as const, detail: '草稿' };
+    const first = addClassActivity(source, 'course-1', 'unit-1', activity);
+    const replay = addClassActivity(first, 'course-1', 'unit-1', { ...activity, title: '同一请求重放' });
+    expect(replay[0]?.units[0]?.activities).toEqual([{ ...activity, title: '同一请求重放' }]);
+  });
+
+  it('rejects invalid option and judgement answers during edit and publication', () => {
+    const source = [{ id: 'course-1', name: '课程', description: '', status: 'active' as const, units: [{ id: 'unit-1', title: '单元', description: '', status: 'published' as const, activities: [{
+      id: 'quiz-draft-1', type: 'quiz' as const, title: '测验', status: 'pending' as const, publication: 'draft' as const, detail: '测验 · 草稿',
+      quiz: { version: 'v1', paperArtifactId: 'paper', paperArtifactVersion: 'v1', questionCount: 1, totalScore: 10, description: '', startAt: '2026-08-25T09:00:00+08:00', endAt: '2026-08-26T09:00:00+08:00', durationMinutes: 20, scoring: 'score' as const, questions: [{ id: 'q1', type: 'single-choice', prompt: '题目', options: ['A', 'B'], answer: 'A', explanation: '解析', difficulty: 'easy', score: 10 }] },
+    }] }] }];
+    const invalidEdit = editQuizActivityDraft(source, 'course-1', 'unit-1', 'quiz-draft-1', { questions: [{ ...source[0]!.units[0]!.activities[0]!.quiz!.questions![0]!, answer: 'C' }] });
+    expect(invalidEdit).toEqual(source);
+    const corrupted = structuredClone(source);
+    corrupted[0]!.units[0]!.activities[0]!.quiz!.questions![0]!.answer = 'C';
+    const action = proposeQuizActivityPublication(corrupted, { courseId: 'course-1', unitId: 'unit-1', activityId: 'quiz-draft-1', actorId: 'teacher-wang', canPublish: true, requestedAt: '2026-08-24T18:00:00+08:00' })!;
+    const evidence = approveQuizActivityPublication(action, 'teacher-wang', '2026-08-24T18:00:01+08:00');
+    expect(executeQuizActivityPublication(corrupted, evidence.action, evidence.approval).receipt.status).toBe('validation_failed');
   });
 });
 

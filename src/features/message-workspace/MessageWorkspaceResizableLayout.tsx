@@ -23,6 +23,7 @@ type MessageWorkspaceResizableLayoutProps = {
   assistant: ReactNode | null;
   children: ReactNode;
   scope: MessageWorkspaceLayoutScope;
+  wideNavigation?: boolean;
 };
 
 type DragSession = {
@@ -44,6 +45,7 @@ export function MessageWorkspaceResizableLayout({
   assistant,
   children,
   scope,
+  wideNavigation = false,
 }: MessageWorkspaceResizableLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const separatorRef = useRef<HTMLDivElement>(null);
@@ -187,6 +189,7 @@ export function MessageWorkspaceResizableLayout({
       data-assistant-open={assistant ? 'true' : 'false'}
       data-dragging={dragging ? 'true' : 'false'}
       data-layout-scope={scope}
+      data-wide-navigation={wideNavigation ? 'true' : 'false'}
       ref={containerRef}
       style={style}
     >

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { ClassInHomeworkReminderAdapter } from '@contracts/workbuddy/im-homework-reminder';
+import type { GuidedExplanationAdapter } from '@contracts/workbuddy/guided-explanation';
 import type { WorkBuddyImExperienceScheduler, WorkBuddyImTarget } from '@contracts/workbuddy/im-conversation-run';
 import {
   approveHomeworkReminder,
@@ -27,6 +28,7 @@ import {
   startWorkBuddyImCapability,
 } from '@domain/workbuddy/im-conversation-run';
 import { EvaluationModule } from '@domain/workbuddy/evaluation';
+import { GuidedExplanationModule, type GuidedExplanationApproval, type GuidedExplanationArtifact, type GuidedExplanationRevision, type SendGuidedExplanationAction } from '@domain/workbuddy/guided-explanation';
 import {
   WorkBuddyImContext,
   WORKBUDDY_IM_DIRECT_REFERENCE_TASK,
@@ -42,9 +44,11 @@ import {
 
 type WorkBuddyImProviderProps = Readonly<{
   adapter: ClassInHomeworkReminderAdapter;
+  guidedExplanationAdapter: GuidedExplanationAdapter;
   teacher: Readonly<{ id: string; name: string }>;
   now: () => Date;
   experienceScheduler?: WorkBuddyImExperienceScheduler;
+  onArtifactCreated?: (artifact: GuidedExplanationArtifact) => void;
   children: ReactNode;
 }>;
 
@@ -58,7 +62,7 @@ const INITIAL_STATE: WorkBuddyImState = Object.freeze({
   evaluationHistory: Object.freeze([]),
 });
 
-export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler, children }: WorkBuddyImProviderProps) {
+export function WorkBuddyImProvider({ adapter, guidedExplanationAdapter, teacher, now, experienceScheduler, onArtifactCreated, children }: WorkBuddyImProviderProps) {
   const scheduler = useMemo(() => experienceScheduler ?? createBrowserWorkBuddyImExperienceScheduler(), [experienceScheduler]);
   const [state, setState] = useState<WorkBuddyImState>(INITIAL_STATE);
   const stateRef = useRef(state);
@@ -101,10 +105,11 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
     const target = stateRef.current.target;
     const normalizedGoal = goal.trim();
     if (!target || !normalizedGoal) return;
-    if (target.kind === 'direct') {
+    const task = resolveWorkBuddyImTask(normalizedGoal);
+    if (target.kind === 'direct' && task.id !== 'guided-explanation') {
       const latestPeerMessage = [...(target.recentMessages ?? [])]
         .reverse()
-        .find(({ authorName }) => authorName !== teacher.name)?.body.trim();
+        .find(({ authorRole }) => authorRole === 'student-family')?.body.trim();
       const body = latestPeerMessage
         ? `我看到了你提到的“${latestPeerMessage}”。我先核对一下相关信息，再给你一个明确答复。`
         : '收到你的消息。我先核对一下相关信息，再给你一个明确答复。';
@@ -124,7 +129,6 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
       return;
     }
     const requestId = ++requestRef.current;
-    const task = resolveWorkBuddyImTask(normalizedGoal);
     let activeIndex = -1;
     const startedAt = scheduler.now();
     let conversation = createWorkBuddyImConversationRun({
@@ -134,6 +138,7 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
       startedAt,
       occurredAt: now().toISOString(),
       organizeEndsAt: startedAt + WORKBUDDY_IM_RUN_TIMING.organizingMs,
+      runInstanceId: task.id === 'guided-explanation' ? String(requestId) : undefined,
     });
     commit((current) => Object.freeze({
       ...current,
@@ -158,7 +163,7 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
           now().toISOString(),
         );
         commit((current) => Object.freeze({ ...current, conversation }));
-        const factRequest = activeIndex === 1
+        const factRequest = activeIndex === 1 && task.id !== 'guided-explanation'
           ? (task.id === 'weekly-preparation-notice'
             ? adapter.readWeeklyPreparationFacts({ classId: target.classId, classLabel: target.classLabel })
             : adapter.readFacts({ classId: target.classId, classLabel: target.classLabel })).then(
@@ -177,7 +182,10 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
 
         const homeworkSummary = homeworkFacts ? summarizeHomeworkReminderFacts(homeworkFacts, now()) : null;
         const preparationCount = weeklyFacts?.planItems.reduce((total, item) => total + item.preparations.length, 0) ?? 0;
-        const outputSummary = task.id === 'weekly-preparation-notice'
+        const guidedSummaries = ['已锁定当前消息线程和教师身份', '已从课程与作业上下文定位练习单第 5 题', '已生成 4 个讲解步骤与检查点', '已准备最终发送话术和可打开的分步讲解链接'];
+        const outputSummary = task.id === 'guided-explanation'
+          ? guidedSummaries[activeIndex] ?? '讲题内容已准备'
+          : task.id === 'weekly-preparation-notice'
           ? activeIndex === 0
             ? `已锁定“${target.classLabel}”和当前目标群聊`
             : activeIndex === 1
@@ -211,6 +219,24 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
         );
         commit((current) => Object.freeze({ ...current, conversation }));
       }
+      if (task.id === 'guided-explanation') {
+        const latestPeerMessage = [...(target.recentMessages ?? [])].reverse().find(({ authorRole, body }) => authorRole === 'student-family' && /[？?]|第\s*\d+\s*题|怎么|为什么|如何|不会|求解|判断/u.test(body))?.body.trim();
+        const prepared = await guidedExplanationAdapter.generateGuidedExplanation({
+          runRef: conversation.runRef,
+          classId: target.classId, classLabel: target.classLabel, threadId: target.threadId,
+          targetKind: target.kind === 'direct' ? 'direct' : 'class', targetLabel: target.classLabel,
+          teacherId: teacher.id, teacherName: teacher.name,
+          question: latestPeerMessage ?? '', generatedAt: now().toISOString(),
+        });
+        if (!prepared) {
+          conversation = completeEmptyWorkBuddyImConversationRun(conversation, '需要补充题干后才能生成讲题内容。', now().toISOString());
+          commit((current) => Object.freeze({ ...current, run: Object.freeze({ status: 'explanation-needs-input', message: '请补充需要讲解的题干，或在包含学生问题的会话中重试。' }), conversation }));
+          return;
+        }
+        conversation = completeWorkBuddyImConversationRun(conversation, prepared.artifact, now().toISOString());
+        commit((current) => Object.freeze({ ...current, run: Object.freeze({ status: 'explanation-draft-ready', ...prepared }), conversation }));
+        return;
+      }
       const preparation = task.id === 'weekly-preparation-notice'
         ? prepareWeeklyPreparationNotice({
           facts: weeklyFacts ?? await adapter.readWeeklyPreparationFacts({ classId: target.classId, classLabel: target.classLabel }),
@@ -236,15 +262,25 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
       }
     } catch (error) {
       if (requestId !== requestRef.current) return;
-      const message = error instanceof Error ? error.message : task.id === 'weekly-preparation-notice' ? '暂时无法读取本周教学计划' : '暂时无法读取作业与提交状态';
+      const message = error instanceof Error ? error.message : task.id === 'guided-explanation' ? '讲题内容生成暂时失败，请重试。' : task.id === 'weekly-preparation-notice' ? '暂时无法读取本周教学计划' : '暂时无法读取作业与提交状态';
       if (activeIndex >= 0) conversation = failWorkBuddyImCapability(conversation, activeIndex, message, now().toISOString());
       commit((current) => Object.freeze({
         ...current,
-        run: Object.freeze({ status: 'failure', kind: 'read_failure', message }),
+        run: task.id === 'guided-explanation'
+          ? Object.freeze({ status: 'explanation-generation-failure', message, goal: normalizedGoal })
+          : Object.freeze({ status: 'failure', kind: 'read_failure', message }),
         conversation,
       }));
     }
-  }, [adapter, commit, now, scheduler, teacher.id, teacher.name]);
+  }, [adapter, commit, guidedExplanationAdapter, now, scheduler, teacher.id, teacher.name]);
+
+  const reviseExplanation = useCallback((revision: GuidedExplanationRevision) => {
+    commit((current) => {
+      if (current.run.status !== 'explanation-draft-ready') return current;
+      const revised = GuidedExplanationModule.revise(current.run, revision);
+      return Object.freeze({ ...current, run: Object.freeze({ status: 'explanation-draft-ready', ...revised }), conversation: current.conversation ? reviseWorkBuddyImArtifactEvent(current.conversation, revised.artifact) : null });
+    });
+  }, [commit]);
 
   const supplement = useCallback((text: string) => {
     const normalized = text.trim();
@@ -342,8 +378,63 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
     revise({ body: body.trim() });
   }, [commit, revise]);
 
+  const executeGuidedExplanation = useCallback(async (artifact: GuidedExplanationArtifact, action: SendGuidedExplanationAction, approval: GuidedExplanationApproval) => {
+    commit((current) => Object.freeze({ ...current, run: Object.freeze({ status: 'explanation-sending', artifact, action, approval }) }));
+    try {
+      const receipt = await guidedExplanationAdapter.executeGuidedExplanation(action, approval, { id: artifact.id, version: artifact.version });
+      const evidenceMatches = receipt.runRef === action.runRef
+        && receipt.contextSnapshotId === action.contextSnapshotId
+        && receipt.artifactRef.id === artifact.id
+        && receipt.artifactRef.version === artifact.version;
+      if (!evidenceMatches) {
+        commit((current) => Object.freeze({
+          ...current,
+          run: Object.freeze({ status: 'explanation-failure', kind: 'evidence_mismatch', message: '讲题内容分发回执与审批证据链不一致；已停止自动操作，请人工核对消息与文件。', artifact, action, approval, receipt }),
+          receiptHistory: Object.freeze([...current.receiptHistory, receipt]),
+        }));
+        return;
+      }
+      const evaluation = EvaluationModule.recordExecutionOutcome({
+        runRef: action.runRef, contextSnapshotRef: action.contextSnapshotId,
+        artifactRef: { id: artifact.id, version: `v${artifact.version}` }, action, approval, receipt,
+      });
+      if (!evaluation) {
+        commit((current) => Object.freeze({ ...current, run: Object.freeze({ status: 'explanation-failure', kind: 'evidence_mismatch', message: '讲题内容的 Action、Approval 与 Receipt 引用不一致，请人工复查。', artifact, action, approval, receipt }), receiptHistory: Object.freeze([...current.receiptHistory, receipt]) }));
+        return;
+      }
+      if (receipt.status === 'success') {
+        onArtifactCreated?.(artifact);
+        commit((current) => Object.freeze({
+          ...current, run: Object.freeze({ status: 'explanation-sent', artifact, action, approval, receipt, evaluation }),
+          conversation: current.conversation ? appendWorkBuddyImEvaluationEvent(current.conversation, receipt, evaluation) : null,
+          receiptHistory: Object.freeze([...current.receiptHistory, receipt]), evaluationHistory: Object.freeze([...current.evaluationHistory, evaluation]),
+        }));
+        return;
+      }
+      commit((current) => Object.freeze({
+        ...current, run: Object.freeze({ status: 'explanation-failure', kind: receipt.status, message: receipt.result, artifact, action, approval, receipt, evaluation }),
+        conversation: current.conversation ? appendWorkBuddyImEvaluationEvent(current.conversation, receipt, evaluation) : null,
+        receiptHistory: Object.freeze([...current.receiptHistory, receipt]), evaluationHistory: Object.freeze([...current.evaluationHistory, evaluation]),
+      }));
+    } catch (error) {
+      commit((current) => Object.freeze({ ...current, run: Object.freeze({ status: 'explanation-failure', kind: 'recoverable_failure', message: error instanceof Error ? error.message : '讲题内容暂时无法分发', artifact, action, approval }) }));
+    }
+  }, [commit, guidedExplanationAdapter, onArtifactCreated]);
+
+  const retryExplanation = useCallback(async () => {
+    const run = stateRef.current.run;
+    if (run.status !== 'explanation-failure' || run.kind !== 'recoverable_failure') return;
+    await executeGuidedExplanation(run.artifact, run.action, run.approval);
+  }, [executeGuidedExplanation]);
+
   const approveAndSend = useCallback(async (body?: string) => {
     const run = stateRef.current.run;
+    if (run.status === 'explanation-draft-ready') {
+      const approved = GuidedExplanationModule.approve(run, teacher.id, now().toISOString());
+      if (!approved) return;
+      await executeGuidedExplanation(run.artifact, approved.action, approved.approval);
+      return;
+    }
     let preparation = run.status === 'draft-ready'
       ? run.preparation
       : run.status === 'failure' && run.kind === 'recoverable_failure' ? run.preparation : undefined;
@@ -427,11 +518,11 @@ export function WorkBuddyImProvider({ adapter, teacher, now, experienceScheduler
         run: Object.freeze({ status: 'failure', kind: 'recoverable_failure', message: error instanceof Error ? error.message : '消息暂时无法发送', preparation }),
       }));
     }
-  }, [adapter, commit, now, teacher.id]);
+  }, [adapter, commit, executeGuidedExplanation, now, teacher.id]);
 
   const actions = useMemo<WorkBuddyImActions>(() => ({
-    open, close, editComposerDraft, generate, supplement, removeStudent, removeGroup, restoreChecklist, editBody, approveAndSend,
-  }), [approveAndSend, close, editBody, editComposerDraft, generate, open, removeGroup, removeStudent, restoreChecklist, supplement]);
+    open, close, editComposerDraft, generate, supplement, removeStudent, removeGroup, restoreChecklist, editBody, reviseExplanation, retryExplanation, approveAndSend,
+  }), [approveAndSend, close, editBody, editComposerDraft, generate, open, removeGroup, removeStudent, restoreChecklist, retryExplanation, reviseExplanation, supplement]);
   const value = useMemo(() => ({ state, actions }), [actions, state]);
   return <WorkBuddyImContext.Provider value={value}>{children}</WorkBuddyImContext.Provider>;
 }

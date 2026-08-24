@@ -36,6 +36,13 @@ const WEEKLY_PLAN: readonly WorkBuddyImRunPlanStep[] = Object.freeze([
   Object.freeze({ id: 'compose-weekly-notice', title: '生成班级通知草稿', capabilityId: 'workbuddy-class-notice-composer', capabilityLabel: 'WorkBuddy 班级通知生成', purpose: '把本周准备事项整理成教师可审阅的一条群通知', inputSummary: '课次安排、准备事项与教师沟通要求', expectedOutput: '一条可编辑的课前准备通知草稿', contextLabels: Object.freeze(['本周课次', '准备事项', '教师要求']) }),
 ]);
 
+const GUIDED_EXPLANATION_PLAN: readonly WorkBuddyImRunPlanStep[] = Object.freeze([
+  CLASS_CONTEXT_STEP,
+  Object.freeze({ id: 'read-question-context', title: '读取题目与学生卡点', capabilityId: 'classin-message-context-reader', capabilityLabel: 'ClassIn 消息上下文', purpose: '只读取当前线程最近的学生问题', inputSummary: '当前线程与最近消息', expectedOutput: '题目与需要讲解的卡点', contextLabels: Object.freeze(['当前线程', '最近学生消息']) }),
+  Object.freeze({ id: 'compose-guided-explanation', title: '生成分步讲解', capabilityId: 'workbuddy-guided-explanation', capabilityLabel: 'WorkBuddy 讲题生成', purpose: '把题目组织成学生可学习的步骤、检查点和答案', inputSummary: '题目、课程范围与教师要求', expectedOutput: '格式中立的讲题 Artifact', contextLabels: Object.freeze(['题目', '教学步骤', '答案策略']) }),
+  Object.freeze({ id: 'prepare-interactive-view', title: '准备交互讲解', capabilityId: 'workbuddy-html-presentation', capabilityLabel: '交互内容投影', purpose: '为首个 Demo 生成可打开的 HTML/H5 投影', inputSummary: '讲题 Artifact 与展示策略', expectedOutput: '待教师审核的交互讲解', contextLabels: Object.freeze(['Artifact 版本', '展示适配器']) }),
+]);
+
 export const WORKBUDDY_IM_TASKS = Object.freeze([
   Object.freeze({
     id: 'homework-reminder',
@@ -57,6 +64,16 @@ export const WORKBUDDY_IM_TASKS = Object.freeze([
     planSummary: '班级定位 → 教学计划读取 → 准备事项提炼 → 班级通知生成',
     plan: WEEKLY_PLAN,
   }),
+  Object.freeze({
+    id: 'guided-explanation',
+    label: '单题讲解',
+    suggestionTitle: '生成可打开的分步讲题内容',
+    prompt: '结合当前消息里的题目，生成一份可打开的分步讲解内容；我审核后再发送。',
+    runTitle: '单题交互讲解',
+    understandingSummary: '我会读取当前线程中的学生问题，整理可教学的解题步骤与检查点，并生成一份可打开的交互讲解供你审核。',
+    planSummary: '上下文定位 → 题目读取 → 分步讲解生成 → 交互投影准备',
+    plan: GUIDED_EXPLANATION_PLAN,
+  }),
 ] as const satisfies readonly WorkBuddyImTaskDefinition[]);
 
 export function getWorkBuddyImTaskDefinition(taskId: WorkBuddyImTaskId): WorkBuddyImTaskDefinition {
@@ -65,6 +82,7 @@ export function getWorkBuddyImTaskDefinition(taskId: WorkBuddyImTaskId): WorkBud
 
 export function resolveWorkBuddyImTask(goal: string): WorkBuddyImTaskDefinition {
   const normalized = goal.trim();
+  if (/讲题|讲解|解题|不会做|不会解|推导/.test(normalized)) return getWorkBuddyImTaskDefinition('guided-explanation');
   if (/教学计划|提前.*准备|课前准备/.test(normalized)) return getWorkBuddyImTaskDefinition('weekly-preparation-notice');
   return getWorkBuddyImTaskDefinition('homework-reminder');
 }
