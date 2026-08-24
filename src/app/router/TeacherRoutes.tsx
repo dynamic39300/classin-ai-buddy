@@ -24,15 +24,22 @@ import { TeacherHomeworkDetailPage } from '@pages/teacher/TeacherHomeworkDetailP
 import { TeacherHomeworkEditPage } from '@pages/teacher/TeacherHomeworkEditPage';
 import { TeacherHomeworkReviewPage } from '@pages/teacher/TeacherHomeworkReviewPage';
 import { TeacherAiAgentPage } from '@pages/teacher/TeacherAiAgentPage';
-import { AiAgentWorkspaceLayout } from '@features/ai-agent-workspace';
+import { ClassMvpWorkBuddyLayout } from './ClassMvpWorkBuddyLayout';
+import { IdealWorkBuddyLayout } from './IdealWorkBuddyLayout';
 
 export function TeacherRoutes() {
   return (
     <Routes>
+      <Route path="/teacher/classes/:classId/workbuddy" element={<ClassMvpWorkBuddyLayout />}>
+        <Route index element={<Navigate to="new" replace />} />
+        <Route path="new" element={<TeacherAiAgentPage />} />
+        <Route path="runs/:runId" element={<TeacherAiAgentPage />} />
+        <Route path=":section" element={<TeacherAiAgentPage />} />
+      </Route>
       <Route path="/teacher" element={<AppShell role="teacher" />}>
         <Route index element={<Navigate to="home" replace />} />
         <Route path="home" element={<TeacherHomePage />} />
-        <Route path="ai-agent" element={<AiAgentWorkspaceLayout />}>
+        <Route path="ai-agent" element={<IdealWorkBuddyLayout />}>
           <Route index element={<Navigate to="new" replace />} />
           <Route path="new" element={<TeacherAiAgentPage />} />
           <Route path="runs/:runId" element={<TeacherAiAgentPage />} />

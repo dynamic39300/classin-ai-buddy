@@ -76,6 +76,10 @@ type StoredState = Readonly<{
   commands: Readonly<Record<string, ConversationRunCommandReceipt>>;
 }>;
 const STORAGE_KEY = 'workbuddy:conversation-run:v6';
+
+function storageKey(namespace = 'ideal-full'): string {
+  return namespace === 'ideal-full' ? STORAGE_KEY : `${STORAGE_KEY}:${namespace}`;
+}
 const EVENT_ACTORS = new Set(['teacher', 'agent', 'skill', 'tool', 'system']);
 const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'evaluation', 'error', 'system']);
 const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'stopped', 'cancelled', 'superseded']);
@@ -162,11 +166,11 @@ function isCommandReceipt(value: unknown): value is ConversationRunCommandReceip
     && (value.resultRef === undefined || typeof value.resultRef === 'string');
 }
 
-function loadStoredState(): StoredState {
+function loadStoredState(namespace = 'ideal-full'): StoredState {
   const empty = () => Object.freeze({ runtimes: Object.freeze({}), commands: Object.freeze({}) });
   if (typeof window === 'undefined') return empty();
   try {
-    const parsed: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
+    const parsed: unknown = JSON.parse(window.sessionStorage.getItem(storageKey(namespace)) ?? 'null');
     if (!isRecord(parsed) || parsed.version !== 7 || !isRecord(parsed.runtimes) || !isRecord(parsed.commands)) return empty();
     return Object.freeze({
       runtimes: Object.freeze(Object.fromEntries(Object.entries(parsed.runtimes).filter((entry): entry is [string, RuntimeState] => isRuntimeState(entry[1])))),
@@ -298,8 +302,8 @@ export function createConversationRunHostPort(): ConversationRunHostPort {
   });
 }
 
-export function createConversationRunModule(host: ConversationRunHost, scheduler: ConversationRunScheduler): ConversationRunModule {
-  const restored = loadStoredState();
+export function createConversationRunModule(host: ConversationRunHost, scheduler: ConversationRunScheduler, namespace = 'ideal-full'): ConversationRunModule {
+  const restored = loadStoredState(namespace);
   const runtimes = new Map<string, RuntimeState>(Object.entries(restored.runtimes));
   const processedCommands = new Map<string, ConversationRunCommandReceipt>(Object.entries(restored.commands));
   const listeners = new Map<string, Map<ConversationRunListener, string | null>>();
@@ -307,7 +311,7 @@ export function createConversationRunModule(host: ConversationRunHost, scheduler
 
   const persist = () => {
     if (typeof window === 'undefined') return;
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+    window.sessionStorage.setItem(storageKey(namespace), JSON.stringify({
       version: 7,
       runtimes: Object.fromEntries(runtimes),
       commands: Object.fromEntries(processedCommands),

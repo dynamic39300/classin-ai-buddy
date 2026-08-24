@@ -13,6 +13,8 @@ import { useConversationRun } from './use-conversation-run';
 import { useDeadlineCountdown } from './use-deadline-countdown';
 import type { PackageRunView } from './workbuddy-course-production-view';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import { workBuddyRunPath } from './workbuddy-experience-profile';
 import conversationStyles from './ConversationRunSurface.module.css';
 import styles from './PackageConversationRunSurface.module.css';
 
@@ -25,6 +27,7 @@ const PACKAGE_PROGRESS_STEPS: readonly RunProgressStep[] = Object.freeze([
 ]);
 
 export function PackageConversationRunSurface() {
+  const profile = useWorkBuddyExperience();
   const workspace = useWorkBuddyWorkspace();
   const { packageView, packageWritebackScenario, activePackageArtifactId } = workspace.coursePackage;
   const contextCount = workspace.context.contextView.includedCount;
@@ -93,7 +96,7 @@ export function PackageConversationRunSurface() {
             if (receipt) return <PackageReceiptEvent key={event.id} event={event} receipt={receipt} artifacts={run.artifacts} sequence={receiptHistory.indexOf(receipt) + 1} onRetry={() => dispatch({ type: 'retry_failed' })} />;
           }
           const sourceLink = event.id === `${run.id}:source-artifact` && run.parentRunRef
-            ? <Link className={styles.inlineLink} to={`/teacher/ai-agent/runs/${run.parentRunRef}`}>返回源课件任务</Link>
+            ? <Link className={styles.inlineLink} to={workBuddyRunPath(profile, run.parentRunRef)}>返回源课件任务</Link>
             : null;
           return <TimelineEvent key={event.id} icon={iconForEvent(event)} state={event.state} title={event.title} summary={event.summary}>{sourceLink}</TimelineEvent>;
         })}

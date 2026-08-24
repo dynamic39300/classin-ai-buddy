@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import type { AppRole } from '@domain/account/role';
 import { ROLE_LABELS } from '@domain/account/role';
 import { countUnreadMessages } from '@domain/message/message';
@@ -38,15 +38,16 @@ export function Sidebar({ role, inactive = false, navigationExtension, onOpenSet
   const accountButtonRef = useRef<HTMLButtonElement>(null);
   const threads = useMessageThreads();
   const messageUnreadCount = countUnreadMessages(role, threads);
-  const navigation = getNavigation(role).map((node) => (
-    node.kind === 'item' && node.group === 'global'
+  const navigation = getNavigation(role).map((node) => {
+    const projectedNode = node.kind === 'item' && node.group === 'global'
       ? { ...node, badge: messageUnreadCount > 0 ? (messageUnreadCount > 99 ? '99+' : String(messageUnreadCount)) : undefined }
-      : node
-  ));
+      : node;
+    return projectedNode;
+  });
   const collapsibleGroups = navigation.filter((node): node is Extract<NavigationNode, { kind: 'collapsible' }> => node.kind === 'collapsible');
   const activeCollapsibleGroup = collapsibleGroups.find((node) => isNavigationGroupActive(role, node.id, location.pathname));
   const classManagementGroup = collapsibleGroups.find(({ id }) => id.endsWith('class-management'));
-  const classManagementRouteActive = activeCollapsibleGroup?.id === classManagementGroup?.id;
+  const classManagementRouteActive = !extensionRouteActive && activeCollapsibleGroup?.id === classManagementGroup?.id;
   const classManagementOpen = classManagementRouteActive || classManagementManualOpen;
   const groups = (['business', 'global', 'instant-tool'] as const).filter((group) =>
     navigation.some((item) => item.group === group),
@@ -134,6 +135,7 @@ export function Sidebar({ role, inactive = false, navigationExtension, onOpenSet
                   onToggle={() => setClassManagementManualOpen((current) => !current)}
                   extensionOpen={navigationExtensionOpen}
                   hasExtension={navigationExtension?.afterItemId === node.id}
+                  forceActive={Boolean(extensionRouteActive && navigationExtension?.afterItemId === node.id)}
                   onToggleExtension={() => setNavigationExtensionOpen((current) => !current)}
                 />
                 {navigationExtension?.afterItemId === node.id && navigationExtensionOpen ? navigationExtension.content : null}
@@ -156,21 +158,25 @@ type NavigationNodeViewProps = {
   hasExtension: boolean;
   extensionOpen: boolean;
   onToggleExtension: () => void;
+  forceActive: boolean;
 };
 
-function NavigationNodeView({ node, open, disableCollapse, onNavigate, onToggle, hasExtension, extensionOpen, onToggleExtension }: NavigationNodeViewProps) {
+function NavigationNodeView({ node, open, disableCollapse, onNavigate, onToggle, hasExtension, extensionOpen, onToggleExtension, forceActive }: NavigationNodeViewProps) {
   if (node.kind === 'item') {
     const Icon = node.icon;
-    const link = (
-      <NavLink className={`${styles.navItem} ${hasExtension ? styles.navItemWithToggle : ''}`} to={node.to} title={node.label} aria-label={node.label} data-label={node.label} onClick={() => {
+    const className = `${styles.navItem} ${hasExtension ? styles.navItemWithToggle : ''}`;
+    const handleClick = () => {
         onNavigate();
         if (hasExtension && !extensionOpen) onToggleExtension();
-      }}>
+    };
+    const content = <>
         <Icon aria-hidden="true" size={18} />
         <span className={styles.navLabel}>{node.label}</span>
         {node.badge ? <span className={styles.badge} aria-label={`${node.badge}条待处理`}>{node.badge}</span> : null}
-      </NavLink>
-    );
+      </>;
+    const link = forceActive
+      ? <Link className={className} to={node.to} title={node.label} aria-current="page" aria-label={node.label} data-label={node.label} onClick={handleClick}>{content}</Link>
+      : <NavLink className={className} to={node.to} title={node.label} aria-label={node.label} data-label={node.label} onClick={handleClick}>{content}</NavLink>;
 
     if (hasExtension) {
       return (

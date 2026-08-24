@@ -10,6 +10,7 @@ import type {
 } from '@domain/workbuddy/quiz-activity-creation';
 
 type AdapterOptions = Readonly<{
+  idempotencyScope?: string;
   onDraftCreated: (activity: ClassActivity, target: QuizActivityTarget) => void;
   targetReader: QuizActivityDraftTargetReader;
 }>;
@@ -85,7 +86,8 @@ export class MockQuizActivityDraftAdapter implements QuizActivityDraftAdapter, Q
       return this.failure(action, approval, this.scenario);
     }
 
-    const activityId = `activity-${action.artifactRef.id.replace(/^artifact-/, '')}-${action.idempotencyKey}`;
+    const scope = this.options.idempotencyScope?.replace(/[^a-z0-9-]/gi, '-') ?? 'default';
+    const activityId = `activity-${action.artifactRef.id.replace(/^artifact-/, '')}-${action.idempotencyKey}-${scope}`;
     const durationMinutes = action.settings.duration.kind === 'unlimited' ? null : action.settings.duration.minutes;
     const activity: ClassActivity = Object.freeze({
       id: activityId, type: 'quiz', title: action.settings.title, status: 'pending', publication: 'draft', scheduledAt: action.settings.startAt,

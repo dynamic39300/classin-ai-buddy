@@ -16,8 +16,32 @@ async function openTeacherAgent(page: Page) {
       video.currentTime = 0;
     });
   }
+}
+
+async function expectTypewriterComplete(page: Page) {
+  await expect(page.locator('[data-workbuddy-typewriter="true"]')).toHaveAttribute('data-state', 'complete');
+}
+
+async function openClassMvpWorkBuddy(page: Page, viewport = { width: 1440, height: 900 }) {
+  await page.setViewportSize(viewport);
+  await page.goto('/');
+  await page.getByRole('button', { name: /老师视角/ }).click();
+  await page.goto('/teacher/classes/physics-3?course=course-momentum');
+  await page.getByRole('button', { name: '打开 WorkBuddy' }).click();
+  const avatarVideo = page.locator('[data-workbuddy-avatar="true"] video');
+  if (await avatarVideo.count()) {
+    await avatarVideo.evaluate(async (element) => {
+      const video = element as HTMLVideoElement;
+      if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
+        await new Promise<void>((resolve) => video.addEventListener('loadedmetadata', () => resolve(), { once: true }));
+      }
+      video.pause();
+      video.currentTime = 0;
+    });
+  }
   const typewriter = page.locator('[data-workbuddy-typewriter="true"]');
   if (await typewriter.count()) await expect(typewriter).toHaveAttribute('data-state', 'complete');
+  await page.mouse.move(0, 0);
 }
 
 async function switchTask(page: Page, title: string) {
@@ -108,6 +132,7 @@ async function startCoursewareRun(page: Page) {
 
 test('WorkBuddy new task at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
+  await expectTypewriterComplete(page);
   await expectWorkbenchGeometry(page);
 
   await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
@@ -132,8 +157,29 @@ test('WorkBuddy new task at 1440x900', async ({ page }) => {
   await expect(page).toHaveScreenshot('workbuddy-new-task-1440x900.png', { fullPage: true });
 });
 
+test('ClassIn MVP WorkBuddy keeps the new-task surface with the retained navigation at 1440x900', async ({ page }) => {
+  await openClassMvpWorkBuddy(page);
+  await expect(page.getByTestId('class-mvp-workbuddy-shell')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: '老师视角主导航' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'WorkBuddy 导航' })).toBeVisible();
+  await expect(page.getByTestId('ai-agent-workspace-layout')).toHaveAttribute('data-experience-profile', 'classin-mvp');
+  await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'WorkBuddy 导航' }).getByRole('link', { name: '我的任务', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('link', { name: '返回高二物理 3 班' })).toBeVisible();
+  await expect(page).toHaveScreenshot('workbuddy-classin-mvp-new-task-1440x900.png', { fullPage: true });
+});
+
+test('ClassIn MVP WorkBuddy remains reachable at 1024x640', async ({ page }) => {
+  await openClassMvpWorkBuddy(page, { width: 1024, height: 640 });
+  await expect(page.getByRole('link', { name: '返回高二物理 3 班' })).toBeVisible();
+  const overflow = await page.evaluate(() => ({ clientWidth: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }));
+  expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+  await expect(page).toHaveScreenshot('workbuddy-classin-mvp-new-task-1024x640.png', { fullPage: true });
+});
+
 test('WorkBuddy new task entry hover at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
+  await expectTypewriterComplete(page);
   const newTaskEntry = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).getByRole('button', { name: '添加新任务' });
   await newTaskEntry.hover();
   await expect(newTaskEntry.locator('svg.lucide-plus')).toBeVisible();
@@ -144,6 +190,7 @@ test('WorkBuddy new task entry hover at 1440x900', async ({ page }) => {
 
 test('WorkBuddy new task with Core Context auxiliary panel at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
+  await expectTypewriterComplete(page);
   await page.getByRole('button', { name: '展开核心上下文' }).click();
   await expect(page.getByRole('complementary', { name: '核心上下文' })).toBeVisible();
 
@@ -219,7 +266,36 @@ test('WorkBuddy M4 courseware ArtifactDraft at 1440x900', async ({ page }) => {
 
 test('WorkBuddy M4 running step progress at 1440x900', async ({ page }) => {
   await startCoursewareRun(page);
-  const progressTrigger = page.getByRole('button', { name: /查看任务执行步骤，第 1\/4 步/ });
+  await page.clock.runFor(8_000);
+  await expect(page.getByRole('button', { name: '收起辅助区' })).toBeVisible();
+  const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
+  const horizontalOverflow = await page.evaluate(() => Array.from(
+    document.querySelectorAll<HTMLElement>('[data-workbuddy-stage="true"] *'),
+  ).flatMap((element) => {
+    const rectangle = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    if (
+      rectangle.width <= 0
+      || rectangle.height <= 0
+      || element.scrollWidth <= element.clientWidth + 1
+      || style.overflowX === 'hidden'
+      || style.overflowX === 'clip'
+    ) return [];
+    return [{
+      ariaLabel: element.getAttribute('aria-label'),
+      className: element.className,
+      clientWidth: element.clientWidth,
+      overflowX: style.overflowX,
+      scrollWidth: element.scrollWidth,
+      tagName: element.tagName,
+    }];
+  }));
+  expect(horizontalOverflow).toEqual([]);
+  await expect.poll(() => timeline.evaluate((element) => (
+    getComputedStyle(element).overflowX === 'hidden'
+    && element.scrollWidth <= element.clientWidth + 1
+  ))).toBe(true);
+  const progressTrigger = page.getByRole('button', { name: /查看任务执行步骤，第 3\/4 步/ });
   await progressTrigger.hover();
   await expect(page.getByRole('region', { name: '任务执行步骤' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-m4-running-step-progress-1440x900.png', { fullPage: true });

@@ -2,6 +2,10 @@ import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
 
 const STORAGE_KEY = 'workbuddy:teacherin-draft-receipts:v1';
 
+function storageKey(namespace = 'ideal-full'): string {
+  return namespace === 'ideal-full' ? STORAGE_KEY : `${STORAGE_KEY}:${namespace}`;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -30,10 +34,10 @@ function isReceipt(value: unknown): value is TeacherInDraftReceipt {
       : value.recovery === 'retry');
 }
 
-export function loadTeacherInDraftReceipts(): Readonly<Record<string, TeacherInDraftReceipt>> {
+export function loadTeacherInDraftReceipts(namespace = 'ideal-full'): Readonly<Record<string, TeacherInDraftReceipt>> {
   if (typeof window === 'undefined') return {};
   try {
-    const value: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? '{}');
+    const value: unknown = JSON.parse(window.sessionStorage.getItem(storageKey(namespace)) ?? '{}');
     if (!isRecord(value) || !Object.values(value).every(isReceipt)) return {};
     return value as Readonly<Record<string, TeacherInDraftReceipt>>;
   } catch {
@@ -41,13 +45,12 @@ export function loadTeacherInDraftReceipts(): Readonly<Record<string, TeacherInD
   }
 }
 
-export function saveTeacherInDraftReceipts(receipts: Readonly<Record<string, TeacherInDraftReceipt>>): void {
+export function saveTeacherInDraftReceipts(receipts: Readonly<Record<string, TeacherInDraftReceipt>>, namespace = 'ideal-full'): void {
   if (typeof window === 'undefined') return;
-  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(receipts));
+  window.sessionStorage.setItem(storageKey(namespace), JSON.stringify(receipts));
 }
 
-export function clearTeacherInDraftReceipts(): void {
+export function clearTeacherInDraftReceipts(namespace = 'ideal-full'): void {
   if (typeof window === 'undefined') return;
-  window.sessionStorage.removeItem(STORAGE_KEY);
+  window.sessionStorage.removeItem(storageKey(namespace));
 }
-

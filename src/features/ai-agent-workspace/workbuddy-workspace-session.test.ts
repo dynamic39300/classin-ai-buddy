@@ -49,6 +49,15 @@ describe('WorkBuddy workspace session boundary', () => {
     expect(loadWorkBuddyWorkspaceSession()).toMatchObject({ version: 3, taskType: 'single-courseware' });
   });
 
+  it('never falls back across ideal and MVP workspace namespaces', () => {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...validSession(), draftGoal: '终局任务' }));
+    window.sessionStorage.setItem(`${STORAGE_KEY}:classin-mvp`, JSON.stringify({ ...validSession(), draftGoal: 'MVP 任务' }));
+
+    expect(loadWorkBuddyWorkspaceSession('ideal-full')?.draftGoal).toBe('终局任务');
+    expect(loadWorkBuddyWorkspaceSession('classin-mvp')?.draftGoal).toBe('MVP 任务');
+    expect(loadWorkBuddyWorkspaceSession('unknown-profile')).toBeNull();
+  });
+
   it('fails closed when a nested Context item is malformed', () => {
     const session = validSession();
     session.contextProposal.items[0]!.permission = 'write';
@@ -150,6 +159,9 @@ describe('WorkBuddy workspace session boundary', () => {
     };
     saveTeacherInDraftReceipts({ 'artifact-1': receipt });
     expect(loadTeacherInDraftReceipts()).toEqual({ 'artifact-1': receipt });
+    expect(loadTeacherInDraftReceipts('classin-mvp')).toEqual({});
+    saveTeacherInDraftReceipts({ 'artifact-1': receipt }, 'classin-mvp');
+    expect(loadTeacherInDraftReceipts('classin-mvp')).toEqual({ 'artifact-1': receipt });
   });
 
   it('fails closed for a malformed TeacherIn draft receipt', () => {

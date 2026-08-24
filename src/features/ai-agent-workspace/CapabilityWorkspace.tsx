@@ -52,6 +52,8 @@ import {
 import { FileLibrary } from "./FileLibrary";
 import { getFileAssetReference } from './file-library';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import { workBuddyNewTaskPath, workBuddyRunPath } from './workbuddy-experience-profile';
 import styles from "./CapabilityWorkspace.module.css";
 
 type Props = Readonly<{ surface: CapabilitySurfaceId }>;
@@ -81,6 +83,7 @@ const COVERS = ["geometry", "wave", "inquiry", "momentum"];
 
 export function CapabilityWorkspace({ surface }: Props) {
   const workspace = useWorkBuddyWorkspace();
+  const profile = useWorkBuddyExperience();
   const config = getCapabilitySurface(surface);
   const [tab, setTab] = useState(config.tabs[0]?.id ?? "general");
   const [query, setQuery] = useState("");
@@ -150,7 +153,7 @@ export function CapabilityWorkspace({ surface }: Props) {
     else setFeedback(`${item.title} 的连接测试已完成。`);
   };
   const useInTask = (item: CapabilityItem, intent: string) =>
-    navigate("/teacher/ai-agent/new", {
+    navigate(workBuddyNewTaskPath(profile), {
       state: {
         capabilityId: item.id,
         capabilityTitle: item.title,
@@ -185,7 +188,7 @@ export function CapabilityWorkspace({ surface }: Props) {
         <SkillMarket
           {...common}
           onFind={() =>
-            navigate("/teacher/ai-agent/new", {
+            navigate(workBuddyNewTaskPath(profile), {
               state: {
                 capabilityId: "find-skills",
                 capabilityTitle: "查找技能",
@@ -196,7 +199,7 @@ export function CapabilityWorkspace({ surface }: Props) {
           }
           onUpload={() => setSkillUploadOpen(true)}
           onCreate={() =>
-            navigate("/teacher/ai-agent/new", {
+            navigate(workBuddyNewTaskPath(profile), {
               state: {
                 capabilityId: "skill-creator",
                 capabilityTitle: "技能创建器",
@@ -238,7 +241,7 @@ export function CapabilityWorkspace({ surface }: Props) {
               sensitivity: 'personal', selection: 'suggested',
               reference: { system: 'classin-space', objectId: reference.spaceFileRef.id, version: reference.spaceFileRef.version },
             });
-            navigate("/teacher/ai-agent/new", {
+            navigate(workBuddyNewTaskPath(profile), {
               state: {
                 capabilityId: asset.id,
                 capabilityTitle: asset.name,
@@ -259,7 +262,7 @@ export function CapabilityWorkspace({ surface }: Props) {
           }}
           onOpenTeacherIn={(path) => navigate(path)}
           onLocateInSpace={(asset) => navigate(`/teacher/space?parentId=my-workbuddy-artifacts&file=${getFileAssetReference(asset).spaceFileRef.id}`)}
-          onOpenRun={(runId) => navigate(`/teacher/ai-agent/runs/${runId}`)}
+          onOpenRun={(runId) => navigate(workBuddyRunPath(profile, runId))}
         />
       ) : null}
       {surface === "schedules" ? (

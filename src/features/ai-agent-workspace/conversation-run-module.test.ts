@@ -127,6 +127,23 @@ describe('ConversationRun Deep Module', () => {
     expect(restored?.events.every(({ actor, updatedAt, allowedCommands }) => Boolean(actor && updatedAt && allowedCommands))).toBe(true);
   });
 
+  it('isolates runtime and command journals by experience namespace', () => {
+    const clock = manualScheduler();
+    const host: ConversationRunHost = Object.freeze({
+      open: () => Object.freeze({ projection: baseProjection(), progressStepCount: 2 }),
+      execute: () => Object.freeze({ status: 'accepted' as const }),
+    });
+    const ideal = createConversationRunModule(host, clock.scheduler, 'ideal-full');
+    ideal.dispatch('run-1', { id: 'ideal-supplement', type: 'supplement', text: '只属于终局' });
+
+    const mvp = createConversationRunModule(host, clock.scheduler, 'classin-mvp');
+    expect(mvp.open('run-1')?.events.map(({ id }) => id)).not.toContain('ideal-supplement');
+    mvp.dispatch('run-1', { id: 'mvp-supplement', type: 'supplement', text: '只属于 MVP' });
+
+    expect(createConversationRunModule(host, clock.scheduler, 'ideal-full').open('run-1')?.events.map(({ id }) => id)).toContain('ideal-supplement');
+    expect(createConversationRunModule(host, clock.scheduler, 'ideal-full').open('run-1')?.events.map(({ id }) => id)).not.toContain('mvp-supplement');
+  });
+
   it('persists package configuration and publishes the confirmed values into the Run journal', () => {
     const clock = manualScheduler();
     const packageProjection = Object.freeze({

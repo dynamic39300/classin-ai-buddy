@@ -11,6 +11,10 @@ import type { CoursewarePanel, PackagePanel } from './workbuddy-workspace';
 
 const STORAGE_KEY = 'workbuddy:workspace-session:v3';
 
+function storageKey(namespace = 'ideal-full'): string {
+  return namespace === 'ideal-full' ? STORAGE_KEY : `${STORAGE_KEY}:${namespace}`;
+}
+
 export type WorkBuddyWorkspaceSession = Readonly<{
   version: 3;
   contextProposal: ContextProposal;
@@ -375,22 +379,22 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
   return true;
 }
 
-export function loadWorkBuddyWorkspaceSession(): WorkBuddyWorkspaceSession | null {
+export function loadWorkBuddyWorkspaceSession(namespace = 'ideal-full'): WorkBuddyWorkspaceSession | null {
   if (typeof window === 'undefined') return null;
   try {
-    const value: unknown = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? 'null');
+    const value: unknown = JSON.parse(window.sessionStorage.getItem(storageKey(namespace)) ?? 'null');
     return isWorkspaceSession(value) ? value : null;
   } catch {
     return null;
   }
 }
 
-export function saveWorkBuddyWorkspaceSession(session: WorkBuddyWorkspaceSession): void {
+export function saveWorkBuddyWorkspaceSession(session: WorkBuddyWorkspaceSession, namespace = 'ideal-full'): void {
   if (typeof window === 'undefined') return;
-  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  window.sessionStorage.setItem(storageKey(namespace), JSON.stringify(session));
 }
 
-export function clearWorkBuddyWorkspaceSession(): void {
+export function clearWorkBuddyWorkspaceSession(namespace = 'ideal-full'): void {
   if (typeof window === 'undefined') return;
-  window.sessionStorage.removeItem(STORAGE_KEY);
+  window.sessionStorage.removeItem(storageKey(namespace));
 }

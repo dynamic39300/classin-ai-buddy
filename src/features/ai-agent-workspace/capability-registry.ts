@@ -1,4 +1,5 @@
 import { CalendarClock, FileText, FolderOpen, Settings, Shapes, Wrench, type LucideIcon } from 'lucide-react';
+import { parseWorkBuddyWorkspaceRoute } from './workbuddy-experience-profile';
 
 export type WorkBuddyCapability = {
   id: 'skills' | 'tools' | 'content' | 'files' | 'schedules' | 'settings';
@@ -29,6 +30,7 @@ export function getVisibleWorkBuddyCapability(section: string) {
 }
 
 export function getWorkBuddyCapabilityFromPathname(pathname: string, options: Readonly<{ includeDormant?: boolean }> = {}) {
-  const section = pathname.match(/^\/teacher\/ai-agent\/([^/]+)/)?.[1];
+  const route = parseWorkBuddyWorkspaceRoute(pathname);
+  const section = route ? pathname.slice(route.basePath.length + 1).split('/')[0] : undefined;
   return section ? (options.includeDormant ? getWorkBuddyCapability(section) : getVisibleWorkBuddyCapability(section)) : undefined;
 }

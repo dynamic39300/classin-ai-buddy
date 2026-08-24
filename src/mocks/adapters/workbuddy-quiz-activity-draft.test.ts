@@ -49,6 +49,20 @@ describe('MockQuizActivityDraftAdapter', () => {
     expect(onDraftCreated).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps identical demo request IDs distinct across WorkBuddy experience scopes', () => {
+    const createScoped = (idempotencyScope: string) => new MockQuizActivityDraftAdapter({
+      idempotencyScope,
+      onDraftCreated,
+      targetReader: { read: (target) => ({ classId: target.classId, courseId: target.courseId, unitId: target.unitId, version: target.expectedVersion, canCreateDraft: true }) },
+    });
+    const ideal = createScoped('ideal-full').execute(action, approval);
+    const mvp = createScoped('classin-mvp').execute(action, approval);
+
+    expect(ideal.status).toBe('success');
+    expect(mvp.status).toBe('success');
+    if (ideal.status === 'success' && mvp.status === 'success') expect(mvp.object.id).not.toBe(ideal.object.id);
+  });
+
   it('fails closed when an idempotency key is reused with a changed side-effect payload', () => {
     adapter.execute(action, approval);
     expect(() => adapter.execute({ ...action, settings: { ...action.settings, title: '被篡改的标题' } }, approval)).toThrow('幂等键');

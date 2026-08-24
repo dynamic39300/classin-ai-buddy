@@ -907,6 +907,15 @@ button.activityCopy:focus-visible {
   border-bottom: var(--rule-thin) solid var(--color-line-subtle);
 }
 
+.contextRail > .workBuddyRailSection {
+  position: sticky;
+  z-index: var(--z-raised);
+  bottom: 0;
+  border-top: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-surface);
+  box-shadow: 0 calc(var(--space-xs) * -1) var(--space-md) color-mix(in srgb, var(--color-surface) 92%, transparent);
+}
+
 .contextRail > section > header > button:first-child {
   display: flex;
   width: 100%;
@@ -946,9 +955,70 @@ button.activityCopy:focus-visible {
   padding: 0 var(--space-md) var(--space-md);
 }
 
+.railSectionNote {
+  margin: 0 0 var(--space-2xs);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.workBuddyPortal {
+  display: grid;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-md) var(--space-xs);
+}
+
+.workBuddyIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.workBuddyIdentity > div {
+  display: grid;
+  gap: var(--space-3xs);
+}
+
+.workBuddyIdentity strong { font-size: var(--text-sm); }
+.workBuddyIdentity small,
+.workBuddyPortal p {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.workBuddyMark {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: var(--radius-control);
+  background: var(--color-brand-soft);
+  color: var(--color-action-strong);
+}
+
+.workBuddyPortal > button {
+  display: flex;
+  min-height: 1.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-action-strong);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.workBuddyPortal > button:hover,
+.workBuddyPortal > button:focus-visible { background: var(--color-surface-hover); }
+
 .memberStack {
   display: flex;
-  padding: var(--space-xs) 0;
+  min-width: 0;
+  flex: 1;
 }
 
 .memberAvatar {
@@ -963,26 +1033,21 @@ button.activityCopy:focus-visible {
   margin-left: 0;
 }
 
-.memberLine {
+.memberToolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xs);
-  font-size: var(--text-xs);
-}
-
-.memberLine small {
-  color: var(--color-ink-muted);
 }
 
 .railActions {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: space-between;
-  padding-top: var(--space-xs);
+  gap: var(--space-sm);
 }
 
-.railActions button:first-child,
+.railActions button,
 .railLinks button {
   display: flex;
   min-height: 2rem;
@@ -994,6 +1059,7 @@ button.activityCopy:focus-visible {
   cursor: pointer;
   text-align: left;
   font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .feedback {

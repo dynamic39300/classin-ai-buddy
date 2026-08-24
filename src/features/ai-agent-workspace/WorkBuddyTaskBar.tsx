@@ -1,5 +1,6 @@
 import {
   CheckCircle2,
+  ArrowLeft,
   ChevronDown,
   CircleAlert,
   CircleEllipsis,
@@ -15,6 +16,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEve
 import { useLocation, useNavigate } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS, type WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import { workBuddyNewTaskPath, workBuddyRunPath } from './workbuddy-experience-profile';
 import styles from './WorkBuddyTaskBar.module.css';
 
 const NEW_TASK_ID = 'new';
@@ -26,27 +29,25 @@ const STATUS_ICONS = {
   failed: CircleAlert,
 } as const;
 
-function getActiveTaskId(pathname: string): string | null {
+function getActiveTaskId(pathname: string, basePath: string): string | null {
   const runId = pathname.match(/\/runs\/([^/]+)/)?.[1];
   if (runId) return runId;
-  return pathname.endsWith('/new') || pathname === '/teacher/ai-agent' ? NEW_TASK_ID : null;
-}
-
-function taskRoute(taskId: string) {
-  return taskId === NEW_TASK_ID ? '/teacher/ai-agent/new' : `/teacher/ai-agent/runs/${taskId}`;
+  return pathname.endsWith('/new') || pathname === basePath ? NEW_TASK_ID : null;
 }
 
 function sortTasks(items: readonly WorkBuddyRunViewModel[]) {
   return [...items].sort((left, right) => Number(Boolean(right.pinned)) - Number(Boolean(left.pinned)));
 }
 
-export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
+export function WorkBuddyTaskBar({ contextPanel, showReturnCommand = true }: Readonly<{
   contextPanel?: Readonly<{ open: boolean; onOpenChange: (open: boolean) => void }>;
+  showReturnCommand?: boolean;
 }>) {
   const location = useLocation();
   const navigate = useNavigate();
+  const profile = useWorkBuddyExperience();
   const { runs, renameRun, togglePinRun, removeRun } = useWorkBuddyWorkspace().history;
-  const activeTaskId = getActiveTaskId(location.pathname);
+  const activeTaskId = getActiveTaskId(location.pathname, profile.basePath);
   const [openTaskIds, setOpenTaskIds] = useState<readonly string[]>(() => runs.slice(0, 3).map(({ id }) => id));
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -147,7 +148,7 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
     setOpenMenuId(null);
     setRenamingId(null);
     setRenameOrigin(null);
-    navigate(taskRoute(taskId));
+    navigate(taskId === NEW_TASK_ID ? workBuddyNewTaskPath(profile) : workBuddyRunPath(profile, taskId));
   };
 
   const switchCurrentTask = (taskId: string) => {
@@ -164,7 +165,7 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
     setOpenMenuId(null);
     setRenamingId(null);
     setRenameOrigin(null);
-    navigate(taskRoute(taskId));
+    navigate(taskId === NEW_TASK_ID ? workBuddyNewTaskPath(profile) : workBuddyRunPath(profile, taskId));
   };
 
   const closeSelector = (restoreFocus = true) => {
@@ -185,10 +186,10 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
     setOpenTaskIds(remaining);
     if (activeTaskId !== taskId) return;
     const fallback = remaining[Math.min(currentIndex, remaining.length - 1)];
-    if (fallback) navigate(taskRoute(fallback));
+    if (fallback) navigate(fallback === NEW_TASK_ID ? workBuddyNewTaskPath(profile) : workBuddyRunPath(profile, fallback));
     else {
       setOpenTaskIds([NEW_TASK_ID]);
-      navigate(taskRoute(NEW_TASK_ID));
+      navigate(workBuddyNewTaskPath(profile));
     }
   };
 
@@ -227,7 +228,8 @@ export function WorkBuddyTaskBar({ contextPanel }: Readonly<{
   };
 
   return (
-    <header ref={taskBarRef} className={styles.taskBar} aria-label="Work Buddy 任务导航">
+    <header ref={taskBarRef} className={styles.taskBar} aria-label="Work Buddy 任务导航" data-has-return={showReturnCommand && profile.returnTarget ? 'true' : undefined}>
+      {showReturnCommand && profile.returnTarget ? <button className={styles.returnButton} type="button" onClick={() => navigate(profile.returnTarget!.to)}><ArrowLeft aria-hidden="true" size={15} /><span>{profile.returnTarget.label}</span></button> : null}
       <nav ref={tabViewportRef} className={styles.tabViewport} aria-label="已打开的 Work Buddy 任务">
         {openTabs.map((tab) => {
           const active = tab.id === activeTaskId;

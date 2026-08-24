@@ -28,10 +28,19 @@ import { TASK_SKILL_OPTIONS, type TaskSkillOption } from './capability-workspace
 import { TypewriterGreeting } from './TypewriterGreeting';
 import { WorkBuddyAvatar } from './WorkBuddyAvatar';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import {
+  profileAllowsCapability,
+  profileAllowsTaskType,
+  workBuddyCapabilityPath,
+  workBuddyNewTaskPath,
+  workBuddyRunPath,
+} from './workbuddy-experience-profile';
 import styles from './AiAgentWorkSurface.module.css';
 import type { WorkBuddyTaskLayoutContext } from './AiAgentWorkspaceLayout';
 
 export function AiAgentWorkSurface() {
+  const profile = useWorkBuddyExperience();
   const location = useLocation();
   const { runId, section } = useParams();
   const { coursewareView } = useWorkBuddyWorkspace().courseware;
@@ -43,8 +52,11 @@ export function AiAgentWorkSurface() {
   if (runId && quizRun?.id === runId) return <QuizActivityConversationRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
   if (section === 'content') return <Navigate to="/teacher/space/teacherin" replace />;
-  const capability = section ? getVisibleWorkBuddyCapability(section) : undefined;
+  const capability = section && profileAllowsCapability(profile, section)
+    ? getVisibleWorkBuddyCapability(section)
+    : undefined;
   if (capability) return <CapabilityWorkspace key={capability.id} surface={capability.id} />;
+  if (section) return <Navigate to={workBuddyNewTaskPath(profile)} replace />;
   if (location.pathname.endsWith('/new')) return <NewTaskSkeleton />;
   return <NewTaskSkeleton />;
 }
@@ -73,6 +85,7 @@ function skillFromNavigationState(state: NewTaskNavigationState | null): TaskSki
 function NewTaskSkeleton() {
   const navigate = useNavigate();
   const location = useLocation();
+  const profile = useWorkBuddyExperience();
   const [feedback, setFeedback] = useState(() => {
     const state = location.state as NewTaskNavigationState | null;
     return state?.intent === 'context-attached' && state.capabilityTitle
@@ -91,6 +104,12 @@ function NewTaskSkeleton() {
   const { createPackageTask } = useWorkBuddyWorkspace().coursePackage;
   const { createTask: createQuizActivityTask } = useWorkBuddyWorkspace().quizActivity;
   const contextItems = contextView.items.filter(({ included }) => included);
+  const taskTypeAllowed = profileAllowsTaskType(profile, taskType);
+  useEffect(() => {
+    if (taskTypeAllowed) return;
+    const fallbackTaskType = profile.visibleTaskTypes[0];
+    if (fallbackTaskType) setTaskType(fallbackTaskType);
+  }, [profile.visibleTaskTypes, setTaskType, taskTypeAllowed]);
   useEffect(() => {
     const state = location.state as NewTaskNavigationState | null;
     if (!state?.capabilityTitle) return;
@@ -147,14 +166,15 @@ function NewTaskSkeleton() {
 
         <WorkspaceComposer
           ariaLabel="描述教学任务"
-          canSubmit={contextView.status === 'confirmed'}
+          canSubmit={contextView.status === 'confirmed' && taskTypeAllowed}
           className={styles.goalComposerDock}
           mode="task"
           onSubmit={() => {
+            if (!taskTypeAllowed) return;
             const runId = taskType === 'course-package' ? createPackageTask(goal) : taskType === 'quiz-activity-creation' ? createQuizActivityTask(goal) : createCoursewareTask(goal);
             if (runId) {
               clearGoal();
-              navigate(`/teacher/ai-agent/runs/${runId}`);
+              navigate(workBuddyRunPath(profile, runId));
             }
           }}
           onValueChange={setGoal}
@@ -213,7 +233,7 @@ function NewTaskSkeleton() {
                       ))}
                       {!visibleSkills.length ? <p className={styles.skillPickerEmpty}>没有匹配的已安装 Skill</p> : null}
                     </div>
-                    <Link className={styles.skillMarketLink} to="/teacher/ai-agent/skills" onClick={() => closeSkillPicker()}>
+                    <Link className={styles.skillMarketLink} to={workBuddyCapabilityPath(profile, 'skills')} onClick={() => closeSkillPicker()}>
                       <Shapes aria-hidden="true" size={15} />打开技能市场
                     </Link>
                   </section>
@@ -248,9 +268,9 @@ function NewTaskSkeleton() {
         </div>
 
         <div className={styles.shortcuts} aria-label="快捷任务">
-          <button type="button" onClick={() => { setTaskType('single-courseware'); setGoal('为高一（3）班生成一份函数单调性智能课件，包含概念讲解、例题和课堂练习'); }}>生成单个课件</button>
-          <button type="button" onClick={() => { setTaskType('course-package'); setGoal('从函数单调性课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包'); }}>生成课程方案包</button>
-          <button type="button" onClick={() => { setTaskType('quiz-activity-creation'); setGoal('为高二物理 3 班当前单元生成一份动量守恒诊断测验，并创建为教学活动草稿'); }}>生成测验并创建活动草稿</button>
+          {profileAllowsTaskType(profile, 'single-courseware') ? <button type="button" onClick={() => { setTaskType('single-courseware'); setGoal('为高一（3）班生成一份函数单调性智能课件，包含概念讲解、例题和课堂练习'); }}>生成单个课件</button> : null}
+          {profileAllowsTaskType(profile, 'course-package') ? <button type="button" onClick={() => { setTaskType('course-package'); setGoal('从函数单调性课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包'); }}>生成课程方案包</button> : null}
+          {profileAllowsTaskType(profile, 'quiz-activity-creation') ? <button type="button" onClick={() => { setTaskType('quiz-activity-creation'); setGoal('为高二物理 3 班当前单元生成一份动量守恒诊断测验，并创建为教学活动草稿'); }}>生成测验并创建活动草稿</button> : null}
           <button type="button" onClick={() => setGoal('分析高一（3）班最近一次作业，归纳共性问题并给出教学建议')}>分析班级学情</button>
         </div>
         {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}
@@ -263,6 +283,7 @@ function NewTaskSkeleton() {
 }
 
 function RunSkeleton({ runId }: { runId: string }) {
+  const profile = useWorkBuddyExperience();
   const { getRun } = useWorkBuddyWorkspace().history;
   const [panelOpen, setPanelOpen] = useState(true);
   const [artifactFocused, setArtifactFocused] = useState(false);
@@ -279,7 +300,7 @@ function RunSkeleton({ runId }: { runId: string }) {
         <span className={styles.placeholderIcon}><FileText aria-hidden="true" size={22} /></span>
         <h1 id="workbuddy-missing-run-title">找不到这个任务</h1>
         <p>该任务不存在、已被移除，或不属于当前组织。系统不会用其他任务内容替代它。</p>
-        <Link className={styles.returnLink} to="/teacher/ai-agent/new">返回新建任务</Link>
+        <Link className={styles.returnLink} to={workBuddyNewTaskPath(profile)}>返回新建任务</Link>
       </section>
     );
   }

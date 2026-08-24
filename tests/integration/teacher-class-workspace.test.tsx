@@ -180,12 +180,30 @@ describe('teacher class experience refresh', () => {
     const user = userEvent.setup();
     renderWorkspace('physics-3');
 
-    expect(screen.getByRole('complementary', { name: '班级辅助信息' })).toHaveAttribute('data-collapsed', 'false');
+    const rail = screen.getByRole('complementary', { name: '班级辅助信息' });
+    expect(rail).toHaveAttribute('data-collapsed', 'false');
+    const memberToolbar = within(rail).getByRole('group', { name: '成员头像与操作' });
+    expect(within(memberToolbar).getByLabelText('成员头像预览')).toBeInTheDocument();
+    expect(within(memberToolbar).getByRole('button', { name: '查看全部成员' })).toBeInTheDocument();
+    const addMember = within(memberToolbar).getByRole('button', { name: '添加成员' });
+    expect(addMember).toBeInTheDocument();
+    expect(within(memberToolbar).queryByText('王老师')).not.toBeInTheDocument();
+    expect(within(memberToolbar).queryByText('班主任')).not.toBeInTheDocument();
+    await user.click(addMember);
+    expect(screen.getByRole('dialog', { name: '邀请成员' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '关闭邀请成员' }));
     expect(screen.getByText('这是共创页面!')).toBeInTheDocument();
     expect(screen.getByText('AI 助教')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'AI 应用' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('老师已授权 · 班级成员可用')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '我的教学助理' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('仅你可见')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '打开 WorkBuddy' }));
+    expect(screen.getByLabelText('当前路径')).toHaveTextContent('/teacher/classes/physics-3/workbuddy/new?course=course-momentum');
 
     await user.click(screen.getByRole('button', { name: '收起右侧栏' }));
-    expect(screen.getByRole('complementary', { name: '班级辅助信息' })).toHaveAttribute('data-collapsed', 'true');
+    expect(rail).toHaveAttribute('data-collapsed', 'true');
     expect(screen.getByRole('button', { name: '展开右侧栏' })).toBeEnabled();
 
     await user.click(screen.getByRole('button', { name: '班级待办' }));

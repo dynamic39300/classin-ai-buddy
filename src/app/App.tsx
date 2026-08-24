@@ -1,13 +1,12 @@
 import { useCallback, useMemo, type ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import { RoleSessionProvider } from '@features/role-switch';
-import { ClassWorkspaceProvider } from '@features/class-workspace/ClassWorkspaceProvider';
-import { useClassWorkspaceStore } from '@features/class-workspace/class-workspace-store';
+import { ClassWorkspaceProvider, useClassWorkspaceStore } from '@features/class-workspace';
 import { HomeworkWorkspaceProvider, useHomeworkWorkspace } from '@features/homework-workspace';
 import { MessageWorkspaceProvider, useMessageWorkspaceStore } from '@features/message-workspace';
 import { WorkBuddyImProvider } from '@features/workbuddy-im-assistance';
 import { ClassAgentConversationProvider } from '@features/class-agent-conversation';
-import { WorkBuddyWorkspaceProvider } from '@features/ai-agent-workspace';
+import { parseWorkBuddyWorkspaceRoute, WorkBuddyWorkspaceProvider } from '@features/ai-agent-workspace';
 import { WorkBuddyArtifactLibraryProvider, useWorkBuddyArtifactLibrary } from '@features/workbuddy-artifact-library';
 import { OpenCourseWorkspaceProvider, createOpenCourseSessionStore } from '@features/open-course-workspace';
 import { SpaceWorkspaceProvider } from '@features/space-workspace/SpaceWorkspaceProvider';
@@ -42,10 +41,6 @@ import { OperationGuardProvider } from './shell/operation-guard';
 import { RootRouter } from './router/RootRouter';
 
 const OPEN_COURSE_SESSION = createOpenCourseSessionStore(['open-reading']);
-const WORKBUDDY_WRITEBACK_ADAPTER = new MockClassInWritebackAdapter();
-const WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER = new MockPackageWritebackAdapter();
-const WORKBUDDY_TEACHERIN_ADAPTER = new MockTeacherInAdapter();
-WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER.setScenario('success');
 
 function removeHomeworkProjection(courses: ReadonlyArray<ClassCourse>, activityId: string): ClassCourse[] {
   return courses.map((course) => ({
@@ -143,25 +138,39 @@ function ClassAgentBridge({ children }: { children: ReactNode }) {
 }
 
 function WorkBuddyBridge({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const { getClasses, setClasses } = useClassWorkspaceStore();
-  const quizActivityDraftAdapter = useMemo(() => new MockQuizActivityDraftAdapter({
-    targetReader: {
-      read: (target) => {
-        const record = getClasses().find(({ id }) => id === target.classId);
-        const course = record?.courses.find(({ id }) => id === target.courseId);
-        const unit = course?.units.find(({ id }) => id === target.unitId);
-        if (!record || !course || !unit) return null;
-        return { classId: record.id, courseId: course.id, unitId: unit.id, version: unit.sourceVersion ?? `${unit.id}-unversioned`, canCreateDraft: record.roleByAppRole.teacher === 'headmaster' || record.roleByAppRole.teacher === 'teacher' };
-      },
-    },
-    onDraftCreated: (activity, target) => setClasses((current) => current.map((record) => {
-      if (record.id !== target.classId) return record;
-      return { ...record, courses: addClassActivity(record.courses, target.courseId, target.unitId, activity) };
-    })),
-  }), [getClasses, setClasses]);
+  const workspaceNamespace = parseWorkBuddyWorkspaceRoute(location.pathname)?.profileId ?? 'ideal-full';
+  const adapters = useMemo(() => {
+    const packageWriteback = new MockPackageWritebackAdapter();
+    packageWriteback.setScenario('success');
+    return {
+      writeback: new MockClassInWritebackAdapter(),
+      packageWriteback,
+      teacherIn: new MockTeacherInAdapter(),
+      quizActivityDraft: new MockQuizActivityDraftAdapter({
+        idempotencyScope: workspaceNamespace,
+        targetReader: {
+          read: (target) => {
+            const record = getClasses().find(({ id }) => id === target.classId);
+            const course = record?.courses.find(({ id }) => id === target.courseId);
+            const unit = course?.units.find(({ id }) => id === target.unitId);
+            if (!record || !course || !unit) return null;
+            return { classId: record.id, courseId: course.id, unitId: unit.id, version: unit.sourceVersion ?? `${unit.id}-unversioned`, canCreateDraft: record.roleByAppRole.teacher === 'headmaster' || record.roleByAppRole.teacher === 'teacher' };
+          },
+        },
+        onDraftCreated: (activity, target) => setClasses((current) => current.map((record) => {
+          if (record.id !== target.classId) return record;
+          return { ...record, courses: addClassActivity(record.courses, target.courseId, target.unitId, activity) };
+        })),
+      }),
+    };
+  }, [getClasses, setClasses, workspaceNamespace]);
 
   return (
     <WorkBuddyWorkspaceProvider
+      key={workspaceNamespace}
+      workspaceNamespace={workspaceNamespace}
       initialRuns={WORKBUDDY_HISTORY}
       initialContextItems={WORKBUDDY_CONTEXT_ITEMS}
       recommendedContextItemIds={WORKBUDDY_MOMENTUM_RECOMMENDATION}
@@ -175,14 +184,14 @@ function WorkBuddyBridge({ children }: { children: ReactNode }) {
       packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
       runtimeFixture={WORKBUDDY_RUNTIME_FIXTURE}
       clock={WORKBUDDY_FIXED_CLOCK}
-      writebackAdapter={WORKBUDDY_WRITEBACK_ADAPTER}
-      writebackScenarioController={WORKBUDDY_WRITEBACK_ADAPTER}
-      packageWritebackAdapter={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
-      packageWritebackScenarioController={WORKBUDDY_PACKAGE_WRITEBACK_ADAPTER}
-      teacherInAdapter={WORKBUDDY_TEACHERIN_ADAPTER}
+      writebackAdapter={adapters.writeback}
+      writebackScenarioController={adapters.writeback}
+      packageWritebackAdapter={adapters.packageWriteback}
+      packageWritebackScenarioController={adapters.packageWriteback}
+      teacherInAdapter={adapters.teacherIn}
       quizPaper={WORKBUDDY_QUIZ_PAPER}
-      quizActivityDraftAdapter={quizActivityDraftAdapter}
-      quizActivityDraftScenarioController={quizActivityDraftAdapter}
+      quizActivityDraftAdapter={adapters.quizActivityDraft}
+      quizActivityDraftScenarioController={adapters.quizActivityDraft}
     >
       {children}
     </WorkBuddyWorkspaceProvider>
@@ -200,13 +209,13 @@ export function App() {
               <MessageWorkspaceProvider>
                 <ClassAgentBridge>
                   <WorkBuddyImBridge>
-                    <SpaceWorkspaceProvider>
-                      <WorkBuddyBridge>
-                        <BrowserRouter>
+                    <BrowserRouter>
+                      <SpaceWorkspaceProvider>
+                        <WorkBuddyBridge>
                           <RootRouter />
-                        </BrowserRouter>
-                      </WorkBuddyBridge>
-                    </SpaceWorkspaceProvider>
+                        </WorkBuddyBridge>
+                      </SpaceWorkspaceProvider>
+                    </BrowserRouter>
                   </WorkBuddyImBridge>
                 </ClassAgentBridge>
               </MessageWorkspaceProvider>

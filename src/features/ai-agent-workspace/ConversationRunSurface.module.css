@@ -1350,6 +1350,7 @@
 
 .timeline {
   width: min(49rem, 100%);
+  overflow-x: hidden;
   padding-top: var(--space-md);
   scrollbar-gutter: stable;
 }
@@ -1443,7 +1444,7 @@
   position: sticky;
   z-index: var(--z-raised);
   top: 0;
-  margin: calc(-1 * var(--space-xs)) calc(-1 * var(--space-xs)) 0;
+  margin: calc(-1 * var(--space-xs)) 0 0;
   padding: var(--space-xs);
   border-bottom: var(--rule-thin) solid color-mix(in srgb, var(--color-action-strong) 14%, var(--color-line-faint));
   background: color-mix(in srgb, var(--color-surface) 84%, var(--color-brand-soft));
@@ -1464,6 +1465,8 @@
 
 .eventBody {
   position: relative;
+  box-sizing: border-box;
+  max-width: 100%;
   padding-top: 0.125rem;
 }
 

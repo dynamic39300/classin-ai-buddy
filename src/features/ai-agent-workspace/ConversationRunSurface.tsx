@@ -15,6 +15,8 @@ import { useDeadlineCountdown } from './use-deadline-countdown';
 import type { CoursewareRunView } from './workbuddy-course-production-view';
 import { useConversationRun } from './use-conversation-run';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import { workBuddyRunPath } from './workbuddy-experience-profile';
 import styles from './ConversationRunSurface.module.css';
 
 function projectExperience(progress: ConversationRunProgress): CoursewareExperienceState {
@@ -57,6 +59,7 @@ function iconForEvent(event: ConversationRunEvent) {
 }
 
 export function ConversationRunSurface() {
+  const profile = useWorkBuddyExperience();
   const workspace = useWorkBuddyWorkspace();
   const { coursewareView, replanScope, writebackScenario } = workspace.courseware;
   const contextCount = workspace.context.coursewareContextView?.includedCount ?? workspace.context.contextView.includedCount;
@@ -255,7 +258,7 @@ export function ConversationRunSurface() {
               onProposeSave={() => dispatch({ type: 'propose_action' })}
               onDerivePackage={() => {
                 const result = dispatch({ type: 'derive_package' });
-                if (result.resultRef) navigate(`/teacher/ai-agent/runs/${result.resultRef}`);
+                if (result.resultRef) navigate(workBuddyRunPath(profile, result.resultRef));
               }}
             />
           ) : <section className={styles.emptyOutput}><strong>产出将在生成后显示</strong><p>任务过程继续保留在左侧时间线。</p></section>}</div>
@@ -346,6 +349,7 @@ function CoursewareOutput({
   onDerivePackage: () => void;
   onInspectorStateChange: (patch: Readonly<{ focused?: boolean; previewPage?: number; scrollTop?: number }>) => void;
 }>) {
+  const profile = useWorkBuddyExperience();
   const { focused, previewPage, scrollTop } = inspectorState;
   const [toolStatus, setToolStatus] = useState('');
   const outputRef = useRef<HTMLElement>(null);
@@ -439,7 +443,7 @@ function CoursewareOutput({
         {reviewStatus === 'approved' && teacherInReceipt?.status !== 'success' ? <button className={styles.primary} type="button" onClick={createTeacherInDraft}>创建草稿到 TeacherIn</button> : null}
         {teacherInReceipt?.status === 'success' ? <Link to={teacherInReceipt.draft.editorPath}>前往 TeacherIn</Link> : null}
         {reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
-        {reviewStatus === 'approved' && derivedPackageRunRef ? <Link to={`/teacher/ai-agent/runs/${derivedPackageRunRef}`}>打开已派生课程方案包</Link> : null}
+        {reviewStatus === 'approved' && derivedPackageRunRef ? <Link to={workBuddyRunPath(profile, derivedPackageRunRef)}>打开已派生课程方案包</Link> : null}
         {reviewStatus === 'approved' && !derivedPackageRunRef ? <button type="button" onClick={onDerivePackage}>基于此课件生成课程方案包</button> : null}
         {hasReceipt ? <span>执行回执已返回任务时间线</span> : hasAction ? <span>保存流程已进入任务时间线</span> : null}
       </footer>

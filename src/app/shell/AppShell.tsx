@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { AppRole } from '@domain/account/role';
-import { AgentSecondaryNav, getWorkBuddyCapabilityFromPathname } from '@features/ai-agent-workspace';
+import {
+  AgentSecondaryNav,
+  createIdealWorkBuddyExperience,
+  getWorkBuddyCapabilityFromPathname,
+  parseWorkBuddyWorkspaceRoute,
+} from '@features/ai-agent-workspace';
 import { CapabilityDialog, type CapabilityKind } from './CapabilityDialog';
 import { getPageTitle } from './navigation';
 import { PageHeaderProvider } from './PageHeaderContext';
@@ -30,7 +35,9 @@ export function AppShell({ role }: AppShellProps) {
   );
   const previousMessageWorkspaceActiveRef = useRef(messageWorkspaceActive);
   const capabilityTriggerRef = useRef<HTMLElement | null>(null);
-  const agentWorkspaceActive = role === 'teacher' && location.pathname.startsWith('/teacher/ai-agent');
+  const workBuddyRoute = role === 'teacher' ? parseWorkBuddyWorkspaceRoute(location.pathname) : null;
+  const shellExperience = createIdealWorkBuddyExperience();
+  const agentWorkspaceActive = Boolean(workBuddyRoute);
   const agentCapability = agentWorkspaceActive ? getWorkBuddyCapabilityFromPathname(location.pathname, { includeDormant: true }) : undefined;
   const agentTaskWorkspaceActive = agentWorkspaceActive && !agentCapability;
   const pageTitle = agentCapability?.label ?? getPageTitle(role, location.pathname);
@@ -99,8 +106,8 @@ export function AppShell({ role }: AppShellProps) {
         role={role}
         navigationExtension={role === 'teacher' ? {
           afterItemId: 'teacher-ai-agent',
-          activePathPrefix: '/teacher/ai-agent',
-          content: <AgentSecondaryNav />,
+          activePathPrefix: shellExperience.basePath,
+          content: <AgentSecondaryNav profile={shellExperience} />,
         } : undefined}
         onOpenSettings={() => navigate(`/${role === 'teacher' ? 'teacher' : 'student'}/settings/benefits`)}
         onOpenHelp={() => openCapability('help')}

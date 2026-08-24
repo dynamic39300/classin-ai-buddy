@@ -1,8 +1,8 @@
 ---
 title: ClassIn 教师 WorkBuddy 当前状态与下一阶段计划
-status: M4_2_COMPLETE_M4_3_READY_FOR_REVIEW
-version: v0.12
-date: 2026-08-24
+status: M4_4_IN_PROGRESS
+version: v0.15
+date: 2026-08-25
 ---
 
 # 当前状态与下一阶段计划
@@ -19,8 +19,8 @@ date: 2026-08-24
 | 班级多 Agent 渠道 | 公开结构化 `@Agent`、教师/学生隔离私聊、授权重验、目标撤销与可恢复失败已实现 | 随 IM v0.19 验收通过 |
 | M4.2 IM AI 入口地图与 Case 矩阵 | M4.2-01～16 已完成：五个 P0 Case、最终发送话术、真实题号 Context、Agent 私聊发现/历史/响应、共享消息编辑与 WorkBuddy 统一体验均已闭环 | 2026-08-24 用户验收通过 |
 | 一级 WorkBuddy 测验活动草稿（纳入 M4.2 扩展交付） | PRD、Spec、Tickets 与纵向闭环已完成：连续生成并审阅试卷、确认后交互填写参数、draft-only 写回、课程详情逐题编辑、独立发布及学生可见性 | 2026-08-24 用户验收通过 |
-| M4.3 ClassIn 内嵌 MVP 入口 | 已锁定先于外部入口梳理内部 AI 能力、角色与入口 | M4.2 已过 Gate，可进入 Product/UX Review；尚未启动 Implementation |
-| M4.4 独立 To-Teacher / To-C 入口 | 从已验证的 ClassIn 内部能力抽取外部产品体验 | 待 M4.3 Review Gate 后进入 |
+| M4.3 ClassIn 内嵌 MVP 入口 | D-098～D-101 已实施：Demo 双入口共存，终局/MVP 独立 Product Module、Shell/导航、配置、Route 与 Data Space；MVP 左栏将原新建任务入口改名为“我的任务”，页面流程不变，并保留 Skills/Tools/Files、隐藏 Schedules/Settings；Launch Context、返回链路与跨 Experience 隔离均通过工程 Gate | 2026-08-25 用户完成页面验收，`COMPLETE_USER_ACCEPTED` |
+| M4.4 独立教师 WorkBuddy Web 产品 | 从已验证的终局能力建立第三套独立产品体验，补齐官网、教师个人账号、AI 点数、模拟会员订单、无 ClassIn Context 引导与 ClassIn 转化 | `IN_PROGRESS` |
 | M4.5 全局 Demo 体验收口 | IA、UI、交互、引导和 Demo Release Gate | 待 M4.4 Review Gate 后进入 |
 | M5–M10 | M5 规格已就绪；后续生产交付路线保留 | `PARKED`，待 M4.5 后独立恢复 |
 
@@ -67,4 +67,6 @@ M4.3 先于 M4.4，避免外部产品入口在内部能力和角色体系未稳�
 
 M5–M10 保持 `PARKED`，已有文档和实现基础不删除；只有在 M4.5 完成后，经用户独立确认才恢复。
 
-M4.2 最终工程证据：`npm run check` 84 个测试文件 / 555 项测试全通过；production build 通过；讲题最终话术、发送前预览、批准后链接、文件库、PA-01/DA-01、Agent 私聊授权目录/隔离历史/两阶段响应与新消息锚点，以及测验生成→试卷审阅→活动参数→草稿写回→课程详情编辑/发布的关键 E2E/a11y 均通过；受影响范围视觉基线通过并经人工复核。用户已于 2026-08-24 完成 M4.2 页面验收并授权版本封存；M4.3 只进入 Product/UX Review 就绪态，不自动启动 Implementation。
+M4.2 最终工程证据：`npm run check` 84 个测试文件 / 555 项测试全通过；production build 通过；讲题最终话术、发送前预览、批准后链接、文件库、PA-01/DA-01、Agent 私聊授权目录/隔离历史/两阶段响应与新消息锚点，以及测验生成→试卷审阅→活动参数→草稿写回→课程详情编辑/发布的关键 E2E/a11y 均通过；受影响范围视觉基线通过并经人工复核。用户已于 2026-08-24 完成 M4.2 页面验收并授权版本封存。
+
+M4.3 工程证据：`npm run check` 85 个测试文件 / 561 项测试与 production build 通过；131 项 Chromium E2E 均有绿色证据（最新并发全量 121 项通过，10 项拥塞失败随后逐项单 worker 复跑全部通过）；班级详情 1440×900、MVP WorkBuddy 1440×900/1024×640 及终局 WorkBuddy 精确视觉回归通过。用户已于 2026-08-25 完成页面验收并授权继续进入 M4.4。

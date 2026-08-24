@@ -44,7 +44,6 @@ import {
   canManageClass,
   CLASS_ACTIVITY_TYPE_LABELS,
   CLASS_COURSE_LIFECYCLE_LABELS,
-  CLASS_MEMBER_ROLE_LABELS,
   createClassCourse,
   deleteClassCourse,
   deleteClassUnit,
@@ -94,7 +93,7 @@ type TeacherClassWorkspaceProps = {
 
 type SortKey = 'updated-desc' | 'name-asc';
 type DialogKind = 'chat' | 'announcements' | 'settings';
-type RailSection = 'members' | 'cocreation' | 'ai';
+type RailSection = 'members' | 'cocreation' | 'ai' | 'workbuddy';
 type SettingsAction = 'exit' | null;
 type SettingsDraft = {
   name: string;
@@ -388,7 +387,7 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => searchParams.get('course'));
   const [activityFilter, setActivityFilter] = useState<'all' | 'lesson'>('all');
   const [railOpen, setRailOpen] = useState(true);
-  const [railSections, setRailSections] = useState<Record<RailSection, boolean>>({ members: true, cocreation: true, ai: true });
+  const [railSections, setRailSections] = useState<Record<RailSection, boolean>>({ members: true, cocreation: true, ai: true, workbuddy: true });
   const [collapsedUnitIds, setCollapsedUnitIds] = useState<ReadonlySet<string>>(new Set());
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [initialEditor, setInitialEditor] = useState<EditorState | null>(null);
@@ -1134,15 +1133,35 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
           ) : <>
           <section>
             <header className={styles.primaryRailHeader}><button type="button" aria-expanded={railSections.members} onClick={() => toggleRailSection('members')}><span>成员</span><strong>{memberCounts.total}</strong><ChevronDown aria-hidden="true" size={15} /></button><button className={styles.railToggle} type="button" aria-expanded="true" aria-label="收起右侧栏" onClick={() => setRailOpen(false)} title="收起右侧栏"><PanelRightClose aria-hidden="true" size={17} /></button></header>
-            {railSections.members ? <div className={styles.railContent}><div className={styles.memberStack}>{activeMembers.slice(0, 4).map((member) => <span className={styles.memberAvatar} key={member.id} title={getClassMemberDisplayName(member)}>{getClassMemberDisplayName(member).slice(0, 1)}</span>)}</div>{activeMembers.slice(0, 4).map((member) => <div className={styles.memberLine} key={member.id}><span>{getClassMemberDisplayName(member)}</span><small>{CLASS_MEMBER_ROLE_LABELS[member.role]}</small></div>)}<div className={styles.railActions}><button type="button" onClick={() => navigate(`/teacher/classes/${selectedClass.id}/members`)}>查看全部成员</button>{canManage ? <button className={styles.railIconAction} type="button" aria-label="邀请成员" onClick={() => setInviteOpen(true)} title="邀请成员"><UserPlus aria-hidden="true" size={15} /></button> : null}</div></div> : null}
+            {railSections.members ? (
+              <div className={styles.railContent}>
+                <div className={styles.memberToolbar} role="group" aria-label="成员头像与操作">
+                  <div className={styles.memberStack} aria-label="成员头像预览">
+                    {activeMembers.slice(0, 4).map((member) => (
+                      <span className={styles.memberAvatar} key={member.id} title={getClassMemberDisplayName(member)}>
+                        {getClassMemberDisplayName(member).slice(0, 1)}
+                      </span>
+                    ))}
+                  </div>
+                  <div className={styles.railActions}>
+                    <button type="button" onClick={() => navigate(`/teacher/classes/${selectedClass.id}/members`)}>查看全部成员</button>
+                    {canManage ? <button type="button" onClick={() => setInviteOpen(true)}><UserPlus aria-hidden="true" size={14} />添加成员</button> : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </section>
           <section>
             <header><button type="button" aria-expanded={railSections.cocreation} onClick={() => toggleRailSection('cocreation')}><span>共创</span><ChevronDown aria-hidden="true" size={15} /></button></header>
             {railSections.cocreation ? <div className={styles.railLinks}><button type="button" onClick={() => setBoundary('“这是共创页面!”为 Placeholder，未接入真实协作服务。')}><Sparkles aria-hidden="true" size={15} />这是共创页面!</button><button type="button" onClick={() => setBoundary('“回收站”为 Placeholder，未接入真实文档或回收站服务。')}><FolderArchive aria-hidden="true" size={15} />回收站</button></div> : null}
           </section>
           <section>
-            <header><button type="button" aria-expanded={railSections.ai} onClick={() => toggleRailSection('ai')}><span>AI</span><ChevronDown aria-hidden="true" size={15} /></button></header>
-            {railSections.ai ? <div className={styles.railLinks}><button type="button" onClick={() => setBoundary('“AI 助教”为 Placeholder，未接入真实 AI 服务。')}><Bot aria-hidden="true" size={15} />AI 助教</button><button type="button" onClick={() => setBoundary('“AI 学情”为 Placeholder，未生成真实学生分析。')}><Sparkles aria-hidden="true" size={15} />AI 学情</button><button type="button" onClick={() => setBoundary('“应用思路点拨”为 Placeholder，未接入真实 AI 服务。')}><PencilLine aria-hidden="true" size={15} />应用思路点拨</button></div> : null}
+            <header><button type="button" aria-expanded={railSections.ai} onClick={() => toggleRailSection('ai')}><span>AI 应用</span><ChevronDown aria-hidden="true" size={15} /></button></header>
+            {railSections.ai ? <div className={styles.railLinks}><p className={styles.railSectionNote}>老师已授权 · 班级成员可用</p><button type="button" onClick={() => setBoundary('“AI 助教”为 Placeholder，未接入真实 AI 服务。')}><Bot aria-hidden="true" size={15} />AI 助教</button><button type="button" onClick={() => setBoundary('“AI 学情”为 Placeholder，未生成真实学生分析。')}><Sparkles aria-hidden="true" size={15} />AI 学情</button><button type="button" onClick={() => setBoundary('“应用思路点拨”为 Placeholder，未接入真实 AI 服务。')}><PencilLine aria-hidden="true" size={15} />应用思路点拨</button></div> : null}
+          </section>
+          <section className={styles.workBuddyRailSection}>
+            <header><button type="button" aria-expanded={railSections.workbuddy} onClick={() => toggleRailSection('workbuddy')}><span>我的教学助理</span><ChevronDown aria-hidden="true" size={15} /></button></header>
+            {railSections.workbuddy ? <div className={styles.workBuddyPortal}><div className={styles.workBuddyIdentity}><span className={styles.workBuddyMark}><Sparkles aria-hidden="true" size={17} /></span><div><strong>WorkBuddy</strong><small>仅你可见</small></div></div><p>生成、审阅并执行你的教学任务。</p><button type="button" onClick={() => navigate(`/teacher/classes/${selectedClass.id}/workbuddy/new${activeCourse ? `?course=${encodeURIComponent(activeCourse.id)}` : ''}`)}>打开 WorkBuddy<ArrowRight aria-hidden="true" size={15} /></button></div> : null}
           </section>
           </>}
         </aside>

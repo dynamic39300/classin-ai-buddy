@@ -37,6 +37,7 @@ import { WorkBuddyWorkspaceContext, type CoursewarePanel, type PackagePanel, typ
 import { clearTeacherInDraftReceipts, loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
+  workspaceNamespace?: string;
   initialRuns: readonly WorkBuddyRunViewModel[];
   initialContextItems: readonly CoreContextItem[];
   recommendedContextItemIds: readonly string[];
@@ -75,12 +76,13 @@ function contextItemsForTaskType(items: readonly CoreContextItem[], taskType: Wo
 
 export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProps) {
   const {
+    workspaceNamespace = 'ideal-full',
     initialRuns, initialContextItems, recommendedContextItemIds, coursewareDefinition, coursewareOutput, replannedCoursewareOutput,
     capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture, clock,
     writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, teacherInAdapter,
     quizPaper, quizActivityDraftAdapter, quizActivityDraftScenarioController, children,
   } = props;
-  const restoredSession = useMemo(() => loadWorkBuddyWorkspaceSession(), []);
+  const restoredSession = useMemo(() => loadWorkBuddyWorkspaceSession(workspaceNamespace), [workspaceNamespace]);
   const [contextProposal, setContextProposal] = useState(() => restoredSession?.contextProposal ?? createContextProposal(initialContextItems, 'single-courseware'));
   const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(() => restoredSession?.contextSnapshot ?? null);
   const [snapshotsById, setSnapshotsById] = useState<Readonly<Record<string, ContextSnapshot>>>(() => restoredSession?.snapshotsById ?? {});
@@ -104,11 +106,12 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [draftGoal, setDraftGoal] = useState(() => restoredSession?.draftGoal ?? '');
   const [quizRun, setQuizRun] = useState<QuizActivityCreationRun | null>(() => restoredSession?.quizRun ?? null);
   const [quizScenario, setQuizScenarioState] = useState<QuizActivityDraftScenario>(() => restoredSession?.quizScenario ?? quizActivityDraftScenarioController.getScenario());
-  const [teacherInDraftReceipts, setTeacherInDraftReceipts] = useState<Readonly<Record<string, TeacherInDraftReceipt>>>(() => loadTeacherInDraftReceipts());
+  const [teacherInDraftReceipts, setTeacherInDraftReceipts] = useState<Readonly<Record<string, TeacherInDraftReceipt>>>(() => loadTeacherInDraftReceipts(workspaceNamespace));
   const [conversationHostPort] = useState(() => createConversationRunHostPort());
   const [conversationModule] = useState(() => createConversationRunModule(
     conversationHostPort.host,
     createBrowserConversationRunScheduler(),
+    workspaceNamespace,
   ));
 
   const coursewareController = createWorkBuddyCoursewareController({
@@ -232,17 +235,17 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       coursewareRun, coursewareAction, coursewareApproval, coursewareReceipt, writebackScenario, activeCoursewarePanel,
       packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageActionHistory, packageApprovalHistory, packageWritebackScenario,
       activePackagePanel, activePackageArtifactId, quizRun, quizScenario, draftGoal,
-    }));
+    }), workspaceNamespace);
   }, [
     activeCoursewarePanel, activePackageArtifactId, activePackagePanel, contextProposal, contextSnapshot, coursewareAction,
     coursewareApproval, coursewareReceipt, coursewareRun, draftGoal, packageAction, packageApproval, packageReceipt,
     packageActionHistory, packageApprovalHistory, packageReceiptHistory, packageRun, packageWritebackScenario, packageWritebackScenarioController, quizRun, quizScenario, snapshotsById, taskType,
-    writebackScenario, writebackScenarioController,
+    workspaceNamespace, writebackScenario, writebackScenarioController,
   ]);
 
   useEffect(() => quizActivityDraftScenarioController.setScenario(quizScenario), [quizActivityDraftScenarioController, quizScenario]);
 
-  useEffect(() => saveTeacherInDraftReceipts(teacherInDraftReceipts), [teacherInDraftReceipts]);
+  useEffect(() => saveTeacherInDraftReceipts(teacherInDraftReceipts, workspaceNamespace), [teacherInDraftReceipts, workspaceNamespace]);
 
   const workspace: WorkBuddyWorkspace = Object.freeze({
     conversationRun: conversationModule,
@@ -282,8 +285,8 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
       resetCoreContext: () => {
         if (coursewareRun) conversationModule.dispatch(coursewareRun.id, { id: `${coursewareRun.id}:reset`, type: 'reset' });
         if (packageRun) conversationModule.dispatch(packageRun.id, { id: `${packageRun.id}:reset`, type: 'reset' });
-        clearWorkBuddyWorkspaceSession();
-        clearTeacherInDraftReceipts();
+        clearWorkBuddyWorkspaceSession(workspaceNamespace);
+        clearTeacherInDraftReceipts(workspaceNamespace);
         setTeacherInDraftReceipts({});
         setContextSnapshot(null); setSnapshotsById({});
         setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');

@@ -319,6 +319,17 @@ test('teacher class detail at 1440x900', async ({ page }) => {
   await selectRole(page, /老师视角/);
   await openTeacherCollection(page, '我的班级');
   await page.getByRole('row').filter({ hasText: '高二物理 3 班' }).getByRole('button', { name: '进入班级' }).click();
+  const memberToolbar = page.getByRole('group', { name: '成员头像与操作' });
+  const memberRowCenters = await Promise.all([
+    memberToolbar.getByLabel('成员头像预览'),
+    memberToolbar.getByRole('button', { name: '查看全部成员' }),
+    memberToolbar.getByRole('button', { name: '添加成员' }),
+  ].map((element) => element.evaluate((node) => {
+    const rectangle = node.getBoundingClientRect();
+    return rectangle.top + rectangle.height / 2;
+  })));
+  expect(Math.max(...memberRowCenters) - Math.min(...memberRowCenters)).toBeLessThanOrEqual(1);
+  await expect(page.getByRole('complementary', { name: '班级辅助信息' }).getByText('王老师', { exact: true })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-class-detail-1440x900.png', { fullPage: true });
 });

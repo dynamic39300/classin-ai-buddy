@@ -1,8 +1,8 @@
 ---
 title: WorkBuddy M4.2–M4.5 Demo 完善路线
-status: M4_2_COMPLETE_ACTIVE_APPROVED_ROADMAP
-version: v0.4
-date: 2026-08-24
+status: M4_4_IN_PROGRESS
+version: v0.6
+date: 2026-08-25
 source_decision: D-077
 ---
 
@@ -62,20 +62,22 @@ M5–M10 状态为 `PARKED`，不是取消。已有 M5 PRD、Feature Spec 和 Ti
 
 当前锁定的 P0 Case 为 `WB-01 / WB-02 / WB-06 / PA-01 / DA-01`。其中 `WB-06` 使用格式中立的讲题 Artifact；教师先审核可编辑的最终发送话术，并可通过其中的文字链接预览讲解，批准后发送到当前班级群或当前学生私聊。具体 HTML/H5 只属于当前 Presentation Adapter 内部事实。`PA-01 / DA-01` 共用辅导能力但保留公开/私密 Channel Policy，不直接给出最终答案。
 
-截至 2026-08-24，M4.2-01～16 的 PRD、Spec、Tickets、Implementation、自检 Review、自动化验证与用户页面验收均已完成。扩展交付包括消息正文/编辑体验、WorkBuddy Shell 统一体验，以及“生成测验并创建教学活动草稿”的完整纵向闭环。M4.2 状态为 `COMPLETE_USER_ACCEPTED`；M4.3 可进入 Product/UX Review，但尚未启动 Implementation。
+截至 2026-08-25，M4.2-01～16 的 PRD、Spec、Tickets、Implementation、自检 Review、自动化验证与用户页面验收均已完成。扩展交付包括消息正文/编辑体验、WorkBuddy Shell 统一体验，以及“生成测验并创建教学活动草稿”的完整纵向闭环。M4.2 与 M4.3 均为 `COMPLETE_USER_ACCEPTED`；M4.4 已获用户授权进入完整实施流程。
 
 ## 4. M4.3 — ClassIn 内嵌 MVP 入口与角色引导
 
 ### 目标
 
-先在 ClassIn 内部理顺 AI 能力、角色和使用场景。MVP 从班级/课程详情的“AI 应用”进入；终局 WorkBuddy 一级入口继续保留为目标形态，但不要求在 MVP 发布配置中默认暴露。
+先在 ClassIn 内部理顺 AI 能力、角色和使用场景。MVP 在班级/课程详情新增独立“我的教学助理”Launch Portal，打开教师 1:1 的完整 WorkBuddy；原“AI 应用”继续承载老师授权给班级、班级成员可用的 Agent。当前 Demo 同时保留终局一级入口和 MVP 入口；真实 MVP 发布配置可以隐藏终局入口。
 
 ### 交付
 
-- 班级/课程详情中的“AI 应用”入口与上下文连续性；
+- 班级/课程详情中彼此独立的“AI 应用”与“我的教学助理”入口；
+- 独立装配的终局/MVP WorkBuddy Product Module、可复用的底层 Surface、彼此隔离的历史、MVP 内跨班级连续历史、场景级 Launch Context 与返回原班级的连续性；
 - 教师专属 WorkBuddy 与班级共享 Agent 的定位、权限和可见性说明；
 - 教师授权班级 Agent、学生发现已授权 Agent、群聊/私聊入口的角色化引导；
-- MVP 能力可见性配置：暂缓 MCP 等非首发配置，但不删除已完成的终局 Module；
+- `ideal-full` / `classin-mvp` Experience Profile：首版能力完全镜像，后续只裁剪 MVP Profile，不删除终局 Module；
+- 数据空间隔离：终局和 MVP 不共享 Run、历史、草稿、Artifact 索引或 Receipt；MVP 删除类型后相关终局历史完全隐藏；
 - 首次进入、空状态、权限拒绝和角色切换引导。
 
 ### Review Gate
@@ -104,7 +106,7 @@ M5–M10 状态为 `PARKED`，不是取消。已有 M5 PRD、Feature Spec 和 Ti
 - 外部能力是内部已验证能力的受控子集或明确扩展；
 - 不接真实支付、真实 Token 计费、生产账号权益、真实模型或生产 API。
 
-To-C 的具体用户是学生、家长还是更广泛消费者，必须在 M4.4 To Spec 前单独锁定。
+M4.4 首期 To-C 已锁定为教师个人账号，不建设学生、家长或机构管理员产品面。未合作机构中的老师也以个人教师身份体验；机构转化通过 ClassIn 引流入口承接。
 
 ## 6. M4.5 — 全局 IA、UI、交互与 Demo Release Gate
 

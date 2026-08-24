@@ -5,6 +5,8 @@ import type { QuizActivitySettings, QuizQuestionType, QuizScoringScheme } from '
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import { workBuddyNewTaskPath } from './workbuddy-experience-profile';
 import { QUIZ_GENERATION_STEPS, useQuizActivityExperience } from './use-quiz-activity-experience';
 import conversationStyles from './ConversationRunSurface.module.css';
 import styles from './QuizActivityConversationRunSurface.module.css';
@@ -18,6 +20,7 @@ const AVAILABLE_QUESTION_TYPES = Object.freeze(['single-choice', 'multiple-choic
 type LocalSupplement = Readonly<{ id: number; text: string }>;
 
 export function QuizActivityConversationRunSurface() {
+  const profile = useWorkBuddyExperience();
   const workspace = useWorkBuddyWorkspace();
   const quiz = workspace.quizActivity;
   const run = quiz.view?.run;
@@ -192,7 +195,7 @@ export function QuizActivityConversationRunSurface() {
               </div>
               {(run.stage === 'recoverable_failure' || run.stage === 'timeout') ? <button className={styles.primary} type="button" onClick={quiz.retryDraft}>安全重试</button> : null}
               {run.stage === 'version_conflict' ? <button className={styles.primary} type="button" onClick={quiz.refreshTarget}>刷新目标并重新确认</button> : null}
-              {run.stage === 'permission_denied' ? <Link className={styles.secondary} to="/teacher/ai-agent/new">结束并更换授权目标</Link> : null}
+              {run.stage === 'permission_denied' ? <Link className={styles.secondary} to={workBuddyNewTaskPath(profile)}>结束并更换授权目标</Link> : null}
               {run.stage === 'evidence_mismatch' ? <Link className={styles.secondary} to={`/teacher/classes/${run.target.classId}?course=${run.target.courseId}&unit=${run.target.unitId}&source=workbuddy-review`}>进入班级课程人工复查</Link> : null}
             </article>
           ) : null}
