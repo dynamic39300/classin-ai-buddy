@@ -77,7 +77,7 @@ type StoredState = Readonly<{
 }>;
 const STORAGE_KEY = 'workbuddy:conversation-run:v6';
 const EVENT_ACTORS = new Set(['teacher', 'agent', 'skill', 'tool', 'system']);
-const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'error', 'system']);
+const EVENT_KINDS = new Set(['teacher_message', 'goal_understood', 'clarification_request', 'clarification_submitted', 'context_confirmed', 'plan', 'process', 'capability_call', 'artifact', 'proposed_action', 'approval', 'receipt', 'evaluation', 'error', 'system']);
 const EVENT_STATES = new Set(['queued', 'running', 'requires_teacher_input', 'completed', 'failed', 'stopped', 'cancelled', 'superseded']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

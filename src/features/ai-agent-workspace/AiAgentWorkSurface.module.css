@@ -62,43 +62,8 @@
   color: var(--color-ink-muted);
 }
 
-.goalComposer {
+.goalComposerDock {
   overflow: visible;
-  border: var(--rule-thin) solid var(--color-line-control);
-  border-radius: var(--radius-overlay);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-schedule-module);
-}
-
-.goalComposer:focus-within {
-  border-color: var(--color-focus);
-  outline: var(--rule-medium) solid var(--color-focus);
-  outline-offset: var(--space-3xs);
-}
-
-.goalComposer textarea {
-  display: block;
-  width: 100%;
-  min-height: 8.5rem;
-  resize: none;
-  padding: var(--space-md);
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--color-ink);
-  line-height: 1.6;
-}
-
-.goalComposer textarea::placeholder,
-.runComposer input::placeholder {
-  color: var(--color-ink-muted);
-}
-
-.composerFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-xs);
 }
 
 .composerTools {
@@ -110,9 +75,7 @@
 }
 
 .composerTools button,
-.sendButton,
 .runHeader button,
-.runComposer button,
 .shortcuts button,
 .activePanel footer button {
   display: inline-flex;
@@ -297,24 +260,6 @@
 .composerTools .selectedSkillChip > button:focus-visible {
   outline: 0;
   background: color-mix(in srgb, var(--color-action-strong) 12%, transparent);
-}
-
-.sendButton,
-.runComposer button {
-  width: 2rem;
-  padding: 0;
-  background: var(--color-action-strong);
-  color: var(--color-on-action);
-}
-
-.sendButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
-}
-
-.runComposer button:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
 }
 
 .contextSummary {
@@ -510,22 +455,8 @@
   padding-left: var(--space-lg);
 }
 
-.runComposer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-xs);
+.runComposerDock {
   margin: 0 var(--space-lg) var(--space-md);
-  padding: var(--space-xs);
-  border: var(--rule-thin) solid var(--color-line-subtle);
-  border-radius: var(--radius-overlay);
-  background: var(--color-surface);
-}
-
-.runComposer input {
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
 }
 
 .runFeedback {

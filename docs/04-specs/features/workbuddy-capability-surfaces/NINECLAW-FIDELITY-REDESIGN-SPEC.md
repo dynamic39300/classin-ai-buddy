@@ -1,6 +1,6 @@
 ---
 title: Work Buddy 能力页面 NineClaw 高保真重设计规格
-status: READY_FOR_REVIEW
+status: REVIEWED_APPROVED
 version: v0.9
 date: 2026-08-22
 evidence_base: NineClaw 本地原始录屏、静态截图与关键帧图册

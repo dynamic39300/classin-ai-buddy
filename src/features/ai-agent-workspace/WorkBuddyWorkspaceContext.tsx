@@ -77,6 +77,8 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
   const [packageApproval, setPackageApproval] = useState<PackageApproval | null>(() => restoredSession?.packageApproval ?? null);
   const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(() => restoredSession?.packageReceipt ?? null);
   const [packageReceiptHistory, setPackageReceiptHistory] = useState<readonly PackageExecutionReceipt[]>(() => restoredSession?.packageReceiptHistory ?? []);
+  const [packageActionHistory, setPackageActionHistory] = useState<readonly PackageProposedAction[]>(() => restoredSession?.packageActionHistory ?? []);
+  const [packageApprovalHistory, setPackageApprovalHistory] = useState<readonly PackageApproval[]>(() => restoredSession?.packageApprovalHistory ?? []);
   const [packageWritebackScenario, setPackageWritebackScenario] = useState<PackageWritebackScenario>(() => restoredSession?.packageWritebackScenario ?? packageWritebackScenarioController.getScenario());
   const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>(() => restoredSession?.activePackagePanel ?? 'none');
   const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(() => restoredSession?.activePackageArtifactId ?? null);
@@ -101,6 +103,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     sourceCoursewareRun: coursewareRun, run: packageRun, action: packageAction, approval: packageApproval, receipt: packageReceipt,
     writebackScenario: packageWritebackScenario, activePanel: activePackagePanel, activeArtifactId: activePackageArtifactId,
     setRun: setPackageRun, setAction: setPackageAction, setApproval: setPackageApproval, setReceipt: setPackageReceipt, setReceiptHistory: setPackageReceiptHistory,
+    setActionHistory: setPackageActionHistory, setApprovalHistory: setPackageApprovalHistory,
     setWritebackScenario: setPackageWritebackScenario, setActivePanel: setActivePackagePanel, setActiveArtifactId: setActivePackageArtifactId,
     setTaskType: setTaskTypeState, setContextSnapshot, setContextProposal, setSnapshotsById,
   });
@@ -117,9 +120,11 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     && packageRun.sourceArtifactRef?.version === coursewareRun?.artifact?.version
     ? packageRun.id : null;
   const coursewareView = projectCoursewareRunView(
-    coursewareRun, projections, coursewareAction, coursewareReceipt, snapshotsById, derivedPackageRunRef,
+    coursewareRun, projections, coursewareAction, coursewareApproval, coursewareReceipt, snapshotsById, derivedPackageRunRef,
   );
-  const packageView = projectPackageRunView(packageRun, packageAction, packageReceipt, packageReceiptHistory);
+  const packageView = projectPackageRunView(
+    packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageActionHistory, packageApprovalHistory,
+  );
 
   const conversationHost: ConversationRunHost = Object.freeze({
     open: (runRef) => {
@@ -196,16 +201,16 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     writebackScenarioController.setScenario(writebackScenario);
     packageWritebackScenarioController.setScenario(packageWritebackScenario);
     saveWorkBuddyWorkspaceSession(Object.freeze({
-      version: 2,
+      version: 3,
       contextProposal, contextSnapshot, snapshotsById, taskType,
       coursewareRun, coursewareAction, coursewareApproval, coursewareReceipt, writebackScenario, activeCoursewarePanel,
-      packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageWritebackScenario,
+      packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageActionHistory, packageApprovalHistory, packageWritebackScenario,
       activePackagePanel, activePackageArtifactId, draftGoal,
     }));
   }, [
     activeCoursewarePanel, activePackageArtifactId, activePackagePanel, contextProposal, contextSnapshot, coursewareAction,
     coursewareApproval, coursewareReceipt, coursewareRun, draftGoal, packageAction, packageApproval, packageReceipt,
-    packageReceiptHistory, packageRun, packageWritebackScenario, packageWritebackScenarioController, snapshotsById, taskType,
+    packageActionHistory, packageApprovalHistory, packageReceiptHistory, packageRun, packageWritebackScenario, packageWritebackScenarioController, snapshotsById, taskType,
     writebackScenario, writebackScenarioController,
   ]);
 

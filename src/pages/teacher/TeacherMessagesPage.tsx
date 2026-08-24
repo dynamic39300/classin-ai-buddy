@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usePageHeader } from '@app/shell/usePageHeader';
+import { ImmersiveMessageWorkspaceFrame } from '@app/shell/ImmersiveMessageWorkspaceFrame';
+import { useMessageWorkspaceShell } from '@app/shell/MessageWorkspaceShellContext';
 import { getMessageThreadTitle } from '@domain/message/message';
 import { MessageWorkspace, useMessageThreads } from '@features/message-workspace';
 
 export function TeacherMessagesPage() {
+  const messageShell = useMessageWorkspaceShell();
   const [searchParams] = useSearchParams();
   const threads = useMessageThreads();
   const target = threads.find(({ id }) => id === searchParams.get('thread'));
@@ -14,5 +17,13 @@ export function TeacherMessagesPage() {
     ? { title, breadcrumbs: [{ label: '首页', to: '/teacher/home' }, { label: title }] }
     : { title: '消息' }, [fromHome, target, title]);
   usePageHeader(pageHeader);
-  return <MessageWorkspace role="teacher" />;
+  return (
+    <ImmersiveMessageWorkspaceFrame>
+      <MessageWorkspace
+        immersive={messageShell.immersive}
+        onEnterImmersive={messageShell.available ? messageShell.enterImmersive : undefined}
+        role="teacher"
+      />
+    </ImmersiveMessageWorkspaceFrame>
+  );
 }

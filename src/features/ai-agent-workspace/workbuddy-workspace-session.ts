@@ -7,10 +7,10 @@ import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/p
 import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
 import type { CoursewarePanel, PackagePanel } from './workbuddy-workspace';
 
-const STORAGE_KEY = 'workbuddy:workspace-session:v2';
+const STORAGE_KEY = 'workbuddy:workspace-session:v3';
 
 export type WorkBuddyWorkspaceSession = Readonly<{
-  version: 2;
+  version: 3;
   contextProposal: ContextProposal;
   contextSnapshot: ContextSnapshot | null;
   snapshotsById: Readonly<Record<string, ContextSnapshot>>;
@@ -26,6 +26,8 @@ export type WorkBuddyWorkspaceSession = Readonly<{
   packageApproval: PackageApproval | null;
   packageReceipt: PackageExecutionReceipt | null;
   packageReceiptHistory: readonly PackageExecutionReceipt[];
+  packageActionHistory: readonly PackageProposedAction[];
+  packageApprovalHistory: readonly PackageApproval[];
   packageWritebackScenario: PackageWritebackScenario;
   activePackagePanel: PackagePanel;
   activePackageArtifactId: string | null;
@@ -163,7 +165,7 @@ function isPackageApproval(value: unknown): value is PackageApproval {
 }
 
 function isPackageReceipt(value: unknown): value is PackageExecutionReceipt {
-  if (!isRecord(value) || !hasStrings(value, ['id', 'actionId', 'approvalId', 'idempotencyKey', 'truthLabel', 'result']) || !Array.isArray(value.items)) return false;
+  if (!isRecord(value) || !hasStrings(value, ['id', 'actionId', 'approvalId', 'idempotencyKey', 'executedAt', 'truthLabel', 'result']) || !Array.isArray(value.items)) return false;
   const itemValid = value.items.every((item) => isRecord(item) && typeof item.artifactId === 'string'
     && ['succeeded', 'failed', 'not_executed', 'waiting'].includes(String(item.result))
     && (item.result !== 'succeeded' || typeof item.objectId === 'string'));
@@ -191,7 +193,7 @@ function isPackageRun(value: unknown): value is CoursePackageRun {
 }
 
 function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession {
-  if (!isRecord(value) || value.version !== 2) return false;
+  if (!isRecord(value) || value.version !== 3) return false;
   const shapeValid = isContextProposal(value.contextProposal)
     && isNullable(value.contextSnapshot, isContextSnapshot)
     && isRecord(value.snapshotsById) && Object.values(value.snapshotsById).every(isContextSnapshot)
@@ -207,6 +209,8 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
     && isNullable(value.packageApproval, isPackageApproval)
     && isNullable(value.packageReceipt, isPackageReceipt)
     && Array.isArray(value.packageReceiptHistory) && value.packageReceiptHistory.every(isPackageReceipt)
+    && Array.isArray(value.packageActionHistory) && value.packageActionHistory.every(isPackageAction)
+    && Array.isArray(value.packageApprovalHistory) && value.packageApprovalHistory.every(isPackageApproval)
     && ['success', 'partial_success'].includes(String(value.packageWritebackScenario))
     && ['navigator', 'approval', 'receipt', 'core_context', 'none'].includes(String(value.activePackagePanel))
     && (value.activePackageArtifactId === null || typeof value.activePackageArtifactId === 'string')
@@ -233,12 +237,27 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
   const packageApproval = isRecord(value.packageApproval) ? value.packageApproval : null;
   const packageReceipt = isRecord(value.packageReceipt) ? value.packageReceipt : null;
   const packageReceiptHistory = Array.isArray(value.packageReceiptHistory) ? value.packageReceiptHistory : [];
+  const packageActionHistory = Array.isArray(value.packageActionHistory) ? value.packageActionHistory : [];
+  const packageApprovalHistory = Array.isArray(value.packageApprovalHistory) ? value.packageApprovalHistory : [];
   if (packageRun && typeof packageRun.contextSnapshotId === 'string' && !isRecord(snapshots[packageRun.contextSnapshotId])) return false;
   if (packageAction && (!packageRun || packageAction.runRef !== packageRun.id || packageAction.contextSnapshotId !== packageRun.contextSnapshotId
     || !Array.isArray(packageAction.artifactRefs) || !Array.isArray(packageRun.artifacts)
     || !packageAction.artifactRefs.every((ref) => isRecord(ref) && (packageRun.artifacts as unknown[]).some((artifact: unknown) => isRecord(artifact) && artifact.id === ref.id && artifact.version === ref.version)))) return false;
   if (packageApproval && (!packageAction || packageApproval.actionId !== packageAction.id)) return false;
-  if (packageReceipt && (!packageAction || !packageApproval || packageReceipt.actionId !== packageAction.id || packageReceipt.approvalId !== packageApproval.id)) return false;
+  if (packageActionHistory.some((historicalAction) => !isRecord(historicalAction) || !packageRun
+    || historicalAction.runRef !== packageRun.id || historicalAction.contextSnapshotId !== packageRun.contextSnapshotId)) return false;
+  if (packageApprovalHistory.some((historicalApproval) => !isRecord(historicalApproval)
+    || !packageActionHistory.some((historicalAction) => isRecord(historicalAction) && historicalAction.id === historicalApproval.actionId))) return false;
+  if (packageReceiptHistory.some((historicalReceipt) => !isRecord(historicalReceipt)
+    || !packageActionHistory.some((historicalAction) => isRecord(historicalAction) && historicalAction.id === historicalReceipt.actionId)
+    || !packageApprovalHistory.some((historicalApproval) => isRecord(historicalApproval) && historicalApproval.id === historicalReceipt.approvalId))) return false;
+  if (packageReceipt) {
+    const matchesCurrent = packageAction && packageApproval
+      && packageReceipt.actionId === packageAction.id && packageReceipt.approvalId === packageApproval.id;
+    const matchesHistory = packageActionHistory.some((historicalAction) => isRecord(historicalAction) && historicalAction.id === packageReceipt.actionId)
+      && packageApprovalHistory.some((historicalApproval) => isRecord(historicalApproval) && historicalApproval.id === packageReceipt.approvalId);
+    if (!matchesCurrent && !matchesHistory) return false;
+  }
   if (packageReceiptHistory.length && (!packageRun || !Array.isArray(packageRun.artifacts))) return false;
   const packageArtifactIds = new Set(packageRun && Array.isArray(packageRun.artifacts)
     ? packageRun.artifacts.filter(isRecord).map((artifact) => String(artifact.id))

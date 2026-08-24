@@ -1,7 +1,15 @@
 import type { AppRole } from '@domain/account/role';
+import type { ClassAgentChannel, ClassAgentThreadBinding, ClassAgentTruthLabel } from '@domain/class-agent/class-agent';
 
 export type MessageCategory = 'direct' | 'class' | 'system' | 'official';
-export type MessageAuthorRole = AppRole | 'system' | 'official';
+export type MessageAuthorRole = AppRole | 'system' | 'official' | 'class-agent';
+
+export type ClassAgentMessageMetadata = Readonly<{
+  agentId: string;
+  channel: ClassAgentChannel;
+  visibilityLabel: string;
+  truthLabel: ClassAgentTruthLabel;
+}>;
 
 export type MessageEntry = {
   id: string;
@@ -11,6 +19,7 @@ export type MessageEntry = {
   sentAt: string;
   kind: 'text' | 'emoji' | 'system' | 'retracted';
   retractedAt?: string;
+  classAgent?: ClassAgentMessageMetadata;
 };
 
 export type MessageNotice = {
@@ -36,7 +45,10 @@ export type MessageThread = {
   updatedAt: string;
   unreadByRole: Partial<Record<AppRole, number>>;
   classId?: string;
+  memberCount?: number;
   peerId?: string;
+  classAgentBinding?: ClassAgentThreadBinding;
+  classAgentBindings?: readonly ClassAgentThreadBinding[];
   entries: MessageEntry[];
   notice?: MessageNotice;
   pinnedMessageId?: string | null;
@@ -48,6 +60,7 @@ export type MessageContact = {
   relationship: string;
   visibleTo: readonly AppRole[];
   targetThreadId: string;
+  agentId?: string;
 };
 
 export const MESSAGE_CATEGORY_LABELS: Record<MessageCategory, string> = {
@@ -168,6 +181,9 @@ export function appendLocalMessage(
   body: string,
   sentAt: string,
   kind: 'text' | 'emoji' = 'text',
+  messageId?: string,
+  authorRole: MessageAuthorRole = role,
+  classAgent?: ClassAgentMessageMetadata,
 ): MessageThread {
   const content = body.trim();
   if (!content || !isWritableMessageThread(thread)) return thread;
@@ -178,12 +194,13 @@ export function appendLocalMessage(
     entries: [
       ...thread.entries,
       {
-        id: `local-${role}-${thread.entries.length + 1}`,
-        authorRole: role,
+        id: messageId ?? `local-${role}-${thread.entries.length + 1}`,
+        authorRole,
         authorName,
         body: content,
         sentAt,
         kind,
+        classAgent,
       },
     ],
   };

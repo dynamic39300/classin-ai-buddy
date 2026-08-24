@@ -2,8 +2,11 @@
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
   background: var(--color-canvas);
+  transition: grid-template-columns var(--dur-short) var(--ease-out);
 }
 
 .stage {
@@ -12,6 +15,13 @@
   min-width: 0;
   height: 100vh;
   overflow: hidden;
+  transition:
+    grid-template-rows var(--dur-short) var(--ease-out),
+    height var(--dur-short) var(--ease-out),
+    margin var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    border-radius var(--dur-short) var(--ease-out),
+    box-shadow var(--dur-short) var(--ease-out);
 }
 
 .stage[data-workbuddy-stage='true'] {
@@ -20,6 +30,7 @@
 
 .workspace {
   min-width: 0;
+  min-height: 0;
   overflow: auto;
   background: var(--color-canvas);
 }
@@ -43,6 +54,50 @@
   background: var(--color-surface);
 }
 
+.shell[data-message-shell-mode='entering'],
+.shell[data-message-shell-mode='immersive'] {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.shell > aside {
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
+}
+
+.shell[data-message-shell-mode='entering'] > aside,
+.shell[data-message-shell-mode='immersive'] > aside,
+.shell[data-message-shell-mode='exiting'] > aside {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shell[data-message-shell-mode='entering'] > aside,
+.shell[data-message-shell-mode='immersive'] > aside {
+  opacity: 0;
+  transform: translateX(calc(-1 * var(--space-lg)));
+}
+
+.stage > header {
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
+}
+
+.shell[data-message-shell-mode='entering'] .stage,
+.shell[data-message-shell-mode='immersive'] .stage {
+  height: 100vh;
+  grid-template-rows: 0 minmax(0, 1fr);
+  margin: 0;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.shell[data-message-shell-mode='entering'] .stage > header,
+.shell[data-message-shell-mode='immersive'] .stage > header {
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-1 * var(--space-sm)));
+}
+
 @media (max-width: 68rem) {
   .shell {
     grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr);
@@ -50,5 +105,19 @@
 
   .shell[data-contextual-navigation='true'] {
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  }
+
+  .shell[data-message-shell-mode='entering'],
+  .shell[data-message-shell-mode='immersive'] {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .stage,
+  .shell > aside,
+  .stage > header {
+    transition: none;
   }
 }

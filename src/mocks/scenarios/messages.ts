@@ -1,4 +1,9 @@
 import type { MessageContact, MessageThread } from '@domain/message/message';
+import {
+  CLASS_AGENT_DEFINITIONS,
+  PUBLIC_CLASS_AGENT_BINDINGS,
+  createDirectClassAgentBinding,
+} from './class-agent';
 
 export const MESSAGE_NOW = new Date('2026-08-08T14:20:00+08:00');
 
@@ -26,7 +31,44 @@ const INSIGHT_DIRECT_THREADS: ReadonlyArray<MessageThread> = INSIGHT_PEERS.map((
   entries: [],
 }));
 
+function getAgentDirectThreadId(agentId: string, role: 'teacher' | 'student-family'): string {
+  return `direct-${agentId.replace('class-agent-', 'class-agent-')}-${role === 'teacher' ? 'teacher' : 'student'}`;
+}
+
+const CLASS_AGENT_DIRECT_THREADS: ReadonlyArray<MessageThread> = CLASS_AGENT_DEFINITIONS.flatMap((agent) => (
+  (['teacher', 'student-family'] as const).map((role) => ({
+    id: getAgentDirectThreadId(agent.id, role),
+    category: 'direct' as const,
+    visibleTo: [role],
+    titleByRole: { [role]: agent.name },
+    subtitleByRole: { [role]: `班级 Agent · ${agent.classLabel} · ${agent.capabilitySummary}` },
+    avatarByRole: { [role]: agent.avatarLabel },
+    updatedAt: '2026-08-08T13:50:00+08:00',
+    unreadByRole: { [role]: 0 },
+    classId: agent.classId,
+    peerId: agent.id,
+    classAgentBinding: createDirectClassAgentBinding(agent, role),
+    entries: [{
+      id: `${agent.id}-${role}-welcome`,
+      authorRole: 'class-agent' as const,
+      authorName: agent.name,
+      body: role === 'teacher'
+        ? `我是本班已授权的${agent.name}。这条教师私聊与学生线程互相隔离，你可以直接描述需要协助的任务。`
+        : `我是本班已授权的${agent.name}。你可以直接提问；这条私聊只对你和当前 Agent 可见。`,
+      sentAt: '2026-08-08T13:50:00+08:00',
+      kind: 'text' as const,
+      classAgent: {
+        agentId: agent.id,
+        channel: 'private-direct' as const,
+        visibilityLabel: '仅你与班级 Agent 可见',
+        truthLabel: agent.truthLabel,
+      },
+    }],
+  }))
+));
+
 export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
+  ...CLASS_AGENT_DIRECT_THREADS,
   {
     id: 'direct-wang-li',
     category: 'direct',
@@ -92,6 +134,8 @@ export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
     updatedAt: '2026-08-08T14:08:00+08:00',
     unreadByRole: { teacher: 1, 'student-family': 3 },
     classId: 'physics-3',
+    memberCount: 30,
+    classAgentBindings: PUBLIC_CLASS_AGENT_BINDINGS,
     pinnedMessageId: 'cp3-2',
     entries: [
       { id: 'cp3-1', authorRole: 'system', authorName: '系统', body: '动量守恒模型课堂将在 14:30 开始', sentAt: '2026-08-08T13:40:00+08:00', kind: 'system' },
@@ -109,6 +153,7 @@ export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
     updatedAt: '2026-08-08T12:20:00+08:00',
     unreadByRole: { teacher: 0 },
     classId: 'physics-1',
+    memberCount: 32,
     entries: [
       { id: 'cp1-1', authorRole: 'teacher', authorName: '王老师', body: '周末学习提醒已发布，请查收。', sentAt: '2026-08-08T12:20:00+08:00', kind: 'text' },
     ],
@@ -123,6 +168,7 @@ export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
     updatedAt: '2026-08-08T09:45:00+08:00',
     unreadByRole: { 'student-family': 0 },
     classId: 'english-2',
+    memberCount: 28,
     entries: [
       { id: 'ce2-1', authorRole: 'system', authorName: '系统', body: '陈老师发布了阅读训练第 6 讲', sentAt: '2026-08-08T09:30:00+08:00', kind: 'system' },
       { id: 'ce2-2', authorRole: 'system', authorName: '陈老师', body: '有问题可以在群里集中提出。', sentAt: '2026-08-08T09:45:00+08:00', kind: 'text' },
@@ -261,6 +307,14 @@ export const MESSAGE_THREADS: ReadonlyArray<MessageThread> = [
 ];
 
 export const MESSAGE_CONTACTS: ReadonlyArray<MessageContact> = [
+  ...CLASS_AGENT_DEFINITIONS.flatMap((agent) => (['teacher', 'student-family'] as const).map((role) => ({
+    id: `contact-${agent.id}-${role}`,
+    name: agent.name,
+    relationship: `班级 Agent · ${agent.classLabel} · ${agent.capabilitySummary}`,
+    visibleTo: [role],
+    targetThreadId: getAgentDirectThreadId(agent.id, role),
+    agentId: agent.id,
+  }))),
   { id: 'contact-li', name: '李明', relationship: '学生 · 高二物理 3 班', visibleTo: ['teacher'], targetThreadId: 'direct-wang-li' },
   { id: 'contact-zhang', name: '张老师', relationship: '联系人 · 物理教研组', visibleTo: ['teacher'], targetThreadId: 'direct-teacher-zhang' },
   { id: 'contact-wang', name: '王老师', relationship: '物理老师', visibleTo: ['student-family'], targetThreadId: 'direct-wang-li' },

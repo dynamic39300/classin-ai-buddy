@@ -222,7 +222,7 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
         : view.action.status === 'approved' ? ['execute_action'] : [],
     });
     if (view.action.status === 'approved' || view.receipt) {
-      const approvalId = `${view.action.id}:approval`;
+      const approvalId = view.approval?.id ?? `${view.action.id}:approval`;
       inputs.push({
         id: approvalId,
         kind: 'approval',
@@ -243,6 +243,25 @@ export function projectCoursewareConversationRun(view: CoursewareRunView): Conve
       objectRefs: [{ type: 'receipt', id: view.receipt.id }],
       allowedCommands: view.receipt.status === 'success' ? ['derive_package']
         : view.receipt.status === 'permission_denied' || view.receipt.status === 'version_conflict' ? ['recover_action'] : ['execute_action'],
+    });
+  }
+
+  if (view.evaluation) {
+    inputs.push({
+      id: view.evaluation.id,
+      kind: 'evaluation',
+      title: view.evaluation.signal.outcome === 'adopted' ? '已记录教师采纳结果' : '已记录本次未完成采纳',
+      summary: view.evaluation.signal.outcome === 'adopted'
+        ? `${view.evaluation.truthLabel} 草稿已获教师批准并成功写入；尚不代表教学效果。`
+        : `${view.evaluation.truthLabel} 执行状态：${view.evaluation.signal.executionStatus}；尚未形成业务采纳。`,
+      objectRefs: [
+        { type: 'context_snapshot', id: view.evaluation.contextSnapshotRef },
+        { type: 'artifact', id: view.evaluation.artifactRef.id, version: view.evaluation.artifactRef.version },
+        { type: 'action', id: view.evaluation.actionRef },
+        { type: 'approval', id: view.evaluation.approvalRef },
+        { type: 'receipt', id: view.evaluation.receiptRef },
+        { type: 'evaluation', id: view.evaluation.id },
+      ],
     });
   }
 
@@ -331,26 +350,50 @@ export function projectPackageConversationRun(view: PackageRunView): Conversatio
     id: `${run.id}:package-ready`, kind: 'system', title: '课程方案包已生成',
     summary: `${run.artifacts.filter(({ state }) => state !== 'excluded').length} 项产物已形成，可在右侧逐项预览、排除或选择写回。`,
   });
-  if (view.action) {
+  const pushPackageAction = (action: PackageRunView['action'], approval: PackageRunView['approval'], executed: boolean) => {
+    if (!action) return;
     inputs.push({
-      id: view.action.id, kind: 'proposed_action', title: '保存课程方案包到 ClassIn',
-      summary: `${view.action.artifactRefs.length} 项对象 · ${view.action.difference}`,
-      objectRefs: [{ type: 'action', id: view.action.id }],
-      allowedCommands: view.receipt ? [] : view.action.status === 'proposed' ? ['approve_action', 'reject_action', 'set_package_item_included']
-        : view.action.status === 'approved' ? ['execute_action'] : [],
+      id: action.id, kind: 'proposed_action', title: '保存课程方案包到 ClassIn',
+      summary: `${action.artifactRefs.length} 项对象 · ${action.difference}`,
+      objectRefs: [{ type: 'action', id: action.id }],
+      allowedCommands: executed ? [] : action.status === 'proposed' ? ['approve_action', 'reject_action', 'set_package_item_included']
+        : action.status === 'approved' ? ['execute_action'] : [],
     });
-    if (view.action.status === 'approved' || view.receipt) inputs.push({
-      id: `${view.action.id}:approval`, kind: 'approval', title: '教师已批准方案包写回',
+    if (approval) inputs.push({
+      id: approval.id, kind: 'approval', title: '教师已批准方案包写回',
       summary: '写回提案已批准，等待对象级执行结果。',
-      objectRefs: [{ type: 'action', id: view.action.id }],
+      objectRefs: [{ type: 'approval', id: approval.id }, { type: 'action', id: action.id }],
     });
+  };
+  const pushEvaluation = (evaluation: PackageRunView['evaluations'][number]) => inputs.push({
+      id: evaluation.id,
+      kind: 'evaluation',
+      title: evaluation.signal.outcome === 'adopted' ? '已记录对象采纳结果' : '已记录对象未采纳结果',
+      summary: evaluation.signal.outcome === 'adopted'
+        ? `${evaluation.truthLabel} 对象已获教师批准并成功写入；尚不代表教学效果。`
+        : `${evaluation.truthLabel} 对象执行状态：${evaluation.signal.executionStatus}；尚未形成业务采纳。`,
+      objectRefs: [
+        { type: 'context_snapshot', id: evaluation.contextSnapshotRef },
+        { type: 'artifact', id: evaluation.artifactRef.id, version: evaluation.artifactRef.version },
+        { type: 'action', id: evaluation.actionRef },
+        { type: 'approval', id: evaluation.approvalRef },
+        { type: 'receipt', id: evaluation.receiptRef },
+        { type: 'evaluation', id: evaluation.id },
+      ],
+    });
+  for (const attempt of view.executionAttempts) {
+    pushPackageAction(attempt.action, attempt.approval, true);
+    inputs.push({
+      id: attempt.receipt.id, kind: 'receipt', state: attempt.receipt.status === 'success' ? 'completed' : 'failed',
+      title: attempt.receipt.status === 'success' ? '课程方案包已写回 ClassIn' : '课程方案包写回结果', summary: attempt.receipt.result,
+      objectRefs: [{ type: 'receipt', id: attempt.receipt.id }],
+      allowedCommands: attempt.receipt.id === view.receipt?.id && attempt.receipt.status === 'partial_success' && view.retryableArtifactIds.length ? ['retry_failed'] : [],
+    });
+    for (const evaluation of attempt.evaluations) pushEvaluation(evaluation);
   }
-  for (const receipt of view.receiptHistory.length ? view.receiptHistory : view.receipt ? [view.receipt] : []) inputs.push({
-    id: receipt.id, kind: 'receipt', state: receipt.status === 'success' ? 'completed' : 'failed',
-    title: receipt.status === 'success' ? '课程方案包已写回 ClassIn' : '课程方案包写回结果', summary: receipt.result,
-    objectRefs: [{ type: 'receipt', id: receipt.id }],
-    allowedCommands: receipt.status === 'partial_success' && view.retryableArtifactIds.length ? ['retry_failed'] : [],
-  });
+  if (view.action && !view.executionAttempts.some((attempt) => attempt.action.id === view.action?.id)) {
+    pushPackageAction(view.action, view.approval, false);
+  }
   const events = Object.freeze(inputs.map((input, index) => freezeEvent(run.id, index + 1, input)));
   const status: ConversationRunStatus = view.receipt?.status === 'success' ? 'completed'
     : view.receipt ? 'failed'

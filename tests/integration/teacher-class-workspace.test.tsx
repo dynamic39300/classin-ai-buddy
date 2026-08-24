@@ -146,7 +146,15 @@ describe('teacher class experience refresh', () => {
     expect(screen.queryByRole('button', { name: /课程操作/ })).not.toBeInTheDocument();
   });
 
-  it('edits the class in its property dialog and opens contextual dialogs without leaving the class', async () => {
+  it('preserves the home source when routing a class into immersive chat', async () => {
+    const user = userEvent.setup();
+    renderWorkspace('physics-3', '/teacher/classes/physics-3?from=home');
+
+    await user.click(screen.getByRole('button', { name: '班级群聊' }));
+    expect(screen.getByLabelText('当前路径')).toHaveTextContent('/teacher/classes/physics-3/chat?from=home');
+  });
+
+  it('edits the class, keeps contextual dialogs, and routes class chat to its immersive page', async () => {
     const user = userEvent.setup();
     renderWorkspace('physics-3');
 
@@ -158,15 +166,14 @@ describe('teacher class experience refresh', () => {
     await user.click(within(classDialog).getByRole('button', { name: '保存更改' }));
     expect(screen.queryByRole('dialog', { name: '班级属性' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '班级群聊' }));
-    expect(screen.getByRole('dialog', { name: '班级群聊' })).toBeInTheDocument();
-    expect(screen.getByLabelText('当前路径')).toHaveTextContent('dialog=chat');
-    await user.click(screen.getByRole('button', { name: '关闭班级群聊' }));
-    expect(screen.queryByRole('dialog', { name: '班级群聊' })).not.toBeInTheDocument();
-
     await user.click(screen.getByRole('button', { name: '公告' }));
     expect(screen.getByRole('dialog', { name: '公告' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '发布公告' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '关闭公告' }));
+
+    await user.click(screen.getByRole('button', { name: '班级群聊' }));
+    expect(screen.queryByRole('dialog', { name: '班级群聊' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('当前路径')).toHaveTextContent('/teacher/classes/physics-3/chat');
   });
 
   it('controls the auxiliary rail and deep-links class tasks', async () => {

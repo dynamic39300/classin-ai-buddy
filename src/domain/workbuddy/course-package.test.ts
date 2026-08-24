@@ -54,7 +54,7 @@ describe('course-package Artifact Graph', () => {
         { artifactId: 'package-quiz', result: 'not_executed' as const },
         { artifactId: 'package-recording', result: 'not_executed' as const },
       ],
-      result: '部分成功', truthLabel: '[模拟]课程方案包执行回执',
+      executedAt: '2026-08-20T10:16:00+08:00', result: '部分成功', truthLabel: '[模拟]课程方案包执行回执',
     };
     const applied = applyPackageExecutionReceipt(approved, decision.action, decision.approval, receipt);
     expect(applied.accepted).toBe(true);

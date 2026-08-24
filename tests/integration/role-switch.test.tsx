@@ -85,6 +85,18 @@ describe('app shell role journeys', () => {
     expect(within(studentQuickControl).getByRole('button', { name: '切换至老师' })).toBeInTheDocument();
   });
 
+  it('uses one immersive navigation layer for a student class chat', () => {
+    window.sessionStorage.setItem(ROLE_STORAGE_KEY, 'student-family');
+    renderApp('/student/classes/physics-3/chat');
+
+    expect(screen.getByLabelText('班级群聊沉浸工作区导航')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '班级群聊' })).toBeInTheDocument();
+    expect(screen.getByText('高二物理 3 班', { selector: 'header span' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '返回班级' })).toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'WorkBuddy 私密协作窗口' })).not.toBeInTheDocument();
+    expect(document.querySelector('[data-shell-mode="linear-workbench"]')).toHaveAttribute('data-message-shell-mode', 'immersive');
+  });
+
   it('restores a valid role and clears it on logout', async () => {
     window.sessionStorage.setItem(ROLE_STORAGE_KEY, 'student-family');
     const user = userEvent.setup();

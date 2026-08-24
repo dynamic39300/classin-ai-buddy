@@ -60,6 +60,7 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
       actionId: action.id,
       approvalId: approval.id,
       idempotencyKey: action.idempotencyKey,
+      executedAt: '2026-08-20T10:16:00+08:00',
       truthLabel: '[模拟]课程方案包执行回执',
     } as const;
     const receipt: PackageExecutionReceipt = items.every((item): item is Extract<PackageReceiptItem, { result: 'succeeded' | 'not_executed' }> => item.result === 'succeeded' || item.result === 'not_executed')
@@ -79,6 +80,7 @@ export class MockPackageWritebackAdapter implements PackageWritebackAdapter, Pac
   ): PackageExecutionReceipt {
     const base = {
       id: `receipt-package-${status}-1`, actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
+      executedAt: '2026-08-20T10:16:00+08:00',
       result, items: Object.freeze(candidates.map(({ id, approvalState }) => Object.freeze({ artifactId: id, result: approvalState === 'waiting' ? 'waiting' as const : 'not_executed' as const }))),
       truthLabel: '[模拟]课程方案包执行回执',
     };

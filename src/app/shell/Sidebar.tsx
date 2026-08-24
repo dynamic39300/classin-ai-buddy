@@ -12,6 +12,7 @@ import styles from './Sidebar.module.css';
 
 type SidebarProps = {
   role: AppRole;
+  inactive?: boolean;
   navigationExtension?: {
     afterItemId: string;
     activePathPrefix: string;
@@ -27,7 +28,7 @@ const GROUP_LABELS: Record<NavigationGroup, string> = {
   'instant-tool': '即时工具',
 };
 
-export function Sidebar({ role, navigationExtension, onOpenSettings, onOpenHelp }: SidebarProps) {
+export function Sidebar({ role, inactive = false, navigationExtension, onOpenSettings, onOpenHelp }: SidebarProps) {
   const location = useLocation();
   const [accountOpen, setAccountOpen] = useState(false);
   const [classManagementManualOpen, setClassManagementManualOpen] = useState(false);
@@ -58,8 +59,10 @@ export function Sidebar({ role, navigationExtension, onOpenSettings, onOpenHelp 
 
   return (
     <aside
+      aria-hidden={inactive || undefined}
       className={styles.sidebar}
       data-contextual-navigation={navigationExtensionOpen ? 'true' : undefined}
+      inert={inactive || undefined}
     >
       <div className={styles.brand}>
         <span className={styles.brandMark} aria-hidden="true">C</span>

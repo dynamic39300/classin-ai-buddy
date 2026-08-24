@@ -30,7 +30,7 @@ type PackageNotExecutedReceiptItem = Readonly<{ artifactId: string; result: 'not
 type PackageWaitingReceiptItem = Readonly<{ artifactId: string; result: 'waiting'; objectId?: never }>;
 export type PackageReceiptItem = PackageSucceededReceiptItem | PackageFailedReceiptItem | PackageNotExecutedReceiptItem | PackageWaitingReceiptItem;
 type PackageReceiptBase = Readonly<{
-  id: string; actionId: string; approvalId: string; idempotencyKey: string; truthLabel: string; result: string;
+  id: string; actionId: string; approvalId: string; idempotencyKey: string; executedAt: string; truthLabel: string; result: string;
 }>;
 export type PackageExecutionReceipt =
   | PackageReceiptBase & Readonly<{ status: 'success'; items: readonly (PackageSucceededReceiptItem | PackageNotExecutedReceiptItem)[]; recovery?: never; expectedVersion?: never; currentVersion?: never }>

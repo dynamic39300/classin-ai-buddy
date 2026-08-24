@@ -145,30 +145,28 @@ UI 可以先把状态演示出来，但只有拥有事实的 Module 才能宣告
 
 | Module | 小 Interface（目标形状） | 关键不变量 | 当前代码与下一步 |
 | --- | --- | --- | --- |
-| Workbench UI Projection | `render(viewModel)`、`dispatch(command)` | 只消费稳定 ViewModel，不持有业务规则 | [App.tsx](/Users/eeo/Documents/claudecode/classin-ai-buddy/apps/workbench/src/App.tsx) 目前直接管理页面阶段；下一步抽出 Command 和 ViewModel |
-| Course Production Application | `start(input)`、`review(runId, edit)`、`proposeSave(runId)` | 编排用例，不拥有 ClassIn 事实 | [application](/Users/eeo/Documents/claudecode/classin-ai-buddy/packages/application/src/index.ts) 目前只有 Gateway 契约；下一步实现用例 Module |
-| Domain State | `transition(state, signal)`、`validate(object)` | 显式联合状态和不变量；不依赖 UI 或 Adapter | [domain](/Users/eeo/Documents/claudecode/classin-ai-buddy/packages/domain/src/index.ts) 目前只有 `RunState` 和 `CourseScope` |
-| Contract | Zod Schema 和稳定 DTO | 外部输入先校验；不泄漏供应商事件 | [contracts](/Users/eeo/Documents/claudecode/classin-ai-buddy/packages/contracts/src/index.ts) 目前只有脚手架和最小回执类型 |
-| Context Engine | `build(scope, intent)`、`inspect(snapshotId)` | 来源、版本、权限和缺口可追溯 | 尚未实现；由 Adapter 和 Knowledge Adapter 提供事实 |
-| Task Runtime | `start(intent, context)`、`signal(run, signal)`、`inspect(run)` | 计划、等待、重试和恢复集中管理 | 尚未实现；当前 UI 用 `stage` 和定时器模拟 |
-| Capability / Artifact | `resolve(need)`、`invoke(call)`、`readArtifact(ref)` | 能力声明副作用；产物有来源、版本和校验结果 | 尚未实现；当前方案内容写在 UI JSX 中 |
-| Control & Execution | `prepare(action)`、`commit(permit)`、`reverse(receipt)` | 所有副作用统一经过权限、风险、审批和幂等检查 | 尚未实现；当前只有确认页面 |
-| Evaluation | `record(event)`、`summarize(run)` | 记录教师动作、执行结果和后续复查，不代替业务事实 | 尚未实现 |
-| ClassIn Course Adapter | `readScope`、`readCourseStructure`、`saveDraft` | 只负责领域事实和稳定回执，不拥有 Run 或 Artifact | [Mock Adapter](/Users/eeo/Documents/claudecode/classin-ai-buddy/packages/adapters/mock-classin/src/index.ts) 已实现 `saveDraft`；读取和完整回执待补 |
+| Workbench UI Projection | `open(runRef)`、`dispatch(command)` | 只消费稳定 Projection，不持有业务规则 | `src/features/ai-agent-workspace/ConversationRunSurface.tsx` 消费 `ConversationRun` 公开契约；页面阶段已退出主链 |
+| Course Production Application | `create / confirm / execute / propose / approve / writeback` | 编排用例，不拥有 ClassIn 事实 | `workbuddy-courseware-controller.ts` 与 `workbuddy-package-controller.ts` 编排两条课程生产纵向闭环 |
+| Domain State | 纯函数状态转换与校验 | 显式联合状态和不变量；不依赖 UI 或 Adapter | `src/domain/workbuddy/` 已拥有 Run、Context、Artifact、Action、Approval、Receipt 和 Evaluation 规则 |
+| Contract | 稳定 DTO 与 Adapter Interface | 外部输入先校验；不泄漏供应商事件 | `src/contracts/workbuddy/` 定义 ConversationRun、写回、IM 和 TeacherIn 契约 |
+| Context Engine | `propose / confirm / project` | 来源、版本、权限和缺口可追溯 | `core-context.ts` 生成冻结 Snapshot，并按 Capability Manifest 投影最小上下文 |
+| Task Runtime | `open / dispatch / subscribe` | 计划、等待、重试和恢复集中管理 | `conversation-run-module.ts` 统一事件顺序、幂等命令、游标和 Presentation State |
+| Capability / Artifact | Capability Manifest + versioned Artifact | 能力声明副作用；产物有来源、版本和校验结果 | M4.1 固定体验 Adapter 提供确定性能力事件与版本化课件/方案包 Artifact |
+| Control & Execution | `prepare(action)`、`approve(action)`、`execute(action, approval)` | 所有副作用统一经过权限、风险、审批和幂等检查 | 单课件与方案包均已走 ProposedAction → Approval → Adapter → ExecutionReceipt |
+| Evaluation | `recordExecutionOutcome(input)` | 记录教师采纳与执行结果，不代替业务事实或教学效果 | `src/domain/workbuddy/evaluation.ts` 已生成可追溯 EvaluationEvent，并进入课程生产与 IM Timeline |
+| ClassIn Course Adapter | `execute(action, approval)` | 只负责领域事实和稳定回执，不拥有 Run、Artifact 或 Evaluation | `src/mocks/adapters/` 提供可重置成功、冲突、拒绝、部分成功与可恢复失败场景；生产 Adapter 未接入 |
 
 ### 4.2 Seam 与 Adapter
 
-当前真正存在的 Seam 是 `CourseDraftGateway`：
+当前真正存在的课程写回 Seam 是 `ClassInWritebackAdapter` 与 `PackageWritebackAdapter`：
 
 ```ts
-interface CourseDraftGateway {
-  saveDraft(input: CourseDraftInput): Promise<CourseDraftReceipt>;
+interface ClassInWritebackAdapter {
+  execute(action: ProposedAction, approval: Approval): ExecutionReceipt;
 }
 ```
 
-它位于 `packages/application`，由 `MockClassInCourseDraftGateway` 实现。未来增加真实 ClassIn Adapter 时，调用方仍只依赖这个 Interface。这个 Seam 的价值在于：版本冲突、权限拒绝和保存成功的测试可以替换 Adapter，而不需要修改 UI 或用例逻辑。
-
-不过目前它仍是一个较浅的 Interface，因为课程结构读取、幂等键、部分成功和稳定错误信息尚未纳入契约。扩展 Interface 前应先确认真实 Adapter 是否有第二个实现；不要为假想的供应商能力建立一层空包装。
+它们位于 `src/contracts/workbuddy/`，由 `src/mocks/adapters/` 的确定性实现完成当前验证。未来增加真实 ClassIn Adapter 时，Controller 和页面仍只依赖这些 Interface。课程结构读取仍通过当前固定 Context 事实完成；在出现第二个真实实现前，不为假想供应商继续扩张 Interface。
 
 ## 5. 核心状态机
 
@@ -225,16 +223,19 @@ stateDiagram-v2
 
 ### 7.1 当前可运行路径
 
-现在点击保存时，页面只发生本地状态转换：
+现在点击保存时，页面发送稳定命令并经过完整的受治理链路：
 
 ```text
-ConfirmView.onSave
-  → setStage("saving")
-  → App 的 useEffect 等待 1100ms
-  → setStage("saved")
+ConversationRunSurface.dispatch({ type: "propose_action" })
+  → WorkBuddy Courseware Controller 创建 ProposedAction
+  → 教师 Approval
+  → ClassInWritebackAdapter.execute(action, approval)
+  → ExecutionReceipt
+  → EvaluationModule.recordExecutionOutcome(...)
+  → ConversationRun Projection 追加 Receipt 与 EvaluationEvent
 ```
 
-对应代码在 [apps/workbench/src/App.tsx](/Users/eeo/Documents/claudecode/classin-ai-buddy/apps/workbench/src/App.tsx) 的 `ConfirmView` 和 `useEffect`。这条路径适合验证布局和状态文案，但没有调用 API、Application、Harness 或 Adapter，因此不能证明课程已经保存。
+对应代码在 `src/features/ai-agent-workspace/ConversationRunSurface.tsx`、`workbuddy-courseware-controller.ts`、`src/contracts/workbuddy/classin-writeback.ts` 和 `src/domain/workbuddy/evaluation.ts`。当前回执与评价事件均为固定模拟事实，证明 Demo 的契约和恢复路径成立，不证明生产 ClassIn 已接入。
 
 ### 7.2 目标代码路径
 

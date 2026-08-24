@@ -3,10 +3,14 @@ import { Link } from 'react-router-dom';
 import { usePageHeaderConfig } from './usePageHeader';
 import styles from './Topbar.module.css';
 
-export function Topbar() {
+type TopbarProps = {
+  inactive?: boolean;
+};
+
+export function Topbar({ inactive = false }: TopbarProps) {
   const { title, breadcrumbs, meta } = usePageHeaderConfig();
   return (
-    <header className={styles.topbar}>
+    <header aria-hidden={inactive || undefined} className={styles.topbar} inert={inactive || undefined}>
       <div className={styles.pageContext}>
         {breadcrumbs?.length ? (
           <nav className={styles.breadcrumbs} aria-label="面包屑">

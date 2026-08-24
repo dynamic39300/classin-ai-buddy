@@ -61,7 +61,7 @@ export class DeterministicTestPackageWritebackAdapter implements PackageWritebac
     const replay = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
     if (replay) return replay;
     bindIdempotencyKey(this.receipts, action.idempotencyKey, fingerprint);
-    const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, truthLabel: '[模拟]确定性测试执行回执' };
+    const base = { actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey, executedAt: '2026-08-20T10:16:00+08:00', truthLabel: '[模拟]确定性测试执行回执' };
     const notExecuted = candidates.map(({ id, approvalState }) => Object.freeze({ artifactId: id, result: approvalState === 'waiting' ? 'waiting' as const : 'not_executed' as const }));
     if (this.scenario === 'permission_denied') return Object.freeze({ ...base, id: 'receipt-package-permission_denied-1', status: 'permission_denied', recovery: 'choose-another-target', result: 'denied', items: Object.freeze(notExecuted) });
     if (this.scenario === 'version_conflict' && action.target.expectedVersion !== 'unit-momentum-1-v2') return Object.freeze({ ...base, id: 'receipt-package-version_conflict-1', status: 'version_conflict', recovery: 'compare-and-reconfirm', result: 'conflict', expectedVersion: action.target.expectedVersion, currentVersion: 'unit-momentum-1-v2', items: Object.freeze(notExecuted) });

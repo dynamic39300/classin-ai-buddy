@@ -42,7 +42,7 @@ scope: docs/00-project, docs/01-research, docs/02-product, docs/04-specs, docs/0
 5. 第一版交付可审教课程方案包，不生产 PPT，不正式发布，只做模拟草稿写回和回执；PPT 属于第二版。[R-002](../00-project/DECISION-LEDGER.md)
 6. 第一版是单教师、单机构、单班级课程、单次 Run，使用固定、脱敏、可重置的模拟数据。[课程生产产品设计](../04-specs/features/course-production/PRODUCT-DESIGN.md)
 7. Agent 生成路径与业务执行路径分离；任何写回必须经过 ProposedAction、策略、领域校验、教师审批、Adapter 和 ExecutionReceipt。[实现架构蓝图](../06-architecture/WORKBUDDY-IMPLEMENTATION-ARCHITECTURE-BLUEPRINT.md)
-8. 当前采用 `pnpm workspace + TypeScript strict + 模块化单体` 的 production-shaped prototype，不锁定模型供应商和重型编排框架。[D-007/D-008](../00-project/DECISION-LEDGER.md)
+8. 当前采用仓库根目录的单应用 `npm + React/Vite + TypeScript strict` 产品基座；WorkBuddy 作为教师侧纵向 Feature 接入，模型供应商和重型编排框架仍不锁定。[D-007/D-023](../00-project/DECISION-LEDGER.md)
 9. 原型是结构高保真、视觉低保真，重点验证状态、信息架构、教师控制和 Harness 映射，不是品牌 UI 或生产集成证明。[D-003/D-004](../00-project/DECISION-LEDGER.md)
 10. NineClaw 的产品与 Skill 研究目前仍是新的研究输入；其中可吸收内容尚未全部升级到 WorkBuddy manifest、Skill 治理或决策台账。
 

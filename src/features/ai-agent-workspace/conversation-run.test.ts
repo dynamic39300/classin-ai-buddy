@@ -41,7 +41,7 @@ function createCompletedProjection() {
     result: '课件草稿已保存到 ClassIn',
     object: Object.freeze({ id: 'courseware-101', version: 'v1', label: '函数单调性智能课件', returnUrl: '/teacher/classes/physics-3' }),
   });
-  const view = projectCoursewareRunView(run, [], approved.action, receipt, {}, null);
+  const view = projectCoursewareRunView(run, [], approved.action, approved.approval, receipt, {}, null);
   if (!view) throw new Error('Expected courseware view');
   return projectCoursewareConversationRun(view);
 }
@@ -66,13 +66,21 @@ describe('ConversationRun public seam', () => {
       'proposed_action',
       'approval',
       'receipt',
+      'evaluation',
     ]);
     expect(projection?.events.at(-1)).toMatchObject({
-      id: 'receipt-courseware-save-1',
+      id: 'evaluation-receipt-courseware-save-1-artifact-courseware-momentum-v1-success',
       state: 'completed',
-      objectRefs: [{ type: 'receipt', id: 'receipt-courseware-save-1' }],
+      objectRefs: [
+        { type: 'context_snapshot', id: 'context-snapshot-courseware-1' },
+        { type: 'artifact', id: 'artifact-courseware-momentum-v1', version: 'v1' },
+        { type: 'action', id: 'action-courseware-save-1' },
+        { type: 'approval', id: 'approval-courseware-save-1' },
+        { type: 'receipt', id: 'receipt-courseware-save-1' },
+        { type: 'evaluation', id: 'evaluation-receipt-courseware-save-1-artifact-courseware-momentum-v1-success' },
+      ],
     });
-    expect(projection?.cursor).toBe('13');
+    expect(projection?.cursor).toBe('14');
     expect(projection?.events.find(({ kind }) => kind === 'receipt')?.allowedCommands).toEqual(['derive_package']);
     expect(projection?.events.filter(({ kind }) => kind === 'capability_call').every(({ actor }) => actor === 'skill')).toBe(true);
   });
@@ -83,12 +91,12 @@ describe('ConversationRun public seam', () => {
       '为高一（3）班生成一份函数单调性智能课件',
       'context-snapshot-courseware-1',
     );
-    let view = projectCoursewareRunView(run, [], null, null, {}, null)!;
+    let view = projectCoursewareRunView(run, [], null, null, null, {}, null)!;
     expect(projectCoursewareConversationRun(view).events.find(({ kind }) => kind === 'clarification_request')?.allowedCommands)
       .toEqual(['submit_clarification', 'confirm_clarification', 'cancel']);
 
     run = confirmCoursewareBrief(run);
-    view = projectCoursewareRunView(run, [], null, null, {}, null)!;
+    view = projectCoursewareRunView(run, [], null, null, null, {}, null)!;
     expect(projectCoursewareConversationRun(view).events.find(({ kind }) => kind === 'plan')?.allowedCommands)
       .toEqual(['revise_plan', 'start_plan', 'cancel']);
 
@@ -97,7 +105,7 @@ describe('ConversationRun public seam', () => {
       title: '生成二次函数智能课件', goal: '为高一（2）班生成二次函数智能课件',
       plan: run.plan.map((step) => Object.freeze({ ...step, id: `${step.id}-r2` })),
     });
-    view = projectCoursewareRunView(run, [], null, null, {}, null)!;
+    view = projectCoursewareRunView(run, [], null, null, null, {}, null)!;
     const replanned = projectCoursewareConversationRun(view);
     expect(replanned.events.find(({ id }) => id === `${run.id}:r1:plan`)?.state).toBe('superseded');
     expect(replanned.events.find(({ id }) => id === 'artifact-courseware-momentum-v1:v1')?.state).toBe('superseded');
@@ -123,9 +131,14 @@ describe('ConversationRun public seam', () => {
     });
     unsubscribe();
 
-    expect(received).toEqual(['action-courseware-save-1:approval', 'receipt-courseware-save-1', 'command-supplement-1']);
-    expect(first).toMatchObject({ status: 'accepted', cursor: '14' });
-    expect(duplicate).toMatchObject({ status: 'duplicate', cursor: '14' });
+    expect(received).toEqual([
+      'approval-courseware-save-1',
+      'receipt-courseware-save-1',
+      'evaluation-receipt-courseware-save-1-artifact-courseware-momentum-v1-success',
+      'command-supplement-1',
+    ]);
+    expect(first).toMatchObject({ status: 'accepted', cursor: '15' });
+    expect(duplicate).toMatchObject({ status: 'duplicate', cursor: '15' });
     expect(module.open('run-m4-courseware')?.events.filter(({ id }) => id === 'command-supplement-1')).toHaveLength(1);
   });
 });

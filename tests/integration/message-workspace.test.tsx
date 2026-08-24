@@ -95,31 +95,47 @@ describe('message workspace', () => {
 
     await user.click(screen.getByRole('button', { name: '取消置顶' }));
     expect(screen.getByRole('status')).toHaveTextContent('已取消置顶消息');
-    const contextTrigger = screen.getByRole('button', { name: '班级会话操作' });
+    const contextTrigger = screen.getByRole('button', { name: '管理' });
     await user.click(contextTrigger);
-    expect(within(screen.getByRole('menu', { name: '班级会话操作' })).getByRole('menuitem', { name: '群文件' })).toHaveFocus();
-    await user.click(within(screen.getByRole('menu', { name: '班级会话操作' })).getByRole('menuitem', { name: '全体禁言' }));
+    expect(within(screen.getByRole('menu', { name: '会话管理' })).getByRole('menuitem', { name: '群文件' })).toHaveFocus();
+    await user.click(within(screen.getByRole('menu', { name: '会话管理' })).getByRole('menuitem', { name: '全体禁言' }));
     await waitFor(() => expect(contextTrigger).toHaveFocus());
     await user.click(contextTrigger);
-    expect(within(screen.getByRole('menu', { name: '班级会话操作' })).getByRole('menuitem', { name: '解除禁言' })).toBeInTheDocument();
+    expect(within(screen.getByRole('menu', { name: '会话管理' })).getByRole('menuitem', { name: '解除禁言' })).toBeInTheDocument();
   });
 
-  it('keeps the global class header concise and direct chats free of empty menus', async () => {
+  it('shares one teacher management entry across class and direct chats', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher');
     await user.click(screen.getByRole('button', { name: '进入班级' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/teacher/classes/physics-3?from=messages');
-    expect(screen.getByRole('button', { name: '班级会话操作' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '管理' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '私聊' }));
     expect(screen.queryByRole('button', { name: '进入班级' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '班级会话操作' })).not.toBeInTheDocument();
+    const managementTrigger = screen.getByRole('button', { name: '管理' });
+    await user.click(managementTrigger);
+    const menu = screen.getByRole('menu', { name: '会话管理' });
+    expect(within(menu).getByRole('menuitem', { name: '联系人资料' })).toBeInTheDocument();
+    await user.click(within(menu).getByRole('menuitem', { name: '消息免打扰' }));
+    expect(screen.getByRole('status')).toHaveTextContent('已开启消息免打扰');
+    await user.click(managementTrigger);
+    expect(within(screen.getByRole('menu', { name: '会话管理' })).getByRole('menuitem', { name: '关闭消息免打扰' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', { name: /张老师.*重点看一下 3 班的订正情况/ }));
+    const teacherTitle = screen.getByRole('heading', { name: '张老师' });
+    const conversationHeader = teacherTitle.closest('header');
+    expect(conversationHeader).toHaveAttribute('data-message-header', 'conversation');
+    expect(teacherTitle.nextElementSibling).toHaveTextContent('联系人 · 物理教研组');
+    expect(teacherTitle.parentElement).toHaveTextContent('张老师联系人 · 物理教研组');
   });
 
   it('keeps teacher management out of the student view and exposes task-safe notice actions', async () => {
     const user = userEvent.setup();
     renderWorkspace('student-family');
 
+    expect(screen.queryByRole('button', { name: '管理' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /置顶/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /全体禁言/ })).not.toBeInTheDocument();
 

@@ -11,6 +11,7 @@ export type ConversationRunEventKind =
   | 'proposed_action'
   | 'approval'
   | 'receipt'
+  | 'evaluation'
   | 'error'
   | 'system';
 
@@ -18,7 +19,7 @@ export type ConversationRunActor = 'teacher' | 'agent' | 'skill' | 'tool' | 'sys
 
 export type ConversationRunEventState = 'queued' | 'running' | 'requires_teacher_input' | 'completed' | 'failed' | 'stopped' | 'cancelled' | 'superseded';
 export type ConversationRunStatus = 'organizing' | 'needs_information' | 'awaiting_plan_confirmation' | 'running' | 'stopped' | 'cancelled' | 'completed_pending_review' | 'waiting_approval' | 'completed' | 'failed';
-export type ConversationRunObjectType = 'context_snapshot' | 'artifact' | 'action' | 'approval' | 'receipt' | 'capability';
+export type ConversationRunObjectType = 'context_snapshot' | 'artifact' | 'action' | 'approval' | 'receipt' | 'evaluation' | 'capability';
 
 export type ConversationRunObjectRef = Readonly<{ type: ConversationRunObjectType; id: string; version?: string }>;
 

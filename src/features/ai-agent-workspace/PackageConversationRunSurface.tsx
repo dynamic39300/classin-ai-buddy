@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
 import type { ConversationRunEvent, ConversationRunEventState, ConversationRunPackageConfiguration } from '@contracts/workbuddy/conversation-run';
 import type { PackageArtifact, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
+import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { CoreContextPanel } from './CoreContextPanel';
 import { RunProgressDock, type RunProgressStep } from './RunProgressDock';
 import { WorkBuddyModalDialog } from './WorkBuddyModalDialog';
@@ -98,14 +99,22 @@ export function PackageConversationRunSurface() {
         })}
       </div>
       <RunProgressDock progress={progress} steps={PACKAGE_PROGRESS_STEPS} />
-      <div className={conversationStyles.runComposer} role="group" aria-label="任务补充输入">
-        <textarea aria-label="向 Agent 补充要求" value={composerDraft} disabled={progress.status === 'cancelled'} placeholder="补充要求、调整方案包或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
-        <div><span>{canStop && progress.status === 'running' ? <>方案包生成中，第 {progress.activeIndex + 1}/{progress.totalCount} 步{overallRemainingSeconds !== null ? <span aria-hidden="true">，预计还需 {Math.max(1, overallRemainingSeconds)} 秒</span> : null}</> : canResume ? '任务已停止，可从当前位置继续' : progress.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}</span>
+      <WorkspaceComposer
+        ariaLabel="向 Agent 补充要求"
+        className={conversationStyles.runComposerDock}
+        disabled={progress.status === 'cancelled'}
+        groupLabel="任务补充输入"
+        hint={canStop && progress.status === 'running' ? <>方案包生成中，第 {progress.activeIndex + 1}/{progress.totalCount} 步{overallRemainingSeconds !== null ? <span aria-hidden="true">，预计还需 {Math.max(1, overallRemainingSeconds)} 秒</span> : null}</> : canResume ? '任务已停止，可从当前位置继续' : progress.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}
+        onSubmit={() => dispatch({ type: 'supplement', text: composerDraft.trim() })}
+        onValueChange={(text) => dispatch({ type: 'set_composer_draft', text })}
+        placeholder="补充要求、调整方案包或继续追问…"
+        secondaryActions={<>
           {canStop ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
           {canResume ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
-          <button className={conversationStyles.primary} type="button" aria-label="发送补充要求" disabled={progress.status === 'cancelled' || !composerDraft.trim()} onClick={() => dispatch({ type: 'supplement', text: composerDraft.trim() })}>发送</button>
-        </div>
-      </div>
+        </>}
+        submitLabel="发送补充要求"
+        value={composerDraft}
+      />
     </section>
 
     <aside className={conversationStyles.inspector} aria-label="任务辅助区" hidden={!inspectorOpen}>

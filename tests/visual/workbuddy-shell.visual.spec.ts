@@ -253,7 +253,7 @@ test('WorkBuddy M4 course package partial result at 1440x900', async ({ page }) 
 
 test('WorkBuddy M4 Context replanning impact at 1440x900', async ({ page }) => {
   await createCoursewareArtifact(page);
-  const composer = page.getByRole('group', { name: '任务补充输入' });
+  const composer = page.getByRole('form', { name: '任务补充输入' });
   await composer.getByRole('textbox', { name: '向 Agent 补充要求' }).fill('把主教学范围改为高一（2）班的二次函数单元。');
   await composer.getByRole('button', { name: '发送补充要求' }).click();
   await expect(page.getByRole('feed', { name: 'Agent 任务时间线' }).getByRole('article').filter({ hasText: '教学范围变化需要重新规划' })).toBeVisible();

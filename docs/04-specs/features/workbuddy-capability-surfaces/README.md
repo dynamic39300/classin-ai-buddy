@@ -1,6 +1,6 @@
 ---
 title: WorkBuddy 能力与资源页面
-status: IMPLEMENTED_REVIEW_PENDING
+status: REVIEWED_APPROVED
 version: v0.1
 date: 2026-08-22
 review_gate: CAPABILITY_SURFACES_UI_REVIEW
@@ -8,7 +8,7 @@ review_gate: CAPABILITY_SURFACES_UI_REVIEW
 
 # WorkBuddy 能力与资源页面
 
-本 Feature 实现 AI Agent 二级导航下的六个可操作页面：技能市场、工具连接、内容资源、我的文件、定时任务和设置。
+本 Feature 实现 AI Agent 二级导航下的五个可见管理页面：技能市场、工具连接、我的文件、定时任务和设置。旧“内容资源”按 D-051 保留为不可见、可恢复的 Dormant Module，不参与当前导航和发布验收。
 
 页面设计依据：
 
@@ -21,8 +21,8 @@ review_gate: CAPABILITY_SURFACES_UI_REVIEW
 
 | 文档 | 状态 |
 | --- | --- |
-| [Feature Spec](./FEATURE-SPEC.md) | `READY_FOR_USER_REVIEW` |
-| [高保真页面规格](./PAGE-LEVEL-PRD.md) | `READY_FOR_USER_REVIEW` |
-| [Ticket Breakdown](./TICKET-BREAKDOWN-PROPOSAL.md) | `READY_FOR_USER_REVIEW` |
+| [Feature Spec](./FEATURE-SPEC.md) | `REVIEWED_APPROVED` |
+| [高保真页面规格](./PAGE-LEVEL-PRD.md) | `REVIEWED_APPROVED` |
+| [Ticket Breakdown](./TICKET-BREAKDOWN-PROPOSAL.md) | `IMPLEMENTED` |
 
-实现状态：六个页面及关键交互已完成，等待用户进行页面级高保真验收。对应本地 tickets 位于 `.scratch/workbuddy-capability-surfaces/issues/`。
+实现状态：五个可见页面、Dormant 内容模块及关键交互已完成；用户于 2026-08-24 确认页面级高保真验收通过。对应本地 tickets 位于 `.scratch/workbuddy-capability-surfaces/issues/`。

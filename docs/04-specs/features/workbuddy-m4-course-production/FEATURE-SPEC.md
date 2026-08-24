@@ -1,6 +1,6 @@
 ---
 title: WorkBuddy M4 课程生产纵向闭环 Feature Spec
-status: READY_FOR_AGENT
+status: IMPLEMENTED
 version: v0.1
 date: 2026-08-20
 source_prd: ../workbuddy-v1-workspace/PAGE-LEVEL-PRD.md
@@ -15,7 +15,7 @@ M3 已经证明教师可以在完整 ClassIn PC Shell 中进入 AI Agent、创�
 
 教师需要的不只是“看起来像 Agent”的页面，而是一条能够解释输入依据、保持教师控制、交付可审阅产物并安全回到 ClassIn 业务对象的闭环。同时，课程方案包必须作为独立任务模型存在，不能吞并单课件任务；从既有课件派生方案包时，也必须创建关联但独立的新 Run。
 
-M4 因此需要把已审阅 PRD 落实成可重置的产品与工程纵向场景，覆盖 `Goal → Core Context → Plan → Process → Artifact → ProposedAction → Approval → Adapter → ExecutionReceipt`，并明确所有数据和执行仍为本地 Mock。
+M4 因此需要把已审阅 PRD 落实成可重置的产品与工程纵向场景，覆盖 `Goal → Core Context → Plan → Process → Artifact → ProposedAction → Approval → Adapter → ExecutionReceipt → EvaluationEvent`，并明确所有数据和执行仍为本地 Mock。
 
 ## Solution
 
@@ -69,6 +69,7 @@ M4 主场景复用当前 ClassIn PC 已有 Mock 事实：王老师、`org-classi
 40. As a keyboard user, I want Context sections, plan decisions, Artifact actions, approvals, recovery choices, and return links to have visible focus and predictable focus return, so that the complete flow is operable without a pointer.
 41. As a reviewer, I want loading, needs-attention, waiting, recoverable failure, permission denial, conflict, partial success, completed-pending-review, completed, and superseded states to be demonstrable, so that the state architecture can be evaluated.
 42. As an implementation agent, I want tests to cross the same small interfaces used by the UI, so that Domain and Adapter behavior can change without rewriting page-level tests.
+43. As a reviewer, I want both the single-courseware and course-package loops to record EvaluationEvents linked to Run, ContextSnapshot, Artifact version, Action, Approval, and Receipt, so that adoption evidence is explicit and reference mismatches fail closed.
 
 ## Implementation Decisions
 
@@ -76,7 +77,7 @@ M4 主场景复用当前 ClassIn PC 已有 Mock 事实：王老师、`org-classi
 - The resettable M4 fixture uses existing ClassIn Mock facts for `org-classin-demo / physics-3 / course-momentum / unit-momentum-1 / activity-momentum-lesson` and existing Space references. Existing M3 history fixtures remain historical Demo examples and are not treated as ClassIn source facts.
 - The primary Module presents a small command/query Interface for preparing and confirming Context, creating a Run, applying Run commands, inspecting the active view, proposing an Action, approving or rejecting it, executing through the Adapter, and resetting the scenario.
 - Context hierarchy validation, required-item rules, student-sensitive defaults, Snapshot versioning, ContextProjection, state transitions, idempotency, and result normalization stay behind that Interface.
-- `WorkBuddyRun`, `ContextSnapshot`, `ArtifactDraft`, `ProposedAction`, `Approval`, and `ExecutionReceipt` use stable IDs, fixture versions, discriminated states, allowed commands, and explicit recovery paths.
+- `WorkBuddyRun`, `ContextSnapshot`, `ArtifactDraft`, `ProposedAction`, `Approval`, `ExecutionReceipt`, and `EvaluationEvent` use stable IDs, fixture versions, discriminated states, allowed commands, and explicit recovery paths.
 - A single active-panel state supports `artifact | core_context | process_detail | none`. Switching modes preserves per-panel selection, scroll intent, and unapplied Context draft.
 - Task submission does not use elapsed timers or random progress. The resettable scenario Adapter advances through explicit commands and stable events so tests and Review reproduce the same result.
 - Complete ContextSnapshot never crosses the Capability Projection Seam. Process detail receives a minimal projection derived from the fixed CapabilityManifest and step purpose.
@@ -86,12 +87,13 @@ M4 主场景复用当前 ClassIn PC 已有 Mock 事实：王老师、`org-classi
 - Successful save is shown only after an ExecutionReceipt. Approval, animation completion, or model text cannot declare a ClassIn mutation.
 - Courseware and course-package Runs remain independent. A derived package Run stores `sourceArtifactRef` and `parentRunRef`, then confirms its own ContextSnapshot.
 - Package partial success is represented by object-level receipt items; successful items are not retried, failed eligible items retain a retry command, and waiting dependencies remain not executed.
+- Evaluation is recorded only after a validated Receipt. Single-courseware creates one artifact-level EvaluationEvent; course-package creates one EvaluationEvent per approved artifact using its receipt-item result. Success means adoption/writeback only and never claims teaching impact.
 - All fixtures are fixed, desensitized, versioned, in-memory, and resettable. Refresh/cross-session persistence is outside M4.
 - UI continues using the locked ClassIn/Linear/NineClaw design foundation, existing semantic tokens, compact process density, one dominant action, and explicit truth labels.
 
 ## Testing Decisions
 
-- The highest and primary Seam is the public browser journey from teacher role selection through AI Agent, Context confirmation, Run plan/process, Artifact review, Action approval, Mock execution, Receipt inspection, and scenario reset.
+- The highest and primary Seam is the public browser journey from teacher role selection through AI Agent, Context confirmation, Run plan/process, Artifact review, Action approval, Mock execution, Receipt/Evaluation inspection, and scenario reset.
 - Browser tests assert roles, accessible names, state text, allowed actions, URL/return behavior, focus, scroll ownership, truth labels, and visible object-level outcomes. They do not assert private React state or CSS module names.
 - Domain tests cross the Course Production Module Interface and verify hierarchy cleanup, required Context, Snapshot immutability, allowed commands, independent linked Runs, superseded evidence, and state invariants.
 - Adapter contract tests run the same cases against the Mock execution Adapter and deterministic test Adapter: success, idempotent replay, partial success, permission denial, version conflict, and recoverable failure/retry.

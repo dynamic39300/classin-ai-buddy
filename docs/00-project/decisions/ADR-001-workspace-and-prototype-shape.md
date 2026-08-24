@@ -1,9 +1,11 @@
 # ADR-001: Workspace 与原型工程形状
 
-- Status: accepted
+- Status: superseded by D-023
 - Date: 2026-08-16
 
 ## Context
+
+> 历史记录：本 ADR 描述的 workspace 已被删除。当前工程事实是仓库根目录的单应用 `npm + React/Vite + TypeScript` 基座，见 `DECISION-LEDGER.md` 的 D-023；以下内容只用于追溯，不是当前实施指令。
 
 WorkBuddy 当前需要线框原型验证产品结构，同时需要用“课程目标到课程对象”验证 Harness 契约。单 HTML 启动简单，但不能有效验证前后端共享 Schema、模拟/真实 Adapter 一致性、依赖方向和 API 组合根。
 
@@ -35,4 +37,3 @@ WorkBuddy 当前需要线框原型验证产品结构，同时需要用“课程�
 ## Verification
 
 `pnpm check` 必须通过；`apps/workbench` 不得直接依赖 Adapter 或模型 SDK；Mock ClassIn 只能在 API 组合根注入。
-

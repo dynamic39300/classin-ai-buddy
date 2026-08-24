@@ -22,9 +22,12 @@ Goal
 → ProposedAction
 → Approval
 → ExecutionReceipt
+→ EvaluationEvent
 ```
 
 本阶段实现的是可确定性重放的 Agent Run 体验层，不是生产 Agent Runtime。底层 M4 领域对象、审批、策略校验、Adapter 和 ExecutionReceipt 语义继续生效；未来真实 Agent 能力应通过 `ConversationRun` Seam 替换 Experience Adapter，不重写教师交互主链。
+
+单课件闭环记录一个 Artifact 级 EvaluationEvent；方案包闭环按获批 Artifact 和 Receipt item 结果分别记录 EvaluationEvent。任一 Run、ContextSnapshot、Artifact 版本、Action、Approval 或 Receipt 引用不一致时评价失败关闭；“采纳”只说明教师批准且对象写回成功，不代表教学效果。
 
 ## 2. 可验收的两条纵向闭环
 
@@ -128,6 +131,7 @@ Goal
 - 预览器显式标注“只读预览”和 `[模拟] PPTX 预览`，不把体验内容描述为真实文件渲染；
 - 原“编辑课件”和 AI 修改输入改为“使用专业编辑器打开”，当前未接入第三方编辑器时只返回可解释提示；
 - ProposedAction、Approval 与 ExecutionReceipt 继续引用当前 Artifact 版本，不因浏览页码而产生新版本。
+- 2026-08-24 收尾新增 EvaluationEvent：成功或失败回执均关联 Run、ContextSnapshot、Artifact、Action、Approval 与 Receipt；事件只记录采纳/未采纳和执行状态，不推导教学效果。
 - 2026-08-22 复验：TypeScript、ESLint、Production Build 通过；Vitest `58/58` 文件、`418/418` 项通过；M4.1 E2E `15/15` 通过；M4.1 视觉旅程 `2/2` 通过。
 
 本轮复验结果：`npm run check` 通过（57 个测试文件、415 项测试）；Production Build 通过并仅保留既有大 Chunk 提示；M4.1 专属 E2E 14/14 通过；M4.1 视觉旅程 2/2 通过，11 张关键状态快照更新并连续复跑稳定；Reduced Motion 与 axe 验收通过。

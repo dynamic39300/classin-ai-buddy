@@ -5,6 +5,7 @@ import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { ConversationRunEvent, ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
+import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { CoreContextPanel } from './CoreContextPanel';
 import { RunProgressDock } from './RunProgressDock';
 import { WorkBuddyModalDialog } from './WorkBuddyModalDialog';
@@ -51,7 +52,7 @@ function iconForEvent(event: ConversationRunEvent) {
   if (event.kind === 'teacher_message') return <UserRound aria-hidden="true" size={15} />;
   if (event.kind === 'clarification_request' || event.kind === 'context_confirmed' || event.kind === 'proposed_action' || event.kind === 'approval') return <ShieldCheck aria-hidden="true" size={15} />;
   if (event.kind === 'artifact') return <FileText aria-hidden="true" size={15} />;
-  if (event.kind === 'receipt') return <CheckCircle2 aria-hidden="true" size={15} />;
+  if (event.kind === 'receipt' || event.kind === 'evaluation') return <CheckCircle2 aria-hidden="true" size={15} />;
   return event.state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} /> : <Sparkles aria-hidden="true" size={15} />;
 }
 
@@ -195,17 +196,25 @@ export function ConversationRunSurface() {
           }}>新增 {newEventCount} 条</button></article> : null}
         </div>
         <RunProgressDock progress={progress} steps={coursewareView.run.plan} />
-        <div className={styles.runComposer} role="group" aria-label="任务补充输入">
-          <textarea aria-label="向 Agent 补充要求" value={composerDraft} disabled={experience.status === 'cancelled'} placeholder="补充要求、调整任务或继续追问…" onChange={(event) => dispatch({ type: 'set_composer_draft', text: event.target.value })} />
-          <div><span>{canStop && progress.status === 'running' ? <>任务执行中，第 {progress.activeIndex + 1}/{progress.totalCount} 步{overallRemainingSeconds !== null ? <span aria-hidden="true">，预计还需 {Math.max(1, overallRemainingSeconds)} 秒</span> : null}</> : canResume ? '任务已停止，可继续执行' : experience.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}</span>
+        <WorkspaceComposer
+          ariaLabel="向 Agent 补充要求"
+          className={styles.runComposerDock}
+          disabled={experience.status === 'cancelled'}
+          groupLabel="任务补充输入"
+          hint={canStop && progress.status === 'running' ? <>任务执行中，第 {progress.activeIndex + 1}/{progress.totalCount} 步{overallRemainingSeconds !== null ? <span aria-hidden="true">，预计还需 {Math.max(1, overallRemainingSeconds)} 秒</span> : null}</> : canResume ? '任务已停止，可继续执行' : experience.status === 'cancelled' ? '任务已取消，可新建任务重新开始' : '补充内容会记录在当前任务中'}
+          onSubmit={() => {
+            const message = composerDraft.trim();
+            dispatch({ type: 'supplement', text: message, materialScopeChange: /主教学范围|二次函数|改为高一（2）班/.test(message) });
+          }}
+          onValueChange={(text) => dispatch({ type: 'set_composer_draft', text })}
+          placeholder="补充要求、调整任务或继续追问…"
+          secondaryActions={<>
             {canStop ? <button type="button" onClick={() => dispatch({ type: 'stop' })}>停止执行</button> : null}
             {canResume ? <button type="button" onClick={() => dispatch({ type: 'resume' })}>继续执行</button> : null}
-            <button className={styles.primary} type="button" aria-label="发送补充要求" disabled={experience.status === 'cancelled' || !composerDraft.trim()} onClick={() => {
-              const message = composerDraft.trim();
-              dispatch({ type: 'supplement', text: message, materialScopeChange: /主教学范围|二次函数|改为高一（2）班/.test(message) });
-            }}>发送</button>
-          </div>
-        </div>
+          </>}
+          submitLabel="发送补充要求"
+          value={composerDraft}
+        />
       </section>
 
         <aside className={styles.inspector} aria-label="任务辅助区" hidden={!inspectorOpen}>

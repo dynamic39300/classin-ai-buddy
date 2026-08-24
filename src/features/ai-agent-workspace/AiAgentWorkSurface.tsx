@@ -1,5 +1,4 @@
 import {
-  ArrowUp,
   CheckCircle2,
   CircleAlert,
   CircleEllipsis,
@@ -16,6 +15,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
+import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getVisibleWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
@@ -134,15 +134,22 @@ function NewTaskSkeleton() {
         <h1 id="workbuddy-new-task-title">今天想完成什么教学任务？</h1>
         <p className={styles.lead}>描述目标即可。Work Buddy 会检查教学上下文、拆解任务并交付可复查的产物。</p>
 
-        <div className={styles.goalComposer}>
-          <textarea
-            aria-label="描述教学任务"
-            value={goal}
-            placeholder="例如：为高一（3）班生成一份函数单调性课件，包含概念讲解、例题和课堂练习"
-            onChange={(event) => setGoal(event.target.value)}
-          />
-          <div className={styles.composerFooter}>
-            <div className={styles.composerTools}>
+        <WorkspaceComposer
+          ariaLabel="描述教学任务"
+          canSubmit={contextView.status === 'confirmed'}
+          className={styles.goalComposerDock}
+          mode="task"
+          onSubmit={() => {
+            const runId = taskType === 'course-package' ? createPackageTask(goal) : createCoursewareTask(goal);
+            if (runId) {
+              clearGoal();
+              navigate(`/teacher/ai-agent/runs/${runId}`);
+            }
+          }}
+          onValueChange={setGoal}
+          placeholder="例如：为高一（3）班生成一份函数单调性课件，包含概念讲解、例题和课堂练习"
+          submitLabel="创建任务"
+          tools={<div className={styles.composerTools}>
               <button type="button" aria-label="添加附件" onClick={() => setFeedback('请从“我的文件”中选择要加入当前任务的资料。')}><Paperclip aria-hidden="true" size={16} /></button>
               <div
                 className={styles.skillPickerAnchor}
@@ -218,19 +225,9 @@ function NewTaskSkeleton() {
                 </span>
               ) : null}
               <button type="button" aria-expanded={contextPanelOpen} aria-controls="workbuddy-core-context-panel" onClick={() => setContextPanelOpen((open) => !open)}><UsersRound aria-hidden="true" size={15} />核心上下文 · {contextItems.length}</button>
-            </div>
-            <button className={styles.sendButton} type="button" disabled={!goal.trim() || contextView.status !== 'confirmed'} onClick={() => {
-              const runId = taskType === 'course-package' ? createPackageTask(goal) : createCoursewareTask(goal);
-              if (runId) {
-                clearGoal();
-                navigate(`/teacher/ai-agent/runs/${runId}`);
-              }
-            }}>
-              <ArrowUp aria-hidden="true" size={16} />
-              <span className={styles.srOnly}>创建任务</span>
-            </button>
-          </div>
-        </div>
+            </div>}
+          value={goal}
+        />
 
         <div role="group" aria-label="核心上下文摘要">
           <div className={styles.contextSummary} role="group" aria-label="已选择上下文">
@@ -342,21 +339,22 @@ function RunSkeleton({ runId }: { runId: string }) {
         </div>
 
         {composerCommand ? (
-          <div className={styles.runComposer}>
-            <input
-              aria-label={composerCommand === 'supplement' ? '向 Agent 补充要求' : '修改任务要求'}
-              placeholder={composerCommand === 'supplement' ? '补充要求或调整当前任务…' : '修改要求后可重新确认或重试…'}
-              value={supplement}
-              onChange={(event) => setSupplement(event.target.value)}
-            />
-            <button type="button" aria-label={composerCommand === 'supplement' ? '发送补充要求' : '保存修改要求'} disabled={!supplement.trim()} onClick={() => {
+          <WorkspaceComposer
+            ariaLabel={composerCommand === 'supplement' ? '向 Agent 补充要求' : '修改任务要求'}
+            className={styles.runComposerDock}
+            hint={composerCommand === 'supplement' ? '补充内容会记录在当前任务中' : '修改内容会记录到当前任务'}
+            onSubmit={() => {
               setSupplements((current) => [...current, supplement.trim()]);
               setFeedback(composerCommand === 'supplement'
                 ? '补充要求已记录到当前任务。'
                 : '修改要求已记录到当前任务。');
               setSupplement('');
-            }}><ArrowUp aria-hidden="true" size={15} /></button>
-          </div>
+            }}
+            onValueChange={setSupplement}
+            placeholder={composerCommand === 'supplement' ? '补充要求或调整当前任务…' : '修改要求后可重新确认或重试…'}
+            submitLabel={composerCommand === 'supplement' ? '发送补充要求' : '保存修改要求'}
+            value={supplement}
+          />
         ) : null}
         {feedback ? <p className={styles.runFeedback} role="status">{feedback}</p> : null}
       </section>

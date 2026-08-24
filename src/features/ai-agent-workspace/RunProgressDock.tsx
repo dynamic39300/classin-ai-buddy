@@ -47,66 +47,71 @@ export function RunProgressDock({ progress, steps }: Readonly<{
   const open = !dismissed && (hovered || focused || pinned);
 
   return (
-    <div
-      className={styles.progressDock}
-      ref={rootRef}
-      onPointerEnter={() => { setHovered(true); setDismissed(false); }}
-      onPointerLeave={() => setHovered(false)}
-      onFocusCapture={() => { setFocused(true); setDismissed(false); }}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          setFocused(false);
-          setPinned(false);
-          setDismissed(false);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          setPinned(false);
-          setDismissed(true);
-          rootRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
-        }
-      }}
-    >
-      <section className={styles.progressPopover} id={popoverId} role="region" aria-label="任务执行步骤" hidden={!open}>
-        <header><strong>任务执行步骤</strong><span>{progress.completedCount}/{progress.totalCount} 完成</span></header>
-        <ol>
-          {visibleSteps.map((step, index) => {
-            const state = stepState(progress, index);
-            return (
-              <li data-state={state} aria-current={state === 'running' || state === 'stopped' ? 'step' : undefined} key={step.id}>
-                {state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} />
-                  : state === 'running' ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={15} />
-                    : state === 'stopped' ? <CircleEllipsis aria-hidden="true" size={15} />
-                      : <Circle aria-hidden="true" size={15} />}
-                <span>{step.title}</span>
-                <small>{STATE_LABELS[state]}</small>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-      <button
-        className={styles.progressTrigger}
-        type="button"
-        aria-controls={popoverId}
-        aria-expanded={open}
-        aria-label={`查看任务执行步骤，${summary}：${currentStepTitle}`}
-        onClick={() => {
-          if (pinned) {
+    <div className={styles.progressDock}>
+      <p className={styles.progressActivity} data-status={progress.status}>
+        <span>{progress.status === 'running' ? '正在执行' : '已暂停'} · {currentStepTitle}</span>
+      </p>
+      <div
+        className={styles.progressControl}
+        ref={rootRef}
+        onPointerEnter={() => { setHovered(true); setDismissed(false); }}
+        onPointerLeave={() => setHovered(false)}
+        onFocusCapture={() => { setFocused(true); setDismissed(false); }}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setFocused(false);
             setPinned(false);
-            setDismissed(true);
-          } else {
-            setPinned(true);
             setDismissed(false);
           }
         }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            setPinned(false);
+            setDismissed(true);
+            rootRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+          }
+        }}
       >
-        {progress.status === 'running'
-          ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={15} />
-          : <CircleEllipsis aria-hidden="true" size={15} />}
-        <span>{summary}</span>
-      </button>
+        <section className={styles.progressPopover} id={popoverId} role="region" aria-label="任务执行步骤" hidden={!open}>
+          <header><strong>任务执行步骤</strong><span>{progress.completedCount}/{progress.totalCount} 完成</span></header>
+          <ol>
+            {visibleSteps.map((step, index) => {
+              const state = stepState(progress, index);
+              return (
+                <li data-state={state} aria-current={state === 'running' || state === 'stopped' ? 'step' : undefined} key={step.id}>
+                  {state === 'completed' ? <CheckCircle2 aria-hidden="true" size={15} />
+                    : state === 'running' ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={15} />
+                      : state === 'stopped' ? <CircleEllipsis aria-hidden="true" size={15} />
+                        : <Circle aria-hidden="true" size={15} />}
+                  <span>{step.title}</span>
+                  <small>{STATE_LABELS[state]}</small>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+        <button
+          className={styles.progressTrigger}
+          type="button"
+          aria-controls={popoverId}
+          aria-expanded={open}
+          aria-label={`查看任务执行步骤，${summary}：${currentStepTitle}`}
+          onClick={() => {
+            if (pinned) {
+              setPinned(false);
+              setDismissed(true);
+            } else {
+              setPinned(true);
+              setDismissed(false);
+            }
+          }}
+        >
+          {progress.status === 'running'
+            ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={15} />
+            : <CircleEllipsis aria-hidden="true" size={15} />}
+          <span>{summary}</span>
+        </button>
+      </div>
     </div>
   );
 }

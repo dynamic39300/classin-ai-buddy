@@ -1,8 +1,9 @@
 import type { ContextProjection, ContextProposal, ContextSnapshot, CoreContextSection } from '@domain/workbuddy/core-context';
 import type { SingleCoursewareRun } from '@domain/workbuddy/course-production';
 import { getPackageApprovableArtifactIds, type CoursePackageRun, type PackageExecutionReceipt } from '@domain/workbuddy/course-package';
-import type { PackageProposedAction } from '@domain/workbuddy/package-writeback';
-import type { ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
+import type { PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
+import type { Approval, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
+import { EvaluationModule, type EvaluationEvent } from '@domain/workbuddy/evaluation';
 
 type CoursewarePresentation = Readonly<{
   id: string; title: string; goal: string; contextSnapshotId: string; statusLabel: string; stage: SingleCoursewareRun['stage'];
@@ -41,19 +42,30 @@ type CoursewareReceiptPresentation =
     status: 'recoverable_failure' | 'timeout'; result: string; truthLabel: string; recovery: 'retry'; unexecutedTarget: string;
   }>;
 type PackageReceiptPresentation = PackageExecutionReceipt;
+export type PackageExecutionAttemptView = Readonly<{
+  action: PackageActionPresentation;
+  approval: PackageApproval;
+  receipt: PackageReceiptPresentation;
+  evaluations: readonly EvaluationEvent[];
+}>;
 
 export type CoursewareRunView = Readonly<{
   run: CoursewarePresentation;
   projections: readonly ContextProjection[];
   action: CoursewareActionPresentation | null;
+  approval: Approval | null;
   receipt: CoursewareReceiptPresentation | null;
+  evaluation: EvaluationEvent | null;
 }>;
 
 export type PackageRunView = Readonly<{
   run: PackagePresentation;
   action: PackageActionPresentation | null;
+  approval: PackageApproval | null;
   receipt: PackageReceiptPresentation | null;
   receiptHistory: readonly PackageReceiptPresentation[];
+  evaluations: readonly EvaluationEvent[];
+  executionAttempts: readonly PackageExecutionAttemptView[];
   contextConfirmed: boolean;
   retryableArtifactIds: readonly string[];
   canProposeSave: boolean;
@@ -101,11 +113,22 @@ export function projectCoursewareRunView(
   run: SingleCoursewareRun | null,
   projections: readonly ContextProjection[],
   action: ProposedAction | null,
+  approval: Approval | null,
   receipt: ExecutionReceipt | null,
   snapshotsById: Readonly<Record<string, ContextSnapshot>>,
   derivedPackageRunRef: string | null,
 ): CoursewareRunView | null {
   if (!run) return null;
+  const evaluation = action && approval && receipt && run.artifact
+    ? EvaluationModule.recordExecutionOutcome({
+      runRef: run.id,
+      contextSnapshotRef: run.contextSnapshotId,
+      artifactRef: { id: run.artifact.id, version: run.artifact.version },
+      action,
+      approval,
+      receipt,
+    })
+    : null;
   const stageProjection = {
     needs_information: { statusLabel: '需要补充', showBrief: true, showPlan: false, showArtifact: false },
     awaiting_plan_confirmation: { statusLabel: '待确认计划', showBrief: false, showPlan: true, showArtifact: false },
@@ -128,17 +151,44 @@ export function projectCoursewareRunView(
       difference: action.difference, impact: action.impact, permission: action.permission, risk: action.risk, reversible: action.reversible,
       expiresAt: action.expiresAt, idempotencyKey: action.idempotencyKey,
     }) : null,
+    approval: approval ? Object.freeze({ ...approval }) : null,
     receipt: receipt ? Object.freeze({ ...receipt }) : null,
+    evaluation,
   });
 }
 
 export function projectPackageRunView(
   run: CoursePackageRun | null,
   action: PackageProposedAction | null,
+  approval: PackageApproval | null,
   receipt: PackageExecutionReceipt | null,
   receiptHistory: readonly PackageExecutionReceipt[],
+  actionHistory: readonly PackageProposedAction[],
+  approvalHistory: readonly PackageApproval[],
 ): PackageRunView | null {
   if (!run) return null;
+  const projectAction = (candidate: PackageProposedAction): PackageActionPresentation => Object.freeze({
+    id: candidate.id, status: candidate.status, artifactRefs: candidate.artifactRefs, target: candidate.target,
+    difference: candidate.difference, impact: candidate.impact, permission: candidate.permission, risk: candidate.risk,
+    reversible: candidate.reversible, expiresAt: candidate.expiresAt, idempotencyKey: candidate.idempotencyKey,
+  });
+  const executionAttempts = receiptHistory.flatMap((historicalReceipt) => {
+    const historicalAction = actionHistory.find(({ id }) => id === historicalReceipt.actionId);
+    const historicalApproval = approvalHistory.find(({ id }) => id === historicalReceipt.approvalId);
+    if (!historicalAction || !historicalApproval || !run.contextSnapshotId) return [];
+    const evaluations = historicalAction.artifactRefs.flatMap((artifactRef) => {
+      const evaluation = EvaluationModule.recordExecutionOutcome({
+        runRef: run.id, contextSnapshotRef: run.contextSnapshotId!, artifactRef,
+        action: historicalAction, approval: historicalApproval, receipt: historicalReceipt,
+      });
+      return evaluation ? [evaluation] : [];
+    });
+    return [Object.freeze({
+      action: projectAction(historicalAction), approval: Object.freeze({ ...historicalApproval }),
+      receipt: Object.freeze({ ...historicalReceipt }), evaluations: Object.freeze(evaluations),
+    })];
+  });
+  const evaluations = executionAttempts.flatMap((attempt) => attempt.evaluations);
   const stageProjection = {
     awaiting_context: { statusLabel: '待确认上下文', showContextConfirmation: true, showPackageConfiguration: false, showGeneration: false, showArtifacts: false },
     configuring: { statusLabel: '确认范围', showContextConfirmation: false, showPackageConfiguration: true, showGeneration: false, showArtifacts: false },
@@ -153,13 +203,12 @@ export function projectPackageRunView(
       artifacts: run.artifacts, parentRunRef: run.parentRunRef, sourceArtifactRef: run.sourceArtifactRef,
       allowedCommands: run.allowedCommands, recovery: run.recovery,
     }),
-    action: action ? Object.freeze({
-      id: action.id, status: action.status, artifactRefs: action.artifactRefs, target: action.target,
-      difference: action.difference, impact: action.impact, permission: action.permission, risk: action.risk, reversible: action.reversible,
-      expiresAt: action.expiresAt, idempotencyKey: action.idempotencyKey,
-    }) : null,
+    action: action ? projectAction(action) : null,
+    approval: approval ? Object.freeze({ ...approval }) : null,
     receipt: receipt ? Object.freeze({ ...receipt }) : null,
     receiptHistory: Object.freeze(receiptHistory.map((item) => Object.freeze({ ...item }))),
+    evaluations: Object.freeze(evaluations),
+    executionAttempts: Object.freeze(executionAttempts),
     contextConfirmed: run.contextSnapshotId !== null,
     retryableArtifactIds: Object.freeze(run.artifacts.filter(({ state, allowedCommands }) => state === 'failed' && allowedCommands.includes('retry')).map(({ id }) => id)),
     canProposeSave: getPackageApprovableArtifactIds(run).length > 0,

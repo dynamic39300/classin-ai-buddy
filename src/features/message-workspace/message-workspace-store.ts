@@ -1,6 +1,11 @@
 import { createContext, useContext } from 'react';
 import type { AppRole } from '@domain/account/role';
-import type { MessageCategory, MessageThread } from '@domain/message/message';
+import type {
+  ClassAgentMessageMetadata,
+  MessageAuthorRole,
+  MessageCategory,
+  MessageThread,
+} from '@domain/message/message';
 
 export type MessageWorkspaceState =
   | { status: 'loading' }
@@ -21,6 +26,9 @@ export type MessageWorkspaceActions = {
     body: string;
     sentAt: string;
     kind?: 'text' | 'emoji';
+    messageId?: string;
+    authorRole?: MessageAuthorRole;
+    classAgent?: ClassAgentMessageMetadata;
   }) => void;
   togglePin: (threadId: string, messageId: string) => void;
   recallMessage: (role: AppRole, threadId: string, messageId: string, recalledAt: string) => void;

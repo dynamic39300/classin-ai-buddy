@@ -67,6 +67,9 @@ export function MessageWorkspaceProvider({ children, scenario = DEFAULT_SCENARIO
         options.body,
         options.sentAt,
         options.kind,
+        options.messageId,
+        options.authorRole,
+        options.classAgent,
       )
       : thread));
   }, []);

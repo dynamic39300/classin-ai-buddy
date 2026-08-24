@@ -1,6 +1,6 @@
 ---
 title: WorkBuddy 能力与资源页面高保真规格
-status: IMPLEMENTING_V04
+status: REVIEWED_APPROVED
 version: v0.4
 date: 2026-08-22
 ---

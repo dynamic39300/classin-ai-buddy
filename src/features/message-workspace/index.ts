@@ -3,4 +3,4 @@ export {
   MessageWorkspaceProvider,
   type MessageWorkspaceScenario,
 } from './MessageWorkspaceProvider';
-export { useMessageThreads } from './message-workspace-store';
+export { useMessageThreads, useMessageWorkspaceStore } from './message-workspace-store';

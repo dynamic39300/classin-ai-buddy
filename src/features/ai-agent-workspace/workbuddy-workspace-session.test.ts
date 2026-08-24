@@ -4,7 +4,7 @@ import { WORKBUDDY_COURSE_PACKAGE_DEFINITION } from '@mocks/scenarios/workbuddy-
 import { loadWorkBuddyWorkspaceSession } from './workbuddy-workspace-session';
 import { loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
 
-const STORAGE_KEY = 'workbuddy:workspace-session:v2';
+const STORAGE_KEY = 'workbuddy:workspace-session:v3';
 
 function validSession() {
   const teacher = {
@@ -12,7 +12,7 @@ function validSession() {
     sourceVersion: 'actor-v1', permission: 'read', sensitivity: 'organization', selection: 'locked', included: true,
   };
   return {
-    version: 2,
+    version: 3,
     contextProposal: { taskType: 'single-courseware', status: 'needs_attention', items: [teacher] },
     contextSnapshot: null,
     snapshotsById: {},
@@ -28,6 +28,8 @@ function validSession() {
     packageApproval: null,
     packageReceipt: null,
     packageReceiptHistory: [],
+    packageActionHistory: [],
+    packageApprovalHistory: [],
     packageWritebackScenario: 'success',
     activePackagePanel: 'none',
     activePackageArtifactId: null,
@@ -40,7 +42,7 @@ describe('WorkBuddy workspace session boundary', () => {
 
   it('accepts a structurally valid empty workspace session', () => {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(validSession()));
-    expect(loadWorkBuddyWorkspaceSession()).toMatchObject({ version: 2, taskType: 'single-courseware' });
+    expect(loadWorkBuddyWorkspaceSession()).toMatchObject({ version: 3, taskType: 'single-courseware' });
   });
 
   it('fails closed when a nested Context item is malformed', () => {
