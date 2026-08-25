@@ -23,7 +23,6 @@ for (const label of [
   "工具连接",
   "我的文件",
   "定时任务",
-  "设置",
 ]) {
   test(`${label} high-fidelity surface`, async ({ page }) => {
     await openSurface(page, label);
@@ -259,21 +258,11 @@ test("定时任务 running history fidelity", async ({ page }) => {
   );
 });
 
-test("模型设置 split view fidelity", async ({ page }) => {
-  await openSurface(page, "设置");
-  await page.getByRole("button", { name: "模型" }).click();
-  await expect(page.getByTestId("ai-agent-workspace-layout")).toHaveScreenshot(
-    "workbuddy-模型设置.png",
-    { animations: "disabled" },
-  );
-});
-
 for (const label of [
   "技能市场",
   "工具连接",
   "我的文件",
   "定时任务",
-  "设置",
 ]) {
   test(`${label} compact surface`, async ({ page }) => {
     await openSurface(page, label);

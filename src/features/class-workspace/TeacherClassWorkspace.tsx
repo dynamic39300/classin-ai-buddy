@@ -39,6 +39,7 @@ import { usePageHeader } from '@app/shell/usePageHeader';
 import { useOperationGuard } from '@app/shell/use-operation-guard';
 import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { TeachingObjectIcon } from '@design-system/TeachingObjectIcon';
+import { TeachBuddyAvatar } from '@design-system/TeachBuddyAvatar';
 import {
   addClassActivity,
   canCompleteClassCourse,
@@ -94,7 +95,7 @@ type TeacherClassWorkspaceProps = {
 
 type SortKey = 'updated-desc' | 'name-asc';
 type DialogKind = 'chat' | 'announcements' | 'settings';
-type RailSection = 'members' | 'cocreation' | 'ai' | 'workbuddy';
+type RailSection = 'members' | 'cocreation' | 'ai';
 type SettingsAction = 'exit' | null;
 type SettingsDraft = {
   name: string;
@@ -388,7 +389,7 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => searchParams.get('course'));
   const [activityFilter, setActivityFilter] = useState<'all' | 'lesson'>('all');
   const [railOpen, setRailOpen] = useState(true);
-  const [railSections, setRailSections] = useState<Record<RailSection, boolean>>({ members: true, cocreation: true, ai: true, workbuddy: true });
+  const [railSections, setRailSections] = useState<Record<RailSection, boolean>>({ members: true, cocreation: true, ai: true });
   const [collapsedUnitIds, setCollapsedUnitIds] = useState<ReadonlySet<string>>(new Set());
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [initialEditor, setInitialEditor] = useState<EditorState | null>(null);
@@ -1161,14 +1162,26 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
             {railSections.ai ? <div className={styles.railLinks}><p className={styles.railSectionNote}>老师已授权 · 班级成员可用</p><button type="button" onClick={() => setBoundary('“AI 助教”为 Placeholder，未接入真实 AI 服务。')}><Bot aria-hidden="true" size={15} />AI 助教</button><button type="button" onClick={() => setBoundary('“AI 学情”为 Placeholder，未生成真实学生分析。')}><Sparkles aria-hidden="true" size={15} />AI 学情</button><button type="button" onClick={() => setBoundary('“应用思路点拨”为 Placeholder，未接入真实 AI 服务。')}><PencilLine aria-hidden="true" size={15} />应用思路点拨</button></div> : null}
           </section>
           <section className={styles.workBuddyRailSection}>
-            <header><button type="button" aria-expanded={railSections.workbuddy} onClick={() => toggleRailSection('workbuddy')}><span>{TEACHBUDDY_BRAND.shortName}</span><ChevronDown aria-hidden="true" size={15} /></button></header>
-            {railSections.workbuddy ? <div className={styles.workBuddyPortal}><div className={styles.workBuddyIdentity}><span className={styles.workBuddyMark}><Sparkles aria-hidden="true" size={17} /></span><div><strong>{TEACHBUDDY_BRAND.shortName}</strong><small>{TEACHBUDDY_BRAND.descriptor} · 仅你可见</small></div></div><p>生成、审阅并执行你的教学任务。</p><button type="button" onClick={() => navigate(`/teacher/classes/${selectedClass.id}/workbuddy/new${activeCourse ? `?course=${encodeURIComponent(activeCourse.id)}` : ''}`)}>打开 {TEACHBUDDY_BRAND.shortName}<ArrowRight aria-hidden="true" size={15} /></button></div> : null}
+            <button
+              aria-label={`打开 ${TEACHBUDDY_BRAND.shortName}`}
+              className={styles.workBuddyPortal}
+              type="button"
+              onClick={() => navigate(`/teacher/classes/${selectedClass.id}/workbuddy/new${activeCourse ? `?course=${encodeURIComponent(activeCourse.id)}` : ''}`)}
+            >
+              <span className={styles.workBuddyEyebrow}>我的教学伴侣</span>
+              <TeachBuddyAvatar size="standard" />
+              <span className={styles.workBuddyCopy}>
+                <strong>{TEACHBUDDY_BRAND.shortName}</strong>
+                <span>我是您的教学搭档，有什么要帮忙？</span>
+              </span>
+              <span className={styles.workBuddyArrow} aria-hidden="true"><ArrowRight size={16} /></span>
+            </button>
           </section>
           </>}
         </aside>
       </div>
 
-      {quizPublicationReceipt ? <p className={styles.feedback} role="status" aria-label="测验发布回执">{quizPublicationReceipt.truthLabel} {quizPublicationReceipt.result}（{quizPublicationReceipt.id}）</p> : feedback ? <p className={styles.feedback} role="status">{feedback}</p> : null}
+      {quizPublicationReceipt ? <p className={styles.feedback} role="status" aria-label="测验发布回执">{quizPublicationReceipt.result}（{quizPublicationReceipt.id}）</p> : feedback ? <p className={styles.feedback} role="status">{feedback}</p> : null}
       {renderEditor()}
       {courseToComplete ? <WorkspaceDialog title="确认课程结课" description={`结课后，“${courseToComplete.name}”的目录和活动将转为只读。`} onClose={() => setCourseToComplete(null)}><div className={styles.confirmBody}><p>班级本身不会结课，其他课程、成员、公告和群聊不受影响。</p><div className={styles.confirmActions}><button type="button" onClick={() => setCourseToComplete(null)}>取消</button><button className={styles.primaryButton} type="button" onClick={confirmCourseCompletion}>确认结课</button></div></div></WorkspaceDialog> : null}
       {quizPublishTarget ? <WorkspaceDialog title="确认发布测验" description={`“${quizPublishTarget.detail.activity.title}”当前是教师可见草稿。`} onClose={() => setQuizPublishTarget(null)}><div className={styles.confirmBody}><p>发布后学生将在课程目录中看到该测验。请确认你已经完成题目、答案、时间和评分方案的复查。</p><dl><div><dt>对象版本</dt><dd>{quizPublishTarget.action.expectedVersion}</dd></div><div><dt>风险</dt><dd>中；发布后学生立即可见</dd></div><div><dt>可逆性</dt><dd>本次发布不可由此操作撤销</dd></div></dl><div className={styles.confirmActions}><button type="button" onClick={() => setQuizPublishTarget(null)}>继续审阅</button><button className={styles.primaryButton} type="button" onClick={() => {
@@ -1178,7 +1191,7 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
         updateClass(selectedClass.id, (record) => ({ ...record, courses: publication.courses, updatedAt: CLASS_NOW.toISOString() }));
         setQuizPublicationReceipt(publication.receipt);
         setQuizPublishTarget(null);
-        setFeedback(`${publication.receipt.truthLabel} ${publication.receipt.result}（${publication.receipt.id}）`);
+        setFeedback(`${publication.receipt.result}（${publication.receipt.id}）`);
       }}>确认发布</button></div></div></WorkspaceDialog> : null}
       {activityDetail ? (
         <HomeActivityDialog

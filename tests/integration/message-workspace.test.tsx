@@ -95,7 +95,7 @@ describe('message workspace', () => {
 
     await user.click(screen.getByRole('button', { name: '取消置顶' }));
     expect(screen.getByRole('status')).toHaveTextContent('已取消置顶消息');
-    const contextTrigger = screen.getByRole('button', { name: '管理' });
+    const contextTrigger = screen.getByRole('button', { name: '会话管理' });
     await user.click(contextTrigger);
     expect(within(screen.getByRole('menu', { name: '会话管理' })).getByRole('menuitem', { name: '群文件' })).toHaveFocus();
     await user.click(within(screen.getByRole('menu', { name: '会话管理' })).getByRole('menuitem', { name: '全体禁言' }));
@@ -107,13 +107,12 @@ describe('message workspace', () => {
   it('shares one teacher management entry across class and direct chats', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher');
-    await user.click(screen.getByRole('button', { name: '进入班级' }));
-    expect(screen.getByTestId('location')).toHaveTextContent('/teacher/classes/physics-3?from=messages');
-    expect(screen.getByRole('button', { name: '管理' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '进入班级' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '会话管理' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '私聊' }));
     expect(screen.queryByRole('button', { name: '进入班级' })).not.toBeInTheDocument();
-    const managementTrigger = screen.getByRole('button', { name: '管理' });
+    const managementTrigger = screen.getByRole('button', { name: '会话管理' });
     await user.click(managementTrigger);
     const menu = screen.getByRole('menu', { name: '会话管理' });
     expect(within(menu).getByRole('menuitem', { name: '联系人资料' })).toBeInTheDocument();
@@ -135,7 +134,7 @@ describe('message workspace', () => {
     const user = userEvent.setup();
     renderWorkspace('student-family');
 
-    expect(screen.queryByRole('button', { name: '管理' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '会话管理' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /置顶/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /全体禁言/ })).not.toBeInTheDocument();
 

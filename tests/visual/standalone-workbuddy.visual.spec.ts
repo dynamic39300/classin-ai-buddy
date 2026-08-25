@@ -1,12 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function register(page: Page) {
-  await page.goto('/workbuddy/register');
+  await page.goto('/teachbuddy/register');
   await page.getByLabel('教师称呼').fill('林老师');
   await page.getByLabel('邮箱').fill('visual.standalone@example.com');
   await page.getByLabel('密码').fill('teaching88');
   await page.getByRole('button', { name: '注册并免费开始' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/new$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/new$/);
   const avatarVideo = page.locator('[data-workbuddy-avatar="true"] video');
   if (await avatarVideo.count()) {
     await avatarVideo.evaluate(async (element) => {
@@ -24,15 +24,15 @@ async function register(page: Page) {
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/workbuddy');
+  await page.goto('/teachbuddy');
   await page.evaluate(() => localStorage.clear());
 });
 
 test('standalone WorkBuddy acquisition and product surfaces', async ({ page }) => {
-  await page.goto('/workbuddy');
+  await page.goto('/teachbuddy');
   await expect(page).toHaveScreenshot('standalone-workbuddy-landing-1440x900.png', { animations: 'disabled' });
 
-  await page.goto('/workbuddy/register');
+  await page.goto('/teachbuddy/register');
   await expect(page).toHaveScreenshot('standalone-workbuddy-register-1440x900.png', { animations: 'disabled' });
 
   await register(page);

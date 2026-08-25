@@ -106,7 +106,8 @@ test('teacher creates one dynamic smart-courseware run from the on-demand Contex
   await page.clock.runFor(2_000);
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
-  await expect(page.getByLabel('当前为固定体验数据')).toHaveText('[模拟] 体验环境');
+  await expect(page.getByLabel('当前为固定体验数据')).toHaveCount(0);
+  await expect(page.getByText(/模拟|仿真/)).toHaveCount(0);
   await expect(page.getByRole('button', { name: '上下文 · 10' })).toBeVisible();
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   await expect(timeline.getByText('教学目标', { exact: true })).toBeVisible();
@@ -287,7 +288,7 @@ test('teacher previews the full read-only Artifact and completes Action, Approva
   const output = page.getByRole('region', { name: '智能课件产出' });
 
   await expect(output.getByText('可查看全部页面。内容修改需使用专业文档编辑器。', { exact: true })).toBeVisible();
-  await expect(output.getByText('[模拟] 预览', { exact: true })).toBeVisible();
+  await expect(output.getByText(/模拟|仿真/)).toHaveCount(0);
   await expect(output.getByRole('button', { name: '编辑课件' })).toHaveCount(0);
   await expect(output.getByRole('textbox', { name: 'AI 修改要求' })).toHaveCount(0);
   await expect(output.getByText('第 1 页，共 18 页', { exact: true })).toBeVisible();
@@ -466,7 +467,8 @@ test('teacher configures and generates a four-artifact course package inside one
   await page.setViewportSize({ width: 1440, height: 900 });
   await createPackageRun(page);
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-course-package$/);
-  await expect(page.getByLabel('当前为固定体验数据')).toHaveText('[模拟] 体验环境');
+  await expect(page.getByLabel('当前为固定体验数据')).toHaveCount(0);
+  await expect(page.getByText(/模拟|仿真/)).toHaveCount(0);
   const timeline = page.getByRole('feed', { name: 'Agent 任务时间线' });
   const plan = timeline.getByRole('article').filter({ hasText: '课程方案包执行计划' });
   await expect(plan.getByRole('combobox', { name: '课程课时' })).toHaveValue('2');
@@ -561,9 +563,9 @@ test('teacher approves the package once and receives object-level execution resu
   const receipt = timeline.getByRole('article').filter({ hasText: '课程方案包执行完成' });
   await expect(receipt).toBeVisible();
   await expect(receipt.getByText('已执行', { exact: true })).toHaveCount(4);
-  await expect(receipt.getByText('[模拟]课程方案包执行回执', { exact: true })).toBeVisible();
+  await expect(receipt.getByText(/模拟|仿真/)).toHaveCount(0);
   await expect(timeline.getByRole('article').filter({ hasText: '已记录对象采纳结果' })).toHaveCount(4);
-  await expect(timeline.getByText(/\[模拟\] TeachBuddy 评价事件.*尚不代表教学效果/)).toHaveCount(4);
+  await expect(timeline.getByText(/尚不代表教学效果/)).toHaveCount(4);
 });
 
 test('partial package writeback retries only failed and waiting items while retaining both receipts', async ({ page }) => {
@@ -630,6 +632,38 @@ test('approved courseware derives an independently contextualized package with b
   await timeline.getByRole('link', { name: '返回源课件任务' }).click();
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
   await expect(page.getByRole('region', { name: '智能课件产出' }).getByRole('link', { name: '打开已派生课程方案包' })).toBeVisible();
+});
+
+test('approved courseware keeps save destinations and follow-up creation visually distinct', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await generateCoursewareArtifact(page);
+  const output = page.getByRole('region', { name: '智能课件产出' });
+  await output.getByRole('button', { name: '确认课件可用于后续任务' }).click();
+
+  const saveGroup = output.getByRole('group', { name: '保存课件' });
+  const continueGroup = output.getByRole('group', { name: '继续创作' });
+  await expect(saveGroup.getByRole('button', { name: '创建草稿到 TeacherIn' })).toBeVisible();
+  await expect(saveGroup.getByRole('button', { name: '保存到 ClassIn' })).toBeVisible();
+  await expect(continueGroup.getByRole('button', { name: '基于此课件生成课程方案包' })).toBeVisible();
+
+  for (const action of [
+    saveGroup.getByRole('button', { name: '创建草稿到 TeacherIn' }),
+    saveGroup.getByRole('button', { name: '保存到 ClassIn' }),
+    continueGroup.getByRole('button', { name: '基于此课件生成课程方案包' }),
+  ]) {
+    await expect(action).toHaveCSS('white-space', 'nowrap');
+    expect((await action.boundingBox())?.height).toBeLessThanOrEqual(44);
+  }
+
+  await page.setViewportSize({ width: 1000, height: 768 });
+  const outputBox = await output.boundingBox();
+  expect(outputBox).not.toBeNull();
+  for (const action of await output.getByRole('button').filter({ hasText: /TeacherIn|ClassIn|课程方案包/ }).all()) {
+    const actionBox = await action.boundingBox();
+    expect(actionBox).not.toBeNull();
+    expect(actionBox!.x).toBeGreaterThanOrEqual(outputBox!.x);
+    expect(actionBox!.x + actionBox!.width).toBeLessThanOrEqual(outputBox!.x + outputBox!.width);
+  }
 });
 
 test('approved current-run Artifact creates a TeacherIn draft before publication', async ({ page }) => {

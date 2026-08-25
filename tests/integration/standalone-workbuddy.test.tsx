@@ -19,21 +19,21 @@ describe('standalone teacher WorkBuddy', () => {
   beforeEach(() => window.localStorage.clear());
 
   it('shows the independent acquisition landing page before ClassIn role selection', () => {
-    renderStandalone('/workbuddy');
+    renderStandalone('/teachbuddy');
     expect(screen.getByRole('heading', { level: 1, name: '把教学想法，变成可以直接审阅的成果' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: '免费开始' })[0]).toHaveAttribute('href', '/workbuddy/register');
+    expect(screen.getAllByRole('link', { name: '免费开始' })[0]).toHaveAttribute('href', '/teachbuddy/register');
     expect(screen.getByText('注册即得 360 AI 点数')).toBeInTheDocument();
   });
 
   it('guards the app route and preserves a safe standalone next path', () => {
-    renderStandalone('/workbuddy/app/credits');
+    renderStandalone('/teachbuddy/app/credits');
     expect(screen.getByRole('heading', { level: 1, name: '欢迎回到 TeachBuddy' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '免费注册' })).toHaveAttribute('href', '/workbuddy/register?next=%2Fworkbuddy%2Fapp%2Fcredits');
+    expect(screen.getByRole('link', { name: '免费注册' })).toHaveAttribute('href', '/teachbuddy/register?next=%2Fteachbuddy%2Fapp%2Fcredits');
   });
 
   it('projects recoverable registration validation without entering the workspace', async () => {
     const user = userEvent.setup();
-    renderStandalone('/workbuddy/register');
+    renderStandalone('/teachbuddy/register');
     await user.type(screen.getByLabelText('教师称呼'), '林');
     await user.type(screen.getByLabelText('邮箱'), 'invalid');
     await user.type(screen.getByLabelText('密码'), 'short');

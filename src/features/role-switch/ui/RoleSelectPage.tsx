@@ -71,7 +71,7 @@ export function RoleSelectPage() {
             </button>
           ))}
         </div>
-        <p className={styles.legal}>本 Demo 使用本地模拟数据，不连接真实 ClassIn 账号。</p>
+        <p className={styles.legal}>请选择身份进入对应的 ClassIn 工作台。</p>
       </section>
     </main>
   );

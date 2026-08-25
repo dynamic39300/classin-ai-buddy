@@ -21,7 +21,7 @@ source_decisions: D-042/D-043/D-106/D-107
 
 | 维度 | Standalone WorkBuddy | TeacherIn / ClassIn | 关系 |
 | --- | --- | --- | --- |
-| 产品入口与账号 | `/workbuddy/*`、教师个人账号 | ClassIn 教师入口与组织身份 | 隔离 |
+| 产品入口与账号 | `/teachbuddy/*`、教师个人账号 | ClassIn 教师入口与组织身份 | 隔离 |
 | Workspace 与历史 | `standalone-teacher` Namespace | `ideal-full` / `classin-mvp` 与 ClassIn 业务数据 | 隔离 |
 | 存储对象与权限 | 独立个人内容对象、独立权限 | TeacherIn 作品、组织权限与发布状态 | 隔离；连接时建立新对象关联 |
 | 内容类型与结构 | TeacherIn 兼容内容包 | TeacherIn 权威内容契约 | 完全兼容 |

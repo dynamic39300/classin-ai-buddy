@@ -56,7 +56,7 @@ test('organization permissions and question-bank boundary remain visible @a11y',
   await expect(page.getByRole('status')).toContainText('新副本');
 
   await page.getByRole('tab', { name: '题库中心' }).click();
-  await expect(page.getByRole('heading', { name: '题库中心 Placeholder' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '题库中心', level: 2 })).toBeVisible();
   await expect(page.getByRole('button', { name: '返回我的云盘' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: '新建测验' })).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);

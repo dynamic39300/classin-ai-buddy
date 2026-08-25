@@ -29,11 +29,11 @@ type WorkBuddyExperienceProfileId =
 
 `standalone-teacher` 固定：
 
-- `basePath = /workbuddy/app`；
+- `basePath = /teachbuddy/app`；
 - `sessionNamespace = standalone-teacher`；
 - 独立、不可变地持有全部任务与全部能力 ID；
 - `launchContext = null`；
-- `returnTarget = { label: '返回官网', to: '/workbuddy' }`；
+- `returnTarget = { label: '返回官网', to: '/teachbuddy' }`；
 - `productBoundary = standalone-consumer`；
 - 不读取 ClassIn Route 参数或 Class Workspace。
 
@@ -46,7 +46,7 @@ Route parser/path builder 扩展语法但不拥有认证或商业规则。
 - `classin-integrated` 的内容入口可进入既有 TeacherIn；
 - `standalone-consumer` 必须渲染独立、可重置的个人内容库目录；
 - Standalone 内容 ID 使用独立命名空间，来源不得包含 ClassIn 机构、班级、教研组或 TeacherIn 业务对象；
-- 内容详情的改编命令只进入 `/workbuddy/app/new`；个人作品发布只写入本地模拟内容库；
+- 内容详情的改编命令只进入 `/teachbuddy/app/new`；个人作品发布只写入本地模拟内容库；
 - Standalone 文件使用独立 ID 和个人项目元数据；只允许下载、收藏、个人分享链接和 `workbuddy-personal-files` Context 引用，不显示 TeacherIn 草稿、Space 定位或 ClassIn IM 分享目标；
 - 除 ClassIn 价值说明页与官方营销外链外，Standalone DOM 不得出现 `/teacher/*` 操作。
 
@@ -171,15 +171,17 @@ Standalone 初始 Context 只包含固定模拟教师身份、教师手动输入
 
 ## 8. Route and Guard
 
-App 组合根在挂载任何 ClassIn Provider 之前识别 `/workbuddy/*`，并选择独立的 `StandaloneTeacherProvider + StandaloneWorkBuddyBridge`；`RootRouter` 只服务 ClassIn 教师/学生产品：
+App 组合根在挂载任何 ClassIn Provider 之前识别 `/teachbuddy/*`，并选择独立的 `StandaloneTeacherProvider + StandaloneWorkBuddyBridge`；`RootRouter` 只服务 ClassIn 教师/学生产品：
 
-- `/workbuddy` Landing；
-- `/workbuddy/login`、`/workbuddy/register` Auth；
-- `/workbuddy/app/*` 由 Identity Guard 保护；
-- `/workbuddy/app/classin` 投影未连接与连接后的能力差异，不执行申请写回；
-- 已登录 Auth Route 重定向 `/workbuddy/app/new`；
-- 未登录 App Route 重定向 `/workbuddy/login?next=<safe path>`；
-- `next` 只接受 `/workbuddy/app/` 下的同源路径。
+- `/teachbuddy` Landing；
+- `/teachbuddy/login`、`/teachbuddy/register` Auth；
+- `/teachbuddy/app/*` 由 Identity Guard 保护；
+- `/teachbuddy/app/classin` 投影未连接与连接后的能力差异，不执行申请写回；
+- 已登录 Auth Route 重定向 `/teachbuddy/app/new`；
+- 未登录 App Route 重定向 `/teachbuddy/login?next=<safe path>`；
+- `next` 只接受 `/teachbuddy/app/` 下的同源路径。
+- 旧 `/workbuddy/*` 由同一组合根识别并等路径重定向到 `/teachbuddy/*`，保留查询参数和锚点；重定向完成前不挂载 ClassIn 产品 Provider。
+- 页面 CTA、导航、Auth `next` 和工作台生成链接只能使用 `/teachbuddy/*`，不得生成新的 `/workbuddy/*` 链接。
 
 ## 9. UI Projection
 

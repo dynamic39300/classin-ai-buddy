@@ -150,9 +150,10 @@ test('WorkBuddy new task at 1440x900', async ({ page }) => {
   expect(playback).toEqual({ autoplay: true, loop: true, muted: true, playsInline: true });
 
   const secondaryNavigation = page.getByRole('group', { name: 'TeachBuddy 二级导航' });
-  for (const title of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
+  for (const title of ['技能市场', '工具连接', '我的文件', '定时任务']) {
     await expect(secondaryNavigation.getByRole('link', { name: title, exact: true })).toBeVisible();
   }
+  await expect(secondaryNavigation.getByRole('link', { name: '设置', exact: true })).toHaveCount(0);
 
   await expect(page).toHaveScreenshot('workbuddy-new-task-1440x900.png', { fullPage: true });
 });
@@ -166,6 +167,9 @@ test('ClassIn MVP WorkBuddy keeps the new-task surface with the retained navigat
   await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'TeachBuddy 导航' }).getByRole('link', { name: '我的任务', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('link', { name: '返回高二物理 3 班' })).toBeVisible();
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
   await expect(page).toHaveScreenshot('workbuddy-classin-mvp-new-task-1440x900.png', { fullPage: true });
 });
 
@@ -397,7 +401,6 @@ test('WorkBuddy keeps embedded navigation reachable at compact desktop width', a
     { name: '工具连接', exact: true },
     { name: '我的文件', exact: true },
     { name: '定时任务', exact: true },
-    { name: '设置', exact: true },
   ]) {
     const link = secondaryNavigation.getByRole('link', { name, exact });
     await link.scrollIntoViewIfNeeded();

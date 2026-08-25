@@ -1,7 +1,7 @@
 import { ClipboardList, Coins, LockKeyhole, LogOut, Sparkles, UserRound, WalletCards } from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
+import { STANDALONE_TEACHBUDDY_ROUTES, TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import {
   AiAgentWorkSurface,
   AiAgentWorkspaceLayout,
@@ -26,10 +26,10 @@ export function StandaloneWorkBuddyRoutes() {
   );
   return (
     <Routes>
-      <Route path="/workbuddy" element={<StandaloneLandingPage />} />
-      <Route path="/workbuddy/login" element={<StandaloneAuthPage mode="login" />} />
-      <Route path="/workbuddy/register" element={<StandaloneAuthPage mode="register" />} />
-      <Route path="/workbuddy/app" element={<StandaloneProtectedShell profile={profile} />}>
+      <Route path={STANDALONE_TEACHBUDDY_ROUTES.root} element={<StandaloneLandingPage />} />
+      <Route path={STANDALONE_TEACHBUDDY_ROUTES.login} element={<StandaloneAuthPage mode="login" />} />
+      <Route path={STANDALONE_TEACHBUDDY_ROUTES.register} element={<StandaloneAuthPage mode="register" />} />
+      <Route path={STANDALONE_TEACHBUDDY_ROUTES.app} element={<StandaloneProtectedShell profile={profile} />}>
         <Route index element={<Navigate to="new" replace />} />
         <Route path="credits" element={<StandaloneCreditsPage />} />
         <Route path="membership" element={<StandaloneMembershipPage />} />
@@ -40,7 +40,9 @@ export function StandaloneWorkBuddyRoutes() {
           <Route path=":section" element={<AiAgentWorkSurface />} />
         </Route>
       </Route>
-      <Route path="/workbuddy/*" element={<Navigate to="/workbuddy" replace />} />
+      <Route path={STANDALONE_TEACHBUDDY_ROUTES.legacyRoot} element={<LegacyStandalonePathRedirect />} />
+      <Route path={`${STANDALONE_TEACHBUDDY_ROUTES.legacyRoot}/*`} element={<LegacyStandalonePathRedirect />} />
+      <Route path={`${STANDALONE_TEACHBUDDY_ROUTES.root}/*`} element={<Navigate to={STANDALONE_TEACHBUDDY_ROUTES.root} replace />} />
     </Routes>
   );
 }
@@ -48,7 +50,7 @@ export function StandaloneWorkBuddyRoutes() {
 function StandaloneProtectedShell({ profile }: Readonly<{ profile: WorkBuddyExperienceProfile }>) {
   const { identity, taskAdmission } = useStandaloneTeacher();
   const location = useLocation();
-  if (identity.status !== 'signed_in') return <Navigate to={`/workbuddy/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+  if (identity.status !== 'signed_in') return <Navigate to={`${STANDALONE_TEACHBUDDY_ROUTES.login}?next=${encodeURIComponent(location.pathname)}`} replace />;
   return <WorkBuddyTaskAdmissionProvider admission={taskAdmission}><StandaloneWorkBuddyShell profile={profile}><Outlet /></StandaloneWorkBuddyShell></WorkBuddyTaskAdmissionProvider>;
 }
 
@@ -61,22 +63,28 @@ function StandaloneWorkBuddyShell({ profile, children }: Readonly<{ profile: Wor
   return (
     <div className={styles.appShell} data-testid="standalone-workbuddy-shell">
       <aside className={styles.appSidebar} aria-label={`${TEACHBUDDY_BRAND.officialName} 独立产品导航`}>
-        <Link className={styles.appBrand} to="/workbuddy/app/new"><span><Sparkles size={18} /></span><div><strong>{TEACHBUDDY_BRAND.officialName}</strong><small>{TEACHBUDDY_BRAND.descriptor}</small></div></Link>
+        <Link className={styles.appBrand} to={STANDALONE_TEACHBUDDY_ROUTES.newTask}><span><Sparkles size={18} /></span><div><strong>{TEACHBUDDY_BRAND.officialName}</strong><small>{TEACHBUDDY_BRAND.descriptor}</small></div></Link>
         <nav aria-label={`${TEACHBUDDY_BRAND.shortName} 导航`}>
           <Link aria-current={taskActive ? 'page' : undefined} to={workBuddyNewTaskPath(profile)}><ClipboardList size={17} /><span>我的任务</span></Link>
           {WORKBUDDY_CAPABILITIES.filter(({ id }) => profile.visibleCapabilityIds.includes(id)).map(({ id, icon: Icon, label }) => <NavLink key={id} to={workBuddyCapabilityPath(profile, id)}><Icon size={17} /><span>{label}</span></NavLink>)}
-          <NavLink to="/workbuddy/app/credits"><Coins size={17} /><span>AI 点数</span><em>{creditView?.availableBalance ?? 0}</em></NavLink>
-          <NavLink to="/workbuddy/app/membership"><WalletCards size={17} /><span>会员方案</span></NavLink>
+          <NavLink to={STANDALONE_TEACHBUDDY_ROUTES.credits}><Coins size={17} /><span>AI 点数</span><em>{creditView?.availableBalance ?? 0}</em></NavLink>
+          <NavLink to={STANDALONE_TEACHBUDDY_ROUTES.membership}><WalletCards size={17} /><span>会员方案</span></NavLink>
         </nav>
         <section className={styles.sidebarAccount}>
           <div><span><UserRound size={15} /></span><p><strong>{identity.teacher.name}</strong><small>{identity.teacher.email}</small></p></div>
-          <button type="button" onClick={() => { logout(); navigate('/workbuddy'); }}><LogOut size={15} />退出登录</button>
+          <button type="button" onClick={() => { logout(); navigate(STANDALONE_TEACHBUDDY_ROUTES.root); }}><LogOut size={15} />退出登录</button>
         </section>
       </aside>
       <main className={styles.appWorkspace} aria-label={TEACHBUDDY_BRAND.shortName}>
-        <section className={styles.connectionBanner} aria-label="ClassIn 连接状态"><span><LockKeyhole size={14} />[模拟] 未连接 ClassIn</span><p>当前仅使用你的任务描述和上传资料；连接后可自动带入班级、课程、作业与学情。</p><Link to="/workbuddy/app/classin">了解连接价值</Link></section>
+        <section className={styles.connectionBanner} aria-label="ClassIn 连接状态"><span><LockKeyhole size={14} />未连接 ClassIn</span><p>当前仅使用你的任务描述和上传资料；连接后可自动带入班级、课程、作业与学情。</p><Link to={STANDALONE_TEACHBUDDY_ROUTES.classIn}>了解连接价值</Link></section>
         <div className={styles.appSurface}>{children}</div>
       </main>
     </div>
   );
+}
+
+function LegacyStandalonePathRedirect() {
+  const { pathname, search, hash } = useLocation();
+  const suffix = pathname.slice(STANDALONE_TEACHBUDDY_ROUTES.legacyRoot.length);
+  return <Navigate to={`${STANDALONE_TEACHBUDDY_ROUTES.root}${suffix}${search}${hash}`} replace />;
 }

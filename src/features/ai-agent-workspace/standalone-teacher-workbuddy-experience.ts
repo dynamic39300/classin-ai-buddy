@@ -1,4 +1,5 @@
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
+import { STANDALONE_TEACHBUDDY_ROUTES } from '@contracts/workbuddy/product-brand';
 import type { WorkBuddyCapabilityId, WorkBuddyExperienceProfile } from './workbuddy-experience-profile';
 
 const STANDALONE_TASK_TYPES: readonly WorkBuddyTaskType[] = Object.freeze([
@@ -20,12 +21,12 @@ export function createStandaloneTeacherWorkBuddyExperience(accountId?: string): 
   return Object.freeze({
     id: 'standalone-teacher',
     productBoundary: 'standalone-consumer',
-    basePath: '/workbuddy/app',
+    basePath: STANDALONE_TEACHBUDDY_ROUTES.app,
     sessionNamespace: accountId ? `standalone-teacher:${accountId}` : 'standalone-teacher:anonymous',
     visibleTaskTypes: STANDALONE_TASK_TYPES,
     visibleCapabilityIds: STANDALONE_CAPABILITY_IDS,
     launchContext: null,
-    returnTarget: Object.freeze({ label: '返回官网', to: '/workbuddy' }),
+    returnTarget: Object.freeze({ label: '返回官网', to: STANDALONE_TEACHBUDDY_ROUTES.root }),
     search: '',
   });
 }

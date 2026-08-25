@@ -15,7 +15,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
-import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
+import { STANDALONE_TEACHBUDDY_ROUTES, TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getVisibleWorkBuddyCapability, getWorkBuddyCapability } from './capability-registry';
@@ -244,7 +244,7 @@ function NewTaskSkeleton() {
                             setSelectedSkill(skill);
                             closeSkillPicker(true);
                             setSkillQuery('');
-                            setFeedback(`[模拟] 已选择 ${skill.title}，创建任务前仍可移除。`);
+                            setFeedback(`已选择 ${skill.title}，创建任务前仍可移除。`);
                           }}
                         >
                           <span className={styles.skillPickerGlyph}><Shapes aria-hidden="true" size={15} /></span>
@@ -283,9 +283,9 @@ function NewTaskSkeleton() {
 
         {taskQuote ? (
           <div className={styles.taskQuote} aria-label="本次任务 AI 点数报价">
-            <span>[模拟] 本次任务</span>
+            <span>本次任务</span>
             <strong>{taskQuote.amount} AI 点数</strong>
-            <Link to="/workbuddy/app/credits">查看余额</Link>
+            <Link to={STANDALONE_TEACHBUDDY_ROUTES.credits}>查看余额</Link>
           </div>
         ) : null}
 
@@ -441,12 +441,12 @@ function RunSkeleton({ runId }: { runId: string }) {
           <div className={styles.artifactPreview}>
             <span>{item.artifact.progress}</span>
             <div className={styles.slidePreview}>
-              <small>{item.artifact.eyebrow}</small>
+              <small>{item.artifact.eyebrow.replace(/\[模拟\]\s*/gu, '')}</small>
               <h2>{item.artifact.heading}</h2>
               <p>{item.artifact.summary}</p>
               <div className={styles.chartPlaceholder} aria-label="函数图像预览"><span /></div>
             </div>
-            <p>{item.artifact.truthLabel}</p>
+            <p>当前任务产物 · {item.artifact.version}</p>
           </div>
           <footer><button ref={artifactActionRef} type="button" aria-pressed={artifactFocused} onClick={() => {
             setArtifactFocused((current) => !current);

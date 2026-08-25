@@ -196,8 +196,8 @@ describe('teacher class experience refresh', () => {
     expect(screen.getByText('AI 助教')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'AI 应用' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('老师已授权 · 班级成员可用')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'TeachBuddy' })).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('AI 教学搭档 · 仅你可见')).toBeInTheDocument();
+    expect(screen.getByText('我的教学伴侣', { exact: true })).toBeInTheDocument();
+    expect(screen.getByText('我是您的教学搭档，有什么要帮忙？', { exact: true })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '打开 TeachBuddy' }));
     expect(screen.getByLabelText('当前路径')).toHaveTextContent('/teacher/classes/physics-3/workbuddy/new?course=course-momentum');

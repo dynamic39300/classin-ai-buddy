@@ -45,6 +45,14 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
 }
 
+function stablePageScreenshot(page: Page) {
+  return {
+    fullPage: true,
+    mask: [page.locator('[data-teachbuddy-avatar="true"]')],
+    maskColor: '#eef7f2',
+  };
+}
+
 async function scrollbarThumbColor(surface: Locator) {
   return surface.evaluate((element) => getComputedStyle(element, '::-webkit-scrollbar-thumb').backgroundColor);
 }
@@ -149,7 +157,7 @@ test('WorkBuddy IM reminder draft at 1440x900', async ({ page }) => {
   await expectUnifiedCommunicationSurface(page);
   await expectBorderLightReviewCanvas(page);
   await expect(page.getByRole('separator', { name: '调整 TeachBuddy 宽度' })).toBeVisible();
-  await expect(page).toHaveScreenshot('workbuddy-im-reminder-draft-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-reminder-draft-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM expanded editor keeps its shell fixed after scrolling at 1440x900', async ({ page }) => {
@@ -163,7 +171,7 @@ test('WorkBuddy IM expanded editor keeps its shell fixed after scrolling at 1440
   await expect(sidecar.getByText('TeachBuddy', { exact: true })).toBeVisible();
   await expect(sidecar.getByRole('textbox', { name: '向 TeachBuddy 输入要求' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await expect(page).toHaveScreenshot('workbuddy-im-expanded-editor-scrolled-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-expanded-editor-scrolled-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM scrollbars stay quiet until hover or keyboard focus', async ({ page }) => {
@@ -179,12 +187,12 @@ test('WorkBuddy IM scrollbars stay quiet until hover or keyboard focus', async (
   await expect.poll(() => scrollbarThumbColor(body)).not.toBe('rgba(0, 0, 0, 0)');
 });
 
-test('WorkBuddy IM ready state exposes the available simulated class tasks', async ({ page }) => {
+test('WorkBuddy IM ready state exposes the available class tasks', async ({ page }) => {
   await openWorkBuddyReady(page, { width: 1440, height: 900 });
-  const taskGroup = page.getByRole('group', { name: '模拟任务' });
+  const taskGroup = page.getByRole('group', { name: '推荐任务' });
   await expect(taskGroup.getByRole('button')).toHaveCount(3);
   await expectNoHorizontalOverflow(page);
-  await expect(page).toHaveScreenshot('workbuddy-im-two-simulated-tasks-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-two-simulated-tasks-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM weekly preparation notice draft at 1440x900', async ({ page }) => {
@@ -192,7 +200,7 @@ test('WorkBuddy IM weekly preparation notice draft at 1440x900', async ({ page }
   await expectNoHorizontalOverflow(page);
   await expectFloatingAssistantWorkbench(page);
   await expectBorderLightReviewCanvas(page, '群通知正文', 'workbuddy-weekly-review-artifact');
-  await expect(page).toHaveScreenshot('workbuddy-im-weekly-preparation-draft-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-weekly-preparation-draft-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM weekly notice expands inside the sidecar at 1440x900', async ({ page }) => {
@@ -209,7 +217,7 @@ test('WorkBuddy IM weekly notice expands inside the sidecar at 1440x900', async 
   expect(sidecarAfter).not.toBeNull();
   expect(Math.abs(sidecarAfter!.width - sidecarBefore!.width)).toBeLessThanOrEqual(1);
   await expectNoHorizontalOverflow(page);
-  await expect(page).toHaveScreenshot('workbuddy-im-weekly-focused-editor-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-weekly-focused-editor-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM weekly notice keeps its sidecar width while expanding at 1024x640', async ({ page }) => {
@@ -228,7 +236,7 @@ test('WorkBuddy IM weekly notice keeps its sidecar width while expanding at 1024
   expect(editorBox!.height).toBeGreaterThanOrEqual(350);
   await expect(sidecar.getByRole('button', { name: '收起群通知正文' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await expect(page).toHaveScreenshot('workbuddy-im-weekly-focused-editor-1024x640.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-weekly-focused-editor-1024x640.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM edited checklist exposes an inline restore action', async ({ page }) => {
@@ -238,7 +246,7 @@ test('WorkBuddy IM edited checklist exposes an inline restore action', async ({ 
   await expect(sidecar.getByRole('button', { name: '还原名单至本次草稿最初生成的范围' })).toBeVisible();
   await expect(sidecar.getByText('4 位学生', { exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await expect(page).toHaveScreenshot('workbuddy-im-edited-checklist-restore-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-edited-checklist-restore-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM three-pane workspace at 1280x800', async ({ page }) => {
@@ -251,14 +259,14 @@ test('WorkBuddy IM three-pane workspace at 1280x800', async ({ page }) => {
   const box = await sidecar.boundingBox();
   expect(box?.width).toBeGreaterThanOrEqual(384);
   expect(box?.width).toBeLessThanOrEqual(520);
-  await expect(page).toHaveScreenshot('workbuddy-im-three-pane-1280x800.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-three-pane-1280x800.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy guided explanation review at 1440x900', async ({ page }) => {
   await openGuidedExplanationDraft(page, { width: 1440, height: 900 });
   await expectNoHorizontalOverflow(page);
   await expectFloatingAssistantWorkbench(page);
-  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy guided explanation review remains reachable at 1024x640', async ({ page }) => {
@@ -273,7 +281,8 @@ test('WorkBuddy guided explanation review remains reachable at 1024x640', async 
   const sidecarBody = page.getByLabel('TeachBuddy 私密协作窗口').locator('[data-scrolled]');
   await sidecarBody.evaluate((element) => { element.scrollTop = Math.min(420, element.scrollHeight - element.clientHeight); });
   await expect.poll(() => sidecarBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
-  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1024x640.png', { fullPage: true });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1024x640.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy guided explanation exposes editable process and answer controls', async ({ page }) => {
@@ -284,7 +293,7 @@ test('WorkBuddy guided explanation exposes editable process and answer controls'
   await review.getByRole('button', { name: '应用修改' }).scrollIntoViewIfNeeded();
   await expect(review.getByRole('button', { name: '应用修改' })).toBeVisible();
   await expect(review.getByRole('button', { name: '确认保存并发送' })).toBeDisabled();
-  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-editable-answer-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-editable-answer-1440x900.png', stablePageScreenshot(page));
 });
 
 test('guided explanation message opens as a focused student-facing viewer', async ({ page }) => {
@@ -295,7 +304,7 @@ test('guided explanation message opens as a focused student-facing viewer', asyn
   await sidecar.getByRole('button', { name: '查看消息' }).click();
   await page.getByRole('button', { name: '查看分步讲解' }).click();
   await expect(page.getByRole('dialog', { name: '小球正碰：用动量守恒求碰后速度' })).toBeVisible();
-  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-viewer-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-guided-explanation-viewer-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM reminder overlay at 1024x640', async ({ page }) => {
@@ -309,7 +318,7 @@ test('WorkBuddy IM reminder overlay at 1024x640', async ({ page }) => {
   const box = await sidecar.boundingBox();
   expect(box?.width).toBeGreaterThan(384);
   expect(box?.width).toBeLessThanOrEqual(520);
-  await expect(page).toHaveScreenshot('workbuddy-im-reminder-draft-1024x640.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-reminder-draft-1024x640.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM sent receipt stays compact at 1440x900', async ({ page }) => {
@@ -335,7 +344,7 @@ test('WorkBuddy IM sent receipt stays compact at 1440x900', async ({ page }) => 
   await expect(receipt.getByText('已发送 1 条班级群消息')).toBeVisible();
   await expect(receipt.getByText(/王老师 → 高二物理 3 班/)).toBeVisible();
   await expect(receipt.getByRole('button', { name: '查看群消息' })).toBeVisible();
-  await expect(page).toHaveScreenshot('workbuddy-im-sent-receipt-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-sent-receipt-1440x900.png', stablePageScreenshot(page));
 });
 
 test('WorkBuddy IM sent receipt adapts at the 384px minimum panel width', async ({ page }) => {
@@ -358,5 +367,5 @@ test('WorkBuddy IM sent receipt adapts at the 384px minimum panel width', async 
   expect(receiptBox?.height).toBeLessThanOrEqual(160);
   await expect(receipt.getByText(/王老师 → 高二物理 3 班/)).toBeVisible();
   await expect(receipt.getByRole('button', { name: '查看群消息' })).toBeVisible();
-  await expect(page).toHaveScreenshot('workbuddy-im-sent-receipt-384px-1440x900.png', { fullPage: true });
+  await expect(page).toHaveScreenshot('workbuddy-im-sent-receipt-384px-1440x900.png', stablePageScreenshot(page));
 });

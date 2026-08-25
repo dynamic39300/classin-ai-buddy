@@ -61,7 +61,7 @@ M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独
 
 产品能力相同不代表产品 Module 或数据共享。`standalone-teacher` 必须拥有独立 Route、Shell、配置和私有数据空间。
 
-其中“内容资源”和“我的文件”必须是独立产品自己的个人内容/文件库闭环：内容目录、作品详情、收藏、发布、改编、下载、个人分享链接和 Context 引用均停留在 `/workbuddy/app/*`，不跳转 ClassIn TeacherIn、Space 或 `/teacher/*`，也不展示 ClassIn 机构、教研组、班级群或业务文件数据。ClassIn 只在明确的连接价值说明和官方获客入口出现。
+其中“内容资源”和“我的文件”必须是独立产品自己的个人内容/文件库闭环：内容目录、作品详情、收藏、发布、改编、下载、个人分享链接和 Context 引用均停留在 `/teachbuddy/app/*`，不跳转 ClassIn TeacherIn、Space 或 `/teacher/*`，也不展示 ClassIn 机构、教研组、班级群或业务文件数据。ClassIn 只在明确的连接价值说明和官方获客入口出现。
 
 ### 3.2.1 内容生态关系
 
@@ -81,16 +81,16 @@ M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独
 ## 4. 信息架构
 
 ```text
-/workbuddy                       独立官网
+/teachbuddy                       独立官网
   ├─ 产品能力
   ├─ 使用方式
   ├─ 会员方案
   └─ ClassIn 增量
 
-/workbuddy/login                 登录
-/workbuddy/register              注册
+/teachbuddy/login                 登录
+/teachbuddy/register              注册
 
-/workbuddy/app                   独立教师 ClassIn TeachBuddy
+/teachbuddy/app                   独立教师 ClassIn TeachBuddy
   ├─ new                         新建任务
   ├─ runs/:runId                 任务运行
   ├─ skills/tools/content/files  完整能力页
@@ -99,7 +99,9 @@ M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独
   └─ membership                  会员与模拟订单
 ```
 
-未登录访问 `/workbuddy/app/*` 必须返回登录，并保留安全的回跳目标。已登录访问登录/注册页进入工作台。
+`/teachbuddy/*` 是唯一生成新链接的主路径。旧 `/workbuddy/*` 仅作为兼容入口，必须保留原子路径、查询参数和锚点重定向到 `/teachbuddy/*`，不得继续出现在页面 CTA、登录回跳或新分享链接中。
+
+未登录访问 `/teachbuddy/app/*` 必须返回登录，并保留安全的回跳目标。已登录访问登录/注册页进入工作台。
 
 ## 5. 核心旅程
 

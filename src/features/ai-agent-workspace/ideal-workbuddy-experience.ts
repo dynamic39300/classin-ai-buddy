@@ -13,7 +13,6 @@ const IDEAL_CAPABILITY_IDS: readonly WorkBuddyCapabilityId[] = Object.freeze([
   'content',
   'files',
   'schedules',
-  'settings',
 ]);
 
 export function createIdealWorkBuddyExperience(): WorkBuddyExperienceProfile {

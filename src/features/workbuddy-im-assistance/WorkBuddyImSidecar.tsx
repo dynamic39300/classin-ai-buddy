@@ -2,14 +2,14 @@ import {
   AlertTriangle,
   CheckCircle2,
   LoaderCircle,
-  LockKeyhole,
   RotateCcw,
   Sparkles,
   X,
 } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
+import { TeachBuddyAvatar } from '@design-system/TeachBuddyAvatar';
 import { useWorkBuddyIm, WORKBUDDY_IM_DIRECT_REFERENCE_TASK, WORKBUDDY_IM_GUIDED_EXPLANATION_TASK, WORKBUDDY_IM_REFERENCE_TASK, WORKBUDDY_IM_TASKS } from './workbuddy-im-store';
 import { WorkBuddyImRunTimeline } from './WorkBuddyImRunTimeline';
 import { WorkBuddyReviewArtifact } from './WorkBuddyReviewArtifact';
@@ -25,10 +25,34 @@ type WorkBuddyImSidecarProps = Readonly<{
 
 const COMPOSER_MAX_LENGTH = 4_000;
 const COMPOSER_COUNT_THRESHOLD = 3_200;
+const TEACHBUDDY_GREETING = '我是您的教学搭档，有什么要帮忙？';
+const GREETING_SEEN_KEY = 'classin:teachbuddy:im-greeting-seen:v1';
+
+function useTeachBuddyGreeting(): string {
+  const [greeting, setGreeting] = useState(() => {
+    if (typeof window === 'undefined') return TEACHBUDDY_GREETING;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    return reducedMotion || window.sessionStorage.getItem(GREETING_SEEN_KEY) === 'true'
+      ? TEACHBUDDY_GREETING
+      : '';
+  });
+
+  useEffect(() => {
+    if (greeting === TEACHBUDDY_GREETING || typeof window === 'undefined') return undefined;
+    window.sessionStorage.setItem(GREETING_SEEN_KEY, 'true');
+    const timer = window.setInterval(() => {
+      setGreeting((current) => TEACHBUDDY_GREETING.slice(0, current.length + 1));
+    }, 45);
+    return () => window.clearInterval(timer);
+  }, [greeting]);
+
+  return greeting;
+}
 
 export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClose }: WorkBuddyImSidecarProps) {
   const { state, actions } = useWorkBuddyIm();
   const composerDraft = state.composerDraft;
+  const greeting = useTeachBuddyGreeting();
   const bodyRef = useRef<HTMLDivElement>(null);
   const eventCursor = state.conversation?.events.map(({ id, state: eventState }) => `${id}:${eventState}`).join('|') ?? '';
   useEffect(() => {
@@ -70,7 +94,7 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
     : run.status === 'sending'
       ? '正在执行发送，请等待回执后继续'
       : run.status === 'draft-ready'
-        ? '继续提问会以当前班级上下文启动新的模拟 Run'
+        ? '继续提问会以当前班级上下文启动新的任务'
         : run.status === 'direct-draft-ready'
           ? '回复建议尚未发送；可继续调整或插入当前回复框'
           : directContext
@@ -88,17 +112,15 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
     <aside className={styles.sidecar} aria-label={`${TEACHBUDDY_BRAND.shortName} 私密协作窗口`} data-dismissible={onClose ? 'true' : 'false'} data-surface="floating-assistant" id="workbuddy-im-sidecar">
       <header className={styles.header}>
         <div className={styles.identity}>
-          <span className={styles.mark}><Sparkles aria-hidden="true" size={16} /></span>
-          <span><strong>{TEACHBUDDY_BRAND.shortName}</strong><small><LockKeyhole aria-hidden="true" size={11} />{TEACHBUDDY_BRAND.descriptor} · 仅你可见</small></span>
+          <TeachBuddyAvatar size="compact" />
+          <strong>{TEACHBUDDY_BRAND.shortName}</strong>
+          <span aria-label={TEACHBUDDY_GREETING} className={styles.greeting}>{greeting}{greeting !== TEACHBUDDY_GREETING ? <i aria-hidden="true" /> : null}</span>
         </div>
-        {onClose ? <button type="button" aria-label={`关闭 ${TEACHBUDDY_BRAND.shortName}`} onClick={onClose}><X aria-hidden="true" size={17} /></button> : null}
+        <div className={styles.headerActions}>
+          <span className={styles.context}><small>当前上下文</small><strong title={target.classLabel}>{target.classLabel}</strong></span>
+          {onClose ? <button type="button" aria-label={`关闭 ${TEACHBUDDY_BRAND.shortName}`} onClick={onClose}><X aria-hidden="true" size={17} /></button> : null}
+        </div>
       </header>
-
-      <div className={styles.contextBar}>
-        <span>当前上下文</span>
-        <strong>{target.classLabel}</strong>
-        <i>[模拟] 数据</i>
-      </div>
 
       <div
         className={styles.body}
@@ -114,7 +136,7 @@ export function WorkBuddyImSidecar({ onLocateMessage, onInsertDirectReply, onClo
               <Sparkles aria-hidden="true" size={18} />
               <div><h3 id="workbuddy-ready-title">{directContext ? '告诉我你想如何回复当前私聊' : '直接告诉我你想在当前班级完成什么'}</h3><p>{directContext ? '我会结合当前对话生成回复建议；建议只会插入回复框，仍由你确认并发送。' : '我会先理解任务、展示执行步骤并生成草稿；所有结果都要由你确认后才会进入群聊。'}</p></div>
             </div>
-            <div className={styles.taskSuggestions} aria-label="模拟任务" role="group">
+            <div className={styles.taskSuggestions} aria-label="推荐任务" role="group">
               {directContext ? (
                 <>
                   <button className={styles.suggestion} type="button" onClick={() => actions.editComposerDraft(WORKBUDDY_IM_DIRECT_REFERENCE_TASK)}><span>回复辅助</span><strong>根据当前对话拟写回复</strong></button>

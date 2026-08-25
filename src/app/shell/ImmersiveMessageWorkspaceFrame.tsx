@@ -18,9 +18,7 @@ import styles from './ImmersiveMessageWorkspaceFrame.module.css';
 type ImmersiveMessageWorkspaceFrameProps = {
   children: ReactNode;
   title?: string;
-  modeLabel?: string;
   exitLabel?: string;
-  exitHint?: string;
   exitIcon?: 'back' | 'minimize';
   onExit?: () => void;
   showWorkBuddyExitGuidance?: boolean;
@@ -51,9 +49,7 @@ function focusCurrentThread(): void {
 export function ImmersiveMessageWorkspaceFrame({
   children,
   title = '消息',
-  modeLabel = '沉浸工作区',
   exitLabel = '退出沉浸模式',
-  exitHint = '退出后仍停留在当前会话',
   exitIcon = 'minimize',
   onExit,
   showWorkBuddyExitGuidance = false,
@@ -213,16 +209,13 @@ export function ImmersiveMessageWorkspaceFrame({
           <div className={styles.location}>
             <span className={styles.brandMark} aria-hidden="true"><img alt="" src="/brand/classin-wing-mark.png" /></span>
             <h1>{title}</h1>
-            <span className={styles.modeLabel}>{modeLabel}</span>
           </div>
           <div className={styles.exitArea}>
-            <span
-              aria-live={escapeArmed ? 'polite' : undefined}
-              className={styles.escapeHint}
-              role={escapeArmed ? 'status' : undefined}
-            >
-              {escapeArmed ? `再按一次 Esc ${exitLabel}` : exitHint}
-            </span>
+            {escapeArmed ? (
+              <span aria-live="polite" className={styles.escapeHint} role="status">
+                再按一次 Esc {exitLabel}
+              </span>
+            ) : null}
             <button
               className={styles.exitButton}
               disabled={shell.mode === 'exiting'}
@@ -255,21 +248,20 @@ export function ImmersiveMessageWorkspaceFrame({
           <span className={styles.exitGuidanceIcon} aria-hidden="true"><Sparkles size={19} /></span>
           <div className={styles.exitGuidanceContent}>
             <span className={styles.exitGuidanceCopy} role="status" aria-live="polite">
-              <strong>已退出沉浸模式，{TEACHBUDDY_BRAND.shortName} 已收起</strong>
-              <small>当前会话和 {TEACHBUDDY_BRAND.shortName} 任务状态均已保留。</small>
+              <strong>已退出沉浸模式</strong>
+              <small>会话和任务进度已保留。</small>
             </span>
             <div className={styles.exitGuidanceActions}>
               <button type="button" onClick={reopenWorkBuddy}><Sparkles aria-hidden="true" size={14} />重新打开 {TEACHBUDDY_BRAND.shortName}</button>
-              <small>也可以点击右上角“{TEACHBUDDY_BRAND.shortName}”再次打开。</small>
+              <label className={styles.exitGuidancePreference}>
+                <input
+                  checked={exitGuidanceSuppressed}
+                  onChange={(event) => updateExitGuidancePreference(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>不再提示</span>
+              </label>
             </div>
-            <label className={styles.exitGuidancePreference}>
-              <input
-                checked={exitGuidanceSuppressed}
-                onChange={(event) => updateExitGuidancePreference(event.target.checked)}
-                type="checkbox"
-              />
-              <span>不再显示此提示</span>
-            </label>
           </div>
           <button className={styles.exitGuidanceClose} type="button" aria-label="关闭退出引导" onClick={() => dismissExitGuidance(true)}>
             <X aria-hidden="true" size={15} />

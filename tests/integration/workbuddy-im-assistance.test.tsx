@@ -279,7 +279,9 @@ describe('WorkBuddy IM assistance', () => {
 
     await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
     const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
-    expect(within(sidecar).getByText('AI 教学搭档 · 仅你可见')).toBeInTheDocument();
+    expect(within(sidecar).getByText('TeachBuddy')).toBeInTheDocument();
+    expect(within(sidecar).getByLabelText('我是您的教学搭档，有什么要帮忙？')).toBeInTheDocument();
+    expect(within(sidecar).queryByText(/模拟|仿真/)).not.toBeInTheDocument();
     expect(within(sidecar).getByText('高二物理 3 班')).toBeInTheDocument();
 
     expect(within(sidecar).getByRole('button', { name: '作业催交核对未截止作业并提醒未提交学员' })).toBeInTheDocument();

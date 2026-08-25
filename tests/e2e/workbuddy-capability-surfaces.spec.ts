@@ -57,7 +57,7 @@ test("skills market supports search, detail, install and use in task", async ({
   ).toBeVisible();
 });
 
-test("skills add menu supports recoverable upload and simulated import", async ({
+test("skills add menu supports recoverable upload and import", async ({
   page,
 }) => {
   await openSurface(page, "技能市场");
@@ -99,9 +99,8 @@ test("skills add menu supports recoverable upload and simulated import", async (
   await expect(
     page.getByRole("button", { name: "查看lesson-skill" }),
   ).toContainText("已安装");
-  await expect(page.getByRole("status")).toContainText(
-    "[模拟] lesson-skill 已添加",
-  );
+  await expect(page.getByRole("status")).toContainText("lesson-skill 已添加");
+  await expect(page.getByText(/模拟|仿真/)).toHaveCount(0);
 });
 
 test("find, create and direct selection keep Skill use inside the new-task draft", async ({
@@ -299,8 +298,9 @@ test("files support task traceability, cross-field search and class-group sharin
   await shareDialog.getByRole("radio", { name: /高一（3）班班级群/ }).check();
   await shareDialog.getByRole("button", { name: "发送" }).click();
   await expect(page.locator("p[role='status']")).toContainText(
-    "[模拟] 函数单调性智能课件.pptx 已发送到高一（3）班班级群",
+    "函数单调性智能课件.pptx 已发送到高一（3）班班级群",
   );
+  await expect(page.getByText(/模拟|仿真/)).toHaveCount(0);
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(
@@ -412,17 +412,18 @@ test("scheduled task cards remain individually scannable as the list grows", asy
   ).toEqual([]);
 });
 
-test("settings offer grouped controls", async ({ page }) => {
-  await openSurface(page, "设置");
+test("integrated capability navigation does not publish settings", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const teacherButton = page.getByRole("button", { name: /老师视角/ });
+  if (await teacherButton.count()) await teacherButton.click();
+  await page
+    .getByRole("navigation", { name: "老师视角主导航" })
+    .getByRole("link", { name: "TeachBuddy" })
+    .click();
   await expect(
-    page.getByRole("navigation", { name: "TeachBuddy 设置分组" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "模型" }).click();
-  await expect(
-    page.getByRole("heading", { level: 2, name: "模型" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "测试连接" }).click();
-  await expect(page.getByRole("status")).toContainText("模型连接测试完成");
+    page.getByRole("group", { name: "TeachBuddy 二级导航" }).getByRole("link", { name: "设置", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("capability surfaces remain usable in compact desktop without horizontal overflow", async ({

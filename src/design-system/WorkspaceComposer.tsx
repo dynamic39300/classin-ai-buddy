@@ -15,7 +15,7 @@ export type WorkspaceComposerProps = Readonly<{
   value: string;
   placeholder: string;
   submitLabel: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (value: string, caret: number) => void;
   onSubmit: () => void;
   mode?: 'conversation' | 'task';
   className?: string;
@@ -117,7 +117,7 @@ export function WorkspaceComposer({
         aria-label={ariaLabel}
         disabled={disabled}
         maxLength={maxLength}
-        onChange={(event) => onValueChange(event.target.value)}
+        onChange={(event) => onValueChange(event.target.value, event.target.selectionStart)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         ref={textareaRef}

@@ -189,7 +189,7 @@ describe('space workspace', () => {
 
   it('renders question bank as one trustworthy placeholder without local actions', () => {
     renderTeacherSpace('question-bank');
-    expect(screen.getByRole('heading', { name: '题库中心 Placeholder' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: '题库中心' })).toBeInTheDocument();
     expect(screen.queryByText('可信边界')).not.toBeInTheDocument();
     expect(screen.queryByText('题库服务依赖尚未接入，本次只保留空间入口。')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '返回我的云盘' })).not.toBeInTheDocument();

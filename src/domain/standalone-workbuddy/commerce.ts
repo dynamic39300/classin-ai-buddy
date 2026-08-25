@@ -80,7 +80,7 @@ export type AiCreditModule = Readonly<{
 
 export const MEMBERSHIP_PLANS: readonly MembershipPlan[] = Object.freeze([
   Object.freeze({ id: 'free', name: '免费体验', priceCny: 0, credits: 360, cadence: 'monthly' as const }),
-  Object.freeze({ id: 'teaching', name: '教学版', priceCny: 39, credits: 1500, cadence: 'monthly' as const }),
+  Object.freeze({ id: 'teaching', name: '标准版', priceCny: 39, credits: 1500, cadence: 'monthly' as const }),
   Object.freeze({ id: 'professional', name: '专业版', priceCny: 89, credits: 4200, cadence: 'monthly' as const }),
 ]);
 

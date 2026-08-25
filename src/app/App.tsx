@@ -40,6 +40,7 @@ import { MockClassAgentConversationAdapter } from '@mocks/adapters/class-agent/c
 import { CLASS_AGENT_DEFINITIONS, DIRECT_CLASS_AGENT_BINDINGS } from '@mocks/scenarios/class-agent';
 import { WORKBUDDY_QUIZ_PAPER } from '@mocks/scenarios/workbuddy-quiz-activity';
 import { STANDALONE_WORKBUDDY_CONTEXT_ITEMS, STANDALONE_WORKBUDDY_RECOMMENDATION } from '@mocks/scenarios/standalone-workbuddy';
+import { isStandaloneTeachBuddyPath } from '@contracts/workbuddy/product-brand';
 import { OperationGuardProvider } from './shell/operation-guard';
 import { RootRouter } from './router/RootRouter';
 
@@ -290,7 +291,7 @@ function ClassInProductComposition() {
 
 function ProductComposition() {
   const { pathname } = useLocation();
-  return pathname === '/workbuddy' || pathname.startsWith('/workbuddy/')
+  return isStandaloneTeachBuddyPath(pathname)
     ? <StandaloneTeacherProvider><StandaloneWorkBuddyBridge /></StandaloneTeacherProvider>
     : <ClassInProductComposition />;
 }

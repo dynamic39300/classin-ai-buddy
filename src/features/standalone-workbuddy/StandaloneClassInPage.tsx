@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, Database, FileUp, Link2Off } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
+import { STANDALONE_TEACHBUDDY_ROUTES, TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import styles from './StandaloneWorkBuddy.module.css';
 
 export function StandaloneClassInPage() {
@@ -27,7 +27,7 @@ export function StandaloneClassInPage() {
 
       <aside className={styles.classInCta}>
         <div><strong>你不需要先连接，才能体验 {TEACHBUDDY_BRAND.shortName}</strong><p>先完成一个任务；需要跨班级上下文、教学活动写回或机构协同时，再了解 ClassIn 的完整方案。</p></div>
-        <div><Link to="/workbuddy/app/new">先创建一个任务</Link><a href="https://www.classin.com/" target="_blank" rel="noreferrer">了解 ClassIn <ArrowUpRight size={15} /></a></div>
+        <div><Link to={STANDALONE_TEACHBUDDY_ROUTES.newTask}>先创建一个任务</Link><a href="https://www.classin.com/" target="_blank" rel="noreferrer">了解 ClassIn <ArrowUpRight size={15} /></a></div>
       </aside>
     </section>
   );

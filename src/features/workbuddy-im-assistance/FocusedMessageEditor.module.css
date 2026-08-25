@@ -61,7 +61,7 @@
 
 .editor.editor textarea {
   width: 100%;
-  min-height: 6.25rem;
+  min-height: 5rem;
   max-height: 10rem;
   box-sizing: border-box;
   padding: var(--space-sm);
@@ -78,9 +78,8 @@
 }
 
 .editor[data-expanded='true'].editor textarea {
-  height: clamp(22rem, 58dvh, 36rem);
-  min-height: clamp(22rem, 58dvh, 36rem);
-  max-height: none;
+  min-height: 6.25rem;
+  max-height: min(36rem, 58dvh);
   resize: none;
   border-color: var(--color-focus);
   box-shadow: 0 0 0 .125rem color-mix(in srgb, var(--color-focus) 14%, transparent);
@@ -107,8 +106,5 @@
 @container (max-width: 27.5rem) {
   .heading { align-items: flex-start; }
   .headingTools { flex-wrap: wrap; }
-  .editor[data-expanded='true'].editor textarea {
-    height: clamp(20rem, 58dvh, 31rem);
-    min-height: clamp(20rem, 58dvh, 31rem);
-  }
+  .editor[data-expanded='true'].editor textarea { max-height: min(31rem, 58dvh); }
 }

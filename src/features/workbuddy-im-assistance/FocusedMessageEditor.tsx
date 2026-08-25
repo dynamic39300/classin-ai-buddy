@@ -1,5 +1,5 @@
 import { Maximize2, Minimize2 } from 'lucide-react';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './FocusedMessageEditor.module.css';
 
 export function FocusedMessageEditor({
@@ -36,6 +36,18 @@ export function FocusedMessageEditor({
   const textareaDescription = [description ? `${id}-description` : '', error ? `${id}-error` : '']
     .filter(Boolean)
     .join(' ') || undefined;
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const maxHeight = Number.parseFloat(window.getComputedStyle(textarea).maxHeight);
+    const nextHeight = Number.isFinite(maxHeight)
+      ? Math.min(textarea.scrollHeight, maxHeight)
+      : textarea.scrollHeight;
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = Number.isFinite(maxHeight) && textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }, [expanded, value]);
 
   useEffect(() => {
     if (!expanded) return;

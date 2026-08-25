@@ -181,7 +181,7 @@ export function FileLibrary({
     if (selected?.id === asset.id)
       setSelected({ ...asset, favorite: !asset.favorite });
     setFeedback(
-      `[模拟] ${asset.name}${asset.favorite ? "已取消收藏" : "已加入收藏"}。`,
+      `${asset.name}${asset.favorite ? "已取消收藏" : "已加入收藏"}。`,
     );
   };
   const openShare = (asset: FileAsset, event?: MouseEvent) => {
@@ -502,7 +502,7 @@ export function FileLibrary({
               </span>
               <strong>{selected.extension}</strong>
               <p>{selected.summary}</p>
-              <small>[模拟] 当前仅展示结构化文件摘要</small>
+              <small>当前展示结构化文件摘要</small>
             </div>
             <section className={styles.detailSection}>
               <h3>任务与回溯</h3>
@@ -540,7 +540,7 @@ export function FileLibrary({
             {standalone ? (
               <section className={styles.detailSection}>
                 <h3>个人文件库</h3>
-                <p>[模拟] 文件保存在当前独立账号中，可下载、复用或生成个人分享链接。</p>
+                <p>文件保存在当前独立账号中，可下载、复用或生成个人分享链接。</p>
               </section>
             ) : (
               <section className={styles.detailSection}>
@@ -586,7 +586,7 @@ export function FileLibrary({
                 type="button"
                 disabled={!selected.canShare}
                 onClick={() => standalone
-                  ? setFeedback(`[模拟] ${selected.name} 的个人分享链接已复制。`)
+                  ? setFeedback(`${selected.name} 的个人分享链接已复制。`)
                   : openShare(selected)}
               >
                 <Share2 aria-hidden="true" size={16} />
@@ -595,7 +595,7 @@ export function FileLibrary({
               <button
                 type="button"
                 onClick={() =>
-                  setFeedback(`[模拟] ${selected.name} 已准备下载。`)
+                  setFeedback(`${selected.name} 已准备下载。`)
                 }
               >
                 <Download aria-hidden="true" size={16} />
@@ -628,7 +628,7 @@ export function FileLibrary({
           >
             <header>
               <div>
-                <span>[模拟] 分享文件</span>
+                <span>分享文件</span>
                 <h2 id="share-file-title">选择发送位置</h2>
                 <p>{sharing.name}</p>
               </div>
@@ -670,7 +670,7 @@ export function FileLibrary({
               <button
                 type="button"
                 onClick={() => {
-                  setFeedback(`[模拟] ${sharing.name} 的分享链接已复制。`);
+                  setFeedback(`${sharing.name} 的分享链接已复制。`);
                   setSharing(null);
                 }}
               >
@@ -685,7 +685,7 @@ export function FileLibrary({
                     (candidate) => candidate.id === shareTargetId,
                   )!;
                   setFeedback(
-                    `[模拟] ${sharing.name} 已发送到${target.label}。`,
+                    `${sharing.name} 已发送到${target.label}。`,
                   );
                   setSharing(null);
                 }}

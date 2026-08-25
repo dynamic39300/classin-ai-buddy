@@ -5,7 +5,7 @@
   min-height: 0;
   height: calc(100% - (2 * var(--space-sm)));
   align-self: center;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   margin: 0 var(--space-sm) 0 var(--space-xs);
   overflow: clip;
   border: var(--rule-thin) solid var(--color-line-subtle);
@@ -18,13 +18,16 @@
 
 .header {
   display: flex;
-  min-height: 3.5rem;
+  min-width: 0;
+  min-height: 3.75rem;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-sm);
   padding: 0 var(--space-md);
+  border-bottom: var(--rule-thin) solid var(--color-line-faint);
 }
 
-.header > button {
+.headerActions > button {
   display: inline-grid;
   width: 2rem;
   height: 2rem;
@@ -37,44 +40,32 @@
 
 .identity {
   display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
   align-items: center;
   gap: var(--space-xs);
 }
 
-.identity > span:last-child {
-  display: grid;
-  gap: var(--space-3xs);
-}
+.identity strong { flex: 0 0 auto; font-size: var(--text-sm); }
+.greeting { min-width: 0; overflow: hidden; color: var(--color-ink-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
+.greeting i { display: inline-block; width: 1px; height: 1em; margin-left: var(--space-3xs); background: currentColor; vertical-align: -.1em; animation: greeting-caret 720ms step-end infinite; }
+.greeting:has(i:only-child) i { opacity: 0; }
 
-.identity strong { font-size: var(--text-sm); }
-.identity small { display: flex; align-items: center; gap: var(--space-3xs); color: var(--color-ink-muted); font-size: var(--text-xs); }
-
-.mark {
-  display: inline-grid;
-  width: 2rem;
-  height: 2rem;
-  place-items: center;
-  border-radius: var(--radius-object);
-  background: var(--color-brand-soft);
-  color: var(--color-brand-ink);
-}
-
-.contextBar {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+.headerActions {
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
   align-items: center;
   gap: var(--space-xs);
-  min-height: 2.375rem;
-  padding: 0 var(--space-md);
-  background: color-mix(in srgb, var(--color-surface) 72%, var(--color-surface-raised));
-  font-size: var(--text-xs);
 }
 
-.contextBar span { color: var(--color-ink-muted); }
-.contextBar strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.contextBar i { padding: var(--space-3xs) var(--space-xs); border-radius: var(--radius-round); background: var(--color-warning-soft); color: var(--color-warning-ink); font-style: normal; }
+.context { display: grid; min-width: 0; max-width: 9rem; gap: var(--space-3xs); text-align: right; }
+.context small { color: var(--color-ink-muted); font-size: var(--text-xs); }
+.context strong { overflow: hidden; font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
 
-.body { min-height: 0; padding: var(--space-md); overflow-y: auto; overscroll-behavior: contain; }
+@keyframes greeting-caret { 50% { opacity: 0; } }
+
+.body { min-height: 0; padding: var(--space-md) var(--space-md) var(--space-xl); overflow-y: auto; overscroll-behavior: contain; scroll-padding-bottom: var(--space-xl); }
 .ready { display: grid; gap: var(--space-md); }
 .runSurface + .reviewArtifact,
 .runSurface + .centerState,
@@ -155,7 +146,16 @@
 .runComposerDock {
   position: relative;
   z-index: var(--z-base);
-  margin: 0 var(--space-sm) var(--space-sm);
+  margin: var(--space-xs) var(--space-sm) var(--space-sm);
+}
+
+@media (max-width: 74rem) {
+  .greeting { display: none; }
+  .context { max-width: 7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .greeting i { display: none; }
 }
 
 .centerState { display: grid; min-height: 18rem; place-content: center; place-items: center; gap: var(--space-sm); text-align: center; }
@@ -349,7 +349,7 @@
 .reviewActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-sm);
   min-height: 3.5rem;
   padding: var(--space-xs);
@@ -415,8 +415,7 @@
 .runSurface {
   display: grid;
   gap: var(--space-sm);
-  padding-bottom: var(--space-lg);
-  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+  padding-bottom: var(--space-sm);
 }
 
 .runHeader {

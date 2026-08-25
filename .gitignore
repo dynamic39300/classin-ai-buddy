@@ -13,6 +13,14 @@ coverage/
 playwright-report/
 test-results/
 *.log
+*.inspect.ndjson
+.codex-tmp/
+
+# Derived TeachBuddy demo-video QA artifacts; keep the source frames and final 30s export.
+prototype/teachbuddy-courseware-video/qa/
+prototype/teachbuddy-courseware-video/qa-30s/
+prototype/teachbuddy-courseware-video/extract_qa.swift
+prototype/teachbuddy-courseware-video/output/teachbuddy-courseware-full-workflow.mp4
 
 # Local product research captures; derived evidence belongs in docs/01-research/.
 reference/

@@ -259,10 +259,10 @@ describe('shared class agent conversation channels', () => {
     const user = userEvent.setup();
     renderAgentWorkspace(role);
 
-    expect(screen.getByText(/群内公开回复/)).toBeInTheDocument();
+    expect(screen.queryByText(/群内公开回复/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '选择班级 Agent' }));
-    await user.click(screen.getByRole('option', { name: new RegExp(`${PHYSICS_CLASS_AGENT.name}.*Agent`) }));
-    const composer = screen.getByRole('textbox', { name: '输入消息' });
+    await user.click(screen.getByRole('option', { name: new RegExp(PHYSICS_CLASS_AGENT.name) }));
+    const composer = screen.getByRole('textbox', { name: '输入消息' }) as HTMLTextAreaElement;
     expect(screen.getByText(`@${PHYSICS_CLASS_AGENT.name}`)).toBeInTheDocument();
     await user.type(composer, '第 5 题的方向怎么判断？');
     await user.click(screen.getByRole('button', { name: '发送' }));
@@ -270,7 +270,7 @@ describe('shared class agent conversation channels', () => {
     await waitFor(() => expect(screen.getAllByText(/先做第一步：统一规定正方向/).length).toBeGreaterThan(0));
     expect(screen.queryByText(/最终答案|答案是/)).not.toBeInTheDocument();
     expect(screen.getByText('当前班级群成员可见')).toBeInTheDocument();
-    expect(screen.getByText('班级 Agent 已完成模拟回复。')).toBeInTheDocument();
+    expect(screen.getByText('班级 Agent 已完成回复。')).toBeInTheDocument();
   });
 
   it('does not trigger the public agent for a normal class message', async () => {
@@ -285,13 +285,16 @@ describe('shared class agent conversation channels', () => {
   it('opens the mixed picker from typed @ and selects a primary Agent with the keyboard', async () => {
     const user = userEvent.setup();
     renderAgentWorkspace('teacher');
-    const composer = screen.getByRole('textbox', { name: '输入消息' });
-    await user.type(composer, '@错题');
+    const composer = screen.getByRole('textbox', { name: '输入消息' }) as HTMLTextAreaElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+    valueSetter?.call(composer, '请帮 @错题我整理订正步骤');
+    composer.setSelectionRange(6, 6);
+    fireEvent.input(composer);
+    composer.focus();
     expect(screen.getByRole('option', { name: new RegExp(HOMEWORK_CORRECTION_AGENT.name) })).toBeInTheDocument();
     await user.keyboard('{Enter}');
     expect(screen.getByText(`@${HOMEWORK_CORRECTION_AGENT.name}`)).toBeInTheDocument();
-    expect(composer).toHaveValue('');
-    await user.type(composer, '帮我整理订正步骤');
+    expect(composer).toHaveValue('请帮我整理订正步骤');
     await user.click(screen.getByRole('button', { name: '发送' }));
     await waitFor(() => expect(screen.getAllByText(/把原答案与条件逐项对照/).length).toBeGreaterThan(0));
   });
@@ -317,7 +320,7 @@ describe('shared class agent conversation channels', () => {
     await user.click(agentThread);
 
     expect(screen.getByTestId('location')).toHaveTextContent(`thread=${expectedThreadId}`);
-    expect(screen.getAllByText('仅你与班级 Agent 可见').length).toBeGreaterThan(0);
+    expect(screen.queryByText('仅你与班级 Agent 可见')).not.toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: '输入消息' }), '第 5 题的方向怎么判断？');
     await user.click(screen.getByRole('button', { name: '发送' }));
     await waitFor(() => expect(screen.getAllByText(/我们分三步来/).length).toBeGreaterThan(0));
@@ -414,11 +417,12 @@ describe('shared class agent conversation channels', () => {
     const user = userEvent.setup();
     renderAgentWorkspace('teacher');
     await user.click(screen.getByRole('button', { name: '选择班级 Agent' }));
-    await user.click(screen.getByRole('option', { name: new RegExp(`${PHYSICS_CLASS_AGENT.name}.*Agent`) }));
-    expect(screen.getByText(`主响应 Agent · 群内公开 · ${PHYSICS_CLASS_AGENT.contextScopeLabel}`)).toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: new RegExp(PHYSICS_CLASS_AGENT.name) }));
+    expect(screen.getByText(`@${PHYSICS_CLASS_AGENT.name}`)).toBeInTheDocument();
+    expect(screen.queryByText(/主响应 Agent/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '选择班级 Agent' }));
-    await user.click(screen.getByRole('option', { name: new RegExp(`${HOMEWORK_CORRECTION_AGENT.name}.*Agent`) }));
+    await user.click(screen.getByRole('option', { name: new RegExp(HOMEWORK_CORRECTION_AGENT.name) }));
     expect(screen.getByText(`@${HOMEWORK_CORRECTION_AGENT.name}`)).toBeInTheDocument();
     expect(screen.getByText(`已切换为 ${HOMEWORK_CORRECTION_AGENT.name}，可在 5 秒内撤销。`)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '撤销切换' }));
@@ -431,7 +435,7 @@ describe('shared class agent conversation channels', () => {
     const user = userEvent.setup();
     renderAgentWorkspace('student-family', '/', true);
     await user.click(screen.getByRole('button', { name: '选择班级 Agent' }));
-    await user.click(screen.getByRole('option', { name: new RegExp(`${PHYSICS_CLASS_AGENT.name}.*Agent`) }));
+    await user.click(screen.getByRole('option', { name: new RegExp(PHYSICS_CLASS_AGENT.name) }));
     await user.type(screen.getByRole('textbox', { name: '输入消息' }), '第 5 题怎么判断？');
     await user.click(screen.getByRole('button', { name: '发送' }));
 

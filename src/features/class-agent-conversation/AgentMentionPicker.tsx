@@ -1,5 +1,5 @@
-import { Search, Sparkles, UserRound } from 'lucide-react';
-import { useId, type KeyboardEvent } from 'react';
+import { Search, Sparkles, UserRound, X } from 'lucide-react';
+import { useEffect, useId, useRef, type KeyboardEvent } from 'react';
 import type { AgentDiscoveryProjection } from '@domain/class-agent/agent-discovery';
 import {
   projectAgentPickerOptions,
@@ -30,6 +30,7 @@ export function AgentMentionPicker({
   onSelectPerson,
 }: AgentMentionPickerProps) {
   const listboxId = useId();
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const options = projectAgentPickerOptions(projection, people);
   const selected = options[activeIndex] ?? options[0];
   const choose = (option: AgentPickerOption | undefined) => {
@@ -58,6 +59,10 @@ export function AgentMentionPicker({
   const agentOptions = options.filter((option): option is Extract<AgentPickerOption, { kind: 'agent' }> => option.kind === 'agent');
   const peopleOptions = options.filter((option): option is Extract<AgentPickerOption, { kind: 'person' }> => option.kind === 'person');
 
+  useEffect(() => {
+    optionRefs.current[activeIndex]?.scrollIntoView?.({ block: 'nearest' });
+  }, [activeIndex]);
+
   return (
     <section className={styles.picker} aria-label="选择班级 Agent" data-agent-picker-mode={projection.mode}>
       <header className={styles.header}>
@@ -78,7 +83,7 @@ export function AgentMentionPicker({
               const candidate = projection.candidates.find(({ agent }) => agent.id === option.agentId);
               if (!candidate) return null;
               const index = options.indexOf(option);
-              return <button aria-selected={activeIndex === index} id={`${listboxId}-${option.key}`} key={option.key} onClick={() => choose(option)} onMouseEnter={() => onActiveIndexChange(index)} role="option" type="button"><span className={styles.avatar}><Sparkles aria-hidden="true" size={15} /></span><span className={styles.copy}><strong>{candidate.agent.name}<em>Agent</em></strong><small>{candidate.agent.classLabel} · {candidate.agent.capabilitySummary}</small></span></button>;
+              return <button aria-selected={activeIndex === index} id={`${listboxId}-${option.key}`} key={option.key} onClick={() => choose(option)} onMouseEnter={() => onActiveIndexChange(index)} ref={(element) => { optionRefs.current[index] = element; }} role="option" type="button"><span className={styles.avatar}><Sparkles aria-hidden="true" size={15} /></span><span className={styles.copy}><strong>{candidate.agent.name}</strong><small title={candidate.agent.capabilitySummary}>{candidate.agent.capabilitySummary}</small></span></button>;
             })}
           </div>
         ) : null}
@@ -87,13 +92,13 @@ export function AgentMentionPicker({
             <span className={styles.groupLabel}>班级成员</span>
             {peopleOptions.map((option) => {
               const index = options.indexOf(option);
-              return <button aria-selected={activeIndex === index} id={`${listboxId}-${option.key}`} key={option.key} onClick={() => choose(option)} onMouseEnter={() => onActiveIndexChange(index)} role="option" type="button"><span className={styles.avatar} data-person="true"><UserRound aria-hidden="true" size={15} /></span><span className={styles.copy}><strong>{option.person.name}</strong><small>{option.person.description}</small></span></button>;
+              return <button aria-selected={activeIndex === index} id={`${listboxId}-${option.key}`} key={option.key} onClick={() => choose(option)} onMouseEnter={() => onActiveIndexChange(index)} ref={(element) => { optionRefs.current[index] = element; }} role="option" type="button"><span className={styles.avatar} data-person="true"><UserRound aria-hidden="true" size={15} /></span><span className={styles.copy}><strong>{option.person.name}</strong><small title={option.person.description}>{option.person.description}</small></span></button>;
             })}
           </div>
         ) : null}
         {options.length === 0 ? <div className={styles.empty} role="status"><strong>没有匹配的已授权 Agent</strong><span>请尝试名称、学科或能力关键词</span></div> : null}
       </div>
-      <footer>↑↓ 选择 · Enter 确认 · Esc 关闭</footer>
+      <footer><span>↑↓ 选择 · Enter 确认 · Esc 关闭</span><button type="button" onClick={onClose}><X aria-hidden="true" size={13} />关闭</button></footer>
     </section>
   );
 }

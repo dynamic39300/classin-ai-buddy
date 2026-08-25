@@ -51,9 +51,10 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toBeVisible();
 
   const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'TeachBuddy 二级导航' });
-  for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
+  for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务']) {
     await expect(secondaryNavigation.getByRole('link', { name: destination, exact: true })).toBeVisible();
   }
+  await expect(secondaryNavigation.getByRole('link', { name: '设置', exact: true })).toHaveCount(0);
   await expect(secondaryNavigation.getByRole('link', { name: '内容资源', exact: true })).toHaveCount(0);
   await primaryNavigation.getByRole('button', { name: '班课管理', exact: true }).click();
   const workBuddyChild = secondaryNavigation.getByRole('link', { name: '技能市场', exact: true });
@@ -220,12 +221,12 @@ test('primary navigation reveals its scrollbar only while the region is engaged'
   await expect.poll(readScrollbarColor).not.toBe(idleScrollbarColor);
 });
 
-test('capability destinations use the standard page topbar instead of task tabs', async ({ page }) => {
+test('published capability destinations use the standard page topbar instead of task tabs', async ({ page }) => {
   await openTeacherWorkBuddy(page);
   const secondaryNavigation = page.getByRole('group', { name: 'TeachBuddy 二级导航' });
   const capabilityStage = page.locator('#main-content').locator('..');
 
-  for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
+  for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务']) {
     await secondaryNavigation.getByRole('link', { name: destination, exact: true }).click();
     await expect(capabilityStage.locator(':scope > header').getByRole('heading', { level: 1, name: destination })).toBeVisible();
     await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toHaveCount(0);
@@ -234,6 +235,16 @@ test('capability destinations use the standard page topbar instead of task tabs'
   await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
   await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toBeVisible();
   await expect(capabilityStage.locator(':scope > header')).toHaveCount(0);
+});
+
+test('integrated TeachBuddy keeps the retained settings surface unpublished', async ({ page }) => {
+  await openTeacherWorkBuddy(page);
+  const secondaryNavigation = page.getByRole('group', { name: 'TeachBuddy 二级导航' });
+  await expect(secondaryNavigation.getByRole('link', { name: '设置', exact: true })).toHaveCount(0);
+
+  await page.goto('/teacher/ai-agent/settings');
+  await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
+  await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
 });
 
 test('student navigation does not expose teacher WorkBuddy', async ({ page }) => {

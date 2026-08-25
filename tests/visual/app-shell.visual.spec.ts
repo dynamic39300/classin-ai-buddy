@@ -27,6 +27,16 @@ async function expectNoHorizontalOverflow(page: Page) {
   }
 }
 
+async function stabilizeTeachBuddyAvatars(page: Page) {
+  await page.locator('[data-teachbuddy-avatar="true"] video').evaluateAll((videos) => {
+    for (const element of videos) {
+      const video = element as HTMLVideoElement;
+      video.pause();
+      video.style.visibility = 'hidden';
+    }
+  });
+}
+
 async function expectPureWhiteCanvas(page: Page) {
   const backgrounds = await page.evaluate(() => {
     const root = getComputedStyle(document.documentElement);
@@ -331,6 +341,7 @@ test('teacher class detail at 1440x900', async ({ page }) => {
   expect(Math.max(...memberRowCenters) - Math.min(...memberRowCenters)).toBeLessThanOrEqual(1);
   await expect(page.getByRole('complementary', { name: '班级辅助信息' }).getByText('王老师', { exact: true })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
+  await stabilizeTeachBuddyAvatars(page);
   await expect(page).toHaveScreenshot('teacher-class-detail-1440x900.png', { fullPage: true });
 });
 
@@ -346,6 +357,7 @@ test('teacher empty class at 1440x900', async ({ page }) => {
   await expect(page.getByRole('button', { name: '创建课程' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
+  await stabilizeTeachBuddyAvatars(page);
   await expect(page).toHaveScreenshot('teacher-empty-class-1440x900.png', { fullPage: true });
 });
 
@@ -373,6 +385,7 @@ for (const dialog of [
     await page.getByRole('button', { name: dialog.trigger }).click();
     await expect(page.getByRole('dialog', { name: dialog.name })).toBeVisible();
     await expectNoHorizontalOverflow(page);
+    await stabilizeTeachBuddyAvatars(page);
     await expect(page).toHaveScreenshot(dialog.snapshot, { fullPage: true });
   });
 }
@@ -427,6 +440,7 @@ test('teacher class placeholder boundary at 1440x900', async ({ page }) => {
   await page.getByRole('row').filter({ hasText: '高二物理 3 班' }).getByRole('button', { name: '进入班级' }).click();
   await page.getByRole('button', { name: 'AI 助教' }).click();
   await expect(page.getByRole('dialog', { name: '能力边界说明' })).toContainText('Placeholder');
+  await stabilizeTeachBuddyAvatars(page);
   await expect(page).toHaveScreenshot('teacher-class-placeholder-1440x900.png', { fullPage: true });
 });
 
@@ -442,6 +456,7 @@ test('teacher completed course at 1440x900', async ({ page }) => {
   await expect(page.getByRole('menuitem', { name: '新建单元' })).toHaveCount(0);
   await page.getByRole('button', { name: '新建内容' }).click();
   await expectNoHorizontalOverflow(page);
+  await stabilizeTeachBuddyAvatars(page);
   await expect(page).toHaveScreenshot('teacher-completed-class-1440x900.png', { fullPage: true });
 });
 
@@ -660,7 +675,7 @@ test('teacher multi-Agent picker at 1440x900', async ({ page }) => {
   const conversation = page.getByRole('region', { name: '高二物理 3 班会话' });
   await conversation.getByRole('button', { name: '选择班级 Agent' }).click();
   await conversation.getByRole('combobox', { name: '搜索班级 Agent' }).fill('作业');
-  await expect(conversation.getByRole('option', { name: /作业订正助手.*Agent/ })).toBeVisible();
+  await expect(conversation.getByRole('option', { name: /作业订正助手/ })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-multi-agent-picker-1440x900.png', {
     fullPage: true,
@@ -675,7 +690,7 @@ test('teacher public class Agent reply at 1440x900', async ({ page }) => {
   await page.getByRole('link', { name: /消息/ }).click();
   const conversation = page.getByRole('region', { name: '高二物理 3 班会话' });
   await conversation.getByRole('button', { name: '选择班级 Agent' }).click();
-  await conversation.getByRole('option', { name: /物理学习助手.*Agent/ }).click();
+  await conversation.getByRole('option', { name: /物理学习助手/ }).click();
   await conversation.getByRole('textbox', { name: '输入消息' }).fill('第 5 题的方向怎么判断？');
   await conversation.getByRole('button', { name: '发送', exact: true }).click();
   await expect(conversation.getByText(/先做第一步：统一规定正方向/)).toBeVisible({ timeout: 3_000 });
@@ -747,7 +762,7 @@ test('teacher WorkBuddy exit guidance at 1440x900', async ({ page }) => {
   await page.waitForTimeout(300);
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-workbuddy-exit-guidance-1440x900.png', {
-    animations: 'allow',
+    animations: 'disabled',
     fullPage: true,
   });
 });

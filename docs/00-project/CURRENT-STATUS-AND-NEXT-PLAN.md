@@ -1,6 +1,6 @@
 ---
 title: ClassIn TeachBuddy 当前状态与下一阶段计划
-status: M4_4_COMPLETE_USER_ACCEPTED
+status: M4_5_COMPLETE_USER_ACCEPTED
 version: v0.18
 date: 2026-08-25
 ---
@@ -23,7 +23,7 @@ date: 2026-08-25
 | 一级 WorkBuddy 测验活动草稿（纳入 M4.2 扩展交付） | PRD、Spec、Tickets 与纵向闭环已完成：连续生成并审阅试卷、确认后交互填写参数、draft-only 写回、课程详情逐题编辑、独立发布及学生可见性 | 2026-08-24 用户验收通过 |
 | M4.3 ClassIn 内嵌 MVP 入口 | D-098～D-101 已实施：Demo 双入口共存，终局/MVP 独立 Product Module、Shell/导航、配置、Route 与 Data Space；MVP 左栏将原新建任务入口改名为“我的任务”，页面流程不变，并保留 Skills/Tools/Files、隐藏 Schedules/Settings；Launch Context、返回链路与跨 Experience 隔离均通过工程 Gate | 2026-08-25 用户完成页面验收，`COMPLETE_USER_ACCEPTED` |
 | M4.4 独立教师 ClassIn TeachBuddy Web 产品 | 第三套独立 Product Module 已完成：独立官网、教师个人账号、完整任务/能力工作台、AI 点数预占/结算/释放、模拟会员订单、无 ClassIn Context 执行及 ClassIn 价值转化；不挂载 ClassIn 业务 Provider，不共享终局/MVP 私有数据；内容资源统一采用 TeacherIn 兼容格式，为未来受治理接入内部内容生态保留零格式转换路径 | 2026-08-25 用户完成方案与页面 Review，`COMPLETE_USER_ACCEPTED` |
-| M4.5 全局 Demo 体验收口 | IA、UI、交互、引导和 Demo Release Gate；不改变 M4.2～M4.4 已验收的底层功能和业务逻辑 | 已具备进入条件，尚未开始实施 |
+| M4.5 全局 Demo 体验收口 | IA、UI、交互、引导和 Demo Release Gate；不改变 M4.2～M4.4 已验收的底层功能和业务逻辑 | 2026-08-25 用户确认阶段体验验收完成，`COMPLETE_USER_ACCEPTED` |
 | M5–M10 | M5 规格已就绪；后续生产交付路线保留 | `PARKED`，待 M4.5 后独立恢复 |
 
 所有当前运行结果均为固定、脱敏、可重置的 `[模拟]` 数据；没有真实 ClassIn API、模型 Runtime、生产授权或长期记忆。

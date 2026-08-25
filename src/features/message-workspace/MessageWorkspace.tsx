@@ -18,7 +18,6 @@ import {
   Presentation,
   Search,
   ScanLine,
-  Settings2,
   Smile,
   Sparkles,
   UserRoundPlus,
@@ -63,6 +62,7 @@ import type { GuidedExplanationContentReference } from '@domain/workbuddy/guided
 import type { DirectConversationScope } from '@domain/message/direct-conversation-directory';
 import { MESSAGE_CONTACTS, MESSAGE_NOW } from '@mocks/scenarios/messages';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
+import { TeachBuddyAvatar } from '@design-system/TeachBuddyAvatar';
 import { GuidedExplanationPreviewDialog, WorkBuddyImSidecar, useOptionalWorkBuddyIm, type WorkBuddyImTarget } from '@features/workbuddy-im-assistance';
 import {
   AgentMentionPicker,
@@ -108,6 +108,7 @@ type RenderChatOptions = {
 type AgentPickerState = Readonly<{
   mode: 'mixed-mention' | 'agent-only';
   query: string;
+  caret: number;
 }>;
 
 type PrimaryAgentTarget = Readonly<{
@@ -136,17 +137,25 @@ const CLASS_MENTION_PEOPLE: Record<AppRole, readonly AgentPickerPerson[]> = {
   ],
 };
 
-function getActiveMentionQuery(value: string): string | null {
-  const match = value.match(/(?:^|\s)@([^\s@]*)$/u);
+function getActiveMentionQuery(value: string, caret = value.length): string | null {
+  const match = value.slice(0, caret).match(/(?:^|\s)@([^\s@]*)$/u);
   return match?.[1] ?? null;
 }
 
-function removeActiveMentionQuery(value: string): string {
-  return value.replace(/(?:^|\s)@[^\s@]*$/u, '').trimEnd();
+function replaceMentionAtCaret(value: string, caret: number, replacement: string): string {
+  const prefix = value.slice(0, caret);
+  const match = prefix.match(/(?:^|\s)@[^\s@]*$/u);
+  if (!match || match.index === undefined) return value;
+  const leadingSpace = replacement && match[0].startsWith(' ') ? ' ' : '';
+  return `${value.slice(0, match.index)}${leadingSpace}${replacement}${value.slice(caret)}`;
 }
 
-function replaceActiveMentionQuery(value: string, label: string): string {
-  return value.replace(/(?:^|\s)@[^\s@]*$/u, (match) => `${match.startsWith(' ') ? ' ' : ''}@${label} `);
+function removeActiveMentionQuery(value: string, caret: number): string {
+  return replaceMentionAtCaret(value, caret, '');
+}
+
+function replaceActiveMentionQuery(value: string, caret: number, label: string): string {
+  return replaceMentionAtCaret(value, caret, `@${label} `);
 }
 
 function parseCategory(value: string | null): MessageCategory | null {
@@ -721,13 +730,12 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
     const pinned = thread.entries.find(({ id }) => id === thread.pinnedMessageId);
     const isMuted = mutedThreadIds.has(thread.id);
     const composerBlocked = readOnly || (isMuted && role === 'student-family');
-    const classPath = `/${role === 'teacher' ? 'teacher' : 'student'}/classes/${thread.classId ?? ''}?from=messages`;
     const workBuddyAvailable = isWorkBuddyAvailable(thread);
     const workBuddyOpen = isWorkBuddyOpen(thread);
     const teacherManagementAvailable = role === 'teacher' && (thread.category === 'class' || thread.category === 'direct');
     const conversationMenuAvailable = thread.category === 'class' || teacherManagementAvailable;
     const conversationMenuLabel = teacherManagementAvailable ? '会话管理' : '班级会话操作';
-    const subtitle = getMessageThreadSubtitle(role, thread);
+    const subtitle = thread.category === 'class' ? null : getMessageThreadSubtitle(role, thread);
     const classAgent = thread.classAgentBinding && classAgentConversation
       ? classAgentConversation.getAgent(thread.classAgentBinding.agentId)
       : null;
@@ -750,16 +758,16 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
       : classAgentConversation?.getAgent(classAgentStatus.agentId) ?? null;
     const visibleFeedback = feedback === CLASS_AGENT_PENDING_FEEDBACK
       ? classAgentStatus.status === 'replied'
-        ? '班级 Agent 已完成模拟回复。'
+        ? '班级 Agent 已完成回复。'
         : classAgentStatus.status === 'recoverable_failure'
           ? null
           : feedback
       : feedback;
-    const openAgentPicker = (mode: AgentPickerState['mode'], query = '') => {
+    const openAgentPicker = (mode: AgentPickerState['mode'], query = '', caret = composer.length) => {
       if (mode === 'agent-only' && document.activeElement instanceof HTMLButtonElement) {
         agentPickerTriggerRef.current = document.activeElement;
       }
-      setAgentPicker({ mode, query });
+      setAgentPicker({ mode, query, caret });
       setAgentPickerActiveIndex(0);
     };
     const focusComposer = () => {
@@ -810,22 +818,25 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
         setFeedback(null);
       }
       setPrimaryAgentTarget(nextTarget);
-      if (agentPicker?.mode === 'mixed-mention') setComposer((current) => removeActiveMentionQuery(current));
+      if (agentPicker?.mode === 'mixed-mention') {
+        setComposer((current) => removeActiveMentionQuery(current, agentPicker.caret));
+      }
       setAgentPicker(null);
       focusComposer();
     };
     const selectMentionPerson = (person: AgentPickerPerson) => {
-      setComposer((current) => replaceActiveMentionQuery(current, person.name));
+      const caret = agentPicker?.caret ?? composer.length;
+      setComposer((current) => replaceActiveMentionQuery(current, caret, person.name));
       setAgentPicker(null);
       focusComposer();
     };
-    const updateComposer = (value: string) => {
+    const updateComposer = (value: string, caret: number) => {
       setComposer(value);
       setAgentTargetUndo(null);
       setPendingContactThreadId(null);
       if (!isPublicClassAgent) return;
-      const mentionQuery = getActiveMentionQuery(value);
-      if (mentionQuery !== null) openAgentPicker('mixed-mention', mentionQuery);
+      const mentionQuery = getActiveMentionQuery(value, caret);
+      if (mentionQuery !== null) openAgentPicker('mixed-mention', mentionQuery, caret);
       else if (agentPicker?.mode === 'mixed-mention') setAgentPicker(null);
     };
     const pickerOptions = publicAgentProjection
@@ -902,11 +913,8 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
                 onClick={() => activateWorkBuddy(thread)}
                 title={onEnterImmersive ? `打开 ${TEACHBUDDY_BRAND.shortName} 并进入沉浸模式` : `打开 ${TEACHBUDDY_BRAND.shortName}`}
               >
-                <Sparkles aria-hidden="true" size={14} />{TEACHBUDDY_BRAND.shortName}
+                <TeachBuddyAvatar size="micro" />{TEACHBUDDY_BRAND.shortName}
               </button>
-            ) : null}
-            {thread.category === 'class' && !fixedClassId && !embedded ? (
-              <button className={styles.enterClassButton} type="button" onClick={() => navigate(classPath)}>进入班级</button>
             ) : null}
             {conversationMenuAvailable ? (
               <div className={styles.contextMenuHost}>
@@ -915,11 +923,11 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
                   className={teacherManagementAvailable ? styles.managementButton : undefined}
                   type="button"
                   aria-expanded={contextMenuOpen}
-                  aria-label={teacherManagementAvailable ? '管理' : '班级会话操作'}
+                  aria-label={teacherManagementAvailable ? '会话管理' : '班级会话操作'}
                   onClick={() => setContextMenuOpen((open) => !open)}
-                  title={teacherManagementAvailable ? '管理当前会话' : '班级会话操作'}
+                  title={teacherManagementAvailable ? '会话管理' : '班级会话操作'}
                 >
-                  {teacherManagementAvailable ? <><Settings2 aria-hidden="true" size={14} /><span>管理</span></> : <MoreHorizontal aria-hidden="true" size={17} />}
+                  <MoreHorizontal aria-hidden="true" size={17} />
                 </button>
                 {contextMenuOpen ? (
                   <div ref={contextMenuRef} className={styles.commandMenu} role="menu" aria-label={conversationMenuLabel} onKeyDown={(event) => { if (event.key === 'Escape') closeContextMenu(); }}>
@@ -956,17 +964,6 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
             ) : null}
           </div>
         </header>
-
-        {isPublicClassAgent && publicAgentProjection ? (
-          <div className={styles.classAgentContext} data-agent-channel="public-class">
-            <span className={styles.classAgentIcon}><Sparkles aria-hidden="true" size={15} /></span>
-            <span className={styles.classAgentIdentity}>
-              <strong>班级 Agents · {publicAgentProjection.totalAuthorized} 个可用</strong>
-              <small>老师已授权 · 当前班级范围 · 群内公开回复</small>
-            </span>
-            <button type="button" onClick={() => openAgentPicker('agent-only')}>查看 Agents</button>
-          </div>
-        ) : null}
 
         {pinned ? (
           <div className={styles.pinnedBanner}>
@@ -1021,7 +1018,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
                     </button>
                   ) : null}
                   </p>
-                  {entry.classAgent ? <small className={styles.classAgentMessageMeta}>{entry.classAgent.visibilityLabel}</small> : null}
+                  {entry.classAgent?.channel === 'public-class' ? <small className={styles.classAgentMessageMeta}>{entry.classAgent.visibilityLabel}</small> : null}
                   {canRecall || canPin ? <div className={styles.messageActions}>
                     {canPin ? <button type="button" onClick={() => togglePin(entry.id)}><Pin aria-hidden="true" size={13} />{thread.pinnedMessageId === entry.id ? '取消置顶' : '置顶'}</button> : null}
                     {canRecall ? <button type="button" onClick={() => recallMessage(entry.id)}><Undo2 aria-hidden="true" size={13} />撤回</button> : null}
@@ -1066,8 +1063,7 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
             className={styles.composerDock}
             target={activeTarget ? (
               <div className={styles.agentTarget} data-status={activeTarget.status}>
-                <span><Sparkles aria-hidden="true" size={14} /></span>
-                <span><strong>@{activeTarget.agent.name}</strong><small>{activeTarget.status === 'stale' ? '授权已更新 · 请重新选择或移除' : `主响应 Agent · 群内公开 · ${activeTarget.agent.contextScopeLabel}`}</small></span>
+                <strong>@{activeTarget.agent.name}</strong>
                 <span className={styles.agentTargetActions}>
                   {activeTargetUndo ? <button className={styles.agentTargetUndo} type="button" onClick={undoAgentTargetSwitch}>撤销切换</button> : null}
                   <button type="button" onClick={() => { setPrimaryAgentTarget(null); setAgentTargetUndo(null); }} aria-label={`移除${activeTarget.agent.name}`} title="移除 Agent"><X aria-hidden="true" size={14} /></button>
@@ -1079,18 +1075,14 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
             onValueChange={updateComposer}
             placeholder="输入消息"
             submitLabel="发送"
-            hint={isPublicClassAgent
-              ? activeTarget
-                ? `将由 ${activeTarget.agent.name} 在群内公开回复`
-                : '输入 @ 选择班级 Agent 或成员；也可点击 @Agent 快速选择'
-              : classAgent ? '仅你与班级 Agent 可见 · 对话按治理规则留存' : undefined}
+            hint={undefined}
             tools={<>
               {agentPicker && publicAgentProjection ? (
                 <AgentMentionPicker
                   activeIndex={agentPickerActiveIndex}
                   onActiveIndexChange={setAgentPickerActiveIndex}
                   onClose={closeAgentPicker}
-                  onQueryChange={agentPicker.mode === 'agent-only' ? (nextQuery) => { setAgentPicker({ mode: 'agent-only', query: nextQuery }); setAgentPickerActiveIndex(0); } : undefined}
+                  onQueryChange={agentPicker.mode === 'agent-only' ? (nextQuery) => { setAgentPicker({ mode: 'agent-only', query: nextQuery, caret: agentPicker.caret }); setAgentPickerActiveIndex(0); } : undefined}
                   onSelectAgent={selectPublicAgent}
                   onSelectPerson={selectMentionPerson}
                   people={CLASS_MENTION_PEOPLE[role]}

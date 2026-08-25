@@ -26,9 +26,7 @@ export function TeacherClassChatPage() {
   return (
     <ImmersiveMessageWorkspaceFrame
       title="班级群聊"
-      modeLabel={selectedClass?.name ?? '当前班级'}
       exitLabel="返回班级"
-      exitHint="返回后仍停留在当前班级"
       exitIcon="back"
       onExit={returnToClass}
     >

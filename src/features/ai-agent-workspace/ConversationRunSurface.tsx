@@ -127,7 +127,7 @@ export function ConversationRunSurface() {
     <section className={styles.page} data-inspector-open={inspectorOpen} aria-labelledby="conversation-run-title">
       <section className={styles.main}>
         <header className={styles.header}>
-          <div><h1 id="conversation-run-title">{projection.title}</h1><span className={styles.runStatus} data-status={progress.status} role="status">{progress.status === 'organizing' || progress.status === 'running' ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={14} /> : <i aria-hidden="true" />}{runStatusLabel}{progressMeta ? <small aria-hidden="true">{progressMeta}</small> : null}</span><small className={styles.truthMarker} aria-label="当前为固定体验数据">[模拟] 体验环境</small></div>
+          <div><h1 id="conversation-run-title">{projection.title}</h1><span className={styles.runStatus} data-status={progress.status} role="status">{progress.status === 'organizing' || progress.status === 'running' ? <LoaderCircle className={styles.spinner} aria-hidden="true" size={14} /> : <i aria-hidden="true" />}{runStatusLabel}{progressMeta ? <small aria-hidden="true">{progressMeta}</small> : null}</span></div>
           <div className={styles.headerActions}>{recoveryReviewMode ? <label className={styles.recoveryHarness}>恢复路径验收<select aria-label="恢复路径验收场景" value={writebackScenario} onChange={(event) => dispatch({ type: 'set_scenario', scenario: event.target.value as WritebackScenario })}><option value="success">正常保存</option><option value="permission_denied">无写入权限</option><option value="version_conflict">目标版本已更新</option><option value="recoverable_failure">服务暂时不可用</option><option value="timeout">执行等待超时</option></select></label> : null}<button type="button" aria-pressed={inspectorOpen && inspectorMode === 'context'} onClick={() => dispatch({ type: 'set_inspector', open: true, mode: 'context' })}>上下文 · {contextCount}</button><button type="button" aria-pressed={inspectorOpen && inspectorMode === 'output'} disabled={!coursewareView.run.artifact} onClick={() => dispatch({ type: 'set_inspector', open: true, mode: 'output' })}>产出 · {projection.presentation.outputCount}{projection.presentation.unreadOutputCount ? ` · ${projection.presentation.unreadOutputCount} 新` : ''}</button><button type="button" aria-pressed={inspectorOpen} onClick={() => dispatch({ type: 'set_inspector', open: !inspectorOpen })}>
             <PanelRight aria-hidden="true" size={16} />{inspectorOpen ? '收起辅助区' : '展开辅助区'}
           </button></div>
@@ -423,16 +423,16 @@ function CoursewareOutput({
   const savePersonalContent = () => {
     const result = onSavePersonalContent();
     setToolStatus(result.status === 'success'
-      ? `${result.receipt.truthLabel}：课件已保存到当前账号的个人内容库。`
+      ? '课件已保存到当前账号的个人内容库。'
       : '内容证据不一致，未保存到个人内容库。');
   };
   return (
     <section ref={outputRef} tabIndex={focused ? -1 : undefined} className={styles.output} role="region" aria-label="智能课件产出" data-focus={focused} onKeyDown={handlePreviewKeyDown} onScroll={(event) => onInspectorStateChange({ scrollTop: event.currentTarget.scrollTop })}>
       <header><div><span>只读课件</span><h2>{artifact.title}</h2></div><div className={styles.outputTools}>
         <button ref={focusTriggerRef} type="button" aria-pressed={focused} onClick={() => onInspectorStateChange({ focused: !focused })}><Expand aria-hidden="true" size={14} />{focused ? '退出全局预览' : '全局预览'}</button>
-        <button type="button" onClick={() => setToolStatus(standalone ? '[模拟] 当前个人课件已准备下载。' : '当前课件草稿将在完成 ClassIn 保存后提供下载。')}><Download aria-hidden="true" size={14} />下载</button>
-        <button type="button" onClick={() => setToolStatus(standalone ? '[模拟] 当前演示环境未接入第三方文档编辑器。' : '[模拟] 当前演示环境未接入第三方文档编辑器。完成 ClassIn 保存后可从课程对象打开。')}><ExternalLink aria-hidden="true" size={14} />使用专业编辑器打开</button>
-      </div><div className={styles.outputMeta}>{artifactHistory.map(({ version }) => <span data-current={version === artifact.version} key={version}>{version}</span>)}<span>PPTX</span><span>{artifact.pageCount} 页</span><span>[模拟] 预览</span></div></header>
+        <button type="button" onClick={() => setToolStatus(standalone ? '当前个人课件已准备下载。' : '当前课件草稿将在完成 ClassIn 保存后提供下载。')}><Download aria-hidden="true" size={14} />下载</button>
+        <button type="button" onClick={() => setToolStatus(standalone ? '当前暂未接入第三方文档编辑器。' : '当前暂未接入第三方文档编辑器。完成 ClassIn 保存后可从课程对象打开。')}><ExternalLink aria-hidden="true" size={14} />使用专业编辑器打开</button>
+      </div><div className={styles.outputMeta}>{artifactHistory.map(({ version }) => <span data-current={version === artifact.version} key={version}>{version}</span>)}<span>PPTX</span><span>{artifact.pageCount} 页</span><span>课件预览</span></div></header>
       <section className={styles.artifactReader} aria-label="课件全局只读预览">
         <div className={styles.readerIntro}><div><Presentation aria-hidden="true" size={16} /><strong>只读预览</strong></div><p>可查看全部页面。内容修改需使用专业文档编辑器。</p></div>
         <div className={styles.readerShell}>
@@ -464,16 +464,27 @@ function CoursewareOutput({
       {artifact.changeSummary ? <section className={styles.changeSummary} aria-label={`${artifact.version} 修改摘要`}><strong>{artifact.version} 修改摘要</strong><ul>{artifact.changeSummary.map((change) => <li key={change}>{change}</li>)}</ul></section> : null}
       <dl className={styles.outputFacts}><div><dt>来源步骤</dt><dd>{sourceStepLabel}</dd></div><div><dt>质量检查</dt><dd>{artifact.validationSummary}</dd></div><div><dt>当前状态</dt><dd>{standalone ? personalContentReceipt ? '已保存到个人内容库' : '个人课件草稿 · 待保存' : '课件草稿 · 未写入 ClassIn'}</dd></div></dl>
       {toolStatus ? <p className={styles.toolStatus} role="status">{toolStatus}</p> : null}
-      <footer className={styles.outputActions}>
+      <footer className={styles.outputActions} aria-label="课件操作">
         {reviewStatus === 'pending' ? <button className={styles.primary} type="button" onClick={onApproveArtifact}>确认课件可用于后续任务</button> : null}
-        {standalone && reviewStatus === 'approved' && !personalContentReceipt ? <button className={styles.primary} type="button" onClick={savePersonalContent}>保存到个人内容库</button> : null}
-        {standalone && personalContentReceipt ? <span>{personalContentReceipt.truthLabel} · 已保存</span> : null}
-        {!standalone && reviewStatus === 'approved' && teacherInReceipt?.status !== 'success' ? <button className={styles.primary} type="button" onClick={createTeacherInDraft}>创建草稿到 TeacherIn</button> : null}
-        {!standalone && teacherInReceipt?.status === 'success' ? <Link to={teacherInReceipt.draft.editorPath}>前往 TeacherIn</Link> : null}
-        {!standalone && reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
-        {reviewStatus === 'approved' && derivedPackageRunRef ? <Link to={workBuddyRunPath(profile, derivedPackageRunRef)}>打开已派生课程方案包</Link> : null}
-        {reviewStatus === 'approved' && !derivedPackageRunRef ? <button type="button" onClick={onDerivePackage}>基于此课件生成课程方案包</button> : null}
-        {hasReceipt ? <span>执行回执已返回任务时间线</span> : hasAction ? <span>保存流程已进入任务时间线</span> : null}
+        {reviewStatus === 'approved' ? <>
+          <div className={styles.outputActionGroup} role="group" aria-label="保存课件">
+            <div className={styles.outputActionHeading}><strong>保存课件</strong><span>{standalone ? '保存到当前账号' : '选择内容去向'}</span></div>
+            <div className={styles.outputActionButtons}>
+              {standalone && !personalContentReceipt ? <button className={styles.primary} type="button" onClick={savePersonalContent}>保存到个人内容库</button> : null}
+              {standalone && personalContentReceipt ? <span>已保存到个人内容库</span> : null}
+              {!standalone && teacherInReceipt?.status !== 'success' ? <button type="button" onClick={createTeacherInDraft}>创建草稿到 TeacherIn</button> : null}
+              {!standalone && teacherInReceipt?.status === 'success' ? <Link to={teacherInReceipt.draft.editorPath}>前往 TeacherIn</Link> : null}
+              {!standalone && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
+            </div>
+            {hasReceipt ? <span className={styles.outputActionStatus}>执行回执已返回任务时间线</span> : hasAction ? <span className={styles.outputActionStatus}>保存流程已进入任务时间线</span> : null}
+          </div>
+          <div className={styles.outputActionGroup} data-kind="follow-up" role="group" aria-label="继续创作">
+            <div className={styles.outputActionHeading}><strong>继续创作</strong><span>以当前课件开始独立任务</span></div>
+            <div className={styles.outputActionButtons}>
+              {derivedPackageRunRef ? <Link to={workBuddyRunPath(profile, derivedPackageRunRef)}>打开已派生课程方案包</Link> : <button type="button" onClick={onDerivePackage}><Sparkles aria-hidden="true" size={14} />基于此课件生成课程方案包</button>}
+            </div>
+          </div>
+        </> : null}
       </footer>
     </section>
   );
@@ -506,7 +517,7 @@ function CoursewareReceiptCard({ receipt, allowedCommands, onRecover, onRetry }:
   if (receipt.status !== 'success') {
     const title = receipt.status === 'permission_denied' ? '保存位置没有写入权限' : receipt.status === 'version_conflict' ? '目标版本已经更新' : receipt.status === 'timeout' ? '执行等待超时' : '保存服务暂时不可用';
     const recovery = receipt.status === 'permission_denied' ? '改用教师草稿区并重新确认' : receipt.status === 'version_conflict' ? '采用当前版本并重新确认' : '使用同一审批安全重试';
-    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>所选课程单元</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{versionLabel(receipt.expectedVersion)} → {versionLabel(receipt.currentVersion)}</dd></div> : null}</dl>{allowedCommands.includes('recover_action') || allowedCommands.includes('execute_action') ? <button className={styles.recoveryButton} type="button" onClick={allowedCommands.includes('recover_action') ? onRecover : onRetry}>{recovery}</button> : null}</section>;
+    return <section className={styles.receiptCard} data-state="failed" aria-label="ClassIn 执行回执"><strong>{title}</strong><p>{receipt.result.replace('[模拟]', '')}</p><dl><div><dt>未执行范围</dt><dd>所选课程单元</dd></div><div><dt>恢复方式</dt><dd>{recovery}</dd></div>{receipt.status === 'version_conflict' ? <div><dt>版本比较</dt><dd>{versionLabel(receipt.expectedVersion)} → {versionLabel(receipt.currentVersion)}</dd></div> : null}</dl>{allowedCommands.includes('recover_action') || allowedCommands.includes('execute_action') ? <button className={styles.recoveryButton} type="button" onClick={allowedCommands.includes('recover_action') ? onRecover : onRetry}>{recovery}</button> : null}</section>;
   }
-  return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><span className={styles.truthMarker}>{receipt.truthLabel}</span><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result.replace('[模拟]', '')}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
+  return <section className={styles.receiptCard} aria-label="ClassIn 执行回执"><div><CheckCircle2 aria-hidden="true" size={18} /><strong>{receipt.result.replace('[模拟]', '')}</strong></div><p>只有执行回执能证明 ClassIn 已接受本次保存。</p><dl><div><dt>课程对象</dt><dd>{receipt.object.label}</dd></div><div><dt>对象版本</dt><dd>{receipt.object.version}</dd></div><div><dt>执行时间</dt><dd>{receipt.executedAt}</dd></div></dl><Link to={receipt.object.returnUrl}>打开 ClassIn 课程对象</Link></section>;
 }

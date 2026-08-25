@@ -11,7 +11,7 @@ date: 2026-08-25
 
 建设一套面向教师的 **ClassIn TeachBuddy**（界面简称 **TeachBuddy**，中文描述为 **AI 教学搭档**）：新用户可以独立使用教师工作台完成教研、备课、课堂指导、课后服务和个性化沟通；接入 ClassIn 后，系统获得课程、课堂、作业、互动和结果证据，产出更精细、更专业、更个性化。
 
-`WorkBuddy` / `workbuddy` 继续作为既有领域类型、模块、路由和存储的内部工程标识，不再作为产品展示名；完整迁移边界见 [ClassIn TeachBuddy 品牌命名与迁移边界](./TEACHBUDDY-BRAND-MIGRATION.md)。
+`WorkBuddy` / `workbuddy` 继续作为既有领域类型、模块、ClassIn 内部路由和存储的工程标识，不再作为产品展示名；独立 C 端产品的公开 URL 使用 `/teachbuddy/*`，旧 `/workbuddy/*` 只保留兼容跳转。完整迁移边界见 [ClassIn TeachBuddy 品牌命名与迁移边界](./TEACHBUDDY-BRAND-MIGRATION.md)。
 
 终局产品是统一教师工作台和主 Agent 体验。AI 工具、Copilot、有限 Agent、Skills、MCP 和 A2A 是实现层能力，不是教师必须理解或选择的产品入口。
 

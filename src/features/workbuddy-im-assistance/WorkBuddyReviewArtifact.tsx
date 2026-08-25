@@ -5,7 +5,6 @@ import {
   PencilLine,
   RotateCcw,
   SendHorizontal,
-  ShieldCheck,
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -179,7 +178,6 @@ export function WorkBuddyReviewArtifact({
       </div>
 
       <footer className={styles.reviewActions} data-review-layer="action">
-        <p><ShieldCheck aria-hidden="true" size={16} /><span>发送前核验最新提交状态</span></p>
         <button
           aria-label={`确认并发送至${target.classLabel}`}
           className={styles.primaryButton}

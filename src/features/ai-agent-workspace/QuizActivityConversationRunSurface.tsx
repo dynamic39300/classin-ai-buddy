@@ -1,9 +1,9 @@
 import { CheckCircle2, Circle, ClipboardCheck, FileQuestion, LoaderCircle, PanelRight, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { STANDALONE_TEACHBUDDY_ROUTES, TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import type { QuizActivitySettings, QuizQuestionType, QuizScoringScheme } from '@domain/workbuddy/quiz-activity-creation';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
-import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import { useWorkBuddyExperience } from './workbuddy-experience-context';
@@ -130,7 +130,7 @@ export function QuizActivityConversationRunSurface() {
     <section className={conversationStyles.page} data-inspector-open={inspectorOpen} aria-labelledby="quiz-run-title">
       <main className={conversationStyles.main}>
         <header className={conversationStyles.header}>
-          <div><h1 id="quiz-run-title">{run.artifact?.title ?? (standalone ? '生成测验试卷' : '生成测验并创建活动草稿')}</h1><span className={conversationStyles.runStatus} data-status={activeRunStage ? 'running' : 'idle'} role="status">{activeRunStage ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <i aria-hidden="true" />}{runStatusLabel}</span><small className={conversationStyles.truthMarker} aria-label="当前为固定体验数据">[模拟] 体验环境</small></div>
+          <div><h1 id="quiz-run-title">{run.artifact?.title ?? (standalone ? '生成测验试卷' : '生成测验并创建活动草稿')}</h1><span className={conversationStyles.runStatus} data-status={activeRunStage ? 'running' : 'idle'} role="status">{activeRunStage ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <i aria-hidden="true" />}{runStatusLabel}</span></div>
           <div className={conversationStyles.headerActions}>
             <button type="button" aria-pressed={inspectorOpen && inspectorMode === 'context'} onClick={() => { setInspectorMode('context'); setInspectorOpen(true); }}>上下文 · {contextCount}</button>
             <button type="button" aria-pressed={inspectorOpen && inspectorMode === 'output'} disabled={!run.artifact} onClick={() => { setInspectorMode('output'); setInspectorOpen(true); }}>产出 · {run.artifact ? 1 : 0}</button>
@@ -184,14 +184,14 @@ export function QuizActivityConversationRunSurface() {
               <div className={styles.confirmationHeader}><span>需要你的确认</span><small>独立产品内保存</small></div>
               <p>连接 ClassIn 后，才可进一步选择班级、课程与单元，并把这份试卷创建为教师可见的测验活动草稿。</p>
               {personalSaveError ? <p className={styles.formError} role="alert">{personalSaveError}</p> : null}
-              <div className={styles.cardActions}><button className={styles.primary} type="button" onClick={savePersonalQuiz}>确认保存试卷</button><Link className={styles.secondary} to="/workbuddy/app/classin">了解连接 ClassIn 后的能力</Link></div>
+              <div className={styles.cardActions}><button className={styles.primary} type="button" onClick={savePersonalQuiz}>确认保存试卷</button><Link className={styles.secondary} to={STANDALONE_TEACHBUDDY_ROUTES.classIn}>了解连接 ClassIn 后的能力</Link></div>
             </article>
           ) : null}
 
           {standalone && personalQuizReceipt ? (
             <article className={styles.receipt} aria-label="个人测验内容保存回执">
-              <CheckCircle2 aria-hidden="true" size={21} /><div><strong>测验试卷已保存到个人内容库</strong><p>已保留试卷、教师版答案与逐题解析，可继续查看或改编。</p><span>{personalQuizReceipt.truthLabel} · {personalQuizReceipt.objectVersion}</span></div>
-              <Link className={styles.primary} to="/workbuddy/app/content">查看内容资源</Link>
+              <CheckCircle2 aria-hidden="true" size={21} /><div><strong>测验试卷已保存到个人内容库</strong><p>已保留试卷、教师版答案与逐题解析，可继续查看或改编。</p><span>对象版本 · {personalQuizReceipt.objectVersion}</span></div>
+              <Link className={styles.primary} to={STANDALONE_TEACHBUDDY_ROUTES.content}>查看内容资源</Link>
             </article>
           ) : null}
 
@@ -237,7 +237,7 @@ export function QuizActivityConversationRunSurface() {
               <div>
                 <strong>{run.stage === 'permission_denied' ? '当前目标无创建权限' : run.stage === 'version_conflict' ? '目标单元已发生变化' : run.stage === 'evidence_mismatch' ? '执行证据需要人工复查' : run.stage === 'timeout' ? '创建请求超时' : '草稿暂未创建'}</strong>
                 <p>{failedReceipt.result}</p>
-                <span>[模拟] 测验活动草稿执行回执 · 未将本次结果标记为已创建</span>
+                <span>测验活动草稿执行回执 · 未将本次结果标记为已创建</span>
               </div>
               {(run.stage === 'recoverable_failure' || run.stage === 'timeout') ? <button className={styles.primary} type="button" onClick={quiz.retryDraft}>安全重试</button> : null}
               {run.stage === 'version_conflict' ? <button className={styles.primary} type="button" onClick={quiz.refreshTarget}>刷新目标并重新确认</button> : null}

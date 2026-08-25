@@ -13,13 +13,13 @@ import {
 describe('WorkBuddyExperienceProfileModule', () => {
   it('projects the standalone teacher experience onto its own route and data namespace', () => {
     const standalone = createStandaloneTeacherWorkBuddyExperience();
-    expect(parseWorkBuddyWorkspaceRoute('/workbuddy/app/new')).toEqual({
-      profileId: 'standalone-teacher', basePath: '/workbuddy/app', classId: null,
+    expect(parseWorkBuddyWorkspaceRoute('/teachbuddy/app/new')).toEqual({
+      profileId: 'standalone-teacher', basePath: '/teachbuddy/app', classId: null,
     });
     expect(standalone.sessionNamespace).toBe('standalone-teacher:anonymous');
     expect(createStandaloneTeacherWorkBuddyExperience('teacher-2').sessionNamespace).toBe('standalone-teacher:teacher-2');
     expect(standalone.visibleTaskTypes).toEqual(['single-courseware', 'course-package', 'quiz-activity-creation']);
-    expect(workBuddyRunPath(standalone, 'run 1')).toBe('/workbuddy/app/runs/run%201');
+    expect(workBuddyRunPath(standalone, 'run 1')).toBe('/teachbuddy/app/runs/run%201');
   });
   it('projects the ideal and MVP experiences onto different routes and data namespaces', () => {
     const ideal = createIdealWorkBuddyExperience();
@@ -31,6 +31,8 @@ describe('WorkBuddyExperienceProfileModule', () => {
     });
 
     expect(ideal.sessionNamespace).toBe('ideal-full');
+    expect(ideal.visibleCapabilityIds).toEqual(['skills', 'tools', 'content', 'files', 'schedules']);
+    expect(ideal.visibleCapabilityIds).not.toContain('settings');
     expect(mvp.sessionNamespace).toBe('classin-mvp');
     expect(mvp.visibleTaskTypes).toEqual(ideal.visibleTaskTypes);
     expect(mvp.visibleCapabilityIds).toEqual(['skills', 'tools', 'files']);

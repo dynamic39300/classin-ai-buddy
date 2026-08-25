@@ -171,9 +171,9 @@ test('teacher sends and manages a class message @a11y', async ({ page }) => {
 
   await page.getByRole('button', { name: '取消置顶' }).click();
   await expect(page.getByRole('status')).toContainText('已取消置顶消息');
-  await page.getByRole('button', { name: '管理', exact: true }).click();
+  await page.getByRole('button', { name: '会话管理', exact: true }).click();
   await page.getByRole('menuitem', { name: '全体禁言' }).click();
-  await page.getByRole('button', { name: '管理', exact: true }).click();
+  await page.getByRole('button', { name: '会话管理', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: '解除禁言' })).toBeVisible();
   await page.keyboard.press('Escape');
 
@@ -194,11 +194,11 @@ test('teacher always sees conversation management in class and direct chats', as
   await page.getByRole('link', { name: /消息/ }).click();
 
   const classConversation = page.getByRole('region', { name: '高二物理 3 班会话' });
-  await expect(classConversation.getByRole('button', { name: '管理', exact: true })).toBeVisible();
+  await expect(classConversation.getByRole('button', { name: '会话管理', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: '私聊', exact: true }).click();
   const directConversation = page.getByRole('region', { name: '李明会话' });
-  await expect(directConversation.getByRole('button', { name: '管理', exact: true })).toBeVisible();
+  await expect(directConversation.getByRole('button', { name: '会话管理', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'TeachBuddy', exact: true })).toHaveCount(0);
   const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   await expect(sidecar).toBeVisible();
@@ -342,9 +342,8 @@ test('teacher enters and exits the immersive message workspace without losing co
   await expect(page.getByRole('link', { name: /消息/ })).toHaveAttribute('aria-current', 'page');
   await expect(composer).toHaveValue('这是一条尚未发送的消息草稿');
   await expect(sidecar).toHaveCount(0);
-  await expect(page.getByText('已退出沉浸模式，TeachBuddy 已收起', { exact: true })).toBeVisible();
-  await expect(page.getByText('当前会话和 TeachBuddy 任务状态均已保留。', { exact: true })).toBeVisible();
-  await expect(page.getByText('也可以点击右上角“TeachBuddy”再次打开。', { exact: true })).toBeVisible();
+  await expect(page.getByText('已退出沉浸模式', { exact: true })).toBeVisible();
+  await expect(page.getByText('会话和任务进度已保留。', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '进入沉浸模式' })).toHaveCount(0);
   const standardWorkBuddyTrigger = page.getByRole('button', { name: 'TeachBuddy', exact: true });
   await expect(standardWorkBuddyTrigger).toBeVisible();
@@ -365,7 +364,8 @@ test('teacher enters and exits the immersive message workspace without losing co
   expect(guidanceBox).not.toBeNull();
   const viewport = page.viewportSize();
   expect(viewport).not.toBeNull();
-  expect(guidanceBox!.width).toBeGreaterThanOrEqual(460);
+  expect(guidanceBox!.width).toBeGreaterThanOrEqual(400);
+  expect(guidanceBox!.width).toBeLessThanOrEqual(520);
   expect(Math.abs((guidanceBox!.x + guidanceBox!.width / 2) - viewport!.width / 2)).toBeLessThanOrEqual(1);
   expect(Math.abs((guidanceBox!.y + guidanceBox!.height / 2) - viewport!.height / 2)).toBeLessThanOrEqual(1);
   expect(guidanceStyle.backgroundColor).not.toBe('rgb(255, 255, 255)');
@@ -385,7 +385,7 @@ test('teacher enters and exits the immersive message workspace without losing co
   await expect(shell).toHaveAttribute('data-message-shell-mode', 'standard');
   await expect(composer).toHaveValue('这是一条尚未发送的消息草稿');
   await expect(page.getByLabel('TeachBuddy 私密协作窗口')).toHaveCount(0);
-  await expect(page.getByText('已退出沉浸模式，TeachBuddy 已收起', { exact: true })).toBeVisible();
+  await expect(page.getByText('已退出沉浸模式', { exact: true })).toBeVisible();
   await page.getByRole('region', { name: 'TeachBuddy 退出引导' }).getByRole('button', { name: '关闭退出引导' }).click();
   await expect(page.getByRole('region', { name: 'TeachBuddy 退出引导' })).toHaveCount(0);
   await expect(shell).toHaveAttribute('data-message-shell-mode', 'standard');
@@ -422,7 +422,7 @@ test('WorkBuddy exit guidance stays long enough and pauses while the teacher eng
   await page.clock.runFor(10_000);
   await expect(guidance).toBeVisible();
 
-  await page.getByRole('button', { name: '管理', exact: true }).focus();
+  await page.getByRole('button', { name: '会话管理', exact: true }).focus();
   await page.clock.runFor(900);
   await expect(guidance).toHaveCount(0);
 });
@@ -435,7 +435,7 @@ test('teacher can stop showing the WorkBuddy exit guidance until a full page rel
   await page.getByRole('button', { name: '退出沉浸模式' }).click();
 
   const guidance = page.getByRole('region', { name: 'TeachBuddy 退出引导' });
-  const preference = guidance.getByRole('checkbox', { name: '不再显示此提示' });
+  const preference = guidance.getByRole('checkbox', { name: '不再提示' });
   await expect(guidance).toBeVisible();
   await expect(preference).not.toBeChecked();
   const accessibility = await new AxeBuilder({ page })
@@ -469,7 +469,7 @@ test('teacher can stop showing the WorkBuddy exit guidance until a full page rel
   await page.getByRole('button', { name: '退出沉浸模式' }).click();
   await expect(shell).toHaveAttribute('data-message-shell-mode', 'standard');
   await expect(page.getByRole('region', { name: 'TeachBuddy 退出引导' })).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: '不再显示此提示' })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: '不再提示' })).not.toBeChecked();
 });
 
 test('exit guidance never overlaps a still-mounted WorkBuddy sidecar', async ({ page }) => {
@@ -489,7 +489,7 @@ test('exit guidance never overlaps a still-mounted WorkBuddy sidecar', async ({ 
     debugWindow.__workBuddyExitConflict = false;
     const captureConflict = () => {
       const guidanceVisible = Array.from(document.querySelectorAll('[role="status"]'))
-        .some((element) => element.textContent?.includes('已退出沉浸模式，TeachBuddy 已收起'));
+        .some((element) => element.textContent?.includes('已退出沉浸模式'));
       const sidecarVisible = document.querySelector('[aria-label="TeachBuddy 私密协作窗口"]') !== null;
       if (guidanceVisible && sidecarVisible) debugWindow.__workBuddyExitConflict = true;
     };
@@ -518,7 +518,7 @@ test('exit guidance never overlaps a still-mounted WorkBuddy sidecar', async ({ 
 
   expect(exitConflictObserved).toBe(false);
   await expect(page.getByLabel('TeachBuddy 私密协作窗口')).toHaveCount(0);
-  await expect(page.getByText('已退出沉浸模式，TeachBuddy 已收起', { exact: true })).toBeVisible();
+  await expect(page.getByText('已退出沉浸模式', { exact: true })).toBeVisible();
 });
 
 test('exit guidance is reserved for sessions that actually showed WorkBuddy', async ({ page }) => {
@@ -635,7 +635,8 @@ test('teacher reviews a private WorkBuddy reminder and sends one grouped message
   await page.getByRole('link', { name: /消息/ }).click();
 
   const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
-  await expect(sidecar.getByText('仅你可见')).toBeVisible();
+  await expect(sidecar.getByText('仅你可见')).toHaveCount(0);
+  await expect(sidecar.getByText(/我是您的教学搭档，有什么要帮忙？/)).toBeVisible();
   const workBuddyComposer = sidecar.getByRole('textbox', { name: '向 TeachBuddy 输入要求' });
   await expect(workBuddyComposer).toBeVisible();
   await expect(workBuddyComposer).toHaveValue(/请找出当前班级群里还没截止的作业/);
@@ -749,6 +750,7 @@ test('teacher turns the weekly teaching plan into a second simulated class notic
   const noticeEditor = sidecar.getByRole('textbox', { name: '群通知正文', exact: true });
   await expect(noticeEditor).toHaveValue(/动量守恒定律/);
   const initialNoticeBody = await noticeEditor.inputValue();
+  const collapsedEditorBox = await noticeEditor.boundingBox();
   const sidecarBoxBeforeExpand = await sidecar.boundingBox();
   const expandNoticeEditor = sidecar.getByRole('button', { name: '展开编辑群通知正文' });
   await expandNoticeEditor.click();
@@ -760,7 +762,9 @@ test('teacher turns the weekly teaching plan into a second simulated class notic
   await expect(sidecar.getByRole('button', { name: '收起群通知正文' })).toHaveAttribute('aria-expanded', 'true');
   const expandedEditorBox = await noticeEditor.boundingBox();
   expect(expandedEditorBox).not.toBeNull();
-  expect(expandedEditorBox!.height).toBeGreaterThanOrEqual(450);
+  expect(collapsedEditorBox).not.toBeNull();
+  expect(expandedEditorBox!.height).toBeGreaterThan(collapsedEditorBox!.height);
+  expect(expandedEditorBox!.height).toBeLessThanOrEqual(540);
   expect(sidecarBoxBeforeExpand).not.toBeNull();
   expect(sidecarBoxAfterExpand).not.toBeNull();
   expect(Math.abs(sidecarBoxAfterExpand!.width - sidecarBoxBeforeExpand!.width)).toBeLessThanOrEqual(1);
@@ -1007,9 +1011,9 @@ test('teacher and student can publicly mention the same authorized class Agent @
     await page.getByRole('button', { name: perspective }).click();
     await page.getByRole('link', { name: /消息/ }).click();
     const conversation = page.getByRole('region', { name: '高二物理 3 班会话' });
-    await expect(conversation.getByText(/已授权.*群内公开回复/)).toBeVisible();
+    await expect(conversation.getByText(/已授权.*群内公开回复/)).toHaveCount(0);
     await conversation.getByRole('button', { name: '选择班级 Agent' }).click();
-    await conversation.getByRole('option', { name: /物理学习助手.*Agent/ }).click();
+    await conversation.getByRole('option', { name: /物理学习助手/ }).click();
     const composer = conversation.getByRole('textbox', { name: '输入消息' });
     await expect(conversation.getByText('@物理学习助手')).toBeVisible();
     await composer.fill('第 5 题的方向怎么判断？');
@@ -1052,7 +1056,7 @@ test('teacher and student use isolated direct threads with the same class Agent 
     await expect(conversation.getByRole('heading', { name: '物理学习助手' })).toBeVisible();
     await expect(conversation.getByText(/同一班级 Agent.*仅当前会话可见/)).toHaveCount(0);
     await expect(conversation.getByRole('button', { name: '切换 Agent' })).toHaveCount(0);
-    await expect(conversation.getByText('仅你与班级 Agent 可见').first()).toBeVisible();
+    await expect(conversation.getByText('仅你与班级 Agent 可见')).toHaveCount(0);
     const loadOlder = conversation.getByRole('button', { name: '加载更早消息' });
     if (await loadOlder.count()) await loadOlder.click();
     await expect(conversation.getByText(/我是本班已授权的物理学习助手/)).toBeVisible();
@@ -1088,11 +1092,11 @@ test('typed @ searches Agents and members while the direct directory switches is
   const classConversation = page.getByRole('region', { name: '高二物理 3 班会话' });
   const composer = classConversation.getByRole('textbox', { name: '输入消息' });
   await composer.fill('@错题');
-  await expect(classConversation.getByRole('option', { name: /作业订正助手.*Agent/ })).toBeVisible();
+  await expect(classConversation.getByRole('option', { name: /作业订正助手/ })).toBeVisible();
   await composer.press('Enter');
   await expect(classConversation.getByText('@作业订正助手')).toBeVisible();
   await classConversation.getByRole('button', { name: '选择班级 Agent' }).click();
-  await classConversation.getByRole('option', { name: /实验探究助手.*Agent/ }).click();
+  await classConversation.getByRole('option', { name: /实验探究助手/ }).click();
   await expect(classConversation.getByRole('button', { name: '撤销切换' })).toBeVisible();
   await composer.fill('帮我整理实验步骤');
   await expect(classConversation.getByRole('button', { name: '撤销切换' })).toHaveCount(0);

@@ -79,9 +79,17 @@ test('class detail opens the isolated full WorkBuddy MVP experience and returns 
   await page.goto('/teacher/classes/physics-3?course=course-momentum');
   await expect(page.getByRole('button', { name: 'AI 应用' })).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText('老师已授权 · 班级成员可用')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'TeachBuddy', exact: true })).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByText('AI 教学搭档 · 仅你可见')).toBeVisible();
-  await page.getByRole('button', { name: '打开 TeachBuddy' }).click();
+  await expect(page.getByText('我的教学伴侣', { exact: true })).toBeVisible();
+  await expect(page.getByText('我是您的教学搭档，有什么要帮忙？', { exact: true })).toBeVisible();
+  const teachBuddyEntry = page.getByRole('button', { name: '打开 TeachBuddy' });
+  const entryAvatar = await teachBuddyEntry.locator('[data-teachbuddy-avatar="true"]').boundingBox();
+  expect(entryAvatar?.width ?? 0).toBeGreaterThanOrEqual(40);
+  await expect.poll(() => teachBuddyEntry.evaluate((element) => getComputedStyle(element).cursor)).toBe('pointer');
+  await expect.poll(() => teachBuddyEntry.evaluate((element) => getComputedStyle(element).backgroundImage)).not.toBe('none');
+  await teachBuddyEntry.focus();
+  await expect(teachBuddyEntry).toBeFocused();
+  await expect.poll(() => teachBuddyEntry.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe('none');
+  await teachBuddyEntry.click();
 
   await expect(page).toHaveURL(/\/teacher\/classes\/physics-3\/workbuddy\/new\?course=course-momentum$/);
   await expect(page.getByTestId('class-mvp-workbuddy-shell')).toBeVisible();
@@ -141,13 +149,13 @@ test('uses the immersive single-class chat with WorkBuddy and returns to the cla
   await page.getByRole('button', { name: '班级群聊' }).click();
   await expect(page).toHaveURL(/\/teacher\/classes\/physics-3\/chat$/);
   await expect(page.getByRole('heading', { level: 1, name: '班级群聊' })).toBeVisible();
-  await expect(page.getByLabel('班级群聊沉浸工作区导航').getByText('高二物理 3 班', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('班级群聊沉浸工作区导航').getByText('高二物理 3 班', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: '主导航' })).toBeHidden();
   await expect(page.getByLabel('班级消息列表')).toHaveCount(0);
 
   const conversation = page.getByRole('region', { name: '高二物理 3 班会话' });
   const composer = conversation.locator('form');
-  await expect(conversation.getByRole('button', { name: '管理', exact: true })).toBeVisible();
+  await expect(conversation.getByRole('button', { name: '会话管理', exact: true })).toBeVisible();
   await conversation.getByRole('textbox', { name: '输入消息' }).fill('test');
   await conversation.getByRole('button', { name: '发送', exact: true }).click();
 
@@ -199,12 +207,12 @@ test('student class chat uses one immersive navigation layer without teacher Wor
 
   await page.getByRole('button', { name: '班级群聊' }).click();
   await expect(page).toHaveURL(/\/student\/classes\/physics-3\/chat$/);
-  await expect(page.getByLabel('班级群聊沉浸工作区导航')).toContainText('高二物理 3 班');
+  await expect(page.getByLabel('班级群聊沉浸工作区导航')).not.toContainText('高二物理 3 班');
   await expect(page.getByRole('heading', { level: 1, name: '班级群聊' })).toHaveCount(1);
   await expect(page.getByRole('navigation', { name: '学生视角主导航' })).toBeHidden();
   await expect(page.getByRole('region', { name: '高二物理 3 班会话' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'TeachBuddy 私密协作窗口' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '管理', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '会话管理', exact: true })).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
 
   await page.getByRole('button', { name: '返回班级' }).click();

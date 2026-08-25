@@ -20,7 +20,9 @@ fixed_point: 6508529
 | M44-PRD-025 TeacherIn 内容格式兼容 | `domain/teacherin/content.ts` 权威 `teacherin-content-v1` 类型与 Validator；Standalone 内容 Module 在发布与 Session 恢复边界校验；D-107 与兼容架构说明 | Schema/证据链/非法 Session Unit；所有内置与个人发布内容通过权威 Validator；真实 API Adapter 仍为未来 Gate |
 | M44-PRD-022/025 账号级数据隔离 | `createStandaloneTeacherWorkBuddyExperience(accountId)`、账号级 Workspace Namespace、独立能力 fixture 与账号过滤内容 Session | Profile/Session/Capability Unit；两个账号的 Task、Capability、个人内容发布与点数 Chromium 隔离旅程 |
 
-`/workbuddy/*` 不挂载 `RoleSessionProvider`、`ClassWorkspaceProvider`、Homework、Message、IM、Class Agent 或 ClassIn WorkBuddy Bridge。它只复用 WorkBuddy Domain、稳定 Surface、能力 Registry、模板和 Adapter Interface。
+`/teachbuddy/*` 不挂载 `RoleSessionProvider`、`ClassWorkspaceProvider`、Homework、Message、IM、Class Agent 或 ClassIn WorkBuddy Bridge。它只复用 WorkBuddy Domain、稳定 Surface、能力 Registry、模板和 Adapter Interface。
+
+公开 URL 由 `STANDALONE_TEACHBUDDY_ROUTES` 统一拥有；`App.ProductComposition` 同时识别主路径与旧 `/workbuddy/*`，后者只进入 `LegacyStandalonePathRedirect`，按原子路径、查询参数和锚点迁移到 `/teachbuddy/*`。E2E 锁定旧官网锚点兼容跳转，所有正常旅程只使用品牌化主路径。
 
 ## 2. Context and Conversion
 

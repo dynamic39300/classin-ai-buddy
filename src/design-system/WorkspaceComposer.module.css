@@ -46,7 +46,20 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  padding: var(--space-2xs) var(--space-2xs) 0;
+  padding: var(--space-2xs) 0 var(--space-2xs) var(--space-2xs);
+}
+
+.composer:has(.targetSlot) {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-xs);
+}
+
+.composer:has(.targetSlot) textarea {
+  align-self: center;
+}
+
+.composer:has(.targetSlot) .footer {
+  grid-column: 1 / -1;
 }
 
 .task textarea {

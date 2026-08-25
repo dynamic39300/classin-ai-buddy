@@ -46,7 +46,8 @@ fixed_point: 6508529
 - ClassIn 转化：当前依据、未来增量和官方入口清晰，不执行真实连接；
 - 三套 Experience：Route、Profile、Session、History、Commerce 与 Product Shell 隔离；
 - 终局与 MVP 可见功能、路由和 ClassIn 业务状态未被 Standalone 改写。
-- Standalone 内容/文件资源保持 `/workbuddy/app/*`，不投影机构内容、TeacherIn/Space 或 `/teacher` 操作；详情改编与个人文件 Context 只回到 Standalone 新任务。
+- Standalone 内容/文件资源保持 `/teachbuddy/app/*`，不投影机构内容、TeacherIn/Space 或 `/teacher` 操作；详情改编与个人文件 Context 只回到 Standalone 新任务。
+- Standalone 对外主路径已统一为 `/teachbuddy/*`；旧 `/workbuddy/*` 仅做保留子路径、查询参数和锚点的兼容跳转，不再生成新链接。
 - 内容格式兼容不扩大当前实现真值：当前仍是 `[模拟]` 独立产品；权威 `teacherin-content-v1` Schema、边界校验与 Standalone 生产闭环已实现，真实 TeacherIn API 授权连接和 Adapter 写入仍属于后续生产 Gate。
 
 ## Verification Evidence

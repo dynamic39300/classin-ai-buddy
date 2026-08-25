@@ -57,7 +57,7 @@ date: 2026-08-24
 - 同一幂等键重复执行只返回原 Receipt，不产生第二条消息。
 - 标准 Shell 不渲染 Sidecar，只保留 WorkBuddy 单一入口；该入口直接重进三栏沉浸工作区。沉浸态 Sidecar 常驻，不渲染关闭按钮或 Escape 关闭监听。
 - 教师从一级“消息”进入时，ClassIn Sidebar / Topbar 以同源布局过渡退出，消息工作区扩展为最多三栏；WorkBuddy 继续使用同一完整 Run Surface。
-- 顶部持续表达“消息 / 沉浸工作区”和退出去向；显式退出或 `Esc Esc` 只恢复标准 Shell，不执行历史返回，并短时提示 WorkBuddy 已同步收起及再次打开的去向。
+- 顶部只保留“消息”和退出操作；M4.5 已移除“沉浸工作区”及退出去向的静态说明。显式退出或 `Esc Esc` 仍只恢复标准 Shell，不执行历史返回；首次按下 `Esc` 后临时显示二次确认提示。
 - 退出与再次进入不会重建 Message Workspace；当前会话、Composer 草稿、动态 Run、Artifact 与审批状态保持。
 - 1024px 紧凑窗口把 WorkBuddy 转为 520px 内的 Overlay；文件预览被约束为 Focus Surface，不形成第四栏。
 - WorkBuddy 底部固定任务输入区在 Ready、Generating、Draft、Sent 和 Failure 状态持续可达，不随长 Timeline 滚走。

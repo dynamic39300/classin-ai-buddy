@@ -133,7 +133,7 @@ export function CastingWorkspace() {
             <h2>{statusLabel}</h2>
             <p className={styles.stateCopy}>
               {session.status === 'connecting' && target ? `正在连接 ${target.name}，请确认设备已开启。` : null}
-              {session.status === 'connected' && target ? `已连接 ${target.name}。画面传输为本地 Demo 模拟。` : null}
+              {session.status === 'connected' && target ? `已连接 ${target.name}。` : null}
               {session.status === 'failed' ? session.reason : null}
               {session.status === 'ended' ? `${session.previousTarget.name} 的投屏已关闭。` : null}
             </p>

@@ -1,23 +1,29 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+test('legacy standalone URL redirects to the branded TeachBuddy URL', async ({ page }) => {
+  await page.goto('/workbuddy#classin');
+  await expect(page).toHaveURL(/\/teachbuddy#classin$/);
+  await expect(page.getByRole('heading', { level: 1, name: /把教学想法.*可以直接审阅的成果/ })).toBeVisible();
+});
+
 async function registerStandaloneTeacher(page: Page) {
-  await page.goto('/workbuddy/register');
+  await page.goto('/teachbuddy/register');
   await page.getByLabel('教师称呼').fill('林老师');
   await page.getByLabel('邮箱').fill('lin.standalone@example.com');
   await page.getByLabel('密码').fill('teaching88');
   await page.getByRole('button', { name: '注册并免费开始' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/new$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/new$/);
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/workbuddy');
+  await page.goto('/teachbuddy');
   await page.evaluate(() => localStorage.clear());
 });
 
 test('standalone teacher registers, creates a charged task and restores the isolated workspace @a11y', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/workbuddy');
+  await page.goto('/teachbuddy');
   await expect(page.getByRole('heading', { level: 1, name: '把教学想法，变成 可以直接审阅的成果' })).toBeVisible();
   await page.getByRole('link', { name: '免费开始', exact: true }).first().click();
   await page.getByLabel('教师称呼').fill('林老师');
@@ -27,7 +33,8 @@ test('standalone teacher registers, creates a charged task and restores the isol
 
   await expect(page.getByTestId('standalone-workbuddy-shell')).toBeVisible();
   await expect(page.getByRole('link', { name: /AI 点数 360/ })).toBeVisible();
-  await expect(page.getByText('[模拟] 未连接 ClassIn')).toBeVisible();
+  await expect(page.getByText('未连接 ClassIn', { exact: true })).toBeVisible();
+  await expect(page.getByText(/模拟|仿真/)).toHaveCount(0);
   await expect(page.getByRole('link', { name: '内容资源' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: '老师视角主导航' })).toHaveCount(0);
 
@@ -45,7 +52,7 @@ test('standalone teacher registers, creates a charged task and restores the isol
   await page.getByRole('button', { name: '生成单个课件' }).click();
   await expect(page.getByRole('button', { name: '创建任务' })).toBeEnabled();
   await page.getByRole('button', { name: '创建任务' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/runs\/run-m4-courseware$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/runs\/run-m4-courseware$/);
   await expect(page.getByRole('link', { name: /AI 点数 300/ })).toBeVisible();
   await expect(page.getByText('未连接 ClassIn 时，不读取班级、作业或学生事实')).toBeVisible();
 
@@ -56,14 +63,14 @@ test('standalone teacher registers, creates a charged task and restores the isol
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
 });
 
-test('standalone membership simulation grants points once and keeps a persistent ledger @a11y', async ({ page }) => {
+test('standalone membership grants points once and keeps a persistent ledger @a11y', async ({ page }) => {
   await registerStandaloneTeacher(page);
   await page.getByRole('link', { name: '会员方案' }).click();
   await page.getByRole('button', { name: '选择方案' }).first().click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog).toContainText('[模拟] 会员订单');
-  await expect(dialog).toContainText('本次不会产生真实扣款');
-  await dialog.getByRole('button', { name: '确认模拟到账' }).click();
+  await expect(dialog).toContainText('会员订单');
+  await expect(dialog).not.toContainText(/模拟|仿真/);
+  await dialog.getByRole('button', { name: '确认开通' }).click();
   await expect(page.getByRole('status')).toContainText('已到账 1500 AI 点数');
   await expect(page.getByRole('link', { name: /AI 点数 1860/ })).toBeVisible();
 
@@ -80,18 +87,19 @@ test('standalone membership simulation grants points once and keeps a persistent
 test('standalone content resources stay inside the consumer product boundary', async ({ page }) => {
   await registerStandaloneTeacher(page);
   await page.getByRole('link', { name: '内容资源' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/content$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/content$/);
   await expect(page.getByRole('heading', { level: 1, name: '内容资源' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: '老师视角主导航' })).toHaveCount(0);
-  await expect(page.getByText('[模拟] 独立内容库')).toBeVisible();
+  await expect(page.getByText('独立个人内容库', { exact: true })).toBeVisible();
+  await expect(page.getByText(/模拟|仿真/)).toHaveCount(0);
   await expect(page.getByText('机构内容库')).toHaveCount(0);
   await expect(page.locator('a[href^="/teacher"]')).toHaveCount(0);
 
   await page.getByRole('button', { name: '查看函数单调性精品教案' }).click();
   await page.getByRole('button', { name: '改编到新任务' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/new$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/new$/);
 
-  await page.goto('/workbuddy/app/content');
+  await page.goto('/teachbuddy/app/content');
   await page.getByRole('button', { name: '发布作品' }).click();
   await page.getByRole('button', { name: '下一步' }).click();
   await page.getByLabel('作品标题').fill('个人机械波演示课件');
@@ -112,7 +120,7 @@ test('standalone quiz ends in the personal content library without a ClassIn wri
   await page.getByRole('button', { name: /应用本次示例教学范围/ }).click();
   await page.getByRole('button', { name: '确认上下文版本' }).click();
   await page.getByRole('button', { name: '创建任务' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/runs\/run-quiz-activity-1$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/runs\/run-quiz-activity-1$/);
   await expect(page.getByText('当前不会读取或写入 ClassIn 教学活动')).toBeVisible();
 
   await page.getByRole('article', { name: '确认试卷结构' }).getByRole('button', { name: '确认以上要求并生成' }).click();
@@ -130,7 +138,7 @@ test('standalone quiz ends in the personal content library without a ClassIn wri
   await page.reload();
   await expect(page.getByRole('article', { name: '个人测验内容保存回执' })).toBeVisible();
   await page.getByRole('link', { name: '查看内容资源' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/content$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/content$/);
   await expect(page.getByRole('button', { name: /查看.*诊断测验/ })).toBeVisible();
 });
 
@@ -150,12 +158,12 @@ test('standalone accounts keep capability data and workspace sessions isolated',
   await expect(page.getByRole('button', { name: '查看第一位老师的私有课件' })).toBeVisible();
   await page.getByRole('button', { name: '退出登录' }).click();
 
-  await page.goto('/workbuddy/register');
+  await page.goto('/teachbuddy/register');
   await page.getByLabel('教师称呼').fill('周老师');
   await page.getByLabel('邮箱').fill('zhou.standalone@example.com');
   await page.getByLabel('密码').fill('teaching99');
   await page.getByRole('button', { name: '注册并免费开始' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/new$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/new$/);
   await expect(page.getByLabel('描述教学任务')).toHaveValue('');
   await expect(page.getByText('第一位老师的私有任务草稿')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /AI 点数 360/ })).toBeVisible();
@@ -174,7 +182,7 @@ test('standalone accounts keep capability data and workspace sessions isolated',
 test('standalone personal files expose only local product actions', async ({ page }) => {
   await registerStandaloneTeacher(page);
   await page.getByRole('link', { name: '我的文件' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/files$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/files$/);
   await expect(page.locator('a[href^="/teacher"]')).toHaveCount(0);
   await expect(page.getByText(/TeacherIn|组织云盘|教研组/)).toHaveCount(0);
 
@@ -184,10 +192,10 @@ test('standalone personal files expose only local product actions', async ({ pag
   await expect(page.getByRole('button', { name: '在空间中定位' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /TeacherIn/ })).toHaveCount(0);
   await page.getByRole('button', { name: '作为上下文', exact: true }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/new$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/new$/);
 });
 
-test('standalone task admission blocks at zero points and resumes after a simulated membership grant', async ({ page }) => {
+test('standalone task admission blocks at zero points and resumes after a membership grant', async ({ page }) => {
   await registerStandaloneTeacher(page);
   await page.getByRole('button', { name: '生成课程方案包' }).click();
   await page.getByRole('button', { name: /核心上下文 · 2/ }).click();
@@ -195,32 +203,32 @@ test('standalone task admission blocks at zero points and resumes after a simula
   await page.getByRole('button', { name: '确认上下文版本' }).click();
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    if (attempt > 0) await page.goto('/workbuddy/app/new');
+    if (attempt > 0) await page.goto('/teachbuddy/app/new');
     await page.getByLabel('描述教学任务').fill(`生成第 ${attempt + 1} 份课程方案包`);
     await page.getByRole('button', { name: '创建任务' }).click();
-    await expect(page).toHaveURL(/\/workbuddy\/app\/runs\/run-m4-course-package$/);
+    await expect(page).toHaveURL(/\/teachbuddy\/app\/runs\/run-m4-course-package$/);
   }
   await expect(page.getByRole('link', { name: /AI 点数 0/ })).toBeVisible();
 
-  await page.goto('/workbuddy/app/new');
+  await page.goto('/teachbuddy/app/new');
   await page.getByLabel('描述教学任务').fill('生成余额不足时的课程方案包');
   await page.getByRole('button', { name: '创建任务' }).click();
-  await expect(page).toHaveURL(/\/workbuddy\/app\/new$/);
+  await expect(page).toHaveURL(/\/teachbuddy\/app\/new$/);
   await expect(page.getByText('AI 点数不足，请先前往“AI 点数”或“会员方案”补充点数。')).toBeVisible();
 
   await page.getByRole('link', { name: '会员方案' }).click();
   await page.getByRole('button', { name: '选择方案' }).first().click();
-  await page.getByRole('dialog').getByRole('button', { name: '确认模拟到账' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '确认开通' }).click();
   await expect(page.getByRole('link', { name: /AI 点数 1500/ })).toBeVisible();
 
-  await page.goto('/workbuddy/app/new');
+  await page.goto('/teachbuddy/app/new');
   await page.getByLabel('描述教学任务').fill('充值后继续生成课程方案包');
   await page.getByRole('button', { name: '创建任务' }).click();
   await expect(page.getByRole('link', { name: /AI 点数 1380/ })).toBeVisible();
 });
 
 test('signed-out teachers cannot enter standalone app routes', async ({ page }) => {
-  await page.goto('/workbuddy/app/credits');
-  await expect(page).toHaveURL(/\/workbuddy\/login\?next=%2Fworkbuddy%2Fapp%2Fcredits$/);
+  await page.goto('/teachbuddy/app/credits');
+  await expect(page).toHaveURL(/\/teachbuddy\/login\?next=%2Fteachbuddy%2Fapp%2Fcredits$/);
   await expect(page.getByRole('heading', { level: 1, name: '欢迎回到 TeachBuddy' })).toBeVisible();
 });

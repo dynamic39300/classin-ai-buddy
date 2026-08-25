@@ -420,7 +420,7 @@ export function CapabilityWorkspace({ surface }: Props) {
             closeSkillUpload();
             setQuery("");
             setTab("mine");
-            setFeedback(`[模拟] ${result.title} 已添加到我的 Skills。`);
+            setFeedback(`${result.title} 已添加到我的 Skills。`);
           }}
         />
       ) : null}
@@ -710,7 +710,7 @@ function SkillUploadDialog({
           </aside>
         </div>
         <footer>
-          <span>[模拟] 只校验输入，不连接真实 Skill 运行时</span>
+          <span>添加前会校验文件结构和必要字段</span>
           <div>
             <button className={styles.ghostButton} type="button" onClick={close}>取消</button>
             <button className={styles.primaryButton} type="button" onClick={() => submit(candidate)}>添加到我的 Skills</button>
@@ -919,7 +919,7 @@ function ContentMarket({
         <div>
           <h1 id="content-workspace-title">内容资源</h1>
           <p>{standalone ? '发现灵感，管理你的个人作品' : '发现灵感，管理作品'}</p>
-          {standalone ? <small>[模拟] 独立内容库</small> : null}
+          {standalone ? <small>独立个人内容库</small> : null}
         </div>
         <Tabs config={config} tab={tab} setTab={setTab} />
         <button
@@ -1509,7 +1509,7 @@ function Detail({
       <footer>
         <span>
           <Info size={15} />
-          [模拟] 固定版本体验数据
+          当前版本信息
         </span>
         <div>
           {skill && item.status === "可安装" ? (
@@ -2416,11 +2416,11 @@ function StandaloneSettingsSurface() {
   const [feedback, setFeedback] = useState('');
   const labels: Readonly<Record<string, Readonly<{ title: string; description: string }>>> = Object.freeze({
     general: { title: '通用', description: '管理个人工作台的语言、时区和任务默认行为。' },
-    model: { title: 'AI 能力', description: `当前使用 ${TEACHBUDDY_BRAND.shortName} 托管的模拟 AI 能力，不需要配置个人密钥。` },
+    model: { title: 'AI 能力', description: `当前使用 ${TEACHBUDDY_BRAND.shortName} 托管的 AI 能力，不需要配置个人密钥。` },
     data: { title: '个人数据', description: '任务、内容和文件只保存在当前独立教师账号的数据空间。' },
     notifications: { title: '通知', description: '选择是否接收个人任务完成与点数变化提醒。' },
     sandbox: { title: '受控运行', description: '工具只访问当前任务明确选择的个人文件和公开网址。' },
-    about: { title: '关于', description: `${TEACHBUDDY_BRAND.officialName} 当前为固定、可重置的模拟体验。` },
+    about: { title: '关于', description: `${TEACHBUDDY_BRAND.officialName} 是面向教师的任务型 AI 教学工作台。` },
     feedback: { title: '反馈', description: '记录你对独立产品体验的建议。' },
   });
   const current = labels[section] ?? labels.general!;
@@ -2436,7 +2436,7 @@ function StandaloneSettingsSurface() {
           <CircleCheck size={28} />
           <strong>个人配置已启用</strong>
           <span>{current.description}</span>
-          <small>[模拟] 不读取任何机构、班级或业务配置</small>
+          <small>当前独立账号不读取任何机构、班级或业务配置</small>
           <button className={styles.ghostButton} type="button" onClick={() => setFeedback(`${current.title}设置已保存到当前个人账号。`)}>保存设置</button>
         </div>
       </section>
@@ -2687,7 +2687,7 @@ function SettingsContent({
           <dt>当前版本</dt>
           <dd>v0.1</dd>
           <dt>能力状态</dt>
-          <dd>[模拟] 高保真交互与固定数据</dd>
+          <dd>教师任务与内容生产工作台</dd>
         </dl>
       </div>
     );

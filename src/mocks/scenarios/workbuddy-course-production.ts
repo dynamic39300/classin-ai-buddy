@@ -24,7 +24,7 @@ export const WORKBUDDY_COURSEWARE_OUTPUT: CoursewareExecutionOutput = Object.fre
     Object.freeze({ id: 'event-context', title: '核心上下文已载入', summary: '冻结的教学范围与资源引用已校验。', state: 'completed' }),
     Object.freeze({ id: 'event-plan', title: '任务计划已确认', summary: '教师确认四步执行计划与课件交付物。', state: 'completed' }),
     Object.freeze({ id: 'event-structure', title: '教学结构已生成', summary: '从函数图像的变化进入单调性定义，再进入例题与课堂练习。', capability: 'lesson-structure', state: 'completed' }),
-    Object.freeze({ id: 'event-draft', title: '课件草稿已组装', summary: '[模拟]课件页面与讲解结构已形成。', capability: 'courseware-renderer', state: 'completed' }),
+    Object.freeze({ id: 'event-draft', title: '课件草稿已组装', summary: '课件页面与讲解结构已形成。', capability: 'courseware-renderer', state: 'completed' }),
     Object.freeze({ id: 'event-validation', title: '质量检查通过', summary: '目标、结构、术语与练习覆盖检查通过。', capability: 'courseware-quality-check', state: 'completed' }),
   ]),
   artifact: Object.freeze({
@@ -39,7 +39,7 @@ export const WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT: CoursewareExecutionOutput = 
     Object.freeze({ id: 'event-wave-context', title: '二次函数上下文已载入', summary: '高一（2）班、高中数学课程与二次函数单元范围已校验。', state: 'completed' }),
     Object.freeze({ id: 'event-wave-plan', title: '二次函数课件计划已确认', summary: '教师确认从图像特征进入二次函数性质的四步计划。', state: 'completed' }),
     Object.freeze({ id: 'event-wave-structure', title: '二次函数教学结构已生成', summary: '从图像开口、对称轴与顶点进入性质归纳，再进入判断与练习。', capability: 'lesson-structure', state: 'completed' }),
-    Object.freeze({ id: 'event-wave-draft', title: '二次函数课件草稿已组装', summary: '[模拟]二次函数课件页面与讲解结构已形成。', capability: 'courseware-renderer', state: 'completed' }),
+    Object.freeze({ id: 'event-wave-draft', title: '二次函数课件草稿已组装', summary: '二次函数课件页面与讲解结构已形成。', capability: 'courseware-renderer', state: 'completed' }),
     Object.freeze({ id: 'event-wave-validation', title: '二次函数内容质量检查通过', summary: '二次函数目标、结构、术语与练习覆盖检查通过。', capability: 'courseware-quality-check', state: 'completed' }),
   ]),
   artifact: Object.freeze({
@@ -100,7 +100,7 @@ export const WORKBUDDY_RUNTIME_FIXTURE: WorkBuddyRuntimeFixture = Object.freeze(
   history: Object.freeze({
     coursewareEyebrow: '高一数学 · 函数单调性',
     packageSummary: '课件、作业、测验与录播脚本保持独立状态。',
-    packageEyebrow: '[模拟]课程方案包',
+    packageEyebrow: '课程方案包',
     relativeTime: '刚刚',
     eventTime: '固定事件',
     currentStepTime: '现在',

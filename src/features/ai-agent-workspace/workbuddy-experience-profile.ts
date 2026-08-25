@@ -1,4 +1,5 @@
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
+import { STANDALONE_TEACHBUDDY_ROUTES } from '@contracts/workbuddy/product-brand';
 import type { WorkBuddyCapability } from './capability-registry';
 
 export type WorkBuddyExperienceProfileId = 'ideal-full' | 'classin-mvp' | 'standalone-teacher';
@@ -31,8 +32,8 @@ export type WorkBuddyWorkspaceRoute = Readonly<{
 }>;
 
 export function parseWorkBuddyWorkspaceRoute(pathname: string): WorkBuddyWorkspaceRoute | null {
-  if (pathname === '/workbuddy/app' || pathname.startsWith('/workbuddy/app/')) {
-    return Object.freeze({ profileId: 'standalone-teacher', basePath: '/workbuddy/app', classId: null });
+  if (pathname === STANDALONE_TEACHBUDDY_ROUTES.app || pathname.startsWith(`${STANDALONE_TEACHBUDDY_ROUTES.app}/`)) {
+    return Object.freeze({ profileId: 'standalone-teacher', basePath: STANDALONE_TEACHBUDDY_ROUTES.app, classId: null });
   }
   if (pathname === '/teacher/ai-agent' || pathname.startsWith('/teacher/ai-agent/')) {
     return Object.freeze({ profileId: 'ideal-full', basePath: '/teacher/ai-agent', classId: null });

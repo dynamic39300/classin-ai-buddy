@@ -1,6 +1,6 @@
 ---
 title: WorkBuddy M4.2–M4.5 Demo 完善路线
-status: M4_4_COMPLETE_USER_ACCEPTED
+status: M4_5_COMPLETE_USER_ACCEPTED
 version: v0.8
 date: 2026-08-25
 source_decision: D-077
@@ -113,6 +113,8 @@ M4.4 首期 To-C 已锁定为教师个人账号，不建设学生、家长或机
 内容生态关系见 [TeacherIn 内容兼容与独立产品边界](../../../06-architecture/TEACHERIN-CONTENT-COMPATIBILITY.md)。
 
 ## 6. M4.5 — 全局 IA、UI、交互与 Demo Release Gate
+
+当前状态：`COMPLETE_USER_ACCEPTED`。首批实施来源为 Notion《第一部分（IM）：用户体验 UI、UX 问题 check & 优化》，详细契约与反馈映射见 [M4.5 IM 与 TeachBuddy UI/UX Feature Spec](../workbuddy-m4-5-ui-experience/FEATURE-SPEC.md)。本批统一了群聊 `@` Agent、IM 页面降噪、TeachBuddy 动态身份、自适应编辑器、退出引导和产品呈现层真值策略；实现与自动化回归已完成，用户于 2026-08-25 确认阶段体验验收完成。M4.2～M4.4 的底层功能、证据链和数据隔离保持不变。
 
 ### 目标
 

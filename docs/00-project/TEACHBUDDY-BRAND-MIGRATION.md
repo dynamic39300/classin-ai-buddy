@@ -1,9 +1,9 @@
 ---
 title: ClassIn TeachBuddy 品牌命名与迁移边界
 status: LOCKED
-version: v1.0
+version: v1.1
 date: 2026-08-25
-decision: D-108
+decision: D-108, D-111
 ---
 
 # ClassIn TeachBuddy 品牌命名与迁移边界
@@ -15,7 +15,8 @@ decision: D-108
 | 官网、注册登录、正式介绍、对外材料 | **ClassIn TeachBuddy** | 正式产品名，ClassIn 品牌与教学场景同时明确 |
 | 工作台导航、班级入口、任务页、IM 私密协作窗口 | **TeachBuddy** | 空间受限界面的统一短名 |
 | 中文解释性副标题 | **AI 教学搭档** | 说明角色，不作为另一产品名 |
-| 代码、路由、存储、领域证据 | `WorkBuddy` / `workbuddy` | 历史工程兼容标识，不是当前展示品牌 |
+| 代码、ClassIn 内部路由、存储、领域证据 | `WorkBuddy` / `workbuddy` | 历史工程兼容标识，不是当前展示品牌 |
+| 独立 C 端公开 URL | `/teachbuddy/*` | 与 TeachBuddy 展示品牌一致；`/workbuddy/*` 仅兼容跳转 |
 
 不得再新增 `Work Buddy`、`教师 WorkBuddy`、`我的教学助理`、`WorkBuddy by ClassIn` 或 `ClassInBuddy` 等并行展示名。
 
@@ -30,13 +31,13 @@ decision: D-108
 
 ## 不迁移的工程标识
 
-- `/teacher/ai-agent/*`、`/teacher/classes/:classId/workbuddy/*`、`/workbuddy/*` 路由；
+- `/teacher/ai-agent/*`、`/teacher/classes/:classId/workbuddy/*` 等 ClassIn 内部路由；
 - `WorkBuddyRun`、`WorkBuddyExperienceProfile`、`ContextSnapshot` 等已存在的类型与 Interface；
 - `workbuddy` 本地存储命名空间、幂等键、对象 ID、数据属性和测试 ID；
 - `src/**/workbuddy-*`、`docs/**/workbuddy-*` 目录和文件名；
 - `docs/07-history/` 的阶段原稿以及外部研究引用原文。
 
-这些标识保持稳定，是为了让品牌展示迁移不破坏任务恢复、Receipt 证据链、幂等语义、链接兼容和历史追溯。
+这些标识保持稳定，是为了让品牌展示迁移不破坏任务恢复、Receipt 证据链、幂等语义和历史追溯。独立 C 端公开 URL 是产品展示面，已迁移到 `/teachbuddy/*`；旧 `/workbuddy/*` 通过等路径重定向继续兼容已有链接。
 
 ## 后续变更门禁
 
@@ -44,4 +45,4 @@ decision: D-108
 - 对外文档首次出现时写“ClassIn TeachBuddy（简称 TeachBuddy）”；
 - 规格描述产品体验时使用 TeachBuddy，描述代码/领域对象时继续使用准确类型名；
 - 视觉回归、无障碍查询和 E2E 文案断言必须同步品牌展示名；
-- 若未来要迁移路由或领域名，必须另立 ADR，提供持久化数据、URL 和证据对象的兼容方案，不得夹带在 UI 改名中。
+- 若未来继续迁移 ClassIn 内部路由或领域名，必须另立 ADR，提供持久化数据、URL 和证据对象的兼容方案，不得夹带在 UI 改名中。
