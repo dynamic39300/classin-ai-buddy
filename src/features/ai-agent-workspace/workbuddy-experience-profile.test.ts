@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CLASS_RECORDS } from '@mocks/scenarios/classes';
 import { createClassMvpWorkBuddyExperience, resolveClassMvpWorkBuddyExperience } from './classin-mvp-workbuddy-experience';
 import { createIdealWorkBuddyExperience } from './ideal-workbuddy-experience';
+import { createStandaloneTeacherWorkBuddyExperience } from './standalone-teacher-workbuddy-experience';
 import {
   parseWorkBuddyWorkspaceRoute,
   workBuddyCapabilityPath,
@@ -10,6 +11,16 @@ import {
 } from './workbuddy-experience-profile';
 
 describe('WorkBuddyExperienceProfileModule', () => {
+  it('projects the standalone teacher experience onto its own route and data namespace', () => {
+    const standalone = createStandaloneTeacherWorkBuddyExperience();
+    expect(parseWorkBuddyWorkspaceRoute('/workbuddy/app/new')).toEqual({
+      profileId: 'standalone-teacher', basePath: '/workbuddy/app', classId: null,
+    });
+    expect(standalone.sessionNamespace).toBe('standalone-teacher:anonymous');
+    expect(createStandaloneTeacherWorkBuddyExperience('teacher-2').sessionNamespace).toBe('standalone-teacher:teacher-2');
+    expect(standalone.visibleTaskTypes).toEqual(['single-courseware', 'course-package', 'quiz-activity-creation']);
+    expect(workBuddyRunPath(standalone, 'run 1')).toBe('/workbuddy/app/runs/run%201');
+  });
   it('projects the ideal and MVP experiences onto different routes and data namespaces', () => {
     const ideal = createIdealWorkBuddyExperience();
     const mvp = createClassMvpWorkBuddyExperience({

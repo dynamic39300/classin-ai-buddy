@@ -49,6 +49,15 @@ describe('WorkBuddy workspace session boundary', () => {
     expect(loadWorkBuddyWorkspaceSession()).toMatchObject({ version: 3, taskType: 'single-courseware' });
   });
 
+  it('restores a standalone workspace whose ClassIn package writeback requires connection', () => {
+    const session = { ...validSession(), writebackScenario: 'permission_denied', packageWritebackScenario: 'permission_denied' };
+    window.sessionStorage.setItem(`${STORAGE_KEY}:standalone-teacher`, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession('standalone-teacher')).toMatchObject({
+      writebackScenario: 'permission_denied',
+      packageWritebackScenario: 'permission_denied',
+    });
+  });
+
   it('never falls back across ideal and MVP workspace namespaces', () => {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...validSession(), draftGoal: '终局任务' }));
     window.sessionStorage.setItem(`${STORAGE_KEY}:classin-mvp`, JSON.stringify({ ...validSession(), draftGoal: 'MVP 任务' }));
@@ -127,6 +136,11 @@ describe('WorkBuddy workspace session boundary', () => {
     Object.assign(session, { quizRun: reviewedRun });
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
     expect(loadWorkBuddyWorkspaceSession()?.quizRun).toMatchObject({ stage: 'awaiting_activity_parameters', paperReview: { status: 'approved', artifactRef: { id: reviewedRun.artifact?.id, version: 'v1' } } });
+
+    const artifactSavedRun = QuizActivityCreationModule.recordArtifactSaved(reviewedRun);
+    Object.assign(session, { quizRun: artifactSavedRun });
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    expect(loadWorkBuddyWorkspaceSession()?.quizRun).toMatchObject({ stage: 'artifact_saved', allowedCommands: ['open-personal-content'], recovery: null });
 
     Object.assign(session, { quizRun: { ...reviewedRun, paperReview: { ...reviewedRun.paperReview, artifactRef: { id: 'artifact-from-another-run', version: 'v1' } } } });
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));

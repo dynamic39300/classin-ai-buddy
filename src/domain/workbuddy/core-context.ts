@@ -15,7 +15,7 @@ export type CoreContextSensitivity = 'public' | 'organization' | 'class' | 'pers
 export type CoreContextPermission = 'read' | 'restricted';
 export type CoreContextSelection = 'locked' | 'suggested';
 export type CoreContextReference = Readonly<{
-  system: 'classin-space' | 'teacherin';
+  system: 'classin-space' | 'teacherin' | 'workbuddy-personal-files';
   objectId: string;
   version: string;
 }>;

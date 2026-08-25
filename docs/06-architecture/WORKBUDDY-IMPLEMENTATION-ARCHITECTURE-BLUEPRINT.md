@@ -2,8 +2,8 @@
 title: WorkBuddy 业务流程驱动的实现架构蓝图
 status: D0 review draft
 truth: TARGET
-version: v0.1
-date: 2026-08-19
+version: v0.2
+date: 2026-08-25
 ---
 
 # WorkBuddy 业务流程驱动的实现架构蓝图
@@ -138,6 +138,8 @@ flowchart TB
 - **Control & Execution**：集中处理权限、版本、风险、幂等、教师审批和执行顺序。
 - **Adapter**：在 Seam 上连接 ClassIn、Knowledge 和 Model Provider；把外部结果转成稳定契约。
 - **Evaluation**：连接教师修改、Artifact 版本、审批和实际回执；不把模型成功率冒充业务价值。
+
+内容生产采用 [TeacherIn 内容兼容与独立产品边界](./TEACHERIN-CONTENT-COMPATIBILITY.md)：Standalone 与 ClassIn 的 Product Module、账号和数据继续隔离，但内容 Artifact 从生成开始就遵循 TeacherIn 权威内容契约。TeacherIn Adapter 负责身份、权限、对象映射和回执，不承担二次内容转换。
 
 ### 3.4 AI 端的架构设计
 

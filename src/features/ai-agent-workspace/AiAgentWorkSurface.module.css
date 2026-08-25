@@ -680,3 +680,22 @@
     width: min(22.5rem, 92%);
   }
 }
+.taskQuote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+}
+
+.taskQuote strong {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+}
+
+.taskQuote a {
+  margin-left: auto;
+  color: var(--color-action-strong);
+  font-weight: var(--font-weight-semibold);
+}

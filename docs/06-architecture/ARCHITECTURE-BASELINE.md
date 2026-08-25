@@ -1,7 +1,7 @@
 ---
 title: WorkBuddy 全局架构低分辨率基线
 status: LOCKED
-version: v0.1
+version: v0.2
 ---
 
 # WorkBuddy 全局架构低分辨率基线
@@ -26,6 +26,8 @@ WorkBuddy 拥有 Run、Plan、ContextSnapshot 引用、ArtifactDraft、ProposedA
 
 六类稳定契约是 Intent、Context、Artifact、Capability、Action、Evaluation。底层 SDK Session、Graph Checkpoint、Workflow History 和 A2A Task ID 都是 Provider 实现引用，不升级为产品事实。
 
+内容生态另遵循一个跨产品稳定约束：Standalone WorkBuddy 与 TeacherIn 共享同一权威内容契约，但不共享产品运行数据。WorkBuddy Artifact 可投影为 `TeacherIn 兼容内容包`；未来连接只建立身份、权限、对象和回执关联，不进行内容格式转换。详见 [TeacherIn 内容兼容与独立产品边界](./TEACHERIN-CONTENT-COMPATIBILITY.md)。
+
 ## 运行组合
 
 Agent Loop 处理短程模型与工具循环；状态图处理可观察分支和人工中断；Durable Workflow 只承担跨时间等待、定时器、重试和可靠副作用；MCP 是 Agent-to-Tool Adapter；A2A 只用于真正独立、有生命周期和完成契约的专业子 Agent。
@@ -33,4 +35,3 @@ Agent Loop 处理短程模型与工具循环；状态图处理可观察分支和
 ## 首条切片的架构证明
 
 “课程目标到课程对象”必须覆盖目标、上下文、Artifact、Capability、Approval、Action、ExecutionReceipt 和 Evaluation。它验证的是架构责任和契约广度，不宣称生产成熟度或真实 ClassIn 集成完成。
-

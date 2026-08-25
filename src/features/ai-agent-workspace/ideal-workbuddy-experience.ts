@@ -19,6 +19,7 @@ const IDEAL_CAPABILITY_IDS: readonly WorkBuddyCapabilityId[] = Object.freeze([
 export function createIdealWorkBuddyExperience(): WorkBuddyExperienceProfile {
   return Object.freeze({
     id: 'ideal-full',
+    productBoundary: 'classin-integrated',
     basePath: '/teacher/ai-agent',
     sessionNamespace: 'ideal-full',
     visibleTaskTypes: IDEAL_TASK_TYPES,

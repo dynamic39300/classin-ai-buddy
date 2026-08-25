@@ -54,13 +54,13 @@ function projectPackageHistory(current: readonly WorkBuddyRunViewModel[], run: C
 
 function projectQuizHistory(current: readonly WorkBuddyRunViewModel[], run: QuizActivityCreationRun, fixture: WorkBuddyRuntimeFixture): readonly WorkBuddyRunViewModel[] {
   const existing = current.find(({ id }) => id === run.id);
-  const completed = run.stage === 'draft_created';
+  const completed = run.stage === 'draft_created' || run.stage === 'artifact_saved';
   const failed = ['permission_denied', 'version_conflict', 'recoverable_failure', 'timeout', 'evidence_mismatch'].includes(run.stage);
   const item: WorkBuddyRunViewModel = {
     fixtureVersion: run.fixtureVersion, id: run.id, title: run.settings.title || '生成测验并创建活动草稿', relativeTime: fixture.history.relativeTime, pinned: existing?.pinned,
     runState: completed ? { status: 'completed', allowedCommands: ['review-artifact', 'supplement'], recovery: null } : failed ? { status: 'failed', allowedCommands: ['retry', 'revise'], recovery: 'retry-or-revise' } : { status: 'waiting', allowedCommands: ['confirm', 'revise'], recovery: 'confirm-or-revise' },
     goal: run.goal, contextLabels: existing?.contextLabels ?? [],
-    steps: [{ title: completed ? '测验活动草稿已创建' : run.artifact ? '测验试卷已生成' : '等待确认试卷结构', summary: completed ? '请前往班级课程详情审阅并发布。' : 'WorkBuddy 只会创建草稿，不会发布。', time: fixture.history.currentStepTime, state: completed ? 'completed' : failed ? 'failed' : 'waiting' }],
+    steps: [{ title: run.stage === 'artifact_saved' ? '测验试卷已保存' : completed ? '测验活动草稿已创建' : run.artifact ? '测验试卷已生成' : '等待确认试卷结构', summary: run.stage === 'artifact_saved' ? '已保存到当前账号的个人内容库。' : completed ? '请前往班级课程详情审阅并发布。' : 'WorkBuddy 只会创建草稿，不会发布。', time: fixture.history.currentStepTime, state: completed ? 'completed' : failed ? 'failed' : 'waiting' }],
     artifact: run.artifact ? { title: run.artifact.title, version: run.artifact.version, progress: `${run.artifact.questions.length} 题 · ${run.artifact.totalScore} 分`, eyebrow: '[模拟]测验生产', heading: run.artifact.title, summary: run.artifact.validation.summary, truthLabel: run.artifact.truthLabel } : { title: '测验试卷', version: '尚未生成', progress: '等待参数确认', eyebrow: '[模拟]测验生产', heading: '尚未生成试卷', summary: '确认试卷结构后生成。', truthLabel: '[模拟]当前没有已生成的测验试卷。' },
   };
   return [item, ...current.filter(({ id }) => id !== run.id)];

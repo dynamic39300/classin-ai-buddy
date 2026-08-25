@@ -79,7 +79,7 @@ export type CoreContextView = Readonly<{
   snapshotId: string | null;
   items: readonly Readonly<{
     id: string; parentId?: string; section: CoreContextSection; kind: string; label: string; sourceLabel: string; sourceVersion: string;
-    reference?: Readonly<{ system: 'classin-space' | 'teacherin'; objectId: string; version: string }>;
+    reference?: Readonly<{ system: 'classin-space' | 'teacherin' | 'workbuddy-personal-files'; objectId: string; version: string }>;
     permissionLabel: string; sensitivity: string; included: boolean; locked: boolean; selectable: boolean;
   }>[];
 }>;

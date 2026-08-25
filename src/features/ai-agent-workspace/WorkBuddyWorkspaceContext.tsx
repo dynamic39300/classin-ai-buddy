@@ -33,7 +33,7 @@ import {
   loadWorkBuddyWorkspaceSession,
   saveWorkBuddyWorkspaceSession,
 } from './workbuddy-workspace-session';
-import { WorkBuddyWorkspaceContext, type CoursewarePanel, type PackagePanel, type WorkBuddyWorkspace } from './workbuddy-workspace';
+import { WorkBuddyWorkspaceContext, type CoursewarePanel, type PackagePanel, type WorkBuddyPersonalContent, type WorkBuddyWorkspace } from './workbuddy-workspace';
 import { clearTeacherInDraftReceipts, loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
 
 type WorkBuddyWorkspaceProviderProps = Readonly<{
@@ -56,6 +56,7 @@ type WorkBuddyWorkspaceProviderProps = Readonly<{
   packageWritebackAdapter: PackageWritebackAdapter;
   packageWritebackScenarioController: PackageWritebackScenarioController;
   teacherInAdapter: TeacherInAdapter;
+  personalContent?: WorkBuddyPersonalContent | null;
   quizPaper: QuizPaperArtifact;
   quizActivityDraftAdapter: QuizActivityDraftAdapter;
   quizActivityDraftScenarioController: QuizActivityDraftScenarioController;
@@ -79,7 +80,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
     workspaceNamespace = 'ideal-full',
     initialRuns, initialContextItems, recommendedContextItemIds, coursewareDefinition, coursewareOutput, replannedCoursewareOutput,
     capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture, clock,
-    writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, teacherInAdapter,
+    writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, teacherInAdapter, personalContent = null,
     quizPaper, quizActivityDraftAdapter, quizActivityDraftScenarioController, children,
   } = props;
   const restoredSession = useMemo(() => loadWorkBuddyWorkspaceSession(workspaceNamespace), [workspaceNamespace]);
@@ -321,6 +322,7 @@ export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProp
         return receipt;
       },
     }),
+    personalContent,
     courseware: Object.freeze({
       coursewareView,
       ...coursewareController.commands,

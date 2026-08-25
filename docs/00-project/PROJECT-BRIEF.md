@@ -1,8 +1,8 @@
 ---
 title: ClassIn 教师 WorkBuddy 项目简报
 status: LOCKED
-version: v0.1
-date: 2026-08-16
+version: v0.2
+date: 2026-08-25
 ---
 
 # ClassIn 教师 WorkBuddy 项目简报
@@ -37,3 +37,4 @@ date: 2026-08-16
 
 以终为始确定全局低分辨率蓝图，以代表性场景提高局部分辨率；每个功能必须能映射到 Module、Interface、Domain Knowledge、业务 API、状态和评价事件。
 
+独立教师 WorkBuddy 与 ClassIn/TeacherIn 采用“产品运行隔离、内容格式兼容”的双层关系：账号、路由、Workspace、权限和业务数据互不共享；所有内容资源按同一 TeacherIn 内容契约生产，使独立产品产物在未来获得授权连接后无需重新制作或转换格式即可进入内部内容生产、编辑、授权与分发生态。完整关系见 [TeacherIn 内容兼容与独立产品边界](../06-architecture/TEACHERIN-CONTENT-COMPATIBILITY.md)。

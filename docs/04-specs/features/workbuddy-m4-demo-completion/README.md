@@ -1,7 +1,7 @@
 ---
 title: WorkBuddy M4.2–M4.5 Demo 完善路线
-status: M4_4_IN_PROGRESS
-version: v0.6
+status: M4_4_COMPLETE_USER_ACCEPTED
+version: v0.8
 date: 2026-08-25
 source_decision: D-077
 ---
@@ -62,7 +62,7 @@ M5–M10 状态为 `PARKED`，不是取消。已有 M5 PRD、Feature Spec 和 Ti
 
 当前锁定的 P0 Case 为 `WB-01 / WB-02 / WB-06 / PA-01 / DA-01`。其中 `WB-06` 使用格式中立的讲题 Artifact；教师先审核可编辑的最终发送话术，并可通过其中的文字链接预览讲解，批准后发送到当前班级群或当前学生私聊。具体 HTML/H5 只属于当前 Presentation Adapter 内部事实。`PA-01 / DA-01` 共用辅导能力但保留公开/私密 Channel Policy，不直接给出最终答案。
 
-截至 2026-08-25，M4.2-01～16 的 PRD、Spec、Tickets、Implementation、自检 Review、自动化验证与用户页面验收均已完成。扩展交付包括消息正文/编辑体验、WorkBuddy Shell 统一体验，以及“生成测验并创建教学活动草稿”的完整纵向闭环。M4.2 与 M4.3 均为 `COMPLETE_USER_ACCEPTED`；M4.4 已获用户授权进入完整实施流程。
+截至 2026-08-25，M4.2-01～16 的 PRD、Spec、Tickets、Implementation、自检 Review、自动化验证与用户页面验收均已完成。扩展交付包括消息正文/编辑体验、WorkBuddy Shell 统一体验，以及“生成测验并创建教学活动草稿”的完整纵向闭环。M4.2、M4.3 与 M4.4 均为 `COMPLETE_USER_ACCEPTED`；M4.4 封版前又完成账号级数据隔离、独立内容发布闭环与 TeacherIn 权威格式校验，M4.5 已具备进入条件。
 
 ## 4. M4.3 — ClassIn 内嵌 MVP 入口与角色引导
 
@@ -94,19 +94,23 @@ M5–M10 状态为 `PARKED`，不是取消。已有 M5 PRD、Feature Spec 和 Ti
 
 ### 交付
 
-- To-Teacher 与 To-C 的用户、购买者、核心 Job 和价值主张；
-- 外部 Landing、角色选择、轻量进入、首个 AI 任务、可带走结果与 ClassIn 转化路径；
+- 教师个人用户、个人购买者、核心 Job 和价值主张；
+- 外部 Landing、教师注册登录、首个 AI 任务、可带走结果与 ClassIn 转化路径；
 - 无 ClassIn Context 与连接 ClassIn 后能力增量的清晰对比；
 - 模拟额度、积分、会员和升级状态，用于商业体验验证；
-- 独立 WorkBuddy/AI Tutor 的高保真 Demo Surface。
+- 从终局能力完整复制后独立装配的教师 WorkBuddy 高保真 Demo Surface。
+- 内容资源从生产起采用与 TeacherIn 完全一致的内容契约；产品运行和数据保持隔离，未来授权连接后无需格式转换即可进入内部内容生态。
 
 ### Review Gate
 
 - 未使用 ClassIn 的目标用户可以独立完成首次价值闭环；
 - 外部能力是内部已验证能力的受控子集或明确扩展；
+- Standalone 内容包通过 TeacherIn 格式与语义契约，且不以页面跳转、共享数据库或默认同步冒充生态兼容；
 - 不接真实支付、真实 Token 计费、生产账号权益、真实模型或生产 API。
 
 M4.4 首期 To-C 已锁定为教师个人账号，不建设学生、家长或机构管理员产品面。未合作机构中的老师也以个人教师身份体验；机构转化通过 ClassIn 引流入口承接。
+
+内容生态关系见 [TeacherIn 内容兼容与独立产品边界](../../../06-architecture/TEACHERIN-CONTENT-COMPATIBILITY.md)。
 
 ## 6. M4.5 — 全局 IA、UI、交互与 Demo Release Gate
 

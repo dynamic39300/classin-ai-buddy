@@ -32,6 +32,8 @@ import {
 import styles from "./FileLibrary.module.css";
 
 type Props = Readonly<{
+  productBoundary: 'classin-integrated' | 'standalone-consumer';
+  initialAssets?: readonly FileAsset[];
   onUseAsContext: (asset: FileAsset) => void;
   onOpenRun: (runId: string) => void;
   draftReceipts: Readonly<Record<string, TeacherInDraftReceipt>>;
@@ -91,11 +93,12 @@ function AssetIcon({
 }
 
 export function FileLibrary({
-  onUseAsContext, onOpenRun, draftReceipts, onCreateTeacherInDraft, onOpenTeacherIn, onLocateInSpace,
+  productBoundary, initialAssets, onUseAsContext, onOpenRun, draftReceipts, onCreateTeacherInDraft, onOpenTeacherIn, onLocateInSpace,
 }: Props) {
+  const standalone = productBoundary === 'standalone-consumer';
   const generatedLibrary = useOptionalWorkBuddyArtifactLibrary();
   const [assets, setAssets] = useState<FileAsset[]>(() =>
-    FILE_ASSET_FIXTURES.map((asset) => ({ ...asset })),
+    (initialAssets ?? FILE_ASSET_FIXTURES).map((asset) => ({ ...asset, project: { ...asset.project } })),
   );
   const libraryAssets = useMemo(() => {
     const generated = (generatedLibrary?.artifacts ?? []).map((artifact): FileAsset => ({
@@ -131,7 +134,7 @@ export function FileLibrary({
   const selectedTypeLabel =
     TYPE_FILTER_OPTIONS.find((option) => option.value === kind)?.label ??
     "全部类型";
-  const selectedReceipt = selected ? draftReceipts[selected.id] : undefined;
+  const selectedReceipt = !standalone && selected ? draftReceipts[selected.id] : undefined;
 
   useEffect(() => {
     if (!typeMenuOpen) return;
@@ -196,6 +199,7 @@ export function FileLibrary({
   };
   const createTeacherInDraft = (asset: FileAsset, event?: MouseEvent) => {
     event?.stopPropagation();
+    if (standalone) return;
     const receipt = onCreateTeacherInDraft(asset);
     setFeedback(receipt.status === 'success'
       ? '已在 TeacherIn 创建草稿。你可以前往 TeacherIn 继续编辑作品信息、设置授权并发布。'
@@ -389,7 +393,7 @@ export function FileLibrary({
                     </time>
                     <span className={styles.fileSize}>{asset.size}</span>
                     <div className={styles.rowActions}>
-                      {draftReceipts[asset.id]?.status === 'success' ? (
+                      {!standalone && draftReceipts[asset.id]?.status === 'success' ? (
                         <button
                           type="button"
                           aria-label={`${asset.name}前往 TeacherIn`}
@@ -402,7 +406,7 @@ export function FileLibrary({
                         >
                           <BookOpen aria-hidden="true" size={16} />
                         </button>
-                      ) : (
+                      ) : !standalone ? (
                         <button
                           type="button"
                           aria-label={`${asset.name}创建草稿到 TeacherIn`}
@@ -411,7 +415,7 @@ export function FileLibrary({
                         >
                           <BookOpen aria-hidden="true" size={16} />
                         </button>
-                      )}
+                      ) : null}
                       <button
                         type="button"
                         aria-label={`${asset.name}收藏`}
@@ -525,24 +529,33 @@ export function FileLibrary({
               <h3>复用记录</h3>
               <p>
                 已作为上下文引用 {selected.reuseCount} 次
-                {selected.sharedTargets.length
+                {!standalone && selected.sharedTargets.length
                   ? `，最近分享到${selected.sharedTargets.join("、")}`
-                  : "，尚未分享"}
+                  : standalone && selected.canShare
+                    ? '，可生成个人分享链接'
+                    : "，尚未分享"}
                 。
               </p>
             </section>
-            <section className={styles.detailSection}>
-              <h3>TeacherIn 作品</h3>
-              {selectedReceipt?.status === 'success' ? (
-                <p>已创建草稿 · {selectedReceipt.draft.createdAt} · 来源版本 {selectedReceipt.draft.sourceArtifactRef.version}</p>
-              ) : selectedReceipt ? (
-                <p>{selectedReceipt.result}</p>
-              ) : (
-                <p>尚未创建 TeacherIn 草稿。</p>
-              )}
-            </section>
+            {standalone ? (
+              <section className={styles.detailSection}>
+                <h3>个人文件库</h3>
+                <p>[模拟] 文件保存在当前独立账号中，可下载、复用或生成个人分享链接。</p>
+              </section>
+            ) : (
+              <section className={styles.detailSection}>
+                <h3>TeacherIn 作品</h3>
+                {selectedReceipt?.status === 'success' ? (
+                  <p>已创建草稿 · {selectedReceipt.draft.createdAt} · 来源版本 {selectedReceipt.draft.sourceArtifactRef.version}</p>
+                ) : selectedReceipt ? (
+                  <p>{selectedReceipt.result}</p>
+                ) : (
+                  <p>尚未创建 TeacherIn 草稿。</p>
+                )}
+              </section>
+            )}
             <div className={styles.detailActions}>
-              {selectedReceipt?.status === 'success' ? (
+              {!standalone && selectedReceipt?.status === 'success' ? (
                 <button
                   className={styles.teacherInButton}
                   type="button"
@@ -554,12 +567,12 @@ export function FileLibrary({
                   <BookOpen aria-hidden="true" size={16} />
                   前往 TeacherIn
                 </button>
-              ) : (
+              ) : !standalone ? (
                 <button className={styles.teacherInButton} type="button" onClick={() => createTeacherInDraft(selected)}>
                   <BookOpen aria-hidden="true" size={16} />
                   创建草稿到 TeacherIn
                 </button>
-              )}
+              ) : null}
               <button
                 className={styles.contextButton}
                 type="button"
@@ -572,10 +585,12 @@ export function FileLibrary({
               <button
                 type="button"
                 disabled={!selected.canShare}
-                onClick={() => openShare(selected)}
+                onClick={() => standalone
+                  ? setFeedback(`[模拟] ${selected.name} 的个人分享链接已复制。`)
+                  : openShare(selected)}
               >
                 <Share2 aria-hidden="true" size={16} />
-                分享
+                {standalone ? '复制分享链接' : '分享'}
               </button>
               <button
                 type="button"
@@ -586,10 +601,12 @@ export function FileLibrary({
                 <Download aria-hidden="true" size={16} />
                 下载
               </button>
-              <button type="button" onClick={() => onLocateInSpace(selected)}>
-                <ExternalLink aria-hidden="true" size={16} />
-                在空间中定位
-              </button>
+              {!standalone ? (
+                <button type="button" onClick={() => onLocateInSpace(selected)}>
+                  <ExternalLink aria-hidden="true" size={16} />
+                  在空间中定位
+                </button>
+              ) : null}
               {selected.project.runId ? (
                 <button type="button" onClick={() => openRun(selected)}>
                   <ExternalLink aria-hidden="true" size={16} />
@@ -601,7 +618,7 @@ export function FileLibrary({
         </div>
       ) : null}
 
-      {sharing ? (
+      {!standalone && sharing ? (
         <div className={styles.dialogBackdrop}>
           <section
             className={styles.shareDialog}

@@ -27,6 +27,7 @@ export function createClassMvpWorkBuddyExperience(input: Readonly<{
   const search = safeSearch(input.courseId);
   return Object.freeze({
     id: 'classin-mvp',
+    productBoundary: 'classin-integrated',
     basePath: `/teacher/classes/${encodeURIComponent(input.classId)}/workbuddy`,
     sessionNamespace: 'classin-mvp',
     visibleTaskTypes: CLASSIN_MVP_TASK_TYPES,

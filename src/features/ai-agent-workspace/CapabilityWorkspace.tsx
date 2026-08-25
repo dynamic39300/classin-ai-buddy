@@ -54,6 +54,9 @@ import { getFileAssetReference } from './file-library';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import { useWorkBuddyExperience } from './workbuddy-experience-context';
 import { workBuddyNewTaskPath, workBuddyRunPath } from './workbuddy-experience-profile';
+import { standaloneContentItems } from './standalone-content-library';
+import { standaloneCapabilityItems } from './standalone-capability-library';
+import { standaloneFileAssets } from './standalone-file-library';
 import styles from "./CapabilityWorkspace.module.css";
 
 type Props = Readonly<{ surface: CapabilitySurfaceId }>;
@@ -84,12 +87,17 @@ const COVERS = ["geometry", "wave", "inquiry", "momentum"];
 export function CapabilityWorkspace({ surface }: Props) {
   const workspace = useWorkBuddyWorkspace();
   const profile = useWorkBuddyExperience();
+  const standalone = profile.productBoundary === 'standalone-consumer';
   const config = getCapabilitySurface(surface);
   const [tab, setTab] = useState(config.tabs[0]?.id ?? "general");
   const [query, setQuery] = useState("");
   const [contentType, setContentType] = useState("all");
   const [items, setItems] = useState<CapabilityItem[]>(() => [
-    ...surfaceItems(surface),
+    ...(standalone
+      ? surface === 'content'
+        ? standaloneContentItems(workspace.personalContent?.list() ?? [], workspace.personalContent?.accountId)
+        : standaloneCapabilityItems(surface)
+      : surfaceItems(surface)),
   ]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -177,7 +185,7 @@ export function CapabilityWorkspace({ surface }: Props) {
     setContentType,
   };
 
-  if (surface === "settings") return <SettingsSurface />;
+  if (surface === "settings") return standalone ? <StandaloneSettingsSurface /> : <SettingsSurface />;
   return (
     <main
       className={styles.page}
@@ -228,18 +236,22 @@ export function CapabilityWorkspace({ surface }: Props) {
         />
       ) : null}
       {surface === "content" ? (
-        <ContentMarket {...common} onPublish={() => setPublishOpen(true)} />
+        <ContentMarket {...common} standalone={standalone} onPublish={() => setPublishOpen(true)} />
       ) : null}
       {surface === "files" ? (
         <FileLibrary
+          productBoundary={profile.productBoundary}
+          initialAssets={standalone ? standaloneFileAssets() : undefined}
           draftReceipts={workspace.teacherIn.draftReceipts}
           onUseAsContext={(asset) => {
             const reference = getFileAssetReference(asset);
             workspace.context.addReference({
-              id: `space:${asset.id}`, section: 'resources_input', kind: 'space_file', label: asset.name,
+              id: `${standalone ? 'personal-file' : 'space'}:${asset.id}`, section: 'resources_input', kind: standalone ? 'personal_file' : 'space_file', label: asset.name,
               source: 'workbuddy-artifact', sourceVersion: reference.artifactRef.version, permission: 'read',
               sensitivity: 'personal', selection: 'suggested',
-              reference: { system: 'classin-space', objectId: reference.spaceFileRef.id, version: reference.spaceFileRef.version },
+              reference: standalone
+                ? { system: 'workbuddy-personal-files', objectId: asset.id, version: asset.version }
+                : { system: 'classin-space', objectId: reference.spaceFileRef.id, version: reference.spaceFileRef.version },
             });
             navigate(workBuddyNewTaskPath(profile), {
               state: {
@@ -266,7 +278,7 @@ export function CapabilityWorkspace({ surface }: Props) {
         />
       ) : null}
       {surface === "schedules" ? (
-        <ScheduleWorkspace />
+        <ScheduleWorkspace standalone={standalone} />
       ) : null}
       {feedback ? (
         <p className={styles.toast} role="status">
@@ -346,10 +358,38 @@ export function CapabilityWorkspace({ surface }: Props) {
       ) : null}
       {publishOpen ? (
         <PublishWorkspace
+          standalone={standalone}
           close={() => setPublishOpen(false)}
-          finish={() => {
+          finish={(draft) => {
+            if (standalone) {
+              const personalContent = workspace.personalContent;
+              if (!personalContent) {
+                setFeedback('当前个人内容库不可用，作品未保存。');
+                return;
+              }
+              const sequence = personalContent.list().length + 1;
+              const result = personalContent.publish({
+                idempotencyKey: `personal-content-upload-${personalContent.accountId}-${sequence}`,
+                contentType: 'courseware',
+                title: draft.title,
+                description: draft.description,
+                stage: '高中',
+                subject: '物理',
+                tags: ['课件', '机械波'],
+                sourceRunRef: `manual-content-upload-${personalContent.accountId}-${sequence}`,
+                sourceArtifactRef: { id: `personal-upload-${personalContent.accountId}-${sequence}`, version: 'v1' },
+                assetFormat: 'pptx',
+                visibility: draft.visibility,
+                decidedAt: `2026-08-25T10:${String(40 + sequence).padStart(2, '0')}:00+08:00`,
+              });
+              if (result.status !== 'success') {
+                setFeedback('内容证据不一致，作品未保存，请重新打开发布流程。');
+                return;
+              }
+              setItems([...standaloneContentItems(personalContent.list(), personalContent.accountId)]);
+            }
             setPublishOpen(false);
-            setFeedback("作品已提交审核。");
+            setFeedback(standalone ? '作品已保存到个人内容库。' : '作品已提交审核。');
           }}
         />
       ) : null}
@@ -859,7 +899,8 @@ function ContentMarket({
   contentType,
   setContentType,
   onPublish,
-}: Common & Readonly<{ onPublish: () => void }>) {
+  standalone,
+}: Common & Readonly<{ onPublish: () => void; standalone: boolean }>) {
   return (
     <section className={styles.contentScene}>
       <select
@@ -876,7 +917,8 @@ function ContentMarket({
       <header className={styles.contentTop}>
         <div>
           <h1 id="content-workspace-title">内容资源</h1>
-          <p>发现灵感，管理作品</p>
+          <p>{standalone ? '发现灵感，管理你的个人作品' : '发现灵感，管理作品'}</p>
+          {standalone ? <small>[模拟] 独立内容库</small> : null}
         </div>
         <Tabs config={config} tab={tab} setTab={setTab} />
         <button
@@ -888,7 +930,7 @@ function ContentMarket({
           发布作品
         </button>
       </header>
-      {tab === "my-works" ? <MyWorksSummary /> : null}
+      {tab === "my-works" ? <MyWorksSummary standalone={standalone} /> : null}
       {tab !== "my-works" ? (
         <section className={styles.contentHero}>
           <div>
@@ -990,7 +1032,7 @@ function FilterRow({
   );
 }
 
-function MyWorksSummary() {
+function MyWorksSummary({ standalone }: Readonly<{ standalone: boolean }>) {
   return (
     <section className={styles.worksSummary} aria-label="我的作品概览">
       <header>
@@ -1017,7 +1059,7 @@ function MyWorksSummary() {
         <article>
           <span>被复用</span>
           <strong>86</strong>
-          <small>来自 7 个教研组</small>
+          <small>{standalone ? '来自公开教师社区' : '来自 7 个教研组'}</small>
         </article>
         <article>
           <span>被收藏</span>
@@ -1105,10 +1147,23 @@ const DEFAULT_SCHEDULE: ScheduledTask = {
   enabled: true,
 };
 
-function ScheduleWorkspace() {
+const STANDALONE_DEFAULT_SCHEDULE: ScheduledTask = {
+  id: 'standalone-scheduled-task-1',
+  title: '每周一整理个人教学计划',
+  prompt: '请根据我保存的任务目标和个人资料，生成本周教学计划草稿，等待我复查。',
+  repeat: '每天',
+  date: '',
+  time: '09:00',
+  directory: '个人文件库 / 教学计划',
+  expiresAt: '',
+  notifications: [],
+  enabled: true,
+};
+
+function ScheduleWorkspace({ standalone }: Readonly<{ standalone: boolean }>) {
   const [view, setView] = useState<"tasks" | "history">("tasks");
   const [tasks, setTasks] = useState<readonly ScheduledTask[]>([
-    DEFAULT_SCHEDULE,
+    standalone ? STANDALONE_DEFAULT_SCHEDULE : DEFAULT_SCHEDULE,
   ]);
   const [history, setHistory] = useState<readonly ScheduleHistory[]>([]);
   const [dialog, setDialog] = useState<{
@@ -1311,6 +1366,7 @@ function ScheduleWorkspace() {
 
       {dialog ? (
         <ScheduleDialog
+          standalone={standalone}
           mode={dialog.mode}
           draft={dialog.draft}
           setDraft={(draft) => setDialog({ ...dialog, draft })}
@@ -1617,12 +1673,14 @@ function ScheduleDialog({
   setDraft,
   close,
   save,
+  standalone,
 }: Readonly<{
   mode: "create" | "edit";
   draft: ScheduleDraft;
   setDraft: (draft: ScheduleDraft) => void;
   close: () => void;
   save: () => void;
+  standalone: boolean;
 }>) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const notificationLabel = draft.notifications.length
@@ -1727,7 +1785,7 @@ function ScheduleDialog({
               <input
                 id="schedule-directory"
                 aria-label="工作目录"
-                placeholder="ClassIn Space / 我的云盘"
+                placeholder={standalone ? '个人文件库 / 我的资料' : 'ClassIn Space / 我的云盘'}
                 value={draft.directory}
                 onChange={(event) =>
                   setDraft({ ...draft, directory: event.target.value })
@@ -1806,8 +1864,16 @@ function ScheduleDialog({
 function PublishWorkspace({
   close,
   finish,
-}: Readonly<{ close: () => void; finish: () => void }>) {
+  standalone,
+}: Readonly<{
+  close: () => void;
+  finish: (draft: Readonly<{ title: string; description: string; visibility: 'private' | 'teacher-community' }>) => void;
+  standalone: boolean;
+}>) {
   const [step, setStep] = useState(0);
+  const [title, setTitle] = useState('机械波概念演示');
+  const [description, setDescription] = useState('围绕波速、频率和波长关系组织的智能课件。');
+  const [visibility, setVisibility] = useState<'private' | 'teacher-community'>('private');
   const steps = ["上传文件", "完善信息", "设置范围", "提交审核"];
   return (
     <div className={styles.dialogBackdrop}>
@@ -1871,10 +1937,10 @@ function PublishWorkspace({
                 <h3>完善作品信息</h3>
                 <p>清晰的信息可以帮助其他教师准确理解和复用作品。</p>
                 <Field label="作品标题">
-                  <input defaultValue="机械波概念演示" />
+                  <input value={title} onChange={(event) => setTitle(event.target.value)} />
                 </Field>
                 <Field label="作品简介">
-                  <textarea defaultValue="围绕波速、频率和波长关系组织的智能课件。" />
+                  <textarea value={description} onChange={(event) => setDescription(event.target.value)} />
                 </Field>
                 <div className={styles.formColumns}>
                   <Field label="品类">
@@ -1900,15 +1966,15 @@ function PublishWorkspace({
                 <h3>设置可见与复用范围</h3>
                 <p>作品所有权不变，其他教师只能在授权范围内引用或改编。</p>
                 <div className={styles.optionCards}>
-                  <button data-selected type="button">
+                  <button data-selected={visibility === 'private' || !standalone} type="button" onClick={() => standalone && setVisibility('private')}>
                     <span />
-                    <strong>机构内公开</strong>
-                    <small>ClassIn 教研中心内可发现</small>
+                    <strong>{standalone ? '仅自己可见' : '机构内公开'}</strong>
+                    <small>{standalone ? '保存到个人内容库，不对外公开' : 'ClassIn 教研中心内可发现'}</small>
                   </button>
-                  <button type="button">
+                  <button data-selected={standalone && visibility === 'teacher-community'} type="button" onClick={() => standalone && setVisibility('teacher-community')}>
                     <span />
-                    <strong>仅指定教研组</strong>
-                    <small>选择可见的课程或教研组</small>
+                    <strong>{standalone ? '公开给教师社区' : '仅指定教研组'}</strong>
+                    <small>{standalone ? '公开后其他教师可发现并按授权复用' : '选择可见的课程或教研组'}</small>
                   </button>
                 </div>
                 <Field label="复用权限">
@@ -1930,7 +1996,7 @@ function PublishWorkspace({
                   <dt>分类</dt>
                   <dd>高中物理 · 课件</dd>
                   <dt>可见范围</dt>
-                  <dd>ClassIn 教研中心</dd>
+                  <dd>{standalone ? visibility === 'private' ? '个人内容库' : '教师社区' : 'ClassIn 教研中心'}</dd>
                 </dl>
               </div>
             ) : null}
@@ -1948,10 +2014,10 @@ function PublishWorkspace({
             className={styles.primaryButton}
             type="button"
             onClick={() =>
-              step === steps.length - 1 ? finish() : setStep(step + 1)
+              step === steps.length - 1 ? finish({ title, description, visibility }) : setStep(step + 1)
             }
           >
-            {step === steps.length - 1 ? "提交审核" : "下一步"}
+            {step === steps.length - 1 ? (standalone ? '保存到个人内容库' : '提交审核') : '下一步'}
           </button>
         </footer>
       </section>
@@ -2341,6 +2407,40 @@ function Inspector({
         </footer>
       </section>
     </div>
+  );
+}
+
+function StandaloneSettingsSurface() {
+  const [section, setSection] = useState('general');
+  const [feedback, setFeedback] = useState('');
+  const labels: Readonly<Record<string, Readonly<{ title: string; description: string }>>> = Object.freeze({
+    general: { title: '通用', description: '管理个人工作台的语言、时区和任务默认行为。' },
+    model: { title: 'AI 能力', description: '当前使用 WorkBuddy 托管的模拟 AI 能力，不需要配置个人密钥。' },
+    data: { title: '个人数据', description: '任务、内容和文件只保存在当前独立教师账号的数据空间。' },
+    notifications: { title: '通知', description: '选择是否接收个人任务完成与点数变化提醒。' },
+    sandbox: { title: '受控运行', description: '工具只访问当前任务明确选择的个人文件和公开网址。' },
+    about: { title: '关于', description: '独立教师 WorkBuddy 当前为固定、可重置的模拟体验。' },
+    feedback: { title: '反馈', description: '记录你对独立产品体验的建议。' },
+  });
+  const current = labels[section] ?? labels.general!;
+  return (
+    <main className={styles.settingsPage} aria-labelledby="settings-workspace-title">
+      <h1 id="settings-workspace-title" className={styles.srOnly}>设置</h1>
+      <nav className={styles.settingsNav} aria-label="WorkBuddy 个人设置分组">
+        {SETTINGS.map(([id, label, Icon]) => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}><Icon size={18} />{label}</button>)}
+      </nav>
+      <section className={styles.settingsWorkspace}>
+        <h2>{current.title}</h2>
+        <div className={styles.connectionState}>
+          <CircleCheck size={28} />
+          <strong>个人配置已启用</strong>
+          <span>{current.description}</span>
+          <small>[模拟] 不读取任何机构、班级或业务配置</small>
+          <button className={styles.ghostButton} type="button" onClick={() => setFeedback(`${current.title}设置已保存到当前个人账号。`)}>保存设置</button>
+        </div>
+      </section>
+      {feedback ? <p className={styles.toast} role="status">{feedback}</p> : null}
+    </main>
   );
 }
 

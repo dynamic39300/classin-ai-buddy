@@ -72,7 +72,7 @@ function isContextItem(value: unknown): boolean {
     && ['locked', 'suggested'].includes(String(value.selection))
     && typeof value.included === 'boolean'
     && (value.reference === undefined || (isRecord(value.reference)
-      && ['classin-space', 'teacherin'].includes(String(value.reference.system))
+      && ['classin-space', 'teacherin', 'workbuddy-personal-files'].includes(String(value.reference.system))
       && hasStrings(value.reference, ['objectId', 'version'])));
 }
 
@@ -268,6 +268,7 @@ function isQuizRun(value: unknown): value is QuizActivityCreationRun {
     generating: { commands: ['complete-generation'], recovery: 'wait-for-generation' },
     awaiting_paper_review: { commands: ['approve-paper'], recovery: 'review-and-approve-paper' },
     awaiting_activity_parameters: { commands: ['update-activity-settings', 'propose-draft'], recovery: 'complete-activity-parameters' },
+    artifact_saved: { commands: ['open-personal-content'], recovery: null },
     awaiting_approval: { commands: ['approve-draft', 'update-activity-settings'], recovery: 'approve-or-revise-draft' },
     creating_draft: { commands: ['execute-draft'], recovery: 'execute-approved-draft' },
     draft_created: { commands: ['open-class-detail'], recovery: null },
@@ -282,6 +283,7 @@ function isQuizRun(value: unknown): value is QuizActivityCreationRun {
   if (value.stage === 'awaiting_paper_review') return value.artifact !== null && value.paperReview === null && emptyEvidence;
   const reviewed = isQuizPaperReview(value.paperReview, value.artifact);
   if (value.stage === 'awaiting_activity_parameters') return value.artifact !== null && reviewed && emptyEvidence;
+  if (value.stage === 'artifact_saved') return value.artifact !== null && reviewed && emptyEvidence;
   if (value.stage === 'awaiting_approval') return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'proposed' && value.approval === null && value.receipt === null && value.evaluation === null;
   if (value.stage === 'creating_draft') return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'approved' && isRecord(value.approval) && value.receipt === null && value.evaluation === null;
   if (value.stage === 'draft_created') return value.artifact !== null && reviewed && isRecord(value.action) && value.action.status === 'approved' && isRecord(value.approval) && isRecord(value.receipt) && value.receipt.status === 'success' && isRecord(value.evaluation);
@@ -309,7 +311,7 @@ function isWorkspaceSession(value: unknown): value is WorkBuddyWorkspaceSession 
     && Array.isArray(value.packageReceiptHistory) && value.packageReceiptHistory.every(isPackageReceipt)
     && Array.isArray(value.packageActionHistory) && value.packageActionHistory.every(isPackageAction)
     && Array.isArray(value.packageApprovalHistory) && value.packageApprovalHistory.every(isPackageApproval)
-    && ['success', 'partial_success'].includes(String(value.packageWritebackScenario))
+    && ['success', 'partial_success', 'permission_denied', 'version_conflict', 'recoverable_failure', 'timeout'].includes(String(value.packageWritebackScenario))
     && ['navigator', 'approval', 'receipt', 'core_context', 'none'].includes(String(value.activePackagePanel))
     && (value.activePackageArtifactId === null || typeof value.activePackageArtifactId === 'string')
     && isNullable(value.quizRun, isQuizRun)

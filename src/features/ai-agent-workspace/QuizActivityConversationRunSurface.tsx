@@ -21,6 +21,7 @@ type LocalSupplement = Readonly<{ id: number; text: string }>;
 
 export function QuizActivityConversationRunSurface() {
   const profile = useWorkBuddyExperience();
+  const standalone = profile.productBoundary === 'standalone-consumer';
   const workspace = useWorkBuddyWorkspace();
   const quiz = workspace.quizActivity;
   const run = quiz.view?.run;
@@ -35,6 +36,7 @@ export function QuizActivityConversationRunSurface() {
   const [paperTypes, setPaperTypes] = useState<readonly QuizQuestionType[]>(() => run?.brief.questionTypes ?? AVAILABLE_QUESTION_TYPES);
   const [paperTotalScore, setPaperTotalScore] = useState(() => run?.brief.totalScore ?? 100);
   const [briefError, setBriefError] = useState<string | null>(null);
+  const [personalSaveError, setPersonalSaveError] = useState<string | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(() => run?.stage === 'awaiting_paper_review');
   const [inspectorMode, setInspectorMode] = useState<'context' | 'output'>(() => run?.stage === 'awaiting_paper_review' ? 'output' : 'context');
   const [composerDraft, setComposerDraft] = useState('');
@@ -57,10 +59,14 @@ export function QuizActivityConversationRunSurface() {
 
   if (!run) return null;
   const contextCount = workspace.context.contextView.includedCount;
+  const personalQuizReceipt = run.artifact
+    ? workspace.personalContent?.receiptForArtifact(run.artifact.id) ?? null
+    : null;
   const activeRunStage = run.stage === 'plan_ready' || run.stage === 'generating' || run.stage === 'creating_draft';
-  const runStatusLabel = run.stage === 'draft_created' ? '草稿已创建'
+  const runStatusLabel = standalone && personalQuizReceipt ? '已保存到个人内容库'
+    : run.stage === 'draft_created' ? '草稿已创建'
     : run.stage === 'awaiting_approval' ? '待你确认'
-      : run.stage === 'awaiting_activity_parameters' ? '等待活动设置'
+      : run.stage === 'awaiting_activity_parameters' ? (standalone ? '等待保存' : '等待活动设置')
         : run.stage === 'awaiting_paper_review' ? '等待试卷审阅'
         : run.stage === 'plan_ready' || run.stage === 'generating' ? '生成中'
           : run.stage === 'creating_draft' ? '写入中' : '等待确认';
@@ -96,12 +102,34 @@ export function QuizActivityConversationRunSurface() {
     setSupplements((current) => Object.freeze([...current, Object.freeze({ id: current.length + 1, text })]));
     setComposerDraft('');
   };
+  const savePersonalQuiz = () => {
+    if (!run.artifact || !workspace.personalContent) {
+      setPersonalSaveError('当前个人内容库不可用，测验试卷未保存。');
+      return;
+    }
+    const result = workspace.personalContent.publish({
+      idempotencyKey: `save-${workspace.personalContent.accountId}-${run.id}-${run.artifact.id}-${run.artifact.version}`,
+      contentType: 'quiz',
+      title: run.artifact.title,
+      description: run.artifact.description,
+      stage: '高中',
+      subject: '物理',
+      tags: ['测验', '动量守恒'],
+      sourceRunRef: run.id,
+      sourceArtifactRef: { id: run.artifact.id, version: run.artifact.version },
+      assetFormat: 'teacherin-quiz-json',
+      visibility: 'private',
+      decidedAt: '2026-08-25T10:55:00+08:00',
+    });
+    setPersonalSaveError(result.status === 'success' ? null : '内容证据不一致，测验试卷未保存，请重新检查后再试。');
+    if (result.status === 'success') quiz.markArtifactSaved();
+  };
 
   return (
     <section className={conversationStyles.page} data-inspector-open={inspectorOpen} aria-labelledby="quiz-run-title">
       <main className={conversationStyles.main}>
         <header className={conversationStyles.header}>
-          <div><h1 id="quiz-run-title">{run.artifact?.title ?? '生成测验并创建活动草稿'}</h1><span className={conversationStyles.runStatus} data-status={activeRunStage ? 'running' : 'idle'} role="status">{activeRunStage ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <i aria-hidden="true" />}{runStatusLabel}</span><small className={conversationStyles.truthMarker} aria-label="当前为固定体验数据">[模拟] 体验环境</small></div>
+          <div><h1 id="quiz-run-title">{run.artifact?.title ?? (standalone ? '生成测验试卷' : '生成测验并创建活动草稿')}</h1><span className={conversationStyles.runStatus} data-status={activeRunStage ? 'running' : 'idle'} role="status">{activeRunStage ? <LoaderCircle className={conversationStyles.spinner} aria-hidden="true" size={14} /> : <i aria-hidden="true" />}{runStatusLabel}</span><small className={conversationStyles.truthMarker} aria-label="当前为固定体验数据">[模拟] 体验环境</small></div>
           <div className={conversationStyles.headerActions}>
             <button type="button" aria-pressed={inspectorOpen && inspectorMode === 'context'} onClick={() => { setInspectorMode('context'); setInspectorOpen(true); }}>上下文 · {contextCount}</button>
             <button type="button" aria-pressed={inspectorOpen && inspectorMode === 'output'} disabled={!run.artifact} onClick={() => { setInspectorMode('output'); setInspectorOpen(true); }}>产出 · {run.artifact ? 1 : 0}</button>
@@ -110,7 +138,7 @@ export function QuizActivityConversationRunSurface() {
         </header>
 
         <div className={conversationStyles.timeline} role="feed" aria-label="测验活动任务时间线" ref={timelineRef}>
-          <TimelineEvent state="completed" icon={<Sparkles aria-hidden="true" size={16} />} title="已理解测验目标" summary={`${run.target.label} · 将基于当前单元生成试卷，并且只创建教师可见草稿。`} />
+          <TimelineEvent state="completed" icon={<Sparkles aria-hidden="true" size={16} />} title="已理解测验目标" summary={standalone ? '将依据你确认的教学范围和上传资料生成试卷；当前不会读取或写入 ClassIn 教学活动。' : `${run.target.label} · 将基于当前单元生成试卷，并且只创建教师可见草稿。`} />
 
           {run.stage === 'needs_parameters' ? (
             <article className={styles.card} data-state="requires_teacher_input" aria-label="确认试卷结构">
@@ -141,15 +169,32 @@ export function QuizActivityConversationRunSurface() {
 
           {run.stage === 'awaiting_paper_review' ? (
             <article className={styles.card} data-state="requires_teacher_input" aria-label="审阅并确认测验试卷">
-              <header><span className={styles.eventMark}><FileQuestion aria-hidden="true" size={16} /></span><div><strong>请先审阅并确认测验试卷</strong><p>活动设置依赖当前试卷内容。请检查题目、选项、答案和解析，确认后我再继续准备活动参数。</p></div></header>
+              <header><span className={styles.eventMark}><FileQuestion aria-hidden="true" size={16} /></span><div><strong>请先审阅并确认测验试卷</strong><p>{standalone ? '请检查题目、选项、答案和解析；确认后可保存到当前账号的个人内容库。' : '活动设置依赖当前试卷内容。请检查题目、选项、答案和解析，确认后我再继续准备活动参数。'}</p></div></header>
               <div className={styles.confirmationHeader}><span>需要你的确认</span><small>第 2 步，共 4 个教师确认点</small></div>
               <div className={styles.cardActions}>{inspectorOpen && inspectorMode === 'output' ? <span className={styles.reviewOpenStatus}><CheckCircle2 aria-hidden="true" size={15} />试卷已在右侧打开，请完成审阅</span> : <button className={styles.primary} type="button" onClick={() => { setInspectorMode('output'); setInspectorOpen(true); }}>打开试卷审阅</button>}</div>
             </article>
           ) : null}
 
-          {run.paperReview ? <TimelineEvent state="completed" icon={<CheckCircle2 aria-hidden="true" size={16} />} title="试卷内容已确认" summary={`${run.paperReview.artifactRef.version} · 已确认题目、答案与解析，可继续设置测验活动。`} /> : null}
+          {run.paperReview ? <TimelineEvent state="completed" icon={<CheckCircle2 aria-hidden="true" size={16} />} title="试卷内容已确认" summary={`${run.paperReview.artifactRef.version} · 已确认题目、答案与解析，${standalone ? '可保存到个人内容库。' : '可继续设置测验活动。'}`} /> : null}
 
-          {run.stage === 'awaiting_activity_parameters' ? (
+          {standalone && run.stage === 'awaiting_activity_parameters' && !personalQuizReceipt ? (
+            <article className={styles.card} data-state="requires_teacher_input" aria-label="保存测验试卷到个人内容库">
+              <header><ShieldCheck aria-hidden="true" size={19} /><div><strong>保存到个人内容库</strong><p>当前仅保存已确认的试卷内容，不创建班级教学活动，也不会写入 ClassIn。</p></div></header>
+              <div className={styles.confirmationHeader}><span>需要你的确认</span><small>独立产品内保存</small></div>
+              <p>连接 ClassIn 后，才可进一步选择班级、课程与单元，并把这份试卷创建为教师可见的测验活动草稿。</p>
+              {personalSaveError ? <p className={styles.formError} role="alert">{personalSaveError}</p> : null}
+              <div className={styles.cardActions}><button className={styles.primary} type="button" onClick={savePersonalQuiz}>确认保存试卷</button><Link className={styles.secondary} to="/workbuddy/app/classin">了解连接 ClassIn 后的能力</Link></div>
+            </article>
+          ) : null}
+
+          {standalone && personalQuizReceipt ? (
+            <article className={styles.receipt} aria-label="个人测验内容保存回执">
+              <CheckCircle2 aria-hidden="true" size={21} /><div><strong>测验试卷已保存到个人内容库</strong><p>已保留试卷、教师版答案与逐题解析，可继续查看或改编。</p><span>{personalQuizReceipt.truthLabel} · {personalQuizReceipt.objectVersion}</span></div>
+              <Link className={styles.primary} to="/workbuddy/app/content">查看内容资源</Link>
+            </article>
+          ) : null}
+
+          {!standalone && run.stage === 'awaiting_activity_parameters' ? (
             <article className={styles.card} aria-label="测验活动参数">
               <header><ClipboardCheck aria-hidden="true" size={19} /><div><strong>确认测验活动参数</strong><p>班级、课程和单元来自已确认 Context；其余字段可在创建草稿前调整。</p></div></header>
               <div className={styles.confirmationHeader}><span>需要你的确认</span><small>第 3 步，共 4 个教师确认点</small></div>
@@ -168,7 +213,7 @@ export function QuizActivityConversationRunSurface() {
             </article>
           ) : null}
 
-          {run.stage === 'awaiting_approval' && run.action ? (
+          {!standalone && run.stage === 'awaiting_approval' && run.action ? (
             <article className={styles.approval} aria-label="创建测验活动草稿确认">
               <header><ShieldCheck aria-hidden="true" size={20} /><div><strong>将创建草稿，不会发布</strong><p>{run.action.difference}</p></div></header>
               <div className={styles.confirmationHeader}><span>最终写回确认</span><small>第 4 步，共 4 个教师确认点</small></div>
@@ -184,9 +229,9 @@ export function QuizActivityConversationRunSurface() {
             </article>
           ) : null}
 
-          {run.stage === 'creating_draft' ? <TimelineEvent state="running" icon={<LoaderCircle className={styles.spinner} aria-hidden="true" size={16} />} title="正在创建测验活动草稿" summary="正在校验权限、目标版本和审批证据。" status /> : null}
+          {!standalone && run.stage === 'creating_draft' ? <TimelineEvent state="running" icon={<LoaderCircle className={styles.spinner} aria-hidden="true" size={16} />} title="正在创建测验活动草稿" summary="正在校验权限、目标版本和审批证据。" status /> : null}
 
-          {failedReceipt ? (
+          {!standalone && failedReceipt ? (
             <article className={styles.failure} role="alert" aria-label="测验活动草稿创建未完成">
               <div>
                 <strong>{run.stage === 'permission_denied' ? '当前目标无创建权限' : run.stage === 'version_conflict' ? '目标单元已发生变化' : run.stage === 'evidence_mismatch' ? '执行证据需要人工复查' : run.stage === 'timeout' ? '创建请求超时' : '草稿暂未创建'}</strong>
@@ -200,14 +245,14 @@ export function QuizActivityConversationRunSurface() {
             </article>
           ) : null}
 
-          {receipt ? (
+          {!standalone && receipt ? (
             <article className={styles.receipt} aria-label="测验活动草稿执行回执">
               <CheckCircle2 aria-hidden="true" size={21} /><div><strong>测验活动草稿已创建</strong><p>{receipt.result}</p><span>{receipt.object.label} · 草稿 · {run.artifact?.questions.length} 题 · {run.artifact?.totalScore} 分</span></div>
               <Link className={styles.primary} to={receipt.object.returnUrl}>前往班级课程详情审阅</Link>
             </article>
           ) : null}
 
-          {supplements.map((supplement) => <div className={styles.supplementPair} key={supplement.id}><TimelineEvent state="completed" icon={<UserRound aria-hidden="true" size={16} />} title="你补充了要求" summary={supplement.text} /><TimelineEvent state="completed" icon={<Sparkles aria-hidden="true" size={16} />} title="WorkBuddy 已收到" summary="我会把这条补充保留在当前任务对话中；结构和活动字段仍可在对应确认项中调整。" /></div>)}
+          {supplements.map((supplement) => <div className={styles.supplementPair} key={supplement.id}><TimelineEvent state="completed" icon={<UserRound aria-hidden="true" size={16} />} title="你补充了要求" summary={supplement.text} /><TimelineEvent state="completed" icon={<Sparkles aria-hidden="true" size={16} />} title="WorkBuddy 已收到" summary={`我会把这条补充保留在当前任务对话中；${standalone ? '试卷结构仍可在确认前调整。' : '结构和活动字段仍可在对应确认项中调整。'}`} /></div>)}
         </div>
 
         <WorkspaceComposer ariaLabel="向 WorkBuddy 补充要求" className={conversationStyles.runComposerDock} groupLabel="测验任务补充输入" hint={run.stage === 'generating' ? '试卷生成中，也可以继续补充要求' : '补充要求会保留在当前任务对话中'} maxLength={4_000} countThreshold={3_200} onSubmit={submitSupplement} onValueChange={setComposerDraft} placeholder="补充要求、调整测验或继续追问…" submitLabel="发送补充要求" value={composerDraft} />
@@ -219,7 +264,7 @@ export function QuizActivityConversationRunSurface() {
         <section className={styles.outputPanel} aria-label="测验试卷产出" hidden={inspectorMode !== 'output' || !run.artifact}>
           {run.artifact ? <><header><FileQuestion aria-hidden="true" size={18} /><div><strong>{run.artifact.title}</strong><span>测验试卷</span></div></header><p>{run.artifact.description}</p><div className={styles.paperSummary}><span>{run.artifact.version}</span><strong>{run.artifact.questions.length} 题</strong><strong>{run.artifact.totalScore} 分</strong><span>教师版答案与解析</span></div><ol>{run.artifact.questions.map((question) => <li key={question.id}><div><strong>{QUESTION_TYPE_LABELS[question.type]} · {question.score} 分</strong><span>{question.difficulty === 'easy' ? '易' : '中档'}</span></div><p>{question.prompt}</p>{question.options?.length ? <ul className={styles.options} aria-label={`${QUESTION_TYPE_LABELS[question.type]}选项`}>{question.options.map((option, index) => <li key={option}><span>{String.fromCharCode(65 + index)}.</span><span>{option}</span></li>)}</ul> : null}<details><summary>查看答案与解析</summary><b>答案：{question.answer}</b><p>{question.explanation}</p></details></li>)}</ol></> : null}
         </section>
-        {inspectorMode === 'output' && run.stage === 'awaiting_paper_review' ? <section className={styles.reviewAction} aria-label="试卷审阅确认"><div><strong>确认后才能设置活动</strong><p>请确认题目、答案和解析可作为当前测验草稿的内容。</p></div><button className={styles.primary} type="button" onClick={() => { quiz.approvePaper(); setInspectorOpen(false); }}>确认试卷内容，继续设置活动</button></section> : null}
+        {inspectorMode === 'output' && run.stage === 'awaiting_paper_review' ? <section className={styles.reviewAction} aria-label="试卷审阅确认"><div><strong>{standalone ? '确认后才能保存试卷' : '确认后才能设置活动'}</strong><p>{standalone ? '请确认题目、答案和解析可保存为当前账号的个人内容。' : '请确认题目、答案和解析可作为当前测验草稿的内容。'}</p></div><button className={styles.primary} type="button" onClick={() => { quiz.approvePaper(); setInspectorOpen(false); }}>{standalone ? '确认试卷内容，准备保存' : '确认试卷内容，继续设置活动'}</button></section> : null}
         {inspectorMode === 'output' && run.paperReview ? <section className={styles.reviewedState} aria-label="试卷已确认"><CheckCircle2 aria-hidden="true" size={16} /><span>当前 {run.paperReview.artifactRef.version} 已由教师确认</span></section> : null}
       </aside>
     </section>

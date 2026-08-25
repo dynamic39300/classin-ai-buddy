@@ -6,6 +6,12 @@ import type { ConversationRunModule } from '@contracts/workbuddy/conversation-ru
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
 import type { CoreContextItem } from '@domain/workbuddy/core-context';
 import type { CreateTeacherInDraftInput, TeacherInDraftReceipt, TeacherInResource } from '@domain/workbuddy/teacherin';
+import type {
+  PersonalContentReceipt,
+  PublishPersonalContentInput,
+  PublishPersonalContentResult,
+  TeacherInCompatibleContentPackage,
+} from '@domain/standalone-workbuddy/content';
 import type { CoursewareArtifactRevisionInput, CoursewareBrief } from '@domain/workbuddy/course-production';
 import type { QuizActivitySettings, QuizPaperBrief } from '@domain/workbuddy/quiz-activity-creation';
 import type { QuizActivityDraftScenario } from '@contracts/workbuddy/quiz-activity-draft';
@@ -45,6 +51,13 @@ export type WorkBuddyTeacherIn = Readonly<{
   searchResources: (query: string) => readonly TeacherInResource[];
   draftReceipts: Readonly<Record<string, TeacherInDraftReceipt>>;
   createDraft: (input: CreateTeacherInDraftInput) => TeacherInDraftReceipt;
+}>;
+
+export type WorkBuddyPersonalContent = Readonly<{
+  accountId: string;
+  list: () => readonly TeacherInCompatibleContentPackage[];
+  receiptForArtifact: (artifactId: string) => PersonalContentReceipt | null;
+  publish: (input: Omit<PublishPersonalContentInput, 'accountId'>) => PublishPersonalContentResult;
 }>;
 
 export type WorkBuddyCourseware = Readonly<{
@@ -99,6 +112,7 @@ export type WorkBuddyQuizActivity = Readonly<{
   beginGeneration: () => void;
   generatePaper: () => void;
   approvePaper: () => void;
+  markArtifactSaved: () => void;
   updateActivitySettings: (patch: Partial<QuizActivitySettings>) => void;
   prepareDraft: (patch: Partial<QuizActivitySettings>) => string | null;
   proposeDraft: () => void;
@@ -116,6 +130,7 @@ export type WorkBuddyWorkspace = Readonly<{
   taskDraft: WorkBuddyTaskDraft;
   context: WorkBuddyContext;
   teacherIn: WorkBuddyTeacherIn;
+  personalContent: WorkBuddyPersonalContent | null;
   courseware: WorkBuddyCourseware;
   coursePackage: WorkBuddyCoursePackage;
   quizActivity: WorkBuddyQuizActivity;

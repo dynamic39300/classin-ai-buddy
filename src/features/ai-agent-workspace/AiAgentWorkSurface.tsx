@@ -17,7 +17,7 @@ import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams }
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
-import { getVisibleWorkBuddyCapability } from './capability-registry';
+import { getVisibleWorkBuddyCapability, getWorkBuddyCapability } from './capability-registry';
 import { getRunStatusProjection } from './run-status-projection';
 import { CoreContextPanel } from './CoreContextPanel';
 import { ConversationRunSurface } from './ConversationRunSurface';
@@ -29,6 +29,7 @@ import { TypewriterGreeting } from './TypewriterGreeting';
 import { WorkBuddyAvatar } from './WorkBuddyAvatar';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import { useWorkBuddyExperience } from './workbuddy-experience-context';
+import { useWorkBuddyTaskAdmission } from './workbuddy-task-admission-context';
 import {
   profileAllowsCapability,
   profileAllowsTaskType,
@@ -51,9 +52,11 @@ export function AiAgentWorkSurface() {
   if (runId && packageView?.run.id === runId) return <PackageConversationRunSurface />;
   if (runId && quizRun?.id === runId) return <QuizActivityConversationRunSurface />;
   if (runId) return <RunSkeleton key={runId} runId={runId} />;
-  if (section === 'content') return <Navigate to="/teacher/space/teacherin" replace />;
+  if (section === 'content' && profile.productBoundary === 'classin-integrated') {
+    return <Navigate to="/teacher/space/teacherin" replace />;
+  }
   const capability = section && profileAllowsCapability(profile, section)
-    ? getVisibleWorkBuddyCapability(section)
+    ? profile.id === 'standalone-teacher' ? getWorkBuddyCapability(section) : getVisibleWorkBuddyCapability(section)
     : undefined;
   if (capability) return <CapabilityWorkspace key={capability.id} surface={capability.id} />;
   if (section) return <Navigate to={workBuddyNewTaskPath(profile)} replace />;
@@ -86,6 +89,7 @@ function NewTaskSkeleton() {
   const navigate = useNavigate();
   const location = useLocation();
   const profile = useWorkBuddyExperience();
+  const taskAdmission = useWorkBuddyTaskAdmission();
   const [feedback, setFeedback] = useState(() => {
     const state = location.state as NewTaskNavigationState | null;
     return state?.intent === 'context-attached' && state.capabilityTitle
@@ -149,6 +153,13 @@ function NewTaskSkeleton() {
   const contextLabels = contextView.status === 'confirmed'
     ? contextItems.filter(({ kind }) => ['organization', 'class', 'course', 'unit', 'learner_scope'].includes(kind)).map(({ label }) => label)
     : [contextItems.find(({ kind }) => kind === 'organization')?.label ?? 'ClassIn 教研中心', '需要选择教学范围'];
+  const taskQuote = taskAdmission?.quote(taskType) ?? null;
+
+  const createSelectedRun = () => taskType === 'course-package'
+    ? createPackageTask(goal)
+    : taskType === 'quiz-activity-creation'
+      ? createQuizActivityTask(goal)
+      : createCoursewareTask(goal);
 
   return (
     <section className={styles.newTaskPage} aria-labelledby="workbuddy-new-task-title">
@@ -171,7 +182,16 @@ function NewTaskSkeleton() {
           mode="task"
           onSubmit={() => {
             if (!taskTypeAllowed) return;
-            const runId = taskType === 'course-package' ? createPackageTask(goal) : taskType === 'quiz-activity-creation' ? createQuizActivityTask(goal) : createCoursewareTask(goal);
+            const admissionResult = taskAdmission?.start({ taskType, goal, createRun: createSelectedRun });
+            if (admissionResult && !admissionResult.ok) {
+              setFeedback(admissionResult.reason === 'insufficient_credits'
+                ? 'AI 点数不足，请先前往“AI 点数”或“会员方案”补充点数。'
+                : admissionResult.reason === 'evidence_mismatch'
+                  ? '任务请求与已绑定的点数记录不一致，请重新创建任务。'
+                  : '任务尚未创建，已释放预占的 AI 点数，请检查教学上下文后重试。');
+              return;
+            }
+            const runId = admissionResult?.runId ?? createSelectedRun();
             if (runId) {
               clearGoal();
               navigate(workBuddyRunPath(profile, runId));
@@ -260,6 +280,14 @@ function NewTaskSkeleton() {
           value={goal}
         />
 
+        {taskQuote ? (
+          <div className={styles.taskQuote} aria-label="本次任务 AI 点数报价">
+            <span>[模拟] 本次任务</span>
+            <strong>{taskQuote.amount} AI 点数</strong>
+            <Link to="/workbuddy/app/credits">查看余额</Link>
+          </div>
+        ) : null}
+
         <div role="group" aria-label="核心上下文摘要">
           <div className={styles.contextSummary} role="group" aria-label="已选择上下文">
             {contextLabels.slice(0, 4).map((label) => <span key={label}><UsersRound aria-hidden="true" size={14} />{label}</span>)}
@@ -270,7 +298,7 @@ function NewTaskSkeleton() {
         <div className={styles.shortcuts} aria-label="快捷任务">
           {profileAllowsTaskType(profile, 'single-courseware') ? <button type="button" onClick={() => { setTaskType('single-courseware'); setGoal('为高一（3）班生成一份函数单调性智能课件，包含概念讲解、例题和课堂练习'); }}>生成单个课件</button> : null}
           {profileAllowsTaskType(profile, 'course-package') ? <button type="button" onClick={() => { setTaskType('course-package'); setGoal('从函数单调性课程目标出发，生成包含课件、作业、测验和录播脚本的课程方案包'); }}>生成课程方案包</button> : null}
-          {profileAllowsTaskType(profile, 'quiz-activity-creation') ? <button type="button" onClick={() => { setTaskType('quiz-activity-creation'); setGoal('为高二物理 3 班当前单元生成一份动量守恒诊断测验，并创建为教学活动草稿'); }}>生成测验并创建活动草稿</button> : null}
+          {profileAllowsTaskType(profile, 'quiz-activity-creation') ? <button type="button" onClick={() => { setTaskType('quiz-activity-creation'); setGoal(profile.productBoundary === 'standalone-consumer' ? '基于我确认的教学范围和上传资料，生成一份动量守恒诊断测验并保存到个人内容库' : '为高二物理 3 班当前单元生成一份动量守恒诊断测验，并创建为教学活动草稿'); }}>{profile.productBoundary === 'standalone-consumer' ? '生成测验试卷' : '生成测验并创建活动草稿'}</button> : null}
           <button type="button" onClick={() => setGoal('分析高一（3）班最近一次作业，归纳共性问题并给出教学建议')}>分析班级学情</button>
         </div>
         {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : <span className={styles.feedback} aria-hidden="true" />}

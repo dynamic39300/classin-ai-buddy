@@ -13,7 +13,7 @@ describe('WorkBuddy artifact library', () => {
     })!;
     render(
       <WorkBuddyArtifactLibraryProvider initialArtifacts={[prepared.artifact]}>
-        <FileLibrary draftReceipts={{}} onUseAsContext={() => undefined} onOpenRun={() => undefined} onCreateTeacherInDraft={() => { throw new Error('not used'); }} onOpenTeacherIn={() => undefined} onLocateInSpace={() => undefined} />
+        <FileLibrary productBoundary="classin-integrated" draftReceipts={{}} onUseAsContext={() => undefined} onOpenRun={() => undefined} onCreateTeacherInDraft={() => { throw new Error('not used'); }} onOpenTeacherIn={() => undefined} onLocateInSpace={() => undefined} />
       </WorkBuddyArtifactLibraryProvider>,
     );
     expect(screen.getByText(prepared.artifact.title)).toBeInTheDocument();

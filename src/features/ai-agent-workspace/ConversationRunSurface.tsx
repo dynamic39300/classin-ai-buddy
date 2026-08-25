@@ -5,6 +5,7 @@ import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { ConversationRunEvent, ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
+import type { PersonalContentReceipt, PublishPersonalContentResult } from '@domain/standalone-workbuddy/content';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { CoreContextPanel } from './CoreContextPanel';
 import { RunProgressDock } from './RunProgressDock';
@@ -243,6 +244,7 @@ export function ConversationRunSurface() {
               derivedPackageRunRef={coursewareView.run.derivedPackageRunRef}
               onApproveArtifact={() => dispatch({ type: 'approve_artifact' })}
               teacherInReceipt={workspace.teacherIn.draftReceipts[coursewareView.run.artifact.id] ?? null}
+              personalContentReceipt={workspace.personalContent?.receiptForArtifact(coursewareView.run.artifact.id) ?? null}
               onCreateTeacherInDraft={() => workspace.teacherIn.createDraft({
                 runRef: coursewareView.run.id,
                 artifactRef: { id: coursewareView.run.artifact!.id, version: coursewareView.run.artifact!.version },
@@ -255,6 +257,20 @@ export function ConversationRunSurface() {
                 permission: 'allowed',
                 proposedAt: '2026-08-22T10:10:00+08:00',
               })}
+              onSavePersonalContent={() => workspace.personalContent?.publish({
+                idempotencyKey: `save-${workspace.personalContent!.accountId}-${coursewareView.run.id}-${coursewareView.run.artifact!.id}-${coursewareView.run.artifact!.version}`,
+                contentType: 'courseware',
+                title: coursewareView.run.artifact!.title,
+                description: coursewareView.run.artifact!.validationSummary,
+                stage: '高中',
+                subject: '数学',
+                tags: ['课件', '函数'],
+                sourceRunRef: coursewareView.run.id,
+                sourceArtifactRef: { id: coursewareView.run.artifact!.id, version: coursewareView.run.artifact!.version },
+                assetFormat: 'pptx',
+                visibility: 'private',
+                decidedAt: '2026-08-25T10:45:00+08:00',
+              }) ?? Object.freeze({ status: 'evidence_mismatch' as const, idempotencyKey: 'personal-content-unavailable' })}
               onProposeSave={() => dispatch({ type: 'propose_action' })}
               onDerivePackage={() => {
                 const result = dispatch({ type: 'derive_package' });
@@ -332,7 +348,7 @@ function coursewarePreviewPage(pageNumber: number): CoursewarePreviewPage {
 
 function CoursewareOutput({
   artifact, artifactHistory, sourceStepLabel, inspectorState, reviewStatus, hasAction, hasReceipt, derivedPackageRunRef,
-  teacherInReceipt, onCreateTeacherInDraft, onApproveArtifact, onProposeSave, onDerivePackage, onInspectorStateChange,
+  teacherInReceipt, personalContentReceipt, onCreateTeacherInDraft, onSavePersonalContent, onApproveArtifact, onProposeSave, onDerivePackage, onInspectorStateChange,
 }: Readonly<{
   artifact: CoursewareArtifactDraft;
   artifactHistory: readonly CoursewareArtifactDraft[];
@@ -343,13 +359,16 @@ function CoursewareOutput({
   hasReceipt: boolean;
   derivedPackageRunRef: string | null;
   teacherInReceipt: TeacherInDraftReceipt | null;
+  personalContentReceipt: PersonalContentReceipt | null;
   onCreateTeacherInDraft: () => TeacherInDraftReceipt;
+  onSavePersonalContent: () => PublishPersonalContentResult;
   onApproveArtifact: () => void;
   onProposeSave: () => void;
   onDerivePackage: () => void;
   onInspectorStateChange: (patch: Readonly<{ focused?: boolean; previewPage?: number; scrollTop?: number }>) => void;
 }>) {
   const profile = useWorkBuddyExperience();
+  const standalone = profile.productBoundary === 'standalone-consumer';
   const { focused, previewPage, scrollTop } = inspectorState;
   const [toolStatus, setToolStatus] = useState('');
   const outputRef = useRef<HTMLElement>(null);
@@ -400,12 +419,18 @@ function CoursewareOutput({
       ? '已在 TeacherIn 创建草稿。你可以前往 TeacherIn 继续编辑作品信息、设置授权并发布。'
       : receipt.result);
   };
+  const savePersonalContent = () => {
+    const result = onSavePersonalContent();
+    setToolStatus(result.status === 'success'
+      ? `${result.receipt.truthLabel}：课件已保存到当前账号的个人内容库。`
+      : '内容证据不一致，未保存到个人内容库。');
+  };
   return (
     <section ref={outputRef} tabIndex={focused ? -1 : undefined} className={styles.output} role="region" aria-label="智能课件产出" data-focus={focused} onKeyDown={handlePreviewKeyDown} onScroll={(event) => onInspectorStateChange({ scrollTop: event.currentTarget.scrollTop })}>
       <header><div><span>只读课件</span><h2>{artifact.title}</h2></div><div className={styles.outputTools}>
         <button ref={focusTriggerRef} type="button" aria-pressed={focused} onClick={() => onInspectorStateChange({ focused: !focused })}><Expand aria-hidden="true" size={14} />{focused ? '退出全局预览' : '全局预览'}</button>
-        <button type="button" onClick={() => setToolStatus('当前课件草稿将在完成 ClassIn 保存后提供下载。')}><Download aria-hidden="true" size={14} />下载</button>
-        <button type="button" onClick={() => setToolStatus('[模拟] 当前演示环境未接入第三方文档编辑器。完成 ClassIn 保存后可从课程对象打开。')}><ExternalLink aria-hidden="true" size={14} />使用专业编辑器打开</button>
+        <button type="button" onClick={() => setToolStatus(standalone ? '[模拟] 当前个人课件已准备下载。' : '当前课件草稿将在完成 ClassIn 保存后提供下载。')}><Download aria-hidden="true" size={14} />下载</button>
+        <button type="button" onClick={() => setToolStatus(standalone ? '[模拟] 当前演示环境未接入第三方文档编辑器。' : '[模拟] 当前演示环境未接入第三方文档编辑器。完成 ClassIn 保存后可从课程对象打开。')}><ExternalLink aria-hidden="true" size={14} />使用专业编辑器打开</button>
       </div><div className={styles.outputMeta}>{artifactHistory.map(({ version }) => <span data-current={version === artifact.version} key={version}>{version}</span>)}<span>PPTX</span><span>{artifact.pageCount} 页</span><span>[模拟] 预览</span></div></header>
       <section className={styles.artifactReader} aria-label="课件全局只读预览">
         <div className={styles.readerIntro}><div><Presentation aria-hidden="true" size={16} /><strong>只读预览</strong></div><p>可查看全部页面。内容修改需使用专业文档编辑器。</p></div>
@@ -436,13 +461,15 @@ function CoursewareOutput({
         </div>
       </section>
       {artifact.changeSummary ? <section className={styles.changeSummary} aria-label={`${artifact.version} 修改摘要`}><strong>{artifact.version} 修改摘要</strong><ul>{artifact.changeSummary.map((change) => <li key={change}>{change}</li>)}</ul></section> : null}
-      <dl className={styles.outputFacts}><div><dt>来源步骤</dt><dd>{sourceStepLabel}</dd></div><div><dt>质量检查</dt><dd>{artifact.validationSummary}</dd></div><div><dt>当前状态</dt><dd>课件草稿 · 未写入 ClassIn</dd></div></dl>
+      <dl className={styles.outputFacts}><div><dt>来源步骤</dt><dd>{sourceStepLabel}</dd></div><div><dt>质量检查</dt><dd>{artifact.validationSummary}</dd></div><div><dt>当前状态</dt><dd>{standalone ? personalContentReceipt ? '已保存到个人内容库' : '个人课件草稿 · 待保存' : '课件草稿 · 未写入 ClassIn'}</dd></div></dl>
       {toolStatus ? <p className={styles.toolStatus} role="status">{toolStatus}</p> : null}
       <footer className={styles.outputActions}>
         {reviewStatus === 'pending' ? <button className={styles.primary} type="button" onClick={onApproveArtifact}>确认课件可用于后续任务</button> : null}
-        {reviewStatus === 'approved' && teacherInReceipt?.status !== 'success' ? <button className={styles.primary} type="button" onClick={createTeacherInDraft}>创建草稿到 TeacherIn</button> : null}
-        {teacherInReceipt?.status === 'success' ? <Link to={teacherInReceipt.draft.editorPath}>前往 TeacherIn</Link> : null}
-        {reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
+        {standalone && reviewStatus === 'approved' && !personalContentReceipt ? <button className={styles.primary} type="button" onClick={savePersonalContent}>保存到个人内容库</button> : null}
+        {standalone && personalContentReceipt ? <span>{personalContentReceipt.truthLabel} · 已保存</span> : null}
+        {!standalone && reviewStatus === 'approved' && teacherInReceipt?.status !== 'success' ? <button className={styles.primary} type="button" onClick={createTeacherInDraft}>创建草稿到 TeacherIn</button> : null}
+        {!standalone && teacherInReceipt?.status === 'success' ? <Link to={teacherInReceipt.draft.editorPath}>前往 TeacherIn</Link> : null}
+        {!standalone && reviewStatus === 'approved' && !hasAction && !hasReceipt ? <button className={styles.primary} type="button" onClick={onProposeSave}>保存到 ClassIn</button> : null}
         {reviewStatus === 'approved' && derivedPackageRunRef ? <Link to={workBuddyRunPath(profile, derivedPackageRunRef)}>打开已派生课程方案包</Link> : null}
         {reviewStatus === 'approved' && !derivedPackageRunRef ? <button type="button" onClick={onDerivePackage}>基于此课件生成课程方案包</button> : null}
         {hasReceipt ? <span>执行回执已返回任务时间线</span> : hasAction ? <span>保存流程已进入任务时间线</span> : null}

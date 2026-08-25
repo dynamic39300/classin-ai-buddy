@@ -86,6 +86,7 @@ export function createWorkBuddyQuizActivityController(params: QuizActivityContro
         ? QuizActivityCreationModule.generatePaper(current, projectPaperForBrief(paper, current.brief))
         : current),
       approvePaper: () => setRun((current) => current ? QuizActivityCreationModule.approvePaper(current, { teacherId: 'teacher-wang', reviewedAt: '2026-08-24T17:44:00+08:00' }) : current),
+      markArtifactSaved: () => setRun((current) => current ? QuizActivityCreationModule.recordArtifactSaved(current) : current),
       updateActivitySettings: (patch: Partial<QuizActivitySettings>) => setRun((current) => current ? QuizActivityCreationModule.updateActivitySettings(current, patch) : current),
       prepareDraft: (patch: Partial<QuizActivitySettings>) => {
         if (!run) return '当前测验任务已不可用，请重新进入任务。';

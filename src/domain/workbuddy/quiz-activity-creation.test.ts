@@ -41,6 +41,9 @@ describe('QuizActivityCreationModule', () => {
     run = QuizActivityCreationModule.approvePaper(run, { teacherId: 'teacher-wang', reviewedAt: '2026-08-24T17:44:00+08:00' });
     expect(run.stage).toBe('awaiting_activity_parameters');
     expect(run.paperReview).toMatchObject({ status: 'approved', artifactRef: { id: run.artifact?.id, version: 'v1' } });
+    const artifactSaved = QuizActivityCreationModule.recordArtifactSaved(run);
+    expect(artifactSaved).toMatchObject({ stage: 'artifact_saved', allowedCommands: ['open-personal-content'], recovery: null });
+    expect(QuizActivityCreationModule.proposeDraft(artifactSaved, { actionId: 'stale', expiresAt: '2026-08-24T18:40:00+08:00', idempotencyKey: 'stale' })).toBe(artifactSaved);
 
     run = QuizActivityCreationModule.updateActivitySettings(run, {
       title: '动量守恒单元诊断测验', description: '完成后回顾方向与守恒条件。',

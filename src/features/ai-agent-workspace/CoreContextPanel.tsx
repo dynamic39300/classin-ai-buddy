@@ -2,6 +2,7 @@ import { BookOpen, Check, ChevronDown, ChevronRight, Database, RotateCcw, Search
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { CORE_CONTEXT_SECTIONS, type CoreContextSection } from '@domain/workbuddy/core-context';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
+import { useWorkBuddyExperience } from './workbuddy-experience-context';
 import styles from './CoreContextPanel.module.css';
 
 const SECTION_LABELS: Record<CoreContextSection, string> = {
@@ -27,6 +28,7 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
   onInspectorStateChange?: (patch: ContextInspectorPatch) => void;
 }) {
   const workspace = useWorkBuddyWorkspace();
+  const profile = useWorkBuddyExperience();
   const {
     contextView,
     coursewareContextView,
@@ -37,6 +39,8 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
   } = workspace.context;
   const quizTask = workspace.context.taskType === 'quiz-activity-creation';
   const view = mode === 'courseware' ? coursewareContextView ?? contextView : contextView;
+  const standalone = profile.id === 'standalone-teacher';
+  const teachingScopeLabels = view.items.filter(({ kind }) => ['class', 'course', 'unit'].includes(kind)).map(({ label }) => label);
   const status = view.status === 'confirmed' ? '上下文已冻结' : view.status === 'ready_to_confirm' ? '可以确认上下文' : '需要补充教学范围';
   const parentIds = useMemo(() => new Set(view.items.flatMap((item) => item.parentId ? [item.parentId] : [])), [view.items]);
   const [localExpandedIds, setLocalExpandedIds] = useState<ReadonlySet<string>>(() => parentIds);
@@ -66,7 +70,7 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
     return level;
   };
   const visibleItems = view.items.filter(isVisible);
-  const teacherInResources = workspace.teacherIn.searchResources(teacherInQuery);
+  const teacherInResources = standalone ? [] : workspace.teacherIn.searchResources(teacherInQuery);
   const selectedTeacherInIds = new Set(view.items.flatMap((item) => (
     item.reference?.system === 'teacherin' && item.included ? [item.reference.objectId] : []
   )));
@@ -135,12 +139,12 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
 
         {!readOnly ? <button className={styles.recommendation} type="button" onClick={applyRecommendedContext}>
           <Database aria-hidden="true" size={16} />
-          <span><strong>{quizTask ? '应用动量守恒测验建议' : '应用函数单调性课程建议'}</strong><small>{quizTask ? '高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量' : '高一（3）班 · 高中数学 · 函数的性质'}</small></span>
+          <span><strong>{standalone ? '应用本次示例教学范围' : quizTask ? '应用动量守恒测验建议' : '应用函数单调性课程建议'}</strong><small>{standalone ? teachingScopeLabels.join(' · ') : quizTask ? '高二物理 3 班 · 动量与碰撞 · 第一单元 受力与动量' : '高一（3）班 · 高中数学 · 函数的性质'}</small></span>
         </button> : null}
 
         <label className={styles.search}><Search aria-hidden="true" size={14} /><span className={styles.srOnly}>搜索上下文</span><input aria-label="搜索上下文" value={query} placeholder="搜索班级、课程、单元或资源" onChange={(event) => onInspectorStateChange ? onInspectorStateChange({ query: event.target.value }) : setLocalQuery(event.target.value)} /></label>
 
-        {!readOnly ? <section className={styles.teacherInPicker} aria-label="TeacherIn 资源">
+        {!readOnly && !standalone ? <section className={styles.teacherInPicker} aria-label="TeacherIn 资源">
           <header>
             <span className={styles.teacherInTitle}><BookOpen aria-hidden="true" size={16} /><span><strong>TeacherIn 资源</strong><small>选入当前任务上下文，不在这里浏览内容广场</small></span></span>
             <button type="button" aria-expanded={teacherInPickerOpen} onClick={() => setTeacherInPickerOpen((open) => !open)}>{teacherInPickerOpen ? '收起' : '选择资源'}</button>
@@ -195,7 +199,7 @@ export function CoreContextPanel({ id, hidden, onClose, readOnly = false, mode =
         ))}
         </div>
 
-        <p className={styles.sensitiveNote}>学生姓名默认不进入普通课程生产任务；每项能力只取得完成当前步骤所需的最小上下文。</p>
+        <p className={styles.sensitiveNote}>{standalone ? '未连接 ClassIn 时，不读取班级、作业或学生事实；仅使用你主动提供的内容。' : '学生姓名默认不进入普通课程生产任务；每项能力只取得完成当前步骤所需的最小上下文。'}</p>
       </div>
 
       {!readOnly ? <footer className={styles.footer}>

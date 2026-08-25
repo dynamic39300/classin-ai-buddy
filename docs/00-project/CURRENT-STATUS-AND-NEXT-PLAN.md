@@ -1,7 +1,7 @@
 ---
 title: ClassIn 教师 WorkBuddy 当前状态与下一阶段计划
-status: M4_4_IN_PROGRESS
-version: v0.15
+status: M4_4_COMPLETE_USER_ACCEPTED
+version: v0.18
 date: 2026-08-25
 ---
 
@@ -20,8 +20,8 @@ date: 2026-08-25
 | M4.2 IM AI 入口地图与 Case 矩阵 | M4.2-01～16 已完成：五个 P0 Case、最终发送话术、真实题号 Context、Agent 私聊发现/历史/响应、共享消息编辑与 WorkBuddy 统一体验均已闭环 | 2026-08-24 用户验收通过 |
 | 一级 WorkBuddy 测验活动草稿（纳入 M4.2 扩展交付） | PRD、Spec、Tickets 与纵向闭环已完成：连续生成并审阅试卷、确认后交互填写参数、draft-only 写回、课程详情逐题编辑、独立发布及学生可见性 | 2026-08-24 用户验收通过 |
 | M4.3 ClassIn 内嵌 MVP 入口 | D-098～D-101 已实施：Demo 双入口共存，终局/MVP 独立 Product Module、Shell/导航、配置、Route 与 Data Space；MVP 左栏将原新建任务入口改名为“我的任务”，页面流程不变，并保留 Skills/Tools/Files、隐藏 Schedules/Settings；Launch Context、返回链路与跨 Experience 隔离均通过工程 Gate | 2026-08-25 用户完成页面验收，`COMPLETE_USER_ACCEPTED` |
-| M4.4 独立教师 WorkBuddy Web 产品 | 从已验证的终局能力建立第三套独立产品体验，补齐官网、教师个人账号、AI 点数、模拟会员订单、无 ClassIn Context 引导与 ClassIn 转化 | `IN_PROGRESS` |
-| M4.5 全局 Demo 体验收口 | IA、UI、交互、引导和 Demo Release Gate | 待 M4.4 Review Gate 后进入 |
+| M4.4 独立教师 WorkBuddy Web 产品 | 第三套独立 Product Module 已完成：独立官网、教师个人账号、完整任务/能力工作台、AI 点数预占/结算/释放、模拟会员订单、无 ClassIn Context 执行及 ClassIn 价值转化；不挂载 ClassIn 业务 Provider，不共享终局/MVP 私有数据；内容资源统一采用 TeacherIn 兼容格式，为未来受治理接入内部内容生态保留零格式转换路径 | 2026-08-25 用户完成方案与页面 Review，`COMPLETE_USER_ACCEPTED` |
+| M4.5 全局 Demo 体验收口 | IA、UI、交互、引导和 Demo Release Gate；不改变 M4.2～M4.4 已验收的底层功能和业务逻辑 | 已具备进入条件，尚未开始实施 |
 | M5–M10 | M5 规格已就绪；后续生产交付路线保留 | `PARKED`，待 M4.5 后独立恢复 |
 
 所有当前运行结果均为固定、脱敏、可重置的 `[模拟]` 数据；没有真实 ClassIn API、模型 Runtime、生产授权或长期记忆。
@@ -70,3 +70,7 @@ M5–M10 保持 `PARKED`，已有文档和实现基础不删除；只有在 M4.5
 M4.2 最终工程证据：`npm run check` 84 个测试文件 / 555 项测试全通过；production build 通过；讲题最终话术、发送前预览、批准后链接、文件库、PA-01/DA-01、Agent 私聊授权目录/隔离历史/两阶段响应与新消息锚点，以及测验生成→试卷审阅→活动参数→草稿写回→课程详情编辑/发布的关键 E2E/a11y 均通过；受影响范围视觉基线通过并经人工复核。用户已于 2026-08-24 完成 M4.2 页面验收并授权版本封存。
 
 M4.3 工程证据：`npm run check` 85 个测试文件 / 561 项测试与 production build 通过；131 项 Chromium E2E 均有绿色证据（最新并发全量 121 项通过，10 项拥塞失败随后逐项单 worker 复跑全部通过）；班级详情 1440×900、MVP WorkBuddy 1440×900/1024×640 及终局 WorkBuddy 精确视觉回归通过。用户已于 2026-08-25 完成页面验收并授权继续进入 M4.4。
+
+M4.4 最终工程证据：PRD、Feature Spec、14 项 Tickets、实现追踪和双轴 Review 已闭环；全量 TypeScript/ESLint、92 个 Vitest 文件 / 585 项测试与 production build 通过；139 项 Chromium E2E/a11y 均有绿色证据（本轮并发全量 138 项通过，唯一既有消息转场时序用例在并发下读到首帧 `0s`，随后单 worker 精确复跑 1/1 通过）；Standalone 官网、注册、独立工作台、手动 Context、任务扣点、刷新恢复、零余额阻断、模拟会员到账、ClassIn 连接价值、账号级 Workspace 隔离、内容/文件资源独立闭环、独立测验保存和未登录 Guard 均有浏览器证据；1440×900 七个产品状态与 1024×640 工作台共 8 张基线稳定复跑通过。用户已于 2026-08-25 完成 M4.4 方案与页面 Review 并确认无问题；M4.4 可封存，M4.5 已具备正式启动条件。
+
+M4.4 的内容生态关系已按 D-107 锁定：Standalone 与 ClassIn 在产品运行、账号和数据层继续隔离，但内容资源从生产起即遵循 TeacherIn 内容契约。未来连接动作只需要建立身份、权限、对象映射与受控写入，不需要再次转换内容格式；当前 Demo 仍不代表真实 TeacherIn API 已接通。项目总结统一引用 [TeacherIn 内容兼容与独立产品边界](../06-architecture/TEACHERIN-CONTENT-COMPATIBILITY.md)。

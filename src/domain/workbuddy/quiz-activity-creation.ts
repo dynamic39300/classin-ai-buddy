@@ -114,7 +114,7 @@ export type FailedQuizActivityDraftReceipt = QuizReceiptBase & (
 );
 
 export type QuizActivityDraftReceipt = SuccessfulQuizActivityDraftReceipt | FailedQuizActivityDraftReceipt;
-export type QuizActivityRunStage = 'needs_parameters' | 'plan_ready' | 'generating' | 'awaiting_paper_review' | 'awaiting_activity_parameters' | 'awaiting_approval' | 'creating_draft' | 'draft_created' | 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout' | 'evidence_mismatch';
+export type QuizActivityRunStage = 'needs_parameters' | 'plan_ready' | 'generating' | 'awaiting_paper_review' | 'awaiting_activity_parameters' | 'artifact_saved' | 'awaiting_approval' | 'creating_draft' | 'draft_created' | 'permission_denied' | 'version_conflict' | 'recoverable_failure' | 'timeout' | 'evidence_mismatch';
 
 export type QuizActivityCreationRun = Readonly<{
   fixtureVersion: 'workbuddy-quiz-activity-v1';
@@ -253,6 +253,11 @@ function approvePaper(run: QuizActivityCreationRun, input: Readonly<{ teacherId:
   return freezeRun({ ...run, stage: 'awaiting_activity_parameters', paperReview, allowedCommands: ['update-activity-settings', 'propose-draft'], recovery: 'complete-activity-parameters' });
 }
 
+function recordArtifactSaved(run: QuizActivityCreationRun): QuizActivityCreationRun {
+  if (run.stage !== 'awaiting_activity_parameters' || !run.artifact || !run.paperReview) return run;
+  return freezeRun({ ...run, stage: 'artifact_saved', allowedCommands: ['open-personal-content'], recovery: null });
+}
+
 function updateActivitySettings(run: QuizActivityCreationRun, patch: Partial<QuizActivitySettings>): QuizActivityCreationRun {
   if (run.stage !== 'awaiting_activity_parameters' && run.stage !== 'awaiting_approval') return run;
   const settings = validateSettings({ ...run.settings, ...patch });
@@ -314,4 +319,4 @@ function refreshTarget(run: QuizActivityCreationRun): QuizActivityCreationRun {
   });
 }
 
-export const QuizActivityCreationModule = Object.freeze({ create, updatePaperBrief, confirmPaperBrief, beginGeneration, generatePaper, approvePaper, updateActivitySettings, proposeDraft, approveDraft, recordReceipt, retryDraft, refreshTarget });
+export const QuizActivityCreationModule = Object.freeze({ create, updatePaperBrief, confirmPaperBrief, beginGeneration, generatePaper, approvePaper, recordArtifactSaved, updateActivitySettings, proposeDraft, approveDraft, recordReceipt, retryDraft, refreshTarget });

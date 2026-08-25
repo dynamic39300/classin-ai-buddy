@@ -7,6 +7,7 @@ import { MessageWorkspaceProvider, useMessageWorkspaceStore } from '@features/me
 import { WorkBuddyImProvider } from '@features/workbuddy-im-assistance';
 import { ClassAgentConversationProvider } from '@features/class-agent-conversation';
 import { parseWorkBuddyWorkspaceRoute, WorkBuddyWorkspaceProvider } from '@features/ai-agent-workspace';
+import { StandaloneTeacherProvider, StandaloneWorkBuddyRoutes, useStandaloneTeacher } from '@features/standalone-workbuddy';
 import { WorkBuddyArtifactLibraryProvider, useWorkBuddyArtifactLibrary } from '@features/workbuddy-artifact-library';
 import { OpenCourseWorkspaceProvider, createOpenCourseSessionStore } from '@features/open-course-workspace';
 import { SpaceWorkspaceProvider } from '@features/space-workspace/SpaceWorkspaceProvider';
@@ -32,11 +33,13 @@ import { MockClassInWritebackAdapter } from '@mocks/adapters/workbuddy-classin-w
 import { MockQuizActivityDraftAdapter } from '@mocks/adapters/workbuddy-quiz-activity-draft';
 import { MockPackageWritebackAdapter } from '@mocks/adapters/workbuddy-package-writeback';
 import { MockTeacherInAdapter } from '@mocks/adapters/workbuddy-teacherin';
+import { DisconnectedTeacherInAdapter } from '@mocks/adapters/disconnected-teacherin';
 import { MockWorkBuddyImHomeworkReminderAdapter } from '@mocks/adapters/workbuddy-im-homework-reminder';
 import { MockGuidedExplanationDistributionAdapter } from '@mocks/adapters/workbuddy-guided-explanation';
 import { MockClassAgentConversationAdapter } from '@mocks/adapters/class-agent/class-agent-conversation';
 import { CLASS_AGENT_DEFINITIONS, DIRECT_CLASS_AGENT_BINDINGS } from '@mocks/scenarios/class-agent';
 import { WORKBUDDY_QUIZ_PAPER } from '@mocks/scenarios/workbuddy-quiz-activity';
+import { STANDALONE_WORKBUDDY_CONTEXT_ITEMS, STANDALONE_WORKBUDDY_RECOMMENDATION } from '@mocks/scenarios/standalone-workbuddy';
 import { OperationGuardProvider } from './shell/operation-guard';
 import { RootRouter } from './router/RootRouter';
 
@@ -137,15 +140,17 @@ function ClassAgentBridge({ children }: { children: ReactNode }) {
   );
 }
 
-function WorkBuddyBridge({ children }: { children: ReactNode }) {
+function ClassInWorkBuddyBridge({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { getClasses, setClasses } = useClassWorkspaceStore();
   const workspaceNamespace = parseWorkBuddyWorkspaceRoute(location.pathname)?.profileId ?? 'ideal-full';
   const adapters = useMemo(() => {
+    const writeback = new MockClassInWritebackAdapter();
     const packageWriteback = new MockPackageWritebackAdapter();
+    writeback.setScenario('success');
     packageWriteback.setScenario('success');
     return {
-      writeback: new MockClassInWritebackAdapter(),
+      writeback,
       packageWriteback,
       teacherIn: new MockTeacherInAdapter(),
       quizActivityDraft: new MockQuizActivityDraftAdapter({
@@ -159,10 +164,12 @@ function WorkBuddyBridge({ children }: { children: ReactNode }) {
             return { classId: record.id, courseId: course.id, unitId: unit.id, version: unit.sourceVersion ?? `${unit.id}-unversioned`, canCreateDraft: record.roleByAppRole.teacher === 'headmaster' || record.roleByAppRole.teacher === 'teacher' };
           },
         },
-        onDraftCreated: (activity, target) => setClasses((current) => current.map((record) => {
+        onDraftCreated: (activity, target) => {
+          setClasses((current) => current.map((record) => {
           if (record.id !== target.classId) return record;
           return { ...record, courses: addClassActivity(record.courses, target.courseId, target.unitId, activity) };
-        })),
+          }));
+        },
       }),
     };
   }, [getClasses, setClasses, workspaceNamespace]);
@@ -198,7 +205,62 @@ function WorkBuddyBridge({ children }: { children: ReactNode }) {
   );
 }
 
-export function App() {
+function StandaloneWorkBuddyBridge() {
+  const { identity, personalContent } = useStandaloneTeacher();
+  const workspaceNamespace = identity.status === 'signed_in'
+    ? `standalone-teacher:${identity.teacher.id}`
+    : 'standalone-teacher:anonymous';
+  const adapters = useMemo(() => {
+    const writeback = new MockClassInWritebackAdapter();
+    const packageWriteback = new MockPackageWritebackAdapter();
+    writeback.setScenario('permission_denied');
+    packageWriteback.setScenario('permission_denied');
+    const quizActivityDraft = new MockQuizActivityDraftAdapter({
+      idempotencyScope: workspaceNamespace,
+      targetReader: { read: () => null },
+      onDraftCreated: () => undefined,
+    });
+    return {
+      writeback,
+      packageWriteback,
+      teacherIn: new DisconnectedTeacherInAdapter(),
+      quizActivityDraft,
+    };
+  }, [workspaceNamespace]);
+
+  return (
+    <WorkBuddyWorkspaceProvider
+      key={workspaceNamespace}
+      workspaceNamespace={workspaceNamespace}
+      initialRuns={[]}
+      initialContextItems={STANDALONE_WORKBUDDY_CONTEXT_ITEMS}
+      recommendedContextItemIds={STANDALONE_WORKBUDDY_RECOMMENDATION}
+      coursewareDefinition={WORKBUDDY_COURSEWARE_DEFINITION}
+      coursewareOutput={WORKBUDDY_COURSEWARE_OUTPUT}
+      replannedCoursewareOutput={WORKBUDDY_REPLANNED_COURSEWARE_OUTPUT}
+      capabilityManifests={WORKBUDDY_CAPABILITY_MANIFESTS}
+      coursewareActionInput={WORKBUDDY_COURSEWARE_SAVE_ACTION}
+      packageDefinition={WORKBUDDY_COURSE_PACKAGE_DEFINITION}
+      packageActionInput={WORKBUDDY_PACKAGE_ACTION_INPUT}
+      packageFailedArtifactIds={WORKBUDDY_PACKAGE_FAILED_ARTIFACT_IDS}
+      runtimeFixture={WORKBUDDY_RUNTIME_FIXTURE}
+      clock={WORKBUDDY_FIXED_CLOCK}
+      writebackAdapter={adapters.writeback}
+      writebackScenarioController={adapters.writeback}
+      packageWritebackAdapter={adapters.packageWriteback}
+      packageWritebackScenarioController={adapters.packageWriteback}
+      teacherInAdapter={adapters.teacherIn}
+      personalContent={personalContent}
+      quizPaper={WORKBUDDY_QUIZ_PAPER}
+      quizActivityDraftAdapter={adapters.quizActivityDraft}
+      quizActivityDraftScenarioController={adapters.quizActivityDraft}
+    >
+      <StandaloneWorkBuddyRoutes />
+    </WorkBuddyWorkspaceProvider>
+  );
+}
+
+function ClassInProductComposition() {
   return (
     <RoleSessionProvider>
       <OperationGuardProvider>
@@ -206,24 +268,37 @@ export function App() {
           <ClassHomeworkBridge>
             <OpenCourseWorkspaceProvider store={OPEN_COURSE_SESSION}>
               <WorkBuddyArtifactLibraryProvider>
-              <MessageWorkspaceProvider>
-                <ClassAgentBridge>
-                  <WorkBuddyImBridge>
-                    <BrowserRouter>
+                <MessageWorkspaceProvider>
+                  <ClassAgentBridge>
+                    <WorkBuddyImBridge>
                       <SpaceWorkspaceProvider>
-                        <WorkBuddyBridge>
+                        <ClassInWorkBuddyBridge>
                           <RootRouter />
-                        </WorkBuddyBridge>
+                        </ClassInWorkBuddyBridge>
                       </SpaceWorkspaceProvider>
-                    </BrowserRouter>
-                  </WorkBuddyImBridge>
-                </ClassAgentBridge>
-              </MessageWorkspaceProvider>
+                    </WorkBuddyImBridge>
+                  </ClassAgentBridge>
+                </MessageWorkspaceProvider>
               </WorkBuddyArtifactLibraryProvider>
             </OpenCourseWorkspaceProvider>
           </ClassHomeworkBridge>
         </ClassWorkspaceProvider>
       </OperationGuardProvider>
     </RoleSessionProvider>
+  );
+}
+
+function ProductComposition() {
+  const { pathname } = useLocation();
+  return pathname === '/workbuddy' || pathname.startsWith('/workbuddy/')
+    ? <StandaloneTeacherProvider><StandaloneWorkBuddyBridge /></StandaloneTeacherProvider>
+    : <ClassInProductComposition />;
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <ProductComposition />
+    </BrowserRouter>
   );
 }

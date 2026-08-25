@@ -1,7 +1,7 @@
 import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
 import type { WorkBuddyCapability } from './capability-registry';
 
-export type WorkBuddyExperienceProfileId = 'ideal-full' | 'classin-mvp';
+export type WorkBuddyExperienceProfileId = 'ideal-full' | 'classin-mvp' | 'standalone-teacher';
 export type WorkBuddyCapabilityId = WorkBuddyCapability['id'];
 
 export type WorkBuddyLaunchContext = Readonly<{
@@ -14,8 +14,9 @@ export type WorkBuddyLaunchContext = Readonly<{
 
 export type WorkBuddyExperienceProfile = Readonly<{
   id: WorkBuddyExperienceProfileId;
+  productBoundary: 'classin-integrated' | 'standalone-consumer';
   basePath: string;
-  sessionNamespace: WorkBuddyExperienceProfileId;
+  sessionNamespace: string;
   visibleTaskTypes: readonly WorkBuddyTaskType[];
   visibleCapabilityIds: readonly WorkBuddyCapabilityId[];
   launchContext: WorkBuddyLaunchContext | null;
@@ -30,6 +31,9 @@ export type WorkBuddyWorkspaceRoute = Readonly<{
 }>;
 
 export function parseWorkBuddyWorkspaceRoute(pathname: string): WorkBuddyWorkspaceRoute | null {
+  if (pathname === '/workbuddy/app' || pathname.startsWith('/workbuddy/app/')) {
+    return Object.freeze({ profileId: 'standalone-teacher', basePath: '/workbuddy/app', classId: null });
+  }
   if (pathname === '/teacher/ai-agent' || pathname.startsWith('/teacher/ai-agent/')) {
     return Object.freeze({ profileId: 'ideal-full', basePath: '/teacher/ai-agent', classId: null });
   }
