@@ -42,7 +42,7 @@ export type HomeworkReminderArtifactDraft = Readonly<{
   groups: readonly HomeworkReminderGroup[];
   body: string;
   generatedAt: string;
-  truthLabel: '[模拟] WorkBuddy 作业催交草稿';
+  truthLabel: '[模拟] TeachBuddy 作业催交草稿';
 }>;
 
 export type SendClassMessageProposedAction = Readonly<{
@@ -259,7 +259,7 @@ export function prepareHomeworkReminder(input: PrepareHomeworkReminderInput): Ho
     groups: Object.freeze(groups),
     body: renderHomeworkReminderBody(groups),
     generatedAt: now,
-    truthLabel: '[模拟] WorkBuddy 作业催交草稿',
+    truthLabel: '[模拟] TeachBuddy 作业催交草稿',
   });
   return Object.freeze({
     kind: 'homework-reminder',

@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { QuizActivitySettings, QuizQuestionType, QuizScoringScheme } from '@domain/workbuddy/quiz-activity-creation';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { CoreContextPanel } from './CoreContextPanel';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import { useWorkBuddyExperience } from './workbuddy-experience-context';
@@ -252,10 +253,10 @@ export function QuizActivityConversationRunSurface() {
             </article>
           ) : null}
 
-          {supplements.map((supplement) => <div className={styles.supplementPair} key={supplement.id}><TimelineEvent state="completed" icon={<UserRound aria-hidden="true" size={16} />} title="你补充了要求" summary={supplement.text} /><TimelineEvent state="completed" icon={<Sparkles aria-hidden="true" size={16} />} title="WorkBuddy 已收到" summary={`我会把这条补充保留在当前任务对话中；${standalone ? '试卷结构仍可在确认前调整。' : '结构和活动字段仍可在对应确认项中调整。'}`} /></div>)}
+          {supplements.map((supplement) => <div className={styles.supplementPair} key={supplement.id}><TimelineEvent state="completed" icon={<UserRound aria-hidden="true" size={16} />} title="你补充了要求" summary={supplement.text} /><TimelineEvent state="completed" icon={<Sparkles aria-hidden="true" size={16} />} title={`${TEACHBUDDY_BRAND.shortName} 已收到`} summary={`我会把这条补充保留在当前任务对话中；${standalone ? '试卷结构仍可在确认前调整。' : '结构和活动字段仍可在对应确认项中调整。'}`} /></div>)}
         </div>
 
-        <WorkspaceComposer ariaLabel="向 WorkBuddy 补充要求" className={conversationStyles.runComposerDock} groupLabel="测验任务补充输入" hint={run.stage === 'generating' ? '试卷生成中，也可以继续补充要求' : '补充要求会保留在当前任务对话中'} maxLength={4_000} countThreshold={3_200} onSubmit={submitSupplement} onValueChange={setComposerDraft} placeholder="补充要求、调整测验或继续追问…" submitLabel="发送补充要求" value={composerDraft} />
+        <WorkspaceComposer ariaLabel={`向 ${TEACHBUDDY_BRAND.shortName} 补充要求`} className={conversationStyles.runComposerDock} groupLabel="测验任务补充输入" hint={run.stage === 'generating' ? '试卷生成中，也可以继续补充要求' : '补充要求会保留在当前任务对话中'} maxLength={4_000} countThreshold={3_200} onSubmit={submitSupplement} onValueChange={setComposerDraft} placeholder="补充要求、调整测验或继续追问…" submitLabel="发送补充要求" value={composerDraft} />
       </main>
 
       <aside className={conversationStyles.inspector} id="quiz-run-inspector" aria-label="任务辅助区" hidden={!inspectorOpen}>

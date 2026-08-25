@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import {
   clampWorkBuddyWidth,
   getDefaultWorkBuddyWidth,
@@ -63,7 +64,7 @@ export function MessageWorkspaceResizableLayout({
     container.style.setProperty('--workbuddy-layout-width', `${nextWidth}px`);
     if (separator) {
       separator.setAttribute('aria-valuenow', String(Math.round(nextWidth)));
-      separator.setAttribute('aria-valuetext', `WorkBuddy 宽度 ${Math.round(nextWidth)} 像素`);
+      separator.setAttribute('aria-valuetext', `${TEACHBUDDY_BRAND.shortName} 宽度 ${Math.round(nextWidth)} 像素`);
     }
   }, []);
 
@@ -200,12 +201,12 @@ export function MessageWorkspaceResizableLayout({
         <>
           <div
             aria-controls="workbuddy-im-sidecar"
-            aria-label="调整 WorkBuddy 宽度"
+            aria-label={`调整 ${TEACHBUDDY_BRAND.shortName} 宽度`}
             aria-orientation="vertical"
             aria-valuemax={Math.round(limits.max)}
             aria-valuemin={Math.round(limits.min)}
             aria-valuenow={Math.round(committedWidth)}
-            aria-valuetext={`WorkBuddy 宽度 ${Math.round(committedWidth)} 像素`}
+            aria-valuetext={`${TEACHBUDDY_BRAND.shortName} 宽度 ${Math.round(committedWidth)} 像素`}
             className={styles.separator}
             onDoubleClick={resetWidth}
             onKeyDown={handleKeyDown}

@@ -22,7 +22,7 @@ export type GuidedExplanationArtifact = Readonly<{
   presentation: Readonly<{ kind: 'interactive'; preferredAdapter: 'html-h5' }>;
   sourceRef: Readonly<{ threadId: string; messageExcerpt: string }>;
   generatedAt: string;
-  truthLabel: '[模拟] WorkBuddy 交互讲题内容';
+  truthLabel: '[模拟] TeachBuddy 交互讲题内容';
 }>;
 
 export type GuidedExplanationRevision = Readonly<{
@@ -156,7 +156,7 @@ export function prepareGuidedExplanation(input: PrepareGuidedExplanationInput): 
     presentation: Object.freeze({ kind: 'interactive', preferredAdapter: 'html-h5' }),
     sourceRef: Object.freeze({ threadId: input.threadId, messageExcerpt: question }),
     generatedAt: input.generatedAt,
-    truthLabel: '[模拟] WorkBuddy 交互讲题内容',
+    truthLabel: '[模拟] TeachBuddy 交互讲题内容',
   });
   const content: GuidedExplanationContentDraft = Object.freeze({
     kind: 'guided-explanation', artifactRef: Object.freeze({ id: artifact.id, version: `v${artifact.version}` }),

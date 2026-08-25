@@ -8,10 +8,10 @@ async function openSurface(page: Page, label: string) {
   if (await teacherButton.count()) await teacherButton.click();
   await page
     .getByRole("navigation", { name: "老师视角主导航" })
-    .getByRole("link", { name: "Work Buddy" })
+    .getByRole("link", { name: "TeachBuddy" })
     .click();
   await page
-    .getByRole("group", { name: "Work Buddy 二级导航" })
+    .getByRole("group", { name: "TeachBuddy 二级导航" })
     .getByRole("link", { name: label, exact: true })
     .click();
   await expect(
@@ -415,7 +415,7 @@ test("scheduled task cards remain individually scannable as the list grows", asy
 test("settings offer grouped controls", async ({ page }) => {
   await openSurface(page, "设置");
   await expect(
-    page.getByRole("navigation", { name: "Work Buddy 设置分组" }),
+    page.getByRole("navigation", { name: "TeachBuddy 设置分组" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "模型" }).click();
   await expect(
@@ -434,10 +434,10 @@ test("capability surfaces remain usable in compact desktop without horizontal ov
   if (await teacherButton.count()) await teacherButton.click();
   await page
     .getByRole("navigation", { name: "老师视角主导航" })
-    .getByRole("link", { name: "Work Buddy" })
+    .getByRole("link", { name: "TeachBuddy" })
     .click();
   await page
-    .getByRole("group", { name: "Work Buddy 二级导航" })
+    .getByRole("group", { name: "TeachBuddy 二级导航" })
     .getByRole("link", { name: "工具连接", exact: true })
     .click();
   await expect(
@@ -453,7 +453,7 @@ test("capability surfaces remain usable in compact desktop without horizontal ov
   expect(overflow).toBe(false);
 
   await page
-    .getByRole("group", { name: "Work Buddy 二级导航" })
+    .getByRole("group", { name: "TeachBuddy 二级导航" })
     .getByRole("link", { name: "技能市场", exact: true })
     .click();
   await page.getByRole("button", { name: "添加技能" }).click();

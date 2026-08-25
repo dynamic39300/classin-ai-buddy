@@ -387,7 +387,7 @@ test('teacher class immersive chat at 1440x900', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: '班级群聊' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: '主导航' })).toBeHidden();
   await expect(page.getByLabel('班级消息列表')).toHaveCount(0);
-  await expect(page.getByRole('complementary', { name: 'WorkBuddy 私密协作窗口' })).toBeVisible();
+  await expect(page.getByRole('complementary', { name: 'TeachBuddy 私密协作窗口' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-class-chat-immersive-1440x900.png', { fullPage: true });
 });
@@ -402,7 +402,7 @@ test('student class immersive chat at 1440x900', async ({ page }) => {
   await expect(page).toHaveURL(/\/student\/classes\/physics-3\/chat$/);
   await expect(page.getByRole('heading', { level: 1, name: '班级群聊' })).toHaveCount(1);
   await expect(page.getByRole('navigation', { name: '学生视角主导航' })).toBeHidden();
-  await expect(page.getByRole('complementary', { name: 'WorkBuddy 私密协作窗口' })).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: 'TeachBuddy 私密协作窗口' })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('student-class-chat-immersive-1440x900.png', { fullPage: true });
 });
@@ -648,7 +648,7 @@ test('teacher class messages at 1440x900', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-messages-1440x900.png', {
     fullPage: true,
-    mask: [page.getByLabel('WorkBuddy 私密协作窗口')],
+    mask: [page.getByLabel('TeachBuddy 私密协作窗口')],
     maskColor: '#f2f2f2',
   });
 });
@@ -664,7 +664,7 @@ test('teacher multi-Agent picker at 1440x900', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-multi-agent-picker-1440x900.png', {
     fullPage: true,
-    mask: [page.getByLabel('WorkBuddy 私密协作窗口')],
+    mask: [page.getByLabel('TeachBuddy 私密协作窗口')],
     maskColor: '#f2f2f2',
   });
 });
@@ -682,7 +682,7 @@ test('teacher public class Agent reply at 1440x900', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-class-agent-public-reply-1440x900.png', {
     fullPage: true,
-    mask: [page.getByLabel('WorkBuddy 私密协作窗口')],
+    mask: [page.getByLabel('TeachBuddy 私密协作窗口')],
     maskColor: '#f2f2f2',
   });
 });
@@ -742,8 +742,8 @@ test('teacher WorkBuddy exit guidance at 1440x900', async ({ page }) => {
   await selectRole(page, /老师视角/);
   await page.getByRole('link', { name: /消息/ }).click();
   await page.getByRole('button', { name: '退出沉浸模式' }).click();
-  await expect(page.getByRole('region', { name: 'WorkBuddy 退出引导' })).toBeVisible();
-  await expect(page.getByLabel('WorkBuddy 私密协作窗口')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'TeachBuddy 退出引导' })).toBeVisible();
+  await expect(page.getByLabel('TeachBuddy 私密协作窗口')).toHaveCount(0);
   await page.waitForTimeout(300);
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-workbuddy-exit-guidance-1440x900.png', {
@@ -771,7 +771,7 @@ test('teacher direct message WorkBuddy at 1440x900', async ({ page }) => {
   await selectRole(page, /老师视角/);
   await page.getByRole('link', { name: /消息/ }).click();
   await page.getByRole('button', { name: '私聊', exact: true }).click();
-  await expect(page.getByLabel('WorkBuddy 私密协作窗口')).toBeVisible();
+  await expect(page.getByLabel('TeachBuddy 私密协作窗口')).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('teacher-direct-message-workbuddy-1440x900.png', { fullPage: true });
 });

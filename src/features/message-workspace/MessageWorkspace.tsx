@@ -40,6 +40,7 @@ import {
   type SetStateAction,
 } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import type { AppRole } from '@domain/account/role';
 import type {
   AgentMentionEntity,
@@ -899,9 +900,9 @@ export function MessageWorkspace({ role, immersive = false, onEnterImmersive, fi
                 type="button"
                 aria-expanded={onEnterImmersive ? false : workBuddyOpen}
                 onClick={() => activateWorkBuddy(thread)}
-                title={onEnterImmersive ? '打开 WorkBuddy 并进入沉浸模式' : '打开 WorkBuddy'}
+                title={onEnterImmersive ? `打开 ${TEACHBUDDY_BRAND.shortName} 并进入沉浸模式` : `打开 ${TEACHBUDDY_BRAND.shortName}`}
               >
-                <Sparkles aria-hidden="true" size={14} />WorkBuddy
+                <Sparkles aria-hidden="true" size={14} />{TEACHBUDDY_BRAND.shortName}
               </button>
             ) : null}
             {thread.category === 'class' && !fixedClassId && !embedded ? (

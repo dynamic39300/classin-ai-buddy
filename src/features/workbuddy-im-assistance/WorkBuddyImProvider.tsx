@@ -121,7 +121,7 @@ export function WorkBuddyImProvider({ adapter, guidedExplanationAdapter, teacher
             body,
             goal: normalizedGoal,
             version: 1,
-            truthLabel: '[模拟] WorkBuddy 私聊回复建议',
+            truthLabel: '[模拟] TeachBuddy 私聊回复建议',
           }),
         }),
         conversation: null,

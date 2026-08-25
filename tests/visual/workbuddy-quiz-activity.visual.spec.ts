@@ -7,7 +7,7 @@ test('workbuddy quiz activity draft approval at 1440x900', async ({ page }) => {
   await page.clock.pauseAt(new Date(now.getTime() + 1_000));
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
   await page.getByRole('button', { name: '生成测验并创建活动草稿' }).click();
   await page.getByRole('button', { name: '展开核心上下文' }).click();
   const context = page.getByRole('complementary', { name: '核心上下文' });

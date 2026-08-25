@@ -9,7 +9,7 @@ date: 2026-08-25
 
 ## 1. Outcome
 
-M4.3 已形成 `PRD → Feature Spec → Tickets → Implementation → Verify → Review` 的完整工程链。班级详情现在清晰区分班级共享“AI 应用”和教师私密“我的教学助理”；MVP 入口打开独立、全屏的 WorkBuddy 页面。该页面不挂载 ClassIn 原主导航，左栏以“我的任务”命名原新建任务入口，并保留 Skills、Tools、Files 与返回来源班级命令。
+M4.3 已形成 `PRD → Feature Spec → Tickets → Implementation → Verify → Review` 的完整工程链。班级详情现在清晰区分班级共享“AI 应用”和教师私密 TeachBuddy；MVP 入口打开独立、全屏的 TeachBuddy 页面。该页面不挂载 ClassIn 原主导航，左栏以“我的任务”命名原新建任务入口，并保留 Skills、Tools、Files 与返回来源班级命令。
 
 终局 `ideal-full` 与 MVP `classin-mvp` 分别由独立 Product Module 装配；只复用更低层的页面 Surface、Domain 与 Adapter Interface。Route、导航身份、能力配置、Workspace Session、Conversation Runtime、任务草稿、Receipt 缓存及业务对象幂等 scope 均已隔离。MVP 已完成第一次展示裁剪：隐藏 Schedules 与 Settings，但不删除或改变终局配置，终局历史也不会进入 MVP。
 
@@ -19,7 +19,7 @@ M4.3 已形成 `PRD → Feature Spec → Tickets → Implementation → Verify �
 | --- | --- |
 | 同一路由挂载会让未来 MVP 裁剪影响终局 | 建立稳定 Experience Profile Interface 与两套 Route Base；页面只通过 Profile 构造内部链接 |
 | 首版值相同导致误把 Profile 配置当成共享配置 | 终局与 MVP 持有独立、不可变的任务/能力配置副本；只复用底层 Surface、Domain 与 Interface |
-| MVP 页面借用 ClassIn AppShell 或在原导航新增入口 | MVP Route 已移出 `AppShell`；Standalone Shell 只投影 `WorkBuddy 导航`，DOM 中不存在“老师视角主导航” |
+| MVP 页面借用 ClassIn AppShell 或在原导航新增入口 | MVP Route 已移出 `AppShell`；Standalone Shell 只投影 `TeachBuddy 导航`，DOM 中不存在“老师视角主导航” |
 | 只过滤 UI 仍可能泄漏终局历史 | Workspace、Conversation Runtime、TeacherIn Receipt 使用独立 Namespace，且无跨 Namespace fallback |
 | 相同 Demo Run/Action ID 跨 Experience 覆盖 ClassIn 对象 | 每个 Experience 使用独立 Adapter 实例；测验业务对象 ID 增加稳定 idempotency scope |
 | MVP 内部链接跳回终局 | Task Bar、能力导航、新任务、Run、派生任务、失败恢复链接均通过 Profile path builder |
@@ -34,7 +34,7 @@ M4.3 已形成 `PRD → Feature Spec → Tickets → Implementation → Verify �
 - `npm run check`：85 个测试文件、561 项 Vitest 全通过；
 - `npm run build`：production build 通过，保留既有大 chunk 提醒；
 - Chromium E2E：最新全量并发执行 121/131；10 项在浏览器拥塞后出现动画取值或超时，随后全部以单 worker 精确复跑通过。因此 131 项行为均有绿色证据，但本轮未把拥塞结果改写成一次全绿的并发产物；
-- 视觉：班级详情 1440×900、MVP WorkBuddy 1440×900/1024×640、终局 WorkBuddy 1440×900 精确复跑通过；
+- 视觉：班级详情 1440×900、MVP TeachBuddy 1440×900/1024×640、终局 TeachBuddy 1440×900 精确复跑通过；
 - 文件质量：`git diff --check` 通过。
 
 全仓视觉套件仍存在项目已记录的旧基线漂移，范围覆盖角色选择、首页等未修改页面；本阶段未批量重写这些无关基线，只更新并稳定复跑 Write Set 内三张快照。
@@ -45,4 +45,4 @@ M4.3 已形成 `PRD → Feature Spec → Tickets → Implementation → Verify �
 
 ## 5. Navigation identity correction
 
-首次实现错误复用了终局一级导航节点，并在 MVP 路由中改写其 href/active；首版两套 allowlist 也引用了同一数组。第二次虽建立了独立节点，但仍把 MVP Route 挂在 ClassIn AppShell 下，导致原主导航承载了不该存在的“我的教学助理”一级项。根因是把“底层实现可复用”误扩展为“产品 Shell 可复用”，且 E2E 一度把错误行为写成预期。最终修正后两个 Product Module、不可变配置与 Shell 装配均独立；回归测试明确断言终局入口仍在 ClassIn 主导航，MVP 全屏页只存在自己的 `WorkBuddy 导航`，二者不能互相高亮或代理。
+首次实现错误复用了终局一级导航节点，并在 MVP 路由中改写其 href/active；首版两套 allowlist 也引用了同一数组。第二次虽建立了独立节点，但仍把 MVP Route 挂在 ClassIn AppShell 下，导致原主导航承载了不该存在的第二个 TeachBuddy 一级项。根因是把“底层实现可复用”误扩展为“产品 Shell 可复用”，且 E2E 一度把错误行为写成预期。最终修正后两个 Product Module、不可变配置与 Shell 装配均独立；回归测试明确断言终局入口仍在 ClassIn 主导航，MVP 全屏页只存在自己的 `TeachBuddy 导航`，二者不能互相高亮或代理。

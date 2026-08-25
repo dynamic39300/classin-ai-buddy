@@ -77,17 +77,17 @@ WorkBuddy 页面只能调用这些构造器，不能硬编码 `/teacher/ai-agent
 ### 6.1 Class detail rail
 
 - `AI` 更名为 `AI 应用`，保留现有三个入口和行为，增加“班级成员可用”语义。
-- 下方新增独立 `我的教学助理` Section，展示 WorkBuddy 身份、`仅你可见`、价值说明和“打开 WorkBuddy”。
+- 下方新增独立 `TeachBuddy` Section，展示 TeachBuddy 身份、`AI 教学搭档 · 仅你可见`、价值说明和“打开 TeachBuddy”。
 - 两个 Section 分别展开/收起；学生页面无入口。
 
 ### 6.2 MVP workspace
 
 - MVP Route 位于 ClassIn `AppShell` 之外，使用独立全屏 `ClassMvpWorkBuddyShell`；进入后不挂载“老师视角主导航”。
-- Standalone Shell 的可见页面名为 `WorkBuddy`，独立 `WorkBuddy 导航` 依次承载“我的任务、技能市场、工具连接、我的文件”，不渲染可见分组标题。
+- Standalone Shell 的可见页面名为 `TeachBuddy`，独立 `TeachBuddy 导航` 依次承载“我的任务、技能市场、工具连接、我的文件”，不渲染可见分组标题。
 - 左栏“我的任务”链接到 `/new`，只改变显示名称；不得新增任务目录页或改变 `AiAgentWorkSurface` 的新任务内容。历史任务继续由共享 `WorkBuddyTaskBar` 承载。
 - Schedules 与 Settings 不在 MVP allowlist；直接访问对应 MVP URL 重定向 `/new`。终局 Profile 与页面保持不变。
 - 使用共享 `AiAgentWorkspaceLayout`、`WorkBuddyTaskBar` 与 Work Surface，但不复用终局的产品 Shell 装配。
-- 全局“Work Buddy”继续只指向终局 `/teacher/ai-agent`；原 ClassIn 主导航不得新增“我的教学助理”一级入口，也不能被 MVP 重写或高亮。
+- 全局“TeachBuddy”继续只指向终局 `/teacher/ai-agent`；原 ClassIn 主导航不得新增第二个 TeachBuddy 一级入口，也不能被 MVP 重写或高亮。
 - 左侧导航、Task Bar、能力页和 Run 内所有链接均停留在 MVP basePath。
 - Standalone Shell 持续提供“返回 {className}”命令，包含能力页在内的所有子路由均可返回。
 - 页面不显示“阉割版”或内部 Profile 术语。
@@ -111,8 +111,8 @@ ideal-full <X> classin-mvp private session data
 ## 8. Accessibility and responsive contract
 
 - 右栏 Section Header 使用 `aria-expanded`；入口和返回命令有完整名称。
-- 导航后焦点进入标记为 `WorkBuddy` 的独立主区域；返回后由班级详情页面标题接管。
-- 独立页面的导航命名为 `WorkBuddy 导航`，原“老师视角主导航”不存在且不会被隐藏后留在可访问树中。
+- 导航后焦点进入标记为 `TeachBuddy` 的独立主区域；返回后由班级详情页面标题接管。
+- 独立页面的导航命名为 `TeachBuddy 导航`，原“老师视角主导航”不存在且不会被隐藏后留在可访问树中。
 - 1440×900 完整显示双模块；1024×640 右栏可独立滚动，入口、返回和 Task Bar 可达。
 - Reduced Motion 不改变信息结构。
 

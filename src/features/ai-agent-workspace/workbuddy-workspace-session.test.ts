@@ -168,7 +168,7 @@ describe('WorkBuddy workspace session boundary', () => {
         id: 'draft-1', status: 'draft' as const, title: '函数单调性课件', createdAt: '2026-08-22T10:10:00+08:00',
         editorPath: '/teacher/space/teacherin?draft=draft-1',
         sourceArtifactRef: { id: 'artifact-1', version: 'v1' },
-        sourceSpaceFileRef: { id: 'space-file-1', version: 'v1', pathLabel: '我的云盘 / WorkBuddy 产物' },
+        sourceSpaceFileRef: { id: 'space-file-1', version: 'v1', pathLabel: '我的云盘 / TeachBuddy 产物' },
       },
     };
     saveTeacherInDraftReceipts({ 'artifact-1': receipt });

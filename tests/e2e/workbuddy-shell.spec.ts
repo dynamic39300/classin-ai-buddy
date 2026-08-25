@@ -5,13 +5,13 @@ async function openTeacherWorkBuddy(page: Page) {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
 }
 
 async function openAllTasks(page: Page) {
   const existing = page.getByRole('dialog', { name: '全部任务选择器' });
   if (await existing.count()) return existing;
-  await page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).locator('button[aria-current="page"]').click();
+  await page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' }).locator('button[aria-current="page"]').click();
   await expect(existing).toBeVisible();
   return existing;
 }
@@ -25,7 +25,7 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   await openTeacherWorkBuddy(page);
 
   const primaryNavigation = page.getByRole('navigation', { name: '老师视角主导航' });
-  const workBuddyEntry = primaryNavigation.getByRole('link', { name: 'Work Buddy' });
+  const workBuddyEntry = primaryNavigation.getByRole('link', { name: 'TeachBuddy' });
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/new$/);
   await expect(workBuddyEntry).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
@@ -43,14 +43,14 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   });
   expect(playback).toMatchObject({ autoplay: true, loop: true, muted: true, playsInline: true });
   expect(playback.source).toContain('/brand/workbuddy-avatar-loop.mp4');
-  const extensionToggle = primaryNavigation.getByRole('button', { name: '收起 Work Buddy 二级导航' });
+  const extensionToggle = primaryNavigation.getByRole('button', { name: '收起 TeachBuddy 二级导航' });
   await extensionToggle.hover();
   await expect.poll(() => extensionToggle.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
   await expect(extensionToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('[data-workbuddy-stage="true"] > header')).toHaveCount(0);
-  await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toBeVisible();
+  await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toBeVisible();
 
-  const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'Work Buddy 二级导航' });
+  const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'TeachBuddy 二级导航' });
   for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await expect(secondaryNavigation.getByRole('link', { name: destination, exact: true })).toBeVisible();
   }
@@ -71,7 +71,7 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   })));
   expect(childNavigationGeometry[0]).toEqual(childNavigationGeometry[1]);
   await expect(secondaryNavigation.getByText('近期任务', { exact: true })).toHaveCount(0);
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   await expect(taskTabs).toBeVisible();
   await expect(taskTabs.getByRole('button', { name: '新建任务', exact: true })).toHaveAttribute('aria-current', 'page');
 
@@ -83,13 +83,13 @@ test('teacher enters the collapsible WorkBuddy workspace with renamed capability
   await secondaryNavigation.getByRole('link', { name: '工具连接', exact: true }).click();
   const capabilityStage = page.locator('#main-content').locator('..');
   await expect(capabilityStage.locator(':scope > header').getByRole('heading', { level: 1, name: '工具连接' })).toBeVisible();
-  await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toHaveCount(0);
-  await expect(page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' })).toHaveCount(0);
+  await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' })).toHaveCount(0);
 
-  await primaryNavigation.getByRole('button', { name: '收起 Work Buddy 二级导航' }).click();
+  await primaryNavigation.getByRole('button', { name: '收起 TeachBuddy 二级导航' }).click();
   await expect(secondaryNavigation).toHaveCount(0);
-  await primaryNavigation.getByRole('button', { name: '展开 Work Buddy 二级导航' }).click();
-  await expect(primaryNavigation.getByRole('group', { name: 'Work Buddy 二级导航' })).toBeVisible();
+  await primaryNavigation.getByRole('button', { name: '展开 TeachBuddy 二级导航' }).click();
+  await expect(primaryNavigation.getByRole('group', { name: 'TeachBuddy 二级导航' })).toBeVisible();
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical')).toEqual([]);
@@ -143,7 +143,7 @@ test('new task keeps a Codex-style right auxiliary panel compact, aligned and st
   await expect(collapseToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(panel).toBeVisible();
   const geometry = await page.evaluate(() => {
-    const taskBar = document.querySelector<HTMLElement>('header[aria-label="Work Buddy 任务导航"]');
+    const taskBar = document.querySelector<HTMLElement>('header[aria-label="TeachBuddy 任务导航"]');
     const layoutElement = document.querySelector<HTMLElement>('[data-panel-open="true"]');
     const mainElement = layoutElement?.querySelector<HTMLElement>(':scope > section');
     const panelElement = document.querySelector<HTMLElement>('#workbuddy-core-context-panel');
@@ -222,17 +222,17 @@ test('primary navigation reveals its scrollbar only while the region is engaged'
 
 test('capability destinations use the standard page topbar instead of task tabs', async ({ page }) => {
   await openTeacherWorkBuddy(page);
-  const secondaryNavigation = page.getByRole('group', { name: 'Work Buddy 二级导航' });
+  const secondaryNavigation = page.getByRole('group', { name: 'TeachBuddy 二级导航' });
   const capabilityStage = page.locator('#main-content').locator('..');
 
   for (const destination of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await secondaryNavigation.getByRole('link', { name: destination, exact: true }).click();
     await expect(capabilityStage.locator(':scope > header').getByRole('heading', { level: 1, name: destination })).toBeVisible();
-    await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toHaveCount(0);
+    await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toHaveCount(0);
   }
 
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
-  await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toBeVisible();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
+  await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toBeVisible();
   await expect(capabilityStage.locator(':scope > header')).toHaveCount(0);
 });
 
@@ -240,8 +240,8 @@ test('student navigation does not expose teacher WorkBuddy', async ({ page }) =>
   await page.goto('/');
   await page.getByRole('button', { name: /学生视角/ }).click();
   const primaryNavigation = page.getByRole('navigation', { name: '学生视角主导航' });
-  await expect(primaryNavigation.getByRole('link', { name: 'Work Buddy' })).toHaveCount(0);
-  await expect(page.getByRole('group', { name: 'Work Buddy 二级导航' })).toHaveCount(0);
+  await expect(primaryNavigation.getByRole('link', { name: 'TeachBuddy' })).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'TeachBuddy 二级导航' })).toHaveCount(0);
 });
 
 test('teacher keeps a new-task draft when reopening it as a parallel tab', async ({ page }) => {
@@ -251,7 +251,7 @@ test('teacher keeps a new-task draft when reopening it as a parallel tab', async
 
   await switchTask(page, '生成函数单调性课件');
   await expect(page.getByRole('heading', { level: 1, name: '生成函数单调性课件' })).toBeVisible();
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   await expect(taskTabs.getByRole('button', { name: '生成函数单调性课件', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(taskTabs.getByRole('button', { name: '新建任务', exact: true })).toHaveCount(0);
 
@@ -290,7 +290,7 @@ test('teacher keeps a new-task draft when reopening it as a parallel tab', async
 
 test('current-tab selector replaces the active tab instead of opening another tab', async ({ page }) => {
   await openTeacherWorkBuddy(page);
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
 
   await switchTask(page, '函数单元课程方案包');
   await expect(taskTabs.getByRole('button', { name: '函数单元课程方案包', exact: true })).toHaveAttribute('aria-current', 'page');
@@ -325,7 +325,7 @@ test('teacher renames the current Session inline from its active tab', async ({ 
   await openTeacherWorkBuddy(page);
   await switchTask(page, '生成函数单调性课件');
 
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   const currentTab = taskTabs.getByRole('button', { name: '生成函数单调性课件', exact: true });
   const renameTrigger = page.getByRole('button', { name: '重命名任务：生成函数单调性课件' });
   await currentTab.hover();
@@ -351,8 +351,8 @@ test('teacher renames the current Session inline from its active tab', async ({ 
 
 test('task tabs expose distinct hover and persistent active highlights', async ({ page }) => {
   await openTeacherWorkBuddy(page);
-  const taskBar = page.locator('header[aria-label="Work Buddy 任务导航"]');
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskBar = page.locator('header[aria-label="TeachBuddy 任务导航"]');
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   const targetTab = taskTabs.getByRole('button', { name: '生成函数单调性课件', exact: true });
   const targetShell = targetTab.locator('..');
 
@@ -382,7 +382,7 @@ test('all tasks selector anchors to the active task tab', async ({ page }) => {
   await page.setViewportSize({ width: 2589, height: 1027 });
   await switchTask(page, '函数单元课程方案包');
 
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   const activeTab = taskTabs.getByRole('button', { name: '函数单元课程方案包', exact: true });
   const triggerBox = await activeTab.boundingBox();
   expect(triggerBox).not.toBeNull();
@@ -397,7 +397,7 @@ test('all tasks selector anchors to the active task tab', async ({ page }) => {
 
 test('new task entry follows the open tabs and keeps its add icon in every state', async ({ page }) => {
   await openTeacherWorkBuddy(page);
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   const newTaskEntry = taskTabs.getByRole('button', { name: '添加新任务' });
   const lastOpenTab = taskTabs.locator(':scope > div').last();
   const contextToggle = page.getByRole('button', { name: '展开核心上下文' });
@@ -449,7 +449,7 @@ test('teacher uses the add button to keep one Run open while switching another t
   await switchTask(page, '整理本周学情沟通要点');
 
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-parent-note$/);
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   await expect(taskTabs.getByRole('button', { name: '整理本周学情沟通要点', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByText('可重试', { exact: true })).toBeVisible();
 
@@ -476,7 +476,7 @@ test('teacher manages and scrolls all tasks inside the current-tab selector', as
   await renameInput.fill('函数单元方案包 · 第一版');
   await renameInput.press('Enter');
   await expect(page.getByRole('heading', { level: 1, name: '函数单元方案包 · 第一版' })).toBeVisible();
-  const taskTabs = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskTabs = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   await expect(taskTabs.getByRole('button', { name: '函数单元方案包 · 第一版', exact: true })).toHaveAttribute('aria-current', 'page');
 
   const taskList = selector.getByRole('list', { name: '全部任务列表' });

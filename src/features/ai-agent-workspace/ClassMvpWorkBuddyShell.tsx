@@ -1,6 +1,7 @@
 import { ArrowLeft, ClipboardList, LockKeyhole, Sparkles } from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { WORKBUDDY_VISIBLE_CAPABILITIES } from './capability-registry';
 import {
   workBuddyCapabilityPath,
@@ -32,16 +33,16 @@ export function ClassMvpWorkBuddyShell({ children, profile }: ClassMvpWorkBuddyS
 
   return (
     <div className={styles.shell} data-testid="class-mvp-workbuddy-shell">
-      <aside className={styles.sidebar} aria-label="WorkBuddy 页面导航">
+      <aside className={styles.sidebar} aria-label={`${TEACHBUDDY_BRAND.shortName} 页面导航`}>
         <div className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true"><Sparkles size={18} /></span>
           <span className={styles.brandCopy}>
-            <strong>WorkBuddy</strong>
-            <span>教师工作空间</span>
+            <strong>{TEACHBUDDY_BRAND.shortName}</strong>
+            <span>{TEACHBUDDY_BRAND.descriptor}</span>
           </span>
         </div>
 
-        <nav className={styles.navigation} aria-label="WorkBuddy 导航">
+        <nav className={styles.navigation} aria-label={`${TEACHBUDDY_BRAND.shortName} 导航`}>
           <section className={styles.navSection} aria-label="任务">
             <Link
               aria-current={taskWorkspaceActive ? 'page' : undefined}
@@ -76,7 +77,7 @@ export function ClassMvpWorkBuddyShell({ children, profile }: ClassMvpWorkBuddyS
       <main
         ref={pageRef}
         className={styles.workspace}
-        aria-label="WorkBuddy"
+        aria-label={TEACHBUDDY_BRAND.shortName}
         tabIndex={-1}
       >
         {children}

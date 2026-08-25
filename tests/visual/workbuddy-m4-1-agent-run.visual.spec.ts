@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 async function openWorkBuddy(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
 }
 
 async function confirmContext(page: import('@playwright/test').Page) {

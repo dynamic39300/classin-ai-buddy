@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { createElement, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import {
   executeCapabilityCommand,
   filterCapabilityItems,
@@ -510,7 +511,7 @@ function SkillMarket({
     <section className={styles.marketScene}>
       <header className={styles.skillHero}>
         <div>
-          <span>Work Buddy Skills</span>
+          <span>{TEACHBUDDY_BRAND.shortName} Skills</span>
           <h1 id="skills-workspace-title" aria-label="技能市场">
             把专业教学方法
             <br />
@@ -549,7 +550,7 @@ function SkillMarket({
               <div className={styles.skillAddMenu} role="menu" aria-label="添加技能方式">
                 <button type="button" role="menuitem" onClick={() => { setAddMenuOpen(false); onFind(); }}>
                   <Search size={16} />
-                  <span><strong>查找技能</strong><small>让 Work Buddy 帮你找到合适的 Skill</small></span>
+                  <span><strong>查找技能</strong><small>让 {TEACHBUDDY_BRAND.shortName} 帮你找到合适的 Skill</small></span>
                 </button>
                 <button type="button" role="menuitem" onClick={() => { setAddMenuOpen(false); onUpload(); }}>
                   <Upload size={16} />
@@ -2415,18 +2416,18 @@ function StandaloneSettingsSurface() {
   const [feedback, setFeedback] = useState('');
   const labels: Readonly<Record<string, Readonly<{ title: string; description: string }>>> = Object.freeze({
     general: { title: '通用', description: '管理个人工作台的语言、时区和任务默认行为。' },
-    model: { title: 'AI 能力', description: '当前使用 WorkBuddy 托管的模拟 AI 能力，不需要配置个人密钥。' },
+    model: { title: 'AI 能力', description: `当前使用 ${TEACHBUDDY_BRAND.shortName} 托管的模拟 AI 能力，不需要配置个人密钥。` },
     data: { title: '个人数据', description: '任务、内容和文件只保存在当前独立教师账号的数据空间。' },
     notifications: { title: '通知', description: '选择是否接收个人任务完成与点数变化提醒。' },
     sandbox: { title: '受控运行', description: '工具只访问当前任务明确选择的个人文件和公开网址。' },
-    about: { title: '关于', description: '独立教师 WorkBuddy 当前为固定、可重置的模拟体验。' },
+    about: { title: '关于', description: `${TEACHBUDDY_BRAND.officialName} 当前为固定、可重置的模拟体验。` },
     feedback: { title: '反馈', description: '记录你对独立产品体验的建议。' },
   });
   const current = labels[section] ?? labels.general!;
   return (
     <main className={styles.settingsPage} aria-labelledby="settings-workspace-title">
       <h1 id="settings-workspace-title" className={styles.srOnly}>设置</h1>
-      <nav className={styles.settingsNav} aria-label="WorkBuddy 个人设置分组">
+      <nav className={styles.settingsNav} aria-label={`${TEACHBUDDY_BRAND.shortName} 个人设置分组`}>
         {SETTINGS.map(([id, label, Icon]) => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}><Icon size={18} />{label}</button>)}
       </nav>
       <section className={styles.settingsWorkspace}>
@@ -2455,7 +2456,7 @@ function SettingsSurface() {
       <h1 id="settings-workspace-title" className={styles.srOnly}>
         设置
       </h1>
-      <nav className={styles.settingsNav} aria-label="Work Buddy 设置分组">
+      <nav className={styles.settingsNav} aria-label={`${TEACHBUDDY_BRAND.shortName} 设置分组`}>
         {SETTINGS.map(([id, label, Icon]) => (
           <button
             key={id}
@@ -2640,7 +2641,7 @@ function SettingsContent({
     return (
       <div className={styles.feedbackForm}>
         <p className={styles.notice}>
-          帮助我们持续改善 Work Buddy。提交前请移除学生敏感信息。
+          帮助我们持续改善 {TEACHBUDDY_BRAND.shortName}。提交前请移除学生敏感信息。
         </p>
         <Field label="反馈类型">
           <div className={styles.radioRow}>
@@ -2680,7 +2681,7 @@ function SettingsContent({
     return (
       <div className={styles.aboutPanel}>
         <Sparkles size={32} />
-        <h3>Work Buddy</h3>
+        <h3>{TEACHBUDDY_BRAND.officialName}</h3>
         <p>面向教师的任务型 AI 工作台</p>
         <dl>
           <dt>当前版本</dt>

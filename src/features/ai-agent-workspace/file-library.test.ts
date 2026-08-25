@@ -61,7 +61,7 @@ describe("file asset library module", () => {
       artifactRef: { id: 'asset-courseware-pptx', version: 'v2' },
       spaceFileRef: {
         id: 'space-file-courseware-pptx', version: 'v2',
-        pathLabel: '我的云盘 / WorkBuddy 产物 / 函数单调性智能课件.pptx',
+        pathLabel: '我的云盘 / TeachBuddy 产物 / 函数单调性智能课件.pptx',
       },
       teacherInPermission: 'allowed',
     });

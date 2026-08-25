@@ -14,7 +14,7 @@ describe('WorkBuddy quiz activity integration', () => {
     render(<App />);
 
     await user.click(screen.getByRole('button', { name: /老师视角/ }));
-    await user.click(within(screen.getByRole('navigation', { name: '老师视角主导航' })).getByRole('link', { name: 'Work Buddy' }));
+    await user.click(within(screen.getByRole('navigation', { name: '老师视角主导航' })).getByRole('link', { name: 'TeachBuddy' }));
     await user.click(screen.getByRole('button', { name: '生成测验并创建活动草稿' }));
     await user.click(screen.getByRole('button', { name: '展开核心上下文' }));
     const context = screen.getByRole('complementary', { name: '核心上下文' });
@@ -22,11 +22,11 @@ describe('WorkBuddy quiz activity integration', () => {
     await user.click(within(context).getByRole('button', { name: '确认上下文版本' }));
     await user.click(screen.getByRole('button', { name: '创建任务' }));
 
-    const composer = screen.getByRole('textbox', { name: '向 WorkBuddy 补充要求' });
+    const composer = screen.getByRole('textbox', { name: '向 TeachBuddy 补充要求' });
     await user.type(composer, '解析里请突出正方向约定。');
     await user.click(screen.getByRole('button', { name: '发送补充要求' }));
     expect(screen.getByText('解析里请突出正方向约定。')).toBeVisible();
-    expect(screen.getByText('WorkBuddy 已收到')).toBeVisible();
+    expect(screen.getByText('TeachBuddy 已收到')).toBeVisible();
 
     const brief = screen.getByRole('article', { name: '确认试卷结构' });
     const judgement = within(brief).getByRole('checkbox', { name: '判断题' });

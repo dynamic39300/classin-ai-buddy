@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { AppRole } from '@domain/account/role';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { getActionableTaskBadgeCount } from '@domain/task/task';
 import { TASK_ITEMS, TASK_NOW } from '@mocks/scenarios/tasks';
 
@@ -52,7 +53,7 @@ function taskBadge(role: AppRole): string | undefined {
 
 const TEACHER_NAVIGATION: readonly NavigationNode[] = [
   item({ id: 'teacher-home', label: '首页', to: '/teacher/home', icon: Home, group: 'business' }),
-  item({ id: 'teacher-ai-agent', label: 'Work Buddy', to: '/teacher/ai-agent', icon: Sparkles, group: 'business' }),
+  item({ id: 'teacher-ai-agent', label: TEACHBUDDY_BRAND.shortName, to: '/teacher/ai-agent', icon: Sparkles, group: 'business' }),
   {
     kind: 'collapsible',
     id: 'teacher-class-management',

@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
 import type { ConversationRunEvent, ConversationRunProgress } from '@contracts/workbuddy/conversation-run';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import type { CoursewareArtifactDraft } from '@domain/workbuddy/course-production';
 import type { TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
 import type { PersonalContentReceipt, PublishPersonalContentResult } from '@domain/standalone-workbuddy/content';
@@ -251,7 +252,7 @@ export function ConversationRunSurface() {
                 spaceFileRef: {
                   id: `space-file-${coursewareView.run.artifact!.id.replace(/^artifact-/, '')}`,
                   version: coursewareView.run.artifact!.version,
-                  pathLabel: `我的云盘 / WorkBuddy 产物 / ${coursewareView.run.artifact!.title}.pptx`,
+                  pathLabel: `我的云盘 / TeachBuddy 产物 / ${coursewareView.run.artifact!.title}.pptx`,
                 },
                 title: coursewareView.run.artifact!.title,
                 permission: 'allowed',
@@ -447,7 +448,7 @@ function CoursewareOutput({
             <div className={styles.pageStatus}><span aria-live="polite">第 {currentPage} 页，共 {pageCount} 页</span><small>{focused ? '↑ ↓ 或 PageUp / PageDown 翻页' : '打开全局预览可查看全部页面'}</small></div>
             <div className={styles.readerViewport}>
               <article className={styles.slideCanvas} data-tone={pageContent.tone} aria-label={`第 ${currentPage} 页：${pageContent.title}`}>
-                <header><span>ClassIn Work Buddy</span><small>{pageContent.section}</small></header>
+                <header><span>{TEACHBUDDY_BRAND.officialName}</span><small>{pageContent.section}</small></header>
                 <div className={styles.slideCopy}><small>高中数学 · 函数的性质</small><h3>{pageContent.title}</h3><p>{pageContent.summary}</p><ul>{pageContent.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>{pageContent.formula ? <strong>{pageContent.formula}</strong> : null}</div>
                 <footer><span>智能课件 · 体验内容</span><b>{String(currentPage).padStart(2, '0')}</b></footer>
               </article>

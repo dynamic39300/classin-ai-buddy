@@ -40,7 +40,7 @@ export type WeeklyPreparationNoticeArtifactDraft = Readonly<{
   planItems: readonly WeeklyPreparationPlanItem[];
   body: string;
   generatedAt: string;
-  truthLabel: '[模拟] WorkBuddy 课前准备通知草稿';
+  truthLabel: '[模拟] TeachBuddy 课前准备通知草稿';
 }>;
 
 export type WeeklyPreparationNoticePreparation =
@@ -146,7 +146,7 @@ export function prepareWeeklyPreparationNotice(input: Readonly<{
     planItems: Object.freeze(input.facts.planItems),
     body: renderWeeklyPreparationNoticeBody(input.facts),
     generatedAt: capturedAt,
-    truthLabel: '[模拟] WorkBuddy 课前准备通知草稿',
+    truthLabel: '[模拟] TeachBuddy 课前准备通知草稿',
   });
   return Object.freeze({
     kind: 'weekly-preparation-notice',

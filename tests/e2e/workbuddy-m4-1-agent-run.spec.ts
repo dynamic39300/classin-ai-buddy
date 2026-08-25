@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 async function openWorkBuddy(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
 }
 
 async function openNewTaskContext(page: import('@playwright/test').Page) {
@@ -347,7 +347,7 @@ test('teacher previews the full read-only Artifact and completes Action, Approva
   await expect(receipt.getByText('只有执行回执能证明 ClassIn 已接受本次保存。', { exact: true })).toBeVisible();
   await expect(receipt.getByRole('link', { name: '打开 ClassIn 课程对象' })).toBeVisible();
 
-  const taskNavigation = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' });
+  const taskNavigation = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' });
   await taskNavigation.getByRole('button').first().click();
   await taskNavigation.getByRole('button', { name: '生成函数单调性智能课件', exact: true }).click();
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-m4-courseware$/);
@@ -563,7 +563,7 @@ test('teacher approves the package once and receives object-level execution resu
   await expect(receipt.getByText('已执行', { exact: true })).toHaveCount(4);
   await expect(receipt.getByText('[模拟]课程方案包执行回执', { exact: true })).toBeVisible();
   await expect(timeline.getByRole('article').filter({ hasText: '已记录对象采纳结果' })).toHaveCount(4);
-  await expect(timeline.getByText(/\[模拟\] WorkBuddy 评价事件.*尚不代表教学效果/)).toHaveCount(4);
+  await expect(timeline.getByText(/\[模拟\] TeachBuddy 评价事件.*尚不代表教学效果/)).toHaveCount(4);
 });
 
 test('partial package writeback retries only failed and waiting items while retaining both receipts', async ({ page }) => {

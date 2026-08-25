@@ -15,7 +15,7 @@ export type EvaluationEvent = Readonly<{
   }>;
   observedAt: string;
   evaluator: 'workbuddy-system';
-  truthLabel: '[模拟] WorkBuddy 评价事件';
+  truthLabel: '[模拟] TeachBuddy 评价事件';
 }>;
 
 type ActionEvidence = Readonly<{
@@ -87,7 +87,7 @@ function recordExecutionOutcome(input: RecordExecutionOutcomeInput): EvaluationE
     }),
     observedAt: input.receipt.executedAt,
     evaluator: 'workbuddy-system' as const,
-    truthLabel: '[模拟] WorkBuddy 评价事件' as const,
+    truthLabel: '[模拟] TeachBuddy 评价事件' as const,
   });
 }
 

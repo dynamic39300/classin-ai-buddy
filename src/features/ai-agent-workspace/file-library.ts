@@ -200,7 +200,7 @@ export function getFileAssetReference(asset: FileAsset): FileAssetReference {
     spaceFileRef: Object.freeze({
       id: `space-file-${asset.id.replace(/^asset-/, '')}`,
       version: asset.version,
-      pathLabel: `我的云盘 / WorkBuddy 产物 / ${asset.name}`,
+      pathLabel: `我的云盘 / TeachBuddy 产物 / ${asset.name}`,
     }),
     teacherInPermission: asset.status === '无权访问' ? 'denied' : 'allowed',
   });

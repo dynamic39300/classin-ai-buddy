@@ -37,6 +37,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BoundaryDialog } from '@app/shell/BoundaryDialog';
 import { usePageHeader } from '@app/shell/usePageHeader';
 import { useOperationGuard } from '@app/shell/use-operation-guard';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { TeachingObjectIcon } from '@design-system/TeachingObjectIcon';
 import {
   addClassActivity,
@@ -1160,8 +1161,8 @@ export function TeacherClassWorkspace({ detailId, messageThreads, renderClassCha
             {railSections.ai ? <div className={styles.railLinks}><p className={styles.railSectionNote}>老师已授权 · 班级成员可用</p><button type="button" onClick={() => setBoundary('“AI 助教”为 Placeholder，未接入真实 AI 服务。')}><Bot aria-hidden="true" size={15} />AI 助教</button><button type="button" onClick={() => setBoundary('“AI 学情”为 Placeholder，未生成真实学生分析。')}><Sparkles aria-hidden="true" size={15} />AI 学情</button><button type="button" onClick={() => setBoundary('“应用思路点拨”为 Placeholder，未接入真实 AI 服务。')}><PencilLine aria-hidden="true" size={15} />应用思路点拨</button></div> : null}
           </section>
           <section className={styles.workBuddyRailSection}>
-            <header><button type="button" aria-expanded={railSections.workbuddy} onClick={() => toggleRailSection('workbuddy')}><span>我的教学助理</span><ChevronDown aria-hidden="true" size={15} /></button></header>
-            {railSections.workbuddy ? <div className={styles.workBuddyPortal}><div className={styles.workBuddyIdentity}><span className={styles.workBuddyMark}><Sparkles aria-hidden="true" size={17} /></span><div><strong>WorkBuddy</strong><small>仅你可见</small></div></div><p>生成、审阅并执行你的教学任务。</p><button type="button" onClick={() => navigate(`/teacher/classes/${selectedClass.id}/workbuddy/new${activeCourse ? `?course=${encodeURIComponent(activeCourse.id)}` : ''}`)}>打开 WorkBuddy<ArrowRight aria-hidden="true" size={15} /></button></div> : null}
+            <header><button type="button" aria-expanded={railSections.workbuddy} onClick={() => toggleRailSection('workbuddy')}><span>{TEACHBUDDY_BRAND.shortName}</span><ChevronDown aria-hidden="true" size={15} /></button></header>
+            {railSections.workbuddy ? <div className={styles.workBuddyPortal}><div className={styles.workBuddyIdentity}><span className={styles.workBuddyMark}><Sparkles aria-hidden="true" size={17} /></span><div><strong>{TEACHBUDDY_BRAND.shortName}</strong><small>{TEACHBUDDY_BRAND.descriptor} · 仅你可见</small></div></div><p>生成、审阅并执行你的教学任务。</p><button type="button" onClick={() => navigate(`/teacher/classes/${selectedClass.id}/workbuddy/new${activeCourse ? `?course=${encodeURIComponent(activeCourse.id)}` : ''}`)}>打开 {TEACHBUDDY_BRAND.shortName}<ArrowRight aria-hidden="true" size={15} /></button></div> : null}
           </section>
           </>}
         </aside>

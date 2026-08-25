@@ -1,5 +1,5 @@
 ---
-title: M4.4 独立教师 WorkBuddy Web 产品 Tickets
+title: M4.4 独立教师 ClassIn TeachBuddy Web 产品 Tickets
 status: COMPLETE
 version: v1.2
 date: 2026-08-25

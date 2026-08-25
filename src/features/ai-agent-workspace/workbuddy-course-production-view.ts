@@ -111,7 +111,7 @@ export function projectQuizActivityRunView(run: QuizActivityCreationRun | null):
 
 const SOURCE_LABELS = {
   classin: 'ClassIn 业务事实', 'teacher-input': '教师输入', 'institution-rule': '机构规则', 'domain-knowledge': '受版本治理的知识',
-  'workbuddy-artifact': 'WorkBuddy AI 产物', teacherin: 'TeacherIn 资源',
+  'workbuddy-artifact': 'TeachBuddy AI 产物', teacherin: 'TeacherIn 资源',
 } as const;
 
 const SENSITIVITY_LABELS = {

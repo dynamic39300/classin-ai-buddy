@@ -42,7 +42,7 @@ export function ResourceCenterWorkspace({ draft, routeState, updateRouteState, c
           <label>作品名称<input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} /></label>
           <label>授权方式<select value={license} onChange={(event) => setLicense(event.target.value)}><option value="organization-editable">机构内可获取和改编</option><option value="public-readable">公开获取，不可改编</option><option value="private">仅自己可见</option></select></label>
         </div>
-        <p>来源：{draft.source === 'workbuddy' ? 'WorkBuddy AI 协作产物' : 'TeacherIn'} · 草稿 ID：{draft.id}</p>
+        <p>来源：{draft.source === 'workbuddy' ? 'TeachBuddy AI 协作产物' : 'TeacherIn'} · 草稿 ID：{draft.id}</p>
         <footer><button type="button" onClick={() => setDraftFeedback('[模拟] 草稿信息已保存在当前体验环境。')}>保存草稿</button><button className={styles.primaryButton} type="button" onClick={() => setDraftFeedback('[模拟] 已完成发布体验；未写入真实 TeacherIn。')}>发布</button></footer>
         {draftFeedback ? <p className={styles.teacherInDraftFeedback} role="status">{draftFeedback}</p> : null}
       </section> : null}

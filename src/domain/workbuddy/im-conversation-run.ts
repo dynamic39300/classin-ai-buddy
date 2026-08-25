@@ -99,7 +99,7 @@ export function createWorkBuddyImConversationRun(input: Readonly<{
     ]),
     plan: definition.plan,
     progress: Object.freeze({ status: 'organizing', stepEndsAt: input.organizeEndsAt }),
-    truthLabel: '[模拟] WorkBuddy IM Agent Run',
+    truthLabel: '[模拟] TeachBuddy IM Agent Run',
   });
 }
 

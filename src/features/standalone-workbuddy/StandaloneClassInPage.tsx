@@ -1,5 +1,6 @@
 import { ArrowUpRight, Check, Database, FileUp, Link2Off } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import styles from './StandaloneWorkBuddy.module.css';
 
 export function StandaloneClassInPage() {
@@ -8,7 +9,7 @@ export function StandaloneClassInPage() {
       <header>
         <span className={styles.kicker}>从独立使用到教学业务协同</span>
         <h1 id="classin-connection-title">现在可以开始，连接 ClassIn 后更省一步</h1>
-        <p>当前 WorkBuddy 只依据你主动输入的任务描述和上传资料。它不会读取任何班级、学生或作业事实。</p>
+        <p>当前 {TEACHBUDDY_BRAND.shortName} 只依据你主动输入的任务描述和上传资料。它不会读取任何班级、学生或作业事实。</p>
       </header>
 
       <div className={styles.connectionComparison}>
@@ -25,7 +26,7 @@ export function StandaloneClassInPage() {
       </div>
 
       <aside className={styles.classInCta}>
-        <div><strong>你不需要先连接，才能体验 WorkBuddy</strong><p>先完成一个任务；需要跨班级上下文、教学活动写回或机构协同时，再了解 ClassIn 的完整方案。</p></div>
+        <div><strong>你不需要先连接，才能体验 {TEACHBUDDY_BRAND.shortName}</strong><p>先完成一个任务；需要跨班级上下文、教学活动写回或机构协同时，再了解 ClassIn 的完整方案。</p></div>
         <div><Link to="/workbuddy/app/new">先创建一个任务</Link><a href="https://www.classin.com/" target="_blank" rel="noreferrer">了解 ClassIn <ArrowUpRight size={15} /></a></div>
       </aside>
     </section>

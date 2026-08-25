@@ -36,7 +36,7 @@ describe('Evaluation Module', () => {
       signal: { type: 'artifact_adoption', outcome: 'adopted', executionStatus: 'success' },
       observedAt: receipt.executedAt,
       evaluator: 'workbuddy-system',
-      truthLabel: '[模拟] WorkBuddy 评价事件',
+      truthLabel: '[模拟] TeachBuddy 评价事件',
     });
   });
 

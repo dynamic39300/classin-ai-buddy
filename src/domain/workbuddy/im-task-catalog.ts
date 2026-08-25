@@ -26,20 +26,20 @@ const HOMEWORK_PLAN: readonly WorkBuddyImRunPlanStep[] = Object.freeze([
   CLASS_CONTEXT_STEP,
   Object.freeze({ id: 'query-active-homework', title: '查询未截止作业', capabilityId: 'classin-homework-query', capabilityLabel: 'ClassIn 作业查询', purpose: '找出当前班级已经开始且尚未截止的正式作业', inputSummary: '班级引用、作业发布时间、开始时间与截止时间', expectedOutput: '有效作业清单与截止时间', contextLabels: Object.freeze(['班级作业', '发布时间', '截止时间']) }),
   Object.freeze({ id: 'check-submission-status', title: '核对学员提交状态', capabilityId: 'classin-submission-reader', capabilityLabel: 'ClassIn 提交状态查询', purpose: '按作业核对目标学员是否已经提交过', inputSummary: '有效作业、接收学员与最新提交状态', expectedOutput: '按作业去重的未提交学员名单', contextLabels: Object.freeze(['接收学员', '提交状态']) }),
-  Object.freeze({ id: 'compose-reminder', title: '生成分组提醒草稿', capabilityId: 'workbuddy-reminder-composer', capabilityLabel: 'WorkBuddy 分组提醒生成', purpose: '把未提交事实整理成教师可审阅的一条群消息', inputSummary: '作业分组、学员显示名、截止时间与教师沟通要求', expectedOutput: '一条按作业分组的可编辑提醒草稿', contextLabels: Object.freeze(['作业分组', '学员显示名', '教师要求']) }),
+  Object.freeze({ id: 'compose-reminder', title: '生成分组提醒草稿', capabilityId: 'workbuddy-reminder-composer', capabilityLabel: 'TeachBuddy 分组提醒生成', purpose: '把未提交事实整理成教师可审阅的一条群消息', inputSummary: '作业分组、学员显示名、截止时间与教师沟通要求', expectedOutput: '一条按作业分组的可编辑提醒草稿', contextLabels: Object.freeze(['作业分组', '学员显示名', '教师要求']) }),
 ]);
 
 const WEEKLY_PLAN: readonly WorkBuddyImRunPlanStep[] = Object.freeze([
   CLASS_CONTEXT_STEP,
   Object.freeze({ id: 'read-weekly-teaching-plan', title: '读取本周教学计划', capabilityId: 'classin-teaching-plan-reader', capabilityLabel: 'ClassIn 教学计划读取', purpose: '读取当前班级本周已经安排的课次和教学主题', inputSummary: '班级引用、当前周与课程教学计划', expectedOutput: '本周课次、时间和主题清单', contextLabels: Object.freeze(['本周计划', '课程进度']) }),
-  Object.freeze({ id: 'derive-student-preparation', title: '提炼课前准备事项', capabilityId: 'workbuddy-preparation-planner', capabilityLabel: 'WorkBuddy 课前准备提炼', purpose: '把教学安排转成学生能够提前完成的具体准备事项', inputSummary: '课次主题、教材范围与教师教学目标', expectedOutput: '按课次整理的学生准备事项', contextLabels: Object.freeze(['教学主题', '教材范围', '教学目标']) }),
-  Object.freeze({ id: 'compose-weekly-notice', title: '生成班级通知草稿', capabilityId: 'workbuddy-class-notice-composer', capabilityLabel: 'WorkBuddy 班级通知生成', purpose: '把本周准备事项整理成教师可审阅的一条群通知', inputSummary: '课次安排、准备事项与教师沟通要求', expectedOutput: '一条可编辑的课前准备通知草稿', contextLabels: Object.freeze(['本周课次', '准备事项', '教师要求']) }),
+  Object.freeze({ id: 'derive-student-preparation', title: '提炼课前准备事项', capabilityId: 'workbuddy-preparation-planner', capabilityLabel: 'TeachBuddy 课前准备提炼', purpose: '把教学安排转成学生能够提前完成的具体准备事项', inputSummary: '课次主题、教材范围与教师教学目标', expectedOutput: '按课次整理的学生准备事项', contextLabels: Object.freeze(['教学主题', '教材范围', '教学目标']) }),
+  Object.freeze({ id: 'compose-weekly-notice', title: '生成班级通知草稿', capabilityId: 'workbuddy-class-notice-composer', capabilityLabel: 'TeachBuddy 班级通知生成', purpose: '把本周准备事项整理成教师可审阅的一条群通知', inputSummary: '课次安排、准备事项与教师沟通要求', expectedOutput: '一条可编辑的课前准备通知草稿', contextLabels: Object.freeze(['本周课次', '准备事项', '教师要求']) }),
 ]);
 
 const GUIDED_EXPLANATION_PLAN: readonly WorkBuddyImRunPlanStep[] = Object.freeze([
   CLASS_CONTEXT_STEP,
   Object.freeze({ id: 'read-question-context', title: '读取题目与学生卡点', capabilityId: 'classin-message-context-reader', capabilityLabel: 'ClassIn 消息上下文', purpose: '只读取当前线程最近的学生问题', inputSummary: '当前线程与最近消息', expectedOutput: '题目与需要讲解的卡点', contextLabels: Object.freeze(['当前线程', '最近学生消息']) }),
-  Object.freeze({ id: 'compose-guided-explanation', title: '生成分步讲解', capabilityId: 'workbuddy-guided-explanation', capabilityLabel: 'WorkBuddy 讲题生成', purpose: '把题目组织成学生可学习的步骤、检查点和答案', inputSummary: '题目、课程范围与教师要求', expectedOutput: '格式中立的讲题 Artifact', contextLabels: Object.freeze(['题目', '教学步骤', '答案策略']) }),
+  Object.freeze({ id: 'compose-guided-explanation', title: '生成分步讲解', capabilityId: 'workbuddy-guided-explanation', capabilityLabel: 'TeachBuddy 讲题生成', purpose: '把题目组织成学生可学习的步骤、检查点和答案', inputSummary: '题目、课程范围与教师要求', expectedOutput: '格式中立的讲题 Artifact', contextLabels: Object.freeze(['题目', '教学步骤', '答案策略']) }),
   Object.freeze({ id: 'prepare-interactive-view', title: '准备交互讲解', capabilityId: 'workbuddy-html-presentation', capabilityLabel: '交互内容投影', purpose: '为首个 Demo 生成可打开的 HTML/H5 投影', inputSummary: '讲题 Artifact 与展示策略', expectedOutput: '待教师审核的交互讲解', contextLabels: Object.freeze(['Artifact 版本', '展示适配器']) }),
 ]);
 

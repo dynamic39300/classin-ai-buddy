@@ -68,8 +68,8 @@ describe('WorkBuddy IM assistance', () => {
   it('generates, approves, distributes and opens a format-neutral guided explanation', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
     await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
 
@@ -130,8 +130,8 @@ describe('WorkBuddy IM assistance', () => {
     renderWorkspace('teacher');
     await user.click(screen.getByRole('button', { name: '私聊' }));
     await user.click(screen.getByRole('button', { name: /李明.*明白了，我重新画一下过程图/ }));
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
     await user.click(within(sidecar).getByRole('button', { name: '生成回复建议' }));
     const review = await within(sidecar).findByLabelText('单题交互讲解待审核');
@@ -151,8 +151,8 @@ describe('WorkBuddy IM assistance', () => {
   it('preserves the guided artifact and recovers with the same approved action after a transient failure', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher', undefined, false, 'recoverable_failure');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
     await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
     await user.click(await within(sidecar).findByRole('button', { name: '确认保存并发送' }));
@@ -167,8 +167,8 @@ describe('WorkBuddy IM assistance', () => {
   ] as const)('projects %s as a non-retry guided explanation terminal state', async (guidedMode, heading) => {
     const user = userEvent.setup();
     renderWorkspace('teacher', undefined, false, guidedMode);
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
     await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
     await user.click(await within(sidecar).findByRole('button', { name: '确认保存并发送' }));
@@ -180,8 +180,8 @@ describe('WorkBuddy IM assistance', () => {
   it('projects a generation failure with a fresh-run recovery command', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher', undefined, false, 'generation_failure');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: /单题讲解生成可打开的分步讲题内容/ }));
     await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
     const alert = await within(sidecar).findByRole('alert');
@@ -190,41 +190,41 @@ describe('WorkBuddy IM assistance', () => {
   });
   it('keeps WorkBuddy private to teachers in class chat', () => {
     const { unmount } = renderWorkspace('teacher');
-    expect(screen.getByRole('button', { name: 'WorkBuddy' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'TeachBuddy' })).toBeInTheDocument();
 
     unmount();
     renderWorkspace('student-family');
-    expect(screen.queryByRole('button', { name: 'WorkBuddy' })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('WorkBuddy 私密协作窗口')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'TeachBuddy' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('TeachBuddy 私密协作窗口')).not.toBeInTheDocument();
   });
 
   it('keeps WorkBuddy persistent across teacher immersive class and direct chats', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher', undefined, true);
 
-    const sidecar = await screen.findByLabelText('WorkBuddy 私密协作窗口');
+    const sidecar = await screen.findByLabelText('TeachBuddy 私密协作窗口');
     expect(sidecar).toHaveAttribute('data-dismissible', 'false');
-    expect(within(sidecar).queryByRole('button', { name: '关闭 WorkBuddy' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'WorkBuddy' })).not.toBeInTheDocument();
+    expect(within(sidecar).queryByRole('button', { name: '关闭 TeachBuddy' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'TeachBuddy' })).not.toBeInTheDocument();
     expect(within(sidecar).getByText('高二物理 3 班')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '私聊' }));
     await waitFor(() => expect(within(sidecar).getByText('李明')).toBeInTheDocument());
     expect(within(sidecar).getByText('告诉我你想如何回复当前私聊')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'WorkBuddy' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'TeachBuddy' })).not.toBeInTheDocument();
   });
 
   it('closes WorkBuddy after exiting immersive even when it was already open on entry', async () => {
     const user = userEvent.setup();
     const view = renderWorkspace('teacher');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    expect(screen.getByLabelText('WorkBuddy 私密协作窗口')).toHaveAttribute('data-dismissible', 'true');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    expect(screen.getByLabelText('TeachBuddy 私密协作窗口')).toHaveAttribute('data-dismissible', 'true');
 
     view.rerender(createWorkspaceTree('teacher', undefined, true));
-    expect(screen.getByLabelText('WorkBuddy 私密协作窗口')).toHaveAttribute('data-dismissible', 'false');
+    expect(screen.getByLabelText('TeachBuddy 私密协作窗口')).toHaveAttribute('data-dismissible', 'false');
 
     view.rerender(createWorkspaceTree('teacher'));
-    await waitFor(() => expect(screen.queryByLabelText('WorkBuddy 私密协作窗口')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('TeachBuddy 私密协作窗口')).not.toBeInTheDocument());
   });
 
   it('uses the current teacher direct chat to prepare a reply without sending it', async () => {
@@ -232,7 +232,7 @@ describe('WorkBuddy IM assistance', () => {
     renderWorkspace('teacher');
     await user.click(screen.getByRole('button', { name: '私聊' }));
 
-    const trigger = screen.getByRole('button', { name: 'WorkBuddy' });
+    const trigger = screen.getByRole('button', { name: 'TeachBuddy' });
     await user.click(trigger);
     expect(screen.getByText('告诉我你想如何回复当前私聊')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '生成回复建议' }));
@@ -240,7 +240,7 @@ describe('WorkBuddy IM assistance', () => {
     const suggestion = screen.getByRole('textbox', { name: '私聊回复建议正文' });
     expect((suggestion as HTMLTextAreaElement).value).toContain('我看到了你提到的');
     await user.click(screen.getByRole('button', { name: '插入回复框' }));
-    expect(screen.queryByLabelText('WorkBuddy 私密协作窗口')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('TeachBuddy 私密协作窗口')).not.toBeInTheDocument();
     expect((screen.getByRole('textbox', { name: '输入消息' }) as HTMLTextAreaElement).value).toContain('我看到了你提到的');
     expect(screen.getByRole('status')).toHaveTextContent('请确认后发送');
     expect(within(screen.getByLabelText('消息记录')).queryByText(/我看到了你提到的/)).not.toBeInTheDocument();
@@ -249,25 +249,25 @@ describe('WorkBuddy IM assistance', () => {
   it('closes the private sidecar with Escape and restores the WorkBuddy trigger', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher');
-    const trigger = screen.getByRole('button', { name: 'WorkBuddy' });
+    const trigger = screen.getByRole('button', { name: 'TeachBuddy' });
     await user.click(trigger);
-    expect(screen.getByLabelText('WorkBuddy 私密协作窗口')).toBeInTheDocument();
+    expect(screen.getByLabelText('TeachBuddy 私密协作窗口')).toBeInTheDocument();
     await user.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryByLabelText('WorkBuddy 私密协作窗口')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('TeachBuddy 私密协作窗口')).not.toBeInTheDocument());
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   it('shows distinct empty and read-failure states without creating a group message', async () => {
     const user = userEvent.setup();
     const { unmount } = renderWorkspace('teacher', 'empty');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
     await user.click(screen.getByRole('button', { name: '生成消息草稿' }));
     await waitFor(() => expect(screen.getByText('当前没有未截止的作业')).toBeInTheDocument());
     expect(within(screen.getByLabelText('消息记录')).queryByText(/以下作业尚未截止/)).not.toBeInTheDocument();
 
     unmount();
     renderWorkspace('teacher', 'read_failure');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
     await user.click(screen.getByRole('button', { name: '生成消息草稿' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('暂时无法读取作业与提交状态'));
     expect(within(screen.getByLabelText('消息记录')).queryByText(/以下作业尚未截止/)).not.toBeInTheDocument();
@@ -277,9 +277,9 @@ describe('WorkBuddy IM assistance', () => {
     const user = userEvent.setup();
     renderWorkspace('teacher');
 
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
-    expect(within(sidecar).getByText('仅你可见')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
+    expect(within(sidecar).getByText('AI 教学搭档 · 仅你可见')).toBeInTheDocument();
     expect(within(sidecar).getByText('高二物理 3 班')).toBeInTheDocument();
 
     expect(within(sidecar).getByRole('button', { name: '作业催交核对未截止作业并提醒未提交学员' })).toBeInTheDocument();
@@ -321,12 +321,12 @@ describe('WorkBuddy IM assistance', () => {
     expect(within(receipt).getByRole('button', { name: '查看群消息' })).toBeInTheDocument();
     expect(within(receipt).queryByText('发送身份')).not.toBeInTheDocument();
     expect(within(sidecar).getByText('已记录教师采纳结果')).toBeInTheDocument();
-    expect(within(sidecar).getByText(/\[模拟\] WorkBuddy 评价事件.*尚不代表教学效果/)).toBeInTheDocument();
+    expect(within(sidecar).getByText(/\[模拟\] TeachBuddy 评价事件.*尚不代表教学效果/)).toBeInTheDocument();
 
     const timeline = screen.getByLabelText('消息记录');
     const sentMessage = within(timeline).getByText('请以下同学今天完成作业。');
     expect(sentMessage.closest('article')).toHaveTextContent('我 ·');
-    expect(sentMessage).not.toHaveTextContent('WorkBuddy');
+    expect(sentMessage).not.toHaveTextContent('TeachBuddy');
     expect(within(sidecar).getAllByText(/\[模拟\] ClassIn 群消息执行回执/).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -334,11 +334,11 @@ describe('WorkBuddy IM assistance', () => {
     const user = userEvent.setup();
     renderWorkspace('teacher');
 
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: '课前准备根据本周教学计划生成课前准备通知' }));
 
-    const composer = within(sidecar).getByRole('textbox', { name: '向 WorkBuddy 输入要求' });
+    const composer = within(sidecar).getByRole('textbox', { name: '向 TeachBuddy 输入要求' });
     expect(composer).toHaveValue('你帮我看看本周的教学计划，然后看看我们是不是可以让孩子们提前做好准备，给孩子们形成一条通知消息，以便我一键发给他们。');
     await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
 
@@ -363,8 +363,8 @@ describe('WorkBuddy IM assistance', () => {
   it('retains both failed and successful execution evidence when a recoverable send succeeds on retry', async () => {
     const user = userEvent.setup();
     renderWorkspace('teacher', 'recoverable_failure');
-    await user.click(screen.getByRole('button', { name: 'WorkBuddy' }));
-    const sidecar = screen.getByLabelText('WorkBuddy 私密协作窗口');
+    await user.click(screen.getByRole('button', { name: 'TeachBuddy' }));
+    const sidecar = screen.getByLabelText('TeachBuddy 私密协作窗口');
     await user.click(within(sidecar).getByRole('button', { name: '生成消息草稿' }));
     await waitFor(() => expect(within(sidecar).getByRole('button', { name: /确认并发送/ })).toBeInTheDocument());
     await user.click(within(sidecar).getByRole('button', { name: /确认并发送/ }));
@@ -376,6 +376,6 @@ describe('WorkBuddy IM assistance', () => {
     expect(within(sidecar).getByText('已记录本次未完成采纳')).toBeInTheDocument();
     expect(within(sidecar).getByText('班级群消息执行未完成')).toBeInTheDocument();
     expect(within(sidecar).getByText('班级群消息执行完成')).toBeInTheDocument();
-    expect(within(sidecar).getAllByText(/\[模拟\] WorkBuddy 评价事件/)).toHaveLength(2);
+    expect(within(sidecar).getAllByText(/\[模拟\] TeachBuddy 评价事件/)).toHaveLength(2);
   });
 });

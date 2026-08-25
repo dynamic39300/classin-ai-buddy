@@ -27,7 +27,7 @@ describe('standalone teacher WorkBuddy', () => {
 
   it('guards the app route and preserves a safe standalone next path', () => {
     renderStandalone('/workbuddy/app/credits');
-    expect(screen.getByRole('heading', { level: 1, name: '欢迎回到 WorkBuddy' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '欢迎回到 TeachBuddy' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '免费注册' })).toHaveAttribute('href', '/workbuddy/register?next=%2Fworkbuddy%2Fapp%2Fcredits');
   });
 

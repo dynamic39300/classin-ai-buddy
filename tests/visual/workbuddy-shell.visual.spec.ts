@@ -4,7 +4,7 @@ async function openTeacherAgent(page: Page) {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
   const avatarVideo = page.locator('[data-workbuddy-avatar="true"] video');
   if (await avatarVideo.count()) {
     await avatarVideo.evaluate(async (element) => {
@@ -27,7 +27,7 @@ async function openClassMvpWorkBuddy(page: Page, viewport = { width: 1440, heigh
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.goto('/teacher/classes/physics-3?course=course-momentum');
-  await page.getByRole('button', { name: '打开 WorkBuddy' }).click();
+  await page.getByRole('button', { name: '打开 TeachBuddy' }).click();
   const avatarVideo = page.locator('[data-workbuddy-avatar="true"] video');
   if (await avatarVideo.count()) {
     await avatarVideo.evaluate(async (element) => {
@@ -45,7 +45,7 @@ async function openClassMvpWorkBuddy(page: Page, viewport = { width: 1440, heigh
 }
 
 async function switchTask(page: Page, title: string) {
-  await page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).locator('button[aria-current="page"]').click();
+  await page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' }).locator('button[aria-current="page"]').click();
   await page.getByRole('dialog', { name: '全部任务选择器' }).getByRole('button', { name: new RegExp(title) }).first().click();
 }
 
@@ -53,11 +53,11 @@ async function expectWorkbenchGeometry(page: Page) {
   const geometry = await page.evaluate(() => {
     const primaryNavigation = document.querySelector<HTMLElement>('nav[aria-label="老师视角主导航"]');
     const primarySidebar = primaryNavigation?.closest<HTMLElement>('aside');
-    const secondaryNavigation = document.querySelector<HTMLElement>('[role="group"][aria-label="Work Buddy 二级导航"]');
+    const secondaryNavigation = document.querySelector<HTMLElement>('[role="group"][aria-label="TeachBuddy 二级导航"]');
     const workspace = document.querySelector<HTMLElement>('#main-content');
-    const workSurface = document.querySelector<HTMLElement>('[aria-label="Work Buddy 工作区"]');
+    const workSurface = document.querySelector<HTMLElement>('[aria-label="TeachBuddy 工作区"]');
     const stage = document.querySelector<HTMLElement>('[data-workbuddy-stage="true"]');
-    const taskBar = document.querySelector<HTMLElement>('header[aria-label="Work Buddy 任务导航"]');
+    const taskBar = document.querySelector<HTMLElement>('header[aria-label="TeachBuddy 任务导航"]');
     if (!primarySidebar || !secondaryNavigation || !workspace || !workSurface || !stage || !taskBar) throw new Error('WorkBuddy shell geometry is incomplete.');
     const primary = primarySidebar.getBoundingClientRect();
     const secondary = secondaryNavigation.getBoundingClientRect();
@@ -149,7 +149,7 @@ test('WorkBuddy new task at 1440x900', async ({ page }) => {
   });
   expect(playback).toEqual({ autoplay: true, loop: true, muted: true, playsInline: true });
 
-  const secondaryNavigation = page.getByRole('group', { name: 'Work Buddy 二级导航' });
+  const secondaryNavigation = page.getByRole('group', { name: 'TeachBuddy 二级导航' });
   for (const title of ['技能市场', '工具连接', '我的文件', '定时任务', '设置']) {
     await expect(secondaryNavigation.getByRole('link', { name: title, exact: true })).toBeVisible();
   }
@@ -161,10 +161,10 @@ test('ClassIn MVP WorkBuddy keeps the new-task surface with the retained navigat
   await openClassMvpWorkBuddy(page);
   await expect(page.getByTestId('class-mvp-workbuddy-shell')).toBeVisible();
   await expect(page.getByRole('navigation', { name: '老师视角主导航' })).toHaveCount(0);
-  await expect(page.getByRole('navigation', { name: 'WorkBuddy 导航' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'TeachBuddy 导航' })).toBeVisible();
   await expect(page.getByTestId('ai-agent-workspace-layout')).toHaveAttribute('data-experience-profile', 'classin-mvp');
   await expect(page.getByRole('heading', { level: 1, name: '老师好，有什么能帮您的？' })).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'WorkBuddy 导航' }).getByRole('link', { name: '我的任务', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'TeachBuddy 导航' }).getByRole('link', { name: '我的任务', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('link', { name: '返回高二物理 3 班' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-classin-mvp-new-task-1440x900.png', { fullPage: true });
 });
@@ -180,7 +180,7 @@ test('ClassIn MVP WorkBuddy remains reachable at 1024x640', async ({ page }) => 
 test('WorkBuddy new task entry hover at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
   await expectTypewriterComplete(page);
-  const newTaskEntry = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).getByRole('button', { name: '添加新任务' });
+  const newTaskEntry = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' }).getByRole('button', { name: '添加新任务' });
   await newTaskEntry.hover();
   await expect(newTaskEntry.locator('svg.lucide-plus')).toBeVisible();
   await expect(newTaskEntry.locator('svg')).toHaveCount(1);
@@ -208,11 +208,11 @@ test('WorkBuddy TeacherIn Context picker at 1440x900', async ({ page }) => {
 
 test('WorkBuddy capability page uses the standard title topbar at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
-  await page.getByRole('group', { name: 'Work Buddy 二级导航' }).getByRole('link', { name: '技能市场', exact: true }).click();
+  await page.getByRole('group', { name: 'TeachBuddy 二级导航' }).getByRole('link', { name: '技能市场', exact: true }).click();
   const capabilityStage = page.locator('#main-content').locator('..');
 
   await expect(capabilityStage.locator(':scope > header').getByRole('heading', { level: 1, name: '技能市场' })).toBeVisible();
-  await expect(page.locator('header[aria-label="Work Buddy 任务导航"]')).toHaveCount(0);
+  await expect(page.locator('header[aria-label="TeachBuddy 任务导航"]')).toHaveCount(0);
   await expect(page).toHaveScreenshot('workbuddy-capability-titlebar-1440x900.png', { fullPage: true });
 });
 
@@ -235,7 +235,7 @@ test('WorkBuddy completed Session keeps its follow-up composer at 1440x900', asy
 test('WorkBuddy current Session uses an inline rename field at 1440x900', async ({ page }) => {
   await openTeacherAgent(page);
   await switchTask(page, '生成函数单调性课件');
-  const taskTab = page.getByRole('navigation', { name: '已打开的 Work Buddy 任务' }).getByRole('button', { name: '生成函数单调性课件', exact: true });
+  const taskTab = page.getByRole('navigation', { name: '已打开的 TeachBuddy 任务' }).getByRole('button', { name: '生成函数单调性课件', exact: true });
   await taskTab.hover();
   await expect(page.getByRole('button', { name: '重命名任务：生成函数单调性课件' })).toBeVisible();
   await expect(page.getByRole('button', { name: '关闭任务：生成函数单调性课件' })).toBeVisible();
@@ -249,7 +249,7 @@ test('WorkBuddy all-task selector anchors to the current task tab at 1440x900', 
   await openTeacherAgent(page);
   await switchTask(page, '函数单元课程方案包');
   const currentTab = page
-    .getByRole('navigation', { name: '已打开的 Work Buddy 任务' })
+    .getByRole('navigation', { name: '已打开的 TeachBuddy 任务' })
     .getByRole('button', { name: '函数单元课程方案包', exact: true });
   await currentTab.click();
   await expect(page.getByRole('dialog', { name: '全部任务选择器' })).toBeVisible();
@@ -376,9 +376,22 @@ test('WorkBuddy keeps embedded navigation reachable at compact desktop width', a
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
   const primaryNavigation = page.getByRole('navigation', { name: '老师视角主导航' });
-  await primaryNavigation.getByRole('link', { name: 'Work Buddy' }).click();
+  await primaryNavigation.getByRole('link', { name: 'TeachBuddy' }).click();
+  const avatarVideo = page.locator('[data-workbuddy-avatar="true"] video');
+  if (await avatarVideo.count()) {
+    await avatarVideo.evaluate(async (element) => {
+      const video = element as HTMLVideoElement;
+      if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
+        await new Promise<void>((resolve) => video.addEventListener('loadedmetadata', () => resolve(), { once: true }));
+      }
+      video.pause();
+      video.currentTime = 0;
+    });
+  }
+  await expectTypewriterComplete(page);
+  await page.mouse.move(0, 0);
 
-  const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'Work Buddy 二级导航' });
+  const secondaryNavigation = primaryNavigation.getByRole('group', { name: 'TeachBuddy 二级导航' });
   for (const { name, exact } of [
     { name: '技能市场', exact: true },
     { name: '工具连接', exact: true },
@@ -393,7 +406,7 @@ test('WorkBuddy keeps embedded navigation reachable at compact desktop width', a
 
   const geometry = await page.evaluate(() => {
     const sidebar = document.querySelector<HTMLElement>('aside[data-contextual-navigation="true"]');
-    const workspace = document.querySelector<HTMLElement>('[aria-label="Work Buddy 工作区"]');
+    const workspace = document.querySelector<HTMLElement>('[aria-label="TeachBuddy 工作区"]');
     if (!sidebar || !workspace) throw new Error('Compact WorkBuddy geometry is incomplete.');
     return {
       sidebarWidth: sidebar.getBoundingClientRect().width,
@@ -411,8 +424,7 @@ test('WorkBuddy keeps embedded navigation reachable at compact desktop width', a
   await expect(page).toHaveScreenshot('workbuddy-embedded-navigation-1000x768.png', { fullPage: true });
 
   await primaryNavigation.getByRole('link', { name: '首页' }).click();
-  await primaryNavigation.getByRole('button', { name: '收起 Work Buddy 二级导航' }).click();
-  await expect(page.getByRole('group', { name: 'Work Buddy 二级导航' })).toHaveCount(0);
-  const collapsedSidebarWidth = await page.locator('aside').first().evaluate((element) => element.getBoundingClientRect().width);
-  expect(collapsedSidebarWidth).toBe(64);
+  await primaryNavigation.getByRole('button', { name: '收起 TeachBuddy 二级导航' }).click();
+  await expect(page.getByRole('group', { name: 'TeachBuddy 二级导航' })).toHaveCount(0);
+  await expect.poll(() => page.locator('aside').first().evaluate((element) => element.getBoundingClientRect().width)).toBe(64);
 });

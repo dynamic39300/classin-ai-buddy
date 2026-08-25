@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { WORKBUDDY_HISTORY_STATUS_LABELS, type WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
 import { useWorkBuddyWorkspace } from './workbuddy-workspace';
 import { useWorkBuddyExperience } from './workbuddy-experience-context';
@@ -228,9 +229,9 @@ export function WorkBuddyTaskBar({ contextPanel, showReturnCommand = true }: Rea
   };
 
   return (
-    <header ref={taskBarRef} className={styles.taskBar} aria-label="Work Buddy 任务导航" data-has-return={showReturnCommand && profile.returnTarget ? 'true' : undefined}>
+    <header ref={taskBarRef} className={styles.taskBar} aria-label={`${TEACHBUDDY_BRAND.shortName} 任务导航`} data-has-return={showReturnCommand && profile.returnTarget ? 'true' : undefined}>
       {showReturnCommand && profile.returnTarget ? <button className={styles.returnButton} type="button" onClick={() => navigate(profile.returnTarget!.to)}><ArrowLeft aria-hidden="true" size={15} /><span>{profile.returnTarget.label}</span></button> : null}
-      <nav ref={tabViewportRef} className={styles.tabViewport} aria-label="已打开的 Work Buddy 任务">
+      <nav ref={tabViewportRef} className={styles.tabViewport} aria-label={`已打开的 ${TEACHBUDDY_BRAND.shortName} 任务`}>
         {openTabs.map((tab) => {
           const active = tab.id === activeTaskId;
           const run = tab.id === NEW_TASK_ID ? undefined : runById.get(tab.id);

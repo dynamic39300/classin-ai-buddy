@@ -5,7 +5,7 @@ test('teacher generates a quiz, creates only a draft, then reviews and publishes
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
-  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'Work Buddy' }).click();
+  await page.getByRole('navigation', { name: '老师视角主导航' }).getByRole('link', { name: 'TeachBuddy' }).click();
 
   await page.getByRole('button', { name: '生成测验并创建活动草稿' }).click();
   await page.getByRole('button', { name: '展开核心上下文' }).click();
@@ -17,7 +17,7 @@ test('teacher generates a quiz, creates only a draft, then reviews and publishes
   await expect(page).toHaveURL(/\/teacher\/ai-agent\/runs\/run-quiz-activity-1$/);
   await expect(page.getByRole('heading', { name: '生成测验并创建活动草稿' })).toBeVisible();
   await expect(page.getByText('只创建教师可见草稿')).toBeVisible();
-  const composer = page.getByRole('textbox', { name: '向 WorkBuddy 补充要求' });
+  const composer = page.getByRole('textbox', { name: '向 TeachBuddy 补充要求' });
   await composer.fill('解析里请突出正方向约定。');
   await page.getByRole('button', { name: '发送补充要求' }).click();
   await expect(page.getByText('解析里请突出正方向约定。')).toBeVisible();

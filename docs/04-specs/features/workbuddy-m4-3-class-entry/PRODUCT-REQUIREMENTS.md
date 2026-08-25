@@ -1,18 +1,18 @@
 ---
-title: M4.3 ClassIn 站内 WorkBuddy MVP 入口 PRD
+title: M4.3 ClassIn 站内 TeachBuddy MVP 入口 PRD
 status: APPROVED_FOR_IMPLEMENTATION
 version: v1.2
 date: 2026-08-24
 decision: D-098
 ---
 
-# M4.3 ClassIn 站内 WorkBuddy MVP 入口 PRD
+# M4.3 ClassIn 站内 TeachBuddy MVP 入口 PRD
 
 ## 1. 背景与目标
 
-M4.2 已完成终局 WorkBuddy 的一级导航体验与代表性任务闭环。M4.3 在班级课程详情增加首发 MVP 的真实入口：老师从具体教学现场打开“我的教学助理”，进入独立的 WorkBuddy MVP。初始工程先完成终局方案搬迁，再根据本轮验收形成第一版 MVP 导航裁剪。
+M4.2 已完成终局 TeachBuddy 的一级导航体验与代表性任务闭环。M4.3 在班级课程详情增加首发 MVP 的真实入口：老师从具体教学现场打开 TeachBuddy，进入独立的 TeachBuddy MVP。初始工程先完成终局方案搬迁，再根据本轮验收形成第一版 MVP 导航裁剪。
 
-本阶段同时保留 Demo 中的终局入口和 MVP 入口，用于对照验证；真实 MVP 发布配置可隐藏终局一级入口。两个入口都代表“老师自己的 WorkBuddy”，但属于两个独立产品 Experience，不共享任务数据，避免未来 MVP 删除能力后仍暴露终局历史。
+本阶段同时保留 Demo 中的终局入口和 MVP 入口，用于对照验证；真实 MVP 发布配置可隐藏终局一级入口。两个入口都代表“老师自己的 TeachBuddy”，但属于两个独立产品 Experience，不共享任务数据，避免未来 MVP 删除能力后仍暴露终局历史。
 
 ## 2. 用户 Job
 
@@ -39,17 +39,17 @@ Run 1 → 1 stable ContextSnapshot
 | 模块 | 所有者与范围 | 作用 |
 | --- | --- | --- |
 | AI 应用 | 当前班级；老师授权；班级成员可用 | 展示当前班级已授权的 Agent 与应用入口，保持现有行为 |
-| 我的教学助理 | 当前老师；仅老师可见 | 打开 `classin-mvp` WorkBuddy；不属于班级共享 Agent |
+| TeachBuddy | 当前老师；仅老师可见 | 打开 `classin-mvp` TeachBuddy；不属于班级共享 Agent |
 
-“我的教学助理”必须是独立 Section，显示 `WorkBuddy`、`仅你可见` 和“打开 WorkBuddy”。它不能混入“AI 应用”列表，也不能使用“授权给班级”或“班级成员可用”的文案。
+TeachBuddy 必须是独立 Section，显示 `TeachBuddy`、`AI 教学搭档 · 仅你可见` 和“打开 TeachBuddy”。它不能混入“AI 应用”列表，也不能使用“授权给班级”或“班级成员可用”的文案。
 
 ## 5. 核心旅程
 
 ```text
 老师进入 A 班课程详情
-  → 区分“AI 应用”与“我的教学助理”
-  → 打开独立、全屏的 MVP WorkBuddy 页面
-  → 使用页面自己的 WorkBuddy 左侧导航、任务工作台和能力页
+  → 区分“AI 应用”与“TeachBuddy”
+  → 打开独立、全屏的 MVP TeachBuddy 页面
+  → 使用页面自己的 TeachBuddy 左侧导航、任务工作台和能力页
   → A 班成为本次 Launch Context 的软提示
   → 可创建 A 班或其他已授权班级任务
   → 返回 A 班课程详情
@@ -61,7 +61,7 @@ Run 1 → 1 stable ContextSnapshot
 
 - Demo 同时保留 `/teacher/ai-agent/*` 终局入口和班级详情 MVP 入口。
 - 两套 Experience 独立装配各自的 WorkBuddy Shell、配置和数据空间；底层通用 Surface 与设计系统可以复用，但产品 Module 不互相代理。
-- `classin-mvp` 使用独立全屏页面，不挂载 ClassIn 原主导航，也不向原主导航新增“我的教学助理”等一级入口；页面可见名称统一为 `WorkBuddy`。
+- `classin-mvp` 使用独立全屏页面，不挂载 ClassIn 原主导航，也不向原主导航新增 TeachBuddy 一级入口；页面可见名称统一为 `TeachBuddy`。
 - MVP 页内导航承载“我的任务、技能市场、工具连接、我的文件”，不显示分组说明文案；“定时任务、设置”在 MVP 隐藏，但终局继续保留。
 - “我的任务”只替换原“新建任务”的左栏文案，仍进入既有 `/new` 任务工作台；历史任务、已打开任务与新增任务继续由既有 Task Bar 和任务选择器承载。
 - `仅你可见`、来源班级和返回命令位于左栏导航下方，不固定沉底。
@@ -69,7 +69,7 @@ Run 1 → 1 stable ContextSnapshot
 - `classin-mvp` 保留既有任务闭环以及 Skills、Tools、Files；Schedules、Settings 只从 MVP 展示面隐藏，不删除终局实现。
 - MVP 页面提供“返回 {班级名称}”命令；返回不清空 MVP Session。
 - 后续能力裁剪必须通过 Profile 投影完成，不删除终局 Module，也不让隐藏任务可通过 URL 或历史搜索进入。
-- 学生页面、学生导航和班级共享 Agent 列表不得出现教师 WorkBuddy 入口。
+- 学生页面、学生导航和班级共享 Agent 列表不得出现教师 TeachBuddy 入口。
 
 ## 7. 上下文与写回
 
@@ -89,10 +89,10 @@ Run 1 → 1 stable ContextSnapshot
 
 ## 9. 需求 ID
 
-- `M43-PRD-001`：班级详情保留“AI 应用”并新增独立“我的教学助理”。
+- `M43-PRD-001`：班级详情保留“AI 应用”并新增独立 TeachBuddy。
 - `M43-PRD-002`：AI 应用继续表达班级授权、成员可用 Agent，不改变既有行为。
-- `M43-PRD-003`：MVP WorkBuddy 入口仅教师可见，明确为教师私密教学助理。
-- `M43-PRD-004`：点击入口打开独立全屏 WorkBuddy，任务闭环沿用已搬迁的终局实现。
+- `M43-PRD-003`：MVP TeachBuddy 入口仅教师可见，明确为 AI 教学搭档。
+- `M43-PRD-004`：点击入口打开独立全屏 TeachBuddy，任务闭环沿用已搬迁的终局实现。
 - `M43-PRD-005`：Demo 同时保留终局一级入口与 MVP 入口；发布配置可独立决定是否显示终局入口。
 - `M43-PRD-006`：两个 Experience 共享实现但使用独立 Profile、Route 和 Data Space。
 - `M43-PRD-007`：终局历史、草稿、Run、Artifact 和 Receipt 不进入 MVP；MVP 数据也不进入终局。
@@ -104,7 +104,7 @@ Run 1 → 1 stable ContextSnapshot
 - `M43-PRD-013`：非法 Launch Context、Profile 或跨 Namespace Run 失败关闭。
 - `M43-PRD-014`：1440×900 与紧凑视口无溢出；键盘和屏幕阅读器可完成进入、导航与返回。
 - `M43-PRD-015`：模拟结果继续使用统一真值标签，不宣称生产接入。
-- `M43-PRD-016`：MVP 使用独立全屏 WorkBuddy Shell；原 ClassIn 主导航不挂载、不新增 MVP 入口，返回命令稳定回到来源班级。
+- `M43-PRD-016`：MVP 使用独立全屏 TeachBuddy Shell；原 ClassIn 主导航不挂载、不新增 MVP 入口，返回命令稳定回到来源班级。
 - `M43-PRD-017`：左栏“我的任务”只是原“新建任务”的显示名称调整，目标仍为 `/new`，页面内容和任务流程不变。
 - `M43-PRD-018`：MVP 左栏只显示“我的任务、技能市场、工具连接、我的文件”，隐藏分组文案、定时任务和设置；入口上下文紧跟导航。
 
@@ -114,10 +114,10 @@ Run 1 → 1 stable ContextSnapshot
 
 ## 11. 验收标准
 
-- 班级详情能清楚区分共享 AI 应用与私密 WorkBuddy，并打开完整 MVP 工作区。
+- 班级详情能清楚区分共享 AI 应用与私密 TeachBuddy，并打开完整 MVP 工作区。
 - Demo 中终局与 MVP 入口都可使用，视觉与操作规范一致。
-- MVP 页面只显示其自身 WorkBuddy 导航，不显示 ClassIn“老师视角主导航”或新增的“我的教学助理”一级菜单。
+- MVP 页面只显示其自身 TeachBuddy 导航，不显示 ClassIn“老师视角主导航”或新增的 TeachBuddy 一级菜单。
 - 在终局修改/创建的任务不会出现在 MVP；在 MVP 创建的任务不会出现在终局。
 - 从 A 班进入 MVP、返回后仍回 A 班；从 B 班进入仍看到 MVP 自己的历史，不看到终局历史。
-- 学生侧没有 WorkBuddy 入口。
+- 学生侧没有 TeachBuddy 入口。
 - Module、Integration、E2E、a11y、视觉、静态检查和 production build 通过。

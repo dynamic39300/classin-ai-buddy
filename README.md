@@ -1,6 +1,6 @@
-# ClassIn 教师 WorkBuddy
+# ClassIn TeachBuddy
 
-这是 ClassIn PC 教师/学生产品基座与教师 WorkBuddy 的统一设计、研究和实现仓库。当前代码保留既有 ClassIn PC Demo 的完整业务背景，并在教师端增加 AI Agent 工作台；首条 WorkBuddy 纵向切片是“课程目标到课程对象”。
+这是 ClassIn PC 教师/学生产品基座与教师 AI 教学搭档 **ClassIn TeachBuddy** 的统一设计、研究和实现仓库。产品界面简称 **TeachBuddy**；内部工程标识继续使用 `workbuddy`，既有 `WorkBuddyRun`、路由和存储键不随品牌展示名迁移。当前代码保留既有 ClassIn PC Demo 的完整业务背景，并在教师端增加 AI Agent 工作台；首条纵向切片是“课程目标到课程对象”。
 
 ## 当前入口
 
@@ -11,7 +11,7 @@
 - 目录与工程规范：[docs/05-engineering/PROJECT-STRUCTURE.md](./docs/05-engineering/PROJECT-STRUCTURE.md)
 - 原型设计规范：[docs/03-design/PROTOTYPE-DESIGN-STANDARDS.md](./docs/03-design/PROTOTYPE-DESIGN-STANDARDS.md)
 - 首条纵向切片 Spec：[docs/04-specs/features/course-production/SPEC.md](./docs/04-specs/features/course-production/SPEC.md)
-- WorkBuddy V1 规格：[docs/04-specs/features/workbuddy-v1-workspace/](./docs/04-specs/features/workbuddy-v1-workspace/)
+- TeachBuddy V1 规格（目录保留内部工程标识）：[docs/04-specs/features/workbuddy-v1-workspace/](./docs/04-specs/features/workbuddy-v1-workspace/)
 
 ## 运行工作台
 

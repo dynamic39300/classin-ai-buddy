@@ -93,7 +93,7 @@ describe('app shell role journeys', () => {
     expect(screen.getByRole('heading', { level: 1, name: '班级群聊' })).toBeInTheDocument();
     expect(within(screen.getByLabelText('班级群聊沉浸工作区导航')).getByText('高二物理 3 班')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '返回班级' })).toBeInTheDocument();
-    expect(screen.queryByRole('complementary', { name: 'WorkBuddy 私密协作窗口' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'TeachBuddy 私密协作窗口' })).not.toBeInTheDocument();
     expect(document.querySelector('[data-shell-mode="linear-workbench"]')).toHaveAttribute('data-message-shell-mode', 'immersive');
   });
 

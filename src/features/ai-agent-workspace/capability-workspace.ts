@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { TEACHBUDDY_BRAND } from "@contracts/workbuddy/product-brand";
 import { WORKBUDDY_CAPABILITIES } from "./capability-registry";
 
 export type CapabilitySurfaceId =
@@ -211,7 +212,7 @@ export const SKILL_ITEMS: readonly CapabilityItem[] = [
     meta: ["官方能力", "适用：课件生成"],
     tags: ["课程生产", "结构设计"],
     description: "根据课程目标、单元活动和课堂时长，生成可审阅的智能课件结构。",
-    source: "ClassIn WorkBuddy",
+    source: TEACHBUDDY_BRAND.officialName,
     version: "v1.4.0",
     permissions: ["读取课程与单元", "写入 Artifact 草稿"],
   },
@@ -251,7 +252,7 @@ export const SKILL_ITEMS: readonly CapabilityItem[] = [
     meta: ["官方能力", "适用：所有任务"],
     tags: ["目标", "上下文"],
     description: "在开始执行前，把教师目标转换为可确认的任务计划。",
-    source: "ClassIn WorkBuddy",
+    source: TEACHBUDDY_BRAND.officialName,
     version: "v1.2.1",
     permissions: ["读取当前任务上下文"],
   },
@@ -265,7 +266,7 @@ export const SKILL_ITEMS: readonly CapabilityItem[] = [
     tags: ["试卷", "学情"],
     description:
       "分析题目、知识点与答题证据，输出班级层面的教学建议和证据引用。",
-    source: "ClassIn WorkBuddy",
+    source: TEACHBUDDY_BRAND.officialName,
     version: "v1.0.3",
     permissions: ["读取脱敏答题摘要", "生成诊断草稿"],
   },
@@ -278,7 +279,7 @@ export const SKILL_ITEMS: readonly CapabilityItem[] = [
     meta: ["官方能力", "适用：课程规划"],
     tags: ["教学计划", "课程"],
     description: "根据课程周期、教材目录和班级进度生成可调整的教学计划。",
-    source: "ClassIn WorkBuddy",
+    source: TEACHBUDDY_BRAND.officialName,
     version: "v1.3.2",
     permissions: ["读取课程计划", "写入计划草稿"],
   },
@@ -291,7 +292,7 @@ export const SKILL_ITEMS: readonly CapabilityItem[] = [
     meta: ["官方能力", "适用：备课"],
     tags: ["逐字稿", "备课"],
     description: "保留课件页码与讲授环节引用，形成可编辑、可排练的课堂逐字稿。",
-    source: "ClassIn WorkBuddy",
+    source: TEACHBUDDY_BRAND.officialName,
     version: "v1.1.0",
     permissions: ["读取课件与教案", "生成文档草稿"],
   },
@@ -510,7 +511,7 @@ export const FILE_ITEMS: readonly CapabilityItem[] = [
     meta: ["任务产物", "Run：生成函数单调性课件", "2 小时前", "12.4 MB"],
     tags: ["Artifact", "课件"],
     description: "来自“生成函数单调性智能课件”任务的当前版本。",
-    source: "WorkBuddy Artifact",
+    source: `${TEACHBUDDY_BRAND.shortName} Artifact`,
     version: "v2",
     permissions: ["教师可见", "可作为任务输入"],
   },
@@ -629,7 +630,7 @@ export function filterCapabilityItems(
       ].includes(item.status);
     if (tab === "saved") return item.status === "已收藏";
     if (tab === "my-works") return item.source === "我的作品";
-    if (tab === "artifacts") return item.source === "WorkBuddy Artifact";
+    if (tab === "artifacts") return item.source === `${TEACHBUDDY_BRAND.shortName} Artifact`;
     if (tab === "my-cloud") return item.source === "我的文件";
     if (tab === "org-cloud") return item.source.includes("组织云盘");
     if (tab === "upload")

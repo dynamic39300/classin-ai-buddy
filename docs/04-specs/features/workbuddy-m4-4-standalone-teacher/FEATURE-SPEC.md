@@ -1,5 +1,5 @@
 ---
-title: M4.4 独立教师 WorkBuddy Web 产品 Feature Spec
+title: M4.4 独立教师 ClassIn TeachBuddy Web 产品 Feature Spec
 status: APPROVED_FOR_IMPLEMENTATION
 version: v1.2
 date: 2026-08-25

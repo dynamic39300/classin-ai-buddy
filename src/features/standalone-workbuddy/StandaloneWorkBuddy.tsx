@@ -1,6 +1,7 @@
 import { ClipboardList, Coins, LockKeyhole, LogOut, Sparkles, UserRound, WalletCards } from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import {
   AiAgentWorkSurface,
   AiAgentWorkspaceLayout,
@@ -59,9 +60,9 @@ function StandaloneWorkBuddyShell({ profile, children }: Readonly<{ profile: Wor
   const taskActive = location.pathname === profile.basePath || location.pathname.startsWith(`${profile.basePath}/new`) || location.pathname.startsWith(`${profile.basePath}/runs/`);
   return (
     <div className={styles.appShell} data-testid="standalone-workbuddy-shell">
-      <aside className={styles.appSidebar} aria-label="WorkBuddy 独立产品导航">
-        <Link className={styles.appBrand} to="/workbuddy/app/new"><span><Sparkles size={18} /></span><div><strong>WorkBuddy</strong><small>教师工作空间</small></div></Link>
-        <nav aria-label="WorkBuddy 导航">
+      <aside className={styles.appSidebar} aria-label={`${TEACHBUDDY_BRAND.officialName} 独立产品导航`}>
+        <Link className={styles.appBrand} to="/workbuddy/app/new"><span><Sparkles size={18} /></span><div><strong>{TEACHBUDDY_BRAND.officialName}</strong><small>{TEACHBUDDY_BRAND.descriptor}</small></div></Link>
+        <nav aria-label={`${TEACHBUDDY_BRAND.shortName} 导航`}>
           <Link aria-current={taskActive ? 'page' : undefined} to={workBuddyNewTaskPath(profile)}><ClipboardList size={17} /><span>我的任务</span></Link>
           {WORKBUDDY_CAPABILITIES.filter(({ id }) => profile.visibleCapabilityIds.includes(id)).map(({ id, icon: Icon, label }) => <NavLink key={id} to={workBuddyCapabilityPath(profile, id)}><Icon size={17} /><span>{label}</span></NavLink>)}
           <NavLink to="/workbuddy/app/credits"><Coins size={17} /><span>AI 点数</span><em>{creditView?.availableBalance ?? 0}</em></NavLink>
@@ -72,7 +73,7 @@ function StandaloneWorkBuddyShell({ profile, children }: Readonly<{ profile: Wor
           <button type="button" onClick={() => { logout(); navigate('/workbuddy'); }}><LogOut size={15} />退出登录</button>
         </section>
       </aside>
-      <main className={styles.appWorkspace} aria-label="WorkBuddy">
+      <main className={styles.appWorkspace} aria-label={TEACHBUDDY_BRAND.shortName}>
         <section className={styles.connectionBanner} aria-label="ClassIn 连接状态"><span><LockKeyhole size={14} />[模拟] 未连接 ClassIn</span><p>当前仅使用你的任务描述和上传资料；连接后可自动带入班级、课程、作业与学情。</p><Link to="/workbuddy/app/classin">了解连接价值</Link></section>
         <div className={styles.appSurface}>{children}</div>
       </main>

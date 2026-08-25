@@ -1,6 +1,7 @@
 import { Check, Sparkles } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { useStandaloneTeacher } from './standalone-teacher-context';
 import styles from './StandaloneWorkBuddy.module.css';
 
@@ -11,7 +12,7 @@ export function StandaloneLandingPage() {
   return (
     <div className={styles.marketingPage}>
       <header className={styles.marketingHeader}>
-        <Link className={styles.wordmark} to="/workbuddy"><span><Sparkles size={18} /></span><strong>WorkBuddy</strong><small>by ClassIn</small></Link>
+        <Link className={styles.wordmark} to="/workbuddy"><span><Sparkles size={18} /></span><strong>{TEACHBUDDY_BRAND.officialName}</strong><small>{TEACHBUDDY_BRAND.descriptor}</small></Link>
         <nav aria-label="官网导航"><a href="#capabilities">教学能力</a><a href="#plans">AI 点数</a><a href="#classin">连接 ClassIn</a></nav>
         <div className={styles.headerActions}>{identity.status === 'signed_in' ? <Link to="/workbuddy/app/new">进入工作台</Link> : <><Link to="/workbuddy/login">登录</Link><Link data-primary="true" to="/workbuddy/register">免费开始</Link></>}</div>
       </header>
@@ -21,11 +22,11 @@ export function StandaloneLandingPage() {
           <div className={styles.heroCopy}>
             <span className={styles.kicker}>为每一位老师准备的 AI 教学工作台</span>
             <h1>把教学想法，变成<br /><em>可以直接审阅的成果</em></h1>
-            <p>从一节课、一套课程方案到一份测验，WorkBuddy 通过对话理解你的目标，生成可检查、可修改的教学产物。</p>
+            <p>从一节课、一套课程方案到一份测验，{TEACHBUDDY_BRAND.shortName} 通过对话理解你的目标，生成可检查、可修改的教学产物。</p>
             <div className={styles.heroActions}><Link data-primary="true" to={identity.status === 'signed_in' ? '/workbuddy/app/new' : '/workbuddy/register'}>免费开始 <span aria-hidden="true">→</span></Link><a href="#classin">了解 ClassIn</a></div>
             <div className={styles.heroProof}><span><Check size={14} />个人教师账号</span><span><Check size={14} />注册即得 360 AI 点数</span><span><Check size={14} />结果先审阅再使用</span></div>
           </div>
-          <figure className={styles.productVisual}><img alt="WorkBuddy 教师工作台的新建任务页面" src={PRODUCT_PREVIEW} /><figcaption><span>[模拟] 产品体验</span><strong>一个入口，承接完整教学任务</strong></figcaption></figure>
+          <figure className={styles.productVisual}><img alt={`${TEACHBUDDY_BRAND.officialName} 教师工作台的新建任务页面`} src={PRODUCT_PREVIEW} /><figcaption><span>[模拟] 产品体验</span><strong>一个入口，承接完整教学任务</strong></figcaption></figure>
         </section>
 
         <section className={styles.capabilities} id="capabilities" aria-labelledby="capabilities-title">
@@ -43,7 +44,7 @@ export function StandaloneLandingPage() {
           <div><p>首期可通过任务描述和上传资料完成生成。连接 ClassIn 后，可自动带入班级、课程、作业和学情，并把已确认结果沉淀到教学业务中。</p><a href="https://www.classin.com/" rel="noreferrer" target="_blank">了解 ClassIn 教学平台 <span aria-hidden="true">↗</span></a></div>
         </section>
       </main>
-      <footer className={styles.marketingFooter}><span>WorkBuddy by ClassIn</span><span>面向教师的独立 AI 教学工作台 · 当前为 [模拟] 体验</span></footer>
+      <footer className={styles.marketingFooter}><span>{TEACHBUDDY_BRAND.officialName}</span><span>面向教师的独立 AI 教学工作台 · 当前为 [模拟] 体验</span></footer>
     </div>
   );
 }
@@ -79,10 +80,10 @@ export function StandaloneAuthPage({ mode }: Readonly<{ mode: 'login' | 'registe
 
   return (
     <main className={styles.authPage}>
-      <Link className={styles.authBrand} to="/workbuddy"><span><Sparkles size={20} /></span><strong>WorkBuddy</strong><small>by ClassIn</small></Link>
+      <Link className={styles.authBrand} to="/workbuddy"><span><Sparkles size={20} /></span><strong>{TEACHBUDDY_BRAND.officialName}</strong><small>{TEACHBUDDY_BRAND.descriptor}</small></Link>
       <section className={styles.authPanel} aria-labelledby="auth-title">
         <span className={styles.kicker}>教师个人账号</span>
-        <h1 id="auth-title">{mode === 'register' ? '开始你的 AI 教学工作台' : '欢迎回到 WorkBuddy'}</h1>
+        <h1 id="auth-title">{mode === 'register' ? '开始你的 AI 教学工作台' : `欢迎回到 ${TEACHBUDDY_BRAND.shortName}`}</h1>
         <p>{mode === 'register' ? '注册即得 360 AI 点数，完整体验课件、方案与测验任务。' : '继续查看任务、教学产物和 AI 点数流水。'}</p>
         <form onSubmit={submit} noValidate>
           {mode === 'register' ? <label>教师称呼<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="例如：林老师" /></label> : null}
@@ -94,7 +95,7 @@ export function StandaloneAuthPage({ mode }: Readonly<{ mode: 'login' | 'registe
         <p className={styles.authSwitch}>{mode === 'register' ? '已经有账号？' : '还没有账号？'} <Link to={`${mode === 'register' ? '/workbuddy/login' : '/workbuddy/register'}?next=${encodeURIComponent(next)}`}>{mode === 'register' ? '直接登录' : '免费注册'}</Link></p>
         <small>[模拟] 首期体验不连接真实账号或支付系统。</small>
       </section>
-      <aside className={styles.authAside}><span>教师的一天，少一点重复工作</span><blockquote>“先让我看清楚结果，再决定是否使用。”</blockquote><p>WorkBuddy 为每个任务保留清晰的上下文、生成过程、审阅动作和结果证据。</p></aside>
+      <aside className={styles.authAside}><span>教师的一天，少一点重复工作</span><blockquote>“先让我看清楚结果，再决定是否使用。”</blockquote><p>{TEACHBUDDY_BRAND.shortName} 为每个任务保留清晰的上下文、生成过程、审阅动作和结果证据。</p></aside>
     </main>
   );
 }

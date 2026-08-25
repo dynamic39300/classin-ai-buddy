@@ -5,8 +5,8 @@ async function openReminderDraft(page: Page, viewport: { width: number; height: 
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.getByRole('link', { name: /消息/ }).click();
-  await page.getByLabel('WorkBuddy 私密协作窗口').getByRole('button', { name: '生成消息草稿' }).click();
-  await expect(page.getByLabel('WorkBuddy 私密协作窗口').getByText('2 项作业', { exact: true })).toBeVisible({ timeout: 12_000 });
+  await page.getByLabel('TeachBuddy 私密协作窗口').getByRole('button', { name: '生成消息草稿' }).click();
+  await expect(page.getByLabel('TeachBuddy 私密协作窗口').getByText('2 项作业', { exact: true })).toBeVisible({ timeout: 12_000 });
 }
 
 async function openWorkBuddyReady(page: Page, viewport: { width: number; height: number }) {
@@ -14,12 +14,12 @@ async function openWorkBuddyReady(page: Page, viewport: { width: number; height:
   await page.goto('/');
   await page.getByRole('button', { name: /老师视角/ }).click();
   await page.getByRole('link', { name: /消息/ }).click();
-  await expect(page.getByLabel('WorkBuddy 私密协作窗口')).toBeVisible();
+  await expect(page.getByLabel('TeachBuddy 私密协作窗口')).toBeVisible();
 }
 
 async function openWeeklyPreparationDraft(page: Page, viewport: { width: number; height: number }) {
   await openWorkBuddyReady(page, viewport);
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   await sidecar.getByRole('button', { name: /根据本周教学计划生成课前准备通知/ }).click();
   await sidecar.getByRole('button', { name: '生成消息草稿' }).click();
   await expect(sidecar.getByRole('heading', { name: '课前准备通知已生成' })).toBeVisible({ timeout: 12_000 });
@@ -27,7 +27,7 @@ async function openWeeklyPreparationDraft(page: Page, viewport: { width: number;
 
 async function openGuidedExplanationDraft(page: Page, viewport: { width: number; height: number }) {
   await openWorkBuddyReady(page, viewport);
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   await sidecar.locator('button').filter({ hasText: '单题讲解' }).click();
   await sidecar.getByRole('button', { name: '生成消息草稿' }).click();
   await expect(sidecar.getByLabel('单题交互讲解待审核')).toBeVisible({ timeout: 12_000 });
@@ -35,7 +35,7 @@ async function openGuidedExplanationDraft(page: Page, viewport: { width: number;
 
 async function sendReminder(page: Page, viewport: { width: number; height: number }) {
   await openReminderDraft(page, viewport);
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   await sidecar.getByRole('button', { name: '确认并发送至高二物理 3 班' }).click();
   await expect(sidecar.getByRole('status', { name: '班级群消息发送成功' })).toBeVisible();
 }
@@ -51,7 +51,7 @@ async function scrollbarThumbColor(surface: Locator) {
 
 async function expectScrollbarsDisclosedOnInteraction(page: Page) {
   const timeline = page.getByLabel('消息记录');
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const body = sidecar.locator('[data-scrolled]');
   const editor = sidecar.getByRole('textbox', { name: '群消息正文' });
 
@@ -74,7 +74,7 @@ async function expectScrollbarsDisclosedOnInteraction(page: Page) {
 
 async function expectFloatingAssistantWorkbench(page: Page) {
   const frame = page.locator('[data-layout-region="workbuddy-assistant"]');
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const composer = sidecar.locator('form');
   await expect(sidecar).toHaveAttribute('data-surface', 'floating-assistant');
   const [frameBox, sidecarBox, composerBox, surfaceStyle] = await Promise.all([
@@ -148,20 +148,20 @@ test('WorkBuddy IM reminder draft at 1440x900', async ({ page }) => {
   await expectFloatingAssistantWorkbench(page);
   await expectUnifiedCommunicationSurface(page);
   await expectBorderLightReviewCanvas(page);
-  await expect(page.getByRole('separator', { name: '调整 WorkBuddy 宽度' })).toBeVisible();
+  await expect(page.getByRole('separator', { name: '调整 TeachBuddy 宽度' })).toBeVisible();
   await expect(page).toHaveScreenshot('workbuddy-im-reminder-draft-1440x900.png', { fullPage: true });
 });
 
 test('WorkBuddy IM expanded editor keeps its shell fixed after scrolling at 1440x900', async ({ page }) => {
   await openReminderDraft(page, { width: 1440, height: 900 });
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const body = sidecar.locator('[data-scrolled]');
   await sidecar.getByRole('button', { name: '展开编辑群消息正文' }).click();
   await body.hover();
   await page.mouse.wheel(0, 2_400);
   await expect.poll(() => sidecar.evaluate((element) => element.scrollTop)).toBe(0);
-  await expect(sidecar.getByText('WorkBuddy', { exact: true })).toBeVisible();
-  await expect(sidecar.getByRole('textbox', { name: '向 WorkBuddy 输入要求' })).toBeVisible();
+  await expect(sidecar.getByText('TeachBuddy', { exact: true })).toBeVisible();
+  await expect(sidecar.getByRole('textbox', { name: '向 TeachBuddy 输入要求' })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot('workbuddy-im-expanded-editor-scrolled-1440x900.png', { fullPage: true });
 });
@@ -170,7 +170,7 @@ test('WorkBuddy IM scrollbars stay quiet until hover or keyboard focus', async (
   await openReminderDraft(page, { width: 1440, height: 900 });
   await expectScrollbarsDisclosedOnInteraction(page);
 
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const body = sidecar.locator('[data-scrolled]');
   const editor = sidecar.getByRole('textbox', { name: '群消息正文' });
   await editor.focus();
@@ -197,7 +197,7 @@ test('WorkBuddy IM weekly preparation notice draft at 1440x900', async ({ page }
 
 test('WorkBuddy IM weekly notice expands inside the sidecar at 1440x900', async ({ page }) => {
   await openWeeklyPreparationDraft(page, { width: 1440, height: 900 });
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const sidecarBefore = await sidecar.boundingBox();
   await sidecar.getByRole('button', { name: '展开编辑群通知正文' }).click();
   const editor = sidecar.locator('[data-focused-message-editor="true"]');
@@ -214,7 +214,7 @@ test('WorkBuddy IM weekly notice expands inside the sidecar at 1440x900', async 
 
 test('WorkBuddy IM weekly notice keeps its sidecar width while expanding at 1024x640', async ({ page }) => {
   await openWeeklyPreparationDraft(page, { width: 1024, height: 640 });
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const sidecarBefore = await sidecar.boundingBox();
   await sidecar.getByRole('button', { name: '展开编辑群通知正文' }).click();
   const sidecarAfter = await sidecar.boundingBox();
@@ -233,7 +233,7 @@ test('WorkBuddy IM weekly notice keeps its sidecar width while expanding at 1024
 
 test('WorkBuddy IM edited checklist exposes an inline restore action', async ({ page }) => {
   await openReminderDraft(page, { width: 1440, height: 900 });
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   await sidecar.getByRole('button', { name: '从动量守恒作业 A 组移除李明' }).click();
   await expect(sidecar.getByRole('button', { name: '还原名单至本次草稿最初生成的范围' })).toBeVisible();
   await expect(sidecar.getByText('4 位学生', { exact: true })).toBeVisible();
@@ -247,7 +247,7 @@ test('WorkBuddy IM three-pane workspace at 1280x800', async ({ page }) => {
   await expectFloatingAssistantWorkbench(page);
   await expectUnifiedCommunicationSurface(page);
   await expectBorderLightReviewCanvas(page);
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const box = await sidecar.boundingBox();
   expect(box?.width).toBeGreaterThanOrEqual(384);
   expect(box?.width).toBeLessThanOrEqual(520);
@@ -270,7 +270,7 @@ test('WorkBuddy guided explanation review remains reachable at 1024x640', async 
   await review.getByRole('textbox', { name: '教师审核版完整答案' }).scrollIntoViewIfNeeded();
   await expect(review.getByRole('textbox', { name: '教师审核版完整答案' })).toBeVisible();
   await review.getByRole('textbox', { name: '学生题目' }).scrollIntoViewIfNeeded();
-  const sidecarBody = page.getByLabel('WorkBuddy 私密协作窗口').locator('[data-scrolled]');
+  const sidecarBody = page.getByLabel('TeachBuddy 私密协作窗口').locator('[data-scrolled]');
   await sidecarBody.evaluate((element) => { element.scrollTop = Math.min(420, element.scrollHeight - element.clientHeight); });
   await expect.poll(() => sidecarBody.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(page).toHaveScreenshot('workbuddy-guided-explanation-review-1024x640.png', { fullPage: true });
@@ -289,7 +289,7 @@ test('WorkBuddy guided explanation exposes editable process and answer controls'
 
 test('guided explanation message opens as a focused student-facing viewer', async ({ page }) => {
   await openGuidedExplanationDraft(page, { width: 1440, height: 900 });
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   await sidecar.getByRole('button', { name: '确认保存并发送' }).click();
   await expect(sidecar.getByLabel('讲题内容发送成功')).toBeVisible();
   await sidecar.getByRole('button', { name: '查看消息' }).click();
@@ -304,8 +304,8 @@ test('WorkBuddy IM reminder overlay at 1024x640', async ({ page }) => {
   await expectFloatingAssistantWorkbench(page);
   await expectUnifiedCommunicationSurface(page);
   await expectBorderLightReviewCanvas(page);
-  await expect(page.getByRole('separator', { name: '调整 WorkBuddy 宽度' })).not.toBeVisible();
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  await expect(page.getByRole('separator', { name: '调整 TeachBuddy 宽度' })).not.toBeVisible();
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const box = await sidecar.boundingBox();
   expect(box?.width).toBeGreaterThan(384);
   expect(box?.width).toBeLessThanOrEqual(520);
@@ -346,7 +346,7 @@ test('WorkBuddy IM sent receipt adapts at the 384px minimum panel width', async 
   await expectNoHorizontalOverflow(page);
 
   const assistantRegion = page.locator('[data-layout-region="workbuddy-assistant"]');
-  const sidecar = page.getByLabel('WorkBuddy 私密协作窗口');
+  const sidecar = page.getByLabel('TeachBuddy 私密协作窗口');
   const receipt = sidecar.getByRole('status', { name: '班级群消息发送成功' });
   const [assistantBox, sidecarBox, receiptBox] = await Promise.all([
     assistantRegion.boundingBox(),

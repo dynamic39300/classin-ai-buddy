@@ -1,14 +1,16 @@
 ---
-title: M4.4 独立教师 WorkBuddy Web 产品规格包
+title: M4.4 独立教师 ClassIn TeachBuddy Web 产品规格包
 status: COMPLETE_USER_ACCEPTED
 version: v1.2
 date: 2026-08-25
 decision: D-102/D-103/D-104/D-105/D-106/D-107
 ---
 
-# M4.4 独立教师 WorkBuddy Web 产品
+# M4.4 独立教师 ClassIn TeachBuddy Web 产品
 
-本目录按 `Research → PRD → Feature Spec → Tickets → Implementation → Review → Acceptance` 管理 M4.4。产品面向个人教师和未合作机构中的教师，提供独立官网、个人账号、完整 WorkBuddy、AI 点数、模拟会员订单以及连接 ClassIn 的价值引导。
+> 当前正式产品名按 D-108 统一为 **ClassIn TeachBuddy**，工作台简称 **TeachBuddy**，中文描述为 **AI 教学搭档**。本目录和既有类型中的 `workbuddy` 保留为内部工程兼容标识。
+
+本目录按 `Research → PRD → Feature Spec → Tickets → Implementation → Review → Acceptance` 管理 M4.4。产品面向个人教师和未合作机构中的教师，提供独立官网、个人账号、完整 TeachBuddy、AI 点数、模拟会员订单以及连接 ClassIn 的价值引导。
 
 | 事实源 | 文件 | 状态 |
 | --- | --- | --- |

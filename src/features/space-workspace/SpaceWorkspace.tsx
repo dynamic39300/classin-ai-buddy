@@ -42,7 +42,7 @@ export function SpaceWorkspace({ role, surface }: SpaceWorkspaceProps) {
   const teacherInDraftId = searchParams.get('draft');
   const teacherInDraft = teacherInDraftId ? {
     id: teacherInDraftId,
-    title: searchParams.get('title')?.trim() || 'WorkBuddy 作品草稿',
+    title: searchParams.get('title')?.trim() || 'TeachBuddy 作品草稿',
     source: searchParams.get('source') === 'workbuddy' ? 'workbuddy' as const : 'teacherin' as const,
   } : null;
   const folderSequence = useRef(0);
@@ -56,7 +56,7 @@ export function SpaceWorkspace({ role, surface }: SpaceWorkspaceProps) {
   const [deleteGuard, setDeleteGuard] = useState(false);
   const [supplementMenuOpen, setSupplementMenuOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(() => locatedFileId
-    ? locatedFile ? `已在空间中定位“${locatedFile.name}”。` : '未能在当前空间中定位这份 WorkBuddy 产物。'
+    ? locatedFile ? `已在空间中定位“${locatedFile.name}”。` : '未能在当前空间中定位这份 TeachBuddy 产物。'
     : null);
   const [placeholderDialog, setPlaceholderDialog] = useState<string | null>(null);
 

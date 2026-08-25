@@ -1,16 +1,16 @@
 ---
-title: M4.4 独立教师 WorkBuddy Web 产品 PRD
+title: M4.4 独立教师 ClassIn TeachBuddy Web 产品 PRD
 status: APPROVED_FOR_IMPLEMENTATION
 version: v1.1
 date: 2026-08-25
 source_decision: D-102/D-103/D-104/D-105/D-106/D-107
 ---
 
-# M4.4 独立教师 WorkBuddy Web 产品 PRD
+# M4.4 独立教师 ClassIn TeachBuddy Web 产品 PRD
 
 ## 1. 背景与目的
 
-M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独立产品装配。M4.4 把终局 WorkBuddy 的完整任务和能力迁入一个面向外部教师的独立 PC Web 产品，让尚未使用 ClassIn 的老师先完成真实教学任务，再理解连接 ClassIn 后的上下文、业务写回和机构协同增量。
+M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独立产品装配。M4.4 把终局 TeachBuddy 的完整任务和能力迁入一个面向外部教师的独立 PC Web 产品，正式命名为 **ClassIn TeachBuddy**；它让尚未使用 ClassIn 的老师先完成真实教学任务，再理解连接 ClassIn 后的上下文、业务写回和机构协同增量。
 
 该产品承担三项业务目的：
 
@@ -43,7 +43,7 @@ M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独
 
 - 独立官网 Landing；
 - 注册、登录、退出和刷新恢复；
-- 独立教师 WorkBuddy 全功能工作台；
+- 独立教师 ClassIn TeachBuddy 全功能工作台；
 - AI 点数余额、任务报价、消费与流水；
 - 三档模拟会员套餐、模拟订单和到账；
 - 无 ClassIn Context 的持续提示和手动补充路径；
@@ -90,7 +90,7 @@ M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独
 /workbuddy/login                 登录
 /workbuddy/register              注册
 
-/workbuddy/app                   独立教师 WorkBuddy
+/workbuddy/app                   独立教师 ClassIn TeachBuddy
   ├─ new                         新建任务
   ├─ runs/:runId                 任务运行
   ├─ skills/tools/content/files  完整能力页
@@ -206,6 +206,6 @@ M4.2 已验证五类 IM AI Case，M4.3 已建立 ClassIn 站内 MVP 入口与独
 2. 官网、认证、工作台和商业中心形成连续路径；
 3. 点数报价、余额和流水在成功、余额不足、刷新与重放后保持一致；
 4. 未连接 ClassIn 的事实和连接后的增量无需口头解释；
-5. 三套 WorkBuddy 的 Route、配置与私有数据互不影响；
+5. 三套 TeachBuddy Experience 的 Route、配置与私有数据互不影响；
 6. 1440×900 和 1024×640 无溢出、遮挡和不可达操作；
 7. 核心旅程通过 Domain、Integration、E2E、a11y 和 Visual Gate。

@@ -222,5 +222,5 @@ test('standalone task admission blocks at zero points and resumes after a simula
 test('signed-out teachers cannot enter standalone app routes', async ({ page }) => {
   await page.goto('/workbuddy/app/credits');
   await expect(page).toHaveURL(/\/workbuddy\/login\?next=%2Fworkbuddy%2Fapp%2Fcredits$/);
-  await expect(page.getByRole('heading', { level: 1, name: '欢迎回到 WorkBuddy' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: '欢迎回到 TeachBuddy' })).toBeVisible();
 });

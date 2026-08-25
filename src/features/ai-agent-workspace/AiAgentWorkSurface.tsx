@@ -15,6 +15,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { WORKBUDDY_HISTORY_STATUS_LABELS } from '@contracts/workbuddy/workspace';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { WorkspaceComposer } from '@design-system/WorkspaceComposer';
 import { allowsWorkBuddyRunCommand } from '@domain/workbuddy/run-state';
 import { getVisibleWorkBuddyCapability, getWorkBuddyCapability } from './capability-registry';
@@ -169,7 +170,7 @@ function NewTaskSkeleton() {
         <div className={styles.welcomeHeader}>
           <WorkBuddyAvatar size="welcome" />
           <div>
-            <span className={styles.eyebrow}>WorkBuddy</span>
+            <span className={styles.eyebrow}>{TEACHBUDDY_BRAND.shortName}</span>
             <h1 id="workbuddy-new-task-title"><TypewriterGreeting text="老师好，有什么能帮您的？" /></h1>
           </div>
         </div>

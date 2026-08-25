@@ -1,14 +1,16 @@
 ---
-title: M4.3 ClassIn 站内 WorkBuddy MVP 入口规格包
+title: M4.3 ClassIn 站内 TeachBuddy MVP 入口规格包
 status: COMPLETE_USER_ACCEPTED
 version: v1.3
 date: 2026-08-25
 decision: D-098/D-099/D-100/D-101
 ---
 
-# M4.3 ClassIn 站内 WorkBuddy MVP 入口
+# M4.3 ClassIn 站内 TeachBuddy MVP 入口
 
-本目录按 `PRD → Feature Spec → Tickets → Implementation → Review → Acceptance` 管理 M4.3：在班级课程详情中提供教师私密 WorkBuddy MVP 入口，同时保留班级共享“AI 应用”和 Demo 中的终局一级 WorkBuddy。
+> 当前展示品牌按 D-108 统一为 **ClassIn TeachBuddy**（界面简称 **TeachBuddy**）。本目录和既有类型中的 `workbuddy` 保留为内部工程兼容标识。
+
+本目录按 `PRD → Feature Spec → Tickets → Implementation → Review → Acceptance` 管理 M4.3：在班级课程详情中提供教师私密 TeachBuddy MVP 入口，同时保留班级共享“AI 应用”和 Demo 中的终局一级 TeachBuddy。
 
 | 事实源 | 文件 | 状态 |
 | --- | --- | --- |

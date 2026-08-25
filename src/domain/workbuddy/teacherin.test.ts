@@ -10,7 +10,7 @@ import {
 const action = proposeTeacherInDraft({
   runRef: 'run-courseware',
   artifactRef: { id: 'asset-courseware-pptx', version: 'v2' },
-  spaceFileRef: { id: 'space-file-courseware-pptx', version: 'v2', pathLabel: '我的云盘 / WorkBuddy 产物' },
+  spaceFileRef: { id: 'space-file-courseware-pptx', version: 'v2', pathLabel: '我的云盘 / TeachBuddy 产物' },
   title: '函数单调性智能课件',
   permission: 'allowed',
   proposedAt: '2026-08-22T10:10:00+08:00',

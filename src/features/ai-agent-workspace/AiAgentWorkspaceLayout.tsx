@@ -1,5 +1,6 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { TEACHBUDDY_BRAND } from '@contracts/workbuddy/product-brand';
 import { getWorkBuddyCapabilityFromPathname } from './capability-registry';
 import { WorkBuddyExperienceProvider } from './WorkBuddyExperienceContext';
 import type { WorkBuddyExperienceProfile } from './workbuddy-experience-profile';
@@ -35,7 +36,7 @@ export function AiAgentWorkspaceLayout({ profile, showTaskBarReturn = true }: Re
           showReturnCommand={showTaskBarReturn}
         />
       ) : null}
-      <section className={styles.surface} aria-label="Work Buddy 工作区">
+      <section className={styles.surface} aria-label={`${TEACHBUDDY_BRAND.shortName} 工作区`}>
         <Outlet context={{ contextPanelOpen, setContextPanelOpen } satisfies WorkBuddyTaskLayoutContext} />
       </section>
     </div>

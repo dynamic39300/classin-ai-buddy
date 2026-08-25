@@ -65,13 +65,13 @@ describe('WorkspaceComposer', () => {
   it('reveals the configured count near the limit', () => {
     render(
       <WorkspaceComposer
-        ariaLabel="向 WorkBuddy 输入要求"
+        ariaLabel="向 TeachBuddy 输入要求"
         countThreshold={4}
         maxLength={10}
         onSubmit={() => undefined}
         onValueChange={() => undefined}
         placeholder="安排任务"
-        submitLabel="发送给 WorkBuddy"
+        submitLabel="发送给 TeachBuddy"
         value="12345"
       />,
     );

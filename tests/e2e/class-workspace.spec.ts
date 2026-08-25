@@ -79,16 +79,16 @@ test('class detail opens the isolated full WorkBuddy MVP experience and returns 
   await page.goto('/teacher/classes/physics-3?course=course-momentum');
   await expect(page.getByRole('button', { name: 'AI 应用' })).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText('老师已授权 · 班级成员可用')).toBeVisible();
-  await expect(page.getByRole('button', { name: '我的教学助理' })).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByText('仅你可见')).toBeVisible();
-  await page.getByRole('button', { name: '打开 WorkBuddy' }).click();
+  await expect(page.getByRole('button', { name: 'TeachBuddy', exact: true })).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByText('AI 教学搭档 · 仅你可见')).toBeVisible();
+  await page.getByRole('button', { name: '打开 TeachBuddy' }).click();
 
   await expect(page).toHaveURL(/\/teacher\/classes\/physics-3\/workbuddy\/new\?course=course-momentum$/);
   await expect(page.getByTestId('class-mvp-workbuddy-shell')).toBeVisible();
   await expect(page.getByTestId('ai-agent-workspace-layout')).toHaveAttribute('data-experience-profile', 'classin-mvp');
   await expect(page.getByRole('navigation', { name: '老师视角主导航' })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Work Buddy', exact: true })).toHaveCount(0);
-  const workBuddyNavigation = page.getByRole('navigation', { name: 'WorkBuddy 导航' });
+  await expect(page.getByRole('link', { name: 'TeachBuddy', exact: true })).toHaveCount(0);
+  const workBuddyNavigation = page.getByRole('navigation', { name: 'TeachBuddy 导航' });
   await expect(workBuddyNavigation.getByRole('link', { name: '我的任务', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('textbox', { name: '描述教学任务' })).toHaveValue('');
   for (const label of ['技能市场', '工具连接', '我的文件']) {
@@ -121,7 +121,7 @@ test('class detail opens the isolated full WorkBuddy MVP experience and returns 
   await expect(page).toHaveURL(/\/teacher\/classes\/physics-3\?course=course-momentum$/);
 
   await page.goto('/teacher/classes/physics-1?course=course-physics-1');
-  await page.getByRole('button', { name: '打开 WorkBuddy' }).click();
+  await page.getByRole('button', { name: '打开 TeachBuddy' }).click();
   await expect(page).toHaveURL(/\/teacher\/classes\/physics-1\/workbuddy\/new\?course=course-physics-1$/);
   await expect(page.getByRole('textbox', { name: '描述教学任务' })).toHaveValue('MVP 内跨班保留的未提交任务草稿');
   await page.getByRole('link', { name: '返回高二物理 1 班' }).click();
@@ -156,11 +156,11 @@ test('uses the immersive single-class chat with WorkBuddy and returns to the cla
     await expect(conversation.getByRole('button', { name: label, exact: true })).toBeVisible();
   }
 
-  await expect(page.getByRole('complementary', { name: 'WorkBuddy 私密协作窗口' })).toBeVisible();
-  await expect(conversation.getByRole('button', { name: 'WorkBuddy' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '关闭 WorkBuddy' })).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: 'TeachBuddy 私密协作窗口' })).toBeVisible();
+  await expect(conversation.getByRole('button', { name: 'TeachBuddy' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '关闭 TeachBuddy' })).toHaveCount(0);
   await expect(page.getByRole('region', { name: '消息通信主工作台' })).toContainText('高二物理 3 班');
-  const separator = page.getByRole('separator', { name: '调整 WorkBuddy 宽度' });
+  const separator = page.getByRole('separator', { name: '调整 TeachBuddy 宽度' });
   await expect(separator).toBeVisible();
   await separator.focus();
   await page.keyboard.press('Home');
@@ -203,7 +203,7 @@ test('student class chat uses one immersive navigation layer without teacher Wor
   await expect(page.getByRole('heading', { level: 1, name: '班级群聊' })).toHaveCount(1);
   await expect(page.getByRole('navigation', { name: '学生视角主导航' })).toBeHidden();
   await expect(page.getByRole('region', { name: '高二物理 3 班会话' })).toBeVisible();
-  await expect(page.getByRole('complementary', { name: 'WorkBuddy 私密协作窗口' })).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: 'TeachBuddy 私密协作窗口' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: '管理', exact: true })).toHaveCount(0);
   await expectNoSeriousA11yViolations(page);
 

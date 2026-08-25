@@ -36,7 +36,7 @@ export type WorkBuddyImRunProjection = Readonly<{
   events: readonly ConversationRunEvent[];
   plan: readonly WorkBuddyImRunPlanStep[];
   progress: ConversationRunProgress;
-  truthLabel: '[模拟] WorkBuddy IM Agent Run';
+  truthLabel: '[模拟] TeachBuddy IM Agent Run';
 }>;
 
 export interface WorkBuddyImExperienceScheduler {
