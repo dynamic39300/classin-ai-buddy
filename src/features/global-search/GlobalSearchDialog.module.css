@@ -1,0 +1,46 @@
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 · macrostructure: Workbench · genre: modern-minimal
+ * theme: custom · vibe: "ClassIn restrained teaching workbench" · axes: light / geometric-sans / chromatic-green
+ * navigation: N3 application side rail · contrast: pass · tokens/responsive/chrome: pass · context: project-locked
+ */
+.dialog {
+  width: min(46rem, calc(100vw - var(--space-2xl)));
+  max-height: min(42rem, calc(100vh - var(--space-2xl)));
+  padding: 0;
+  overflow: hidden;
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-overlay);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-ink);
+}
+
+.dialog::backdrop { background: var(--color-overlay); }
+.surface { display: grid; min-height: 28rem; grid-template-rows: auto auto minmax(0, 1fr); }
+.searchHeader { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm); padding: var(--space-md); border-bottom: var(--rule-thin) solid var(--color-line-subtle); }
+.searchHeader label { min-width: 0; padding: 0 var(--space-sm); border-radius: var(--radius-control); background: var(--color-surface-muted); }
+.searchHeader input { width: 100%; height: 2.25rem; padding: 0; border: 0; outline: 0; background: transparent; color: var(--color-ink); font: inherit; font-size: var(--text-md); }
+.searchHeader button { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: var(--radius-control); color: var(--color-ink-muted); cursor: pointer; }
+.categories { display: flex; gap: var(--space-2xs); overflow-x: auto; padding: var(--space-sm) var(--space-md); border-bottom: var(--rule-thin) solid var(--color-line-subtle); }
+.categories button { height: 2rem; padding: 0 var(--space-sm); border-radius: var(--radius-control); color: var(--color-ink-secondary); cursor: pointer; font-size: var(--text-sm); white-space: nowrap; }
+.categories button[aria-selected='true'] { background: var(--color-surface-selected); color: var(--color-action-strong); font-weight: var(--font-weight-semibold); }
+.results { min-height: 0; overflow: auto; padding: var(--space-xs) var(--space-md) var(--space-md); }
+.resultSummary { display: flex; min-height: 2.25rem; align-items: center; justify-content: space-between; color: var(--color-ink-muted); font-size: var(--text-xs); }
+.result { display: grid; width: 100%; min-height: 3.75rem; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm); padding: var(--space-xs) var(--space-sm); border-bottom: var(--rule-thin) solid var(--color-line-subtle); text-align: left; cursor: pointer; }
+.result:hover, .result:focus-visible { background: var(--color-surface-muted); }
+.resultIcon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: var(--radius-control); background: var(--color-surface-muted); color: var(--color-action-strong); }
+.resultCopy { display: grid; min-width: 0; gap: var(--space-2xs); }
+.resultCopy > span:first-child { display: flex; min-width: 0; align-items: center; gap: var(--space-xs); }
+.resultCopy strong, .resultCopy > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resultCopy strong { font-size: var(--text-sm); }
+.resultCopy small { padding: var(--space-3xs) var(--space-2xs); border-radius: var(--radius-control); background: var(--color-surface-muted); color: var(--color-action-strong); font-size: var(--text-xs); }
+.resultCopy > span:last-child { color: var(--color-ink-muted); font-size: var(--text-xs); }
+.result > svg { color: var(--color-ink-muted); }
+.empty { display: grid; min-height: 17rem; place-items: center; align-content: center; gap: var(--space-xs); color: var(--color-ink-muted); text-align: center; }
+.empty strong { color: var(--color-ink); }
+.empty button { height: 2rem; margin-top: var(--space-xs); padding: 0 var(--space-sm); border: var(--rule-thin) solid var(--color-line-control); border-radius: var(--radius-control); color: var(--color-ink-secondary); cursor: pointer; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 64rem) {
+  .dialog { width: calc(100vw - var(--space-lg)); max-height: calc(100vh - var(--space-lg)); }
+  .surface { min-height: min(30rem, calc(100vh - var(--space-lg))); }
+}

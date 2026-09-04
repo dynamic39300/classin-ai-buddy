@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["batch_id", "taxonomy_version", "frames"],
+  "properties": {
+    "batch_id": {"type": "string"},
+    "taxonomy_version": {"type": "string"},
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topic_instance_id", "topic_validity", "routing_assessment", "target_node_id", "normalized_concept", "domain_object", "communicative_goal", "candidate_parent_node_id", "split_concepts", "confidence", "reasoning_brief"],
+        "properties": {
+          "topic_instance_id": {"type": "string"},
+          "topic_validity": {"enum": ["stable_topic", "fragmented_not_topic", "context_insufficient", "split_required"]},
+          "routing_assessment": {"enum": ["existing_node", "genuine_gap", "not_applicable"]},
+          "target_node_id": {"type": "string"},
+          "normalized_concept": {"type": "string"},
+          "domain_object": {"type": "string"},
+          "communicative_goal": {"type": "string"},
+          "candidate_parent_node_id": {"type": "string"},
+          "split_concepts": {"type": "array", "items": {"type": "string"}},
+          "confidence": {"enum": ["high", "medium", "low"]},
+          "reasoning_brief": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,120 @@
+taxonomy_version,level,node_id,node_name,path_ids,path_names,review_status
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-001,学习与学业内容,L1-001,学习与学业内容,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-001,学科、技能与研究学习,L1-001 > L2-001,学习与学业内容 > 学科、技能与研究学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-001,英语语言学习,L1-001 > L2-001 > L3-001,学习与学业内容 > 学科、技能与研究学习 > 英语语言学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-002,语文与中文学习,L1-001 > L2-001 > L3-002,学习与学业内容 > 学科、技能与研究学习 > 语文与中文学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-003,数学学习,L1-001 > L2-001 > L3-003,学习与学业内容 > 学科、技能与研究学习 > 数学学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-004,自然科学与工程学习,L1-001 > L2-001 > L3-004,学习与学业内容 > 学科、技能与研究学习 > 自然科学与工程学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-005,编程与计算学习,L1-001 > L2-001 > L3-005,学习与学业内容 > 学科、技能与研究学习 > 编程与计算学习,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-006,艺术技能学习,L1-001 > L2-001 > L3-006,学习与学业内容 > 学科、技能与研究学习 > 艺术技能学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-071,研究方法与学术项目学习,L1-001 > L2-001 > L3-071,学习与学业内容 > 学科、技能与研究学习 > 研究方法与学术项目学习,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-021,学习任务与计划,L1-001 > L2-021,学习与学业内容 > 学习任务与计划,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-007,作业布置、完成与订正,L1-001 > L2-021 > L3-007,学习与学业内容 > 学习任务与计划 > 作业布置、完成与订正,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-009,学习计划、复习与备考,L1-001 > L2-021 > L3-009,学习与学业内容 > 学习任务与计划 > 学习计划、复习与备考,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-022,学习评价与表现,L1-001 > L2-022,学习与学业内容 > 学习评价与表现,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-072,正式测评、考试与成绩,L1-001 > L2-022 > L3-072,学习与学业内容 > 学习评价与表现 > 正式测评、考试与成绩,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-010,日常学习表现与反馈,L1-001 > L2-022 > L3-010,学习与学业内容 > 学习评价与表现 > 日常学习表现与反馈,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-002,教学设计、实施与改进,L1-002,教学设计、实施与改进,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-023,教学内容与资源,L1-002 > L2-023,教学设计、实施与改进 > 教学内容与资源,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-073,教材、教学资料与课件,L1-002 > L2-023 > L3-073,教学设计、实施与改进 > 教学内容与资源 > 教材、教学资料与课件,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-012,教学内容与课程进度,L1-002 > L2-023 > L3-012,教学设计、实施与改进 > 教学内容与资源 > 教学内容与课程进度,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-024,教学设计与课堂实施,L1-002 > L2-024,教学设计、实施与改进 > 教学设计与课堂实施,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-014,教学方法与课堂活动设计,L1-002 > L2-024 > L3-014,教学设计、实施与改进 > 教学设计与课堂实施 > 教学方法与课堂活动设计,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-074,课堂互动规范与参与要求,L1-002 > L2-024 > L3-074,教学设计、实施与改进 > 教学设计与课堂实施 > 课堂互动规范与参与要求,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-004,教学评价与记录,L1-002 > L2-004,教学设计、实施与改进 > 教学评价与记录,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-015,教学质量评价与改进,L1-002 > L2-004 > L3-015,教学设计、实施与改进 > 教学评价与记录 > 教学质量评价与改进,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-016,教学记录、总结与回放,L1-002 > L2-004 > L3-016,教学设计、实施与改进 > 教学评价与记录 > 教学记录、总结与回放,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-003,课程运营与服务,L1-003,课程运营与服务,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-025,课程排期与变更,L1-003 > L2-025,课程运营与服务 > 课程排期与变更,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-018,可用时段与排班,L1-003 > L2-025 > L3-018,课程运营与服务 > 课程排期与变更 > 可用时段与排班,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-075,课程预约与固定排课,L1-003 > L2-025 > L3-075,课程运营与服务 > 课程排期与变更 > 课程预约与固定排课,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-017,课程改期、取消与补课,L1-003 > L2-025 > L3-017,课程运营与服务 > 课程排期与变更 > 课程改期、取消与补课,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-026,到课与课堂运行,L1-003 > L2-026,课程运营与服务 > 到课与课堂运行,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-019,到课、请假与缺勤处置,L1-003 > L2-026 > L3-019,课程运营与服务 > 到课与课堂运行 > 到课、请假与缺勤处置,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-024,教室与课堂接入,L1-003 > L2-026 > L3-024,课程运营与服务 > 到课与课堂运行 > 教室与课堂接入,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-025,课堂开结、时长与中断,L1-003 > L2-026 > L3-025,课程运营与服务 > 到课与课堂运行 > 课堂开结、时长与中断,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-027,学员承接与课程服务,L1-003 > L2-027,课程运营与服务 > 学员承接与课程服务,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-076,试听、首课与学员承接,L1-003 > L2-027 > L3-076,课程运营与服务 > 学员承接与课程服务 > 试听、首课与学员承接,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-077,服务评价、投诉与口碑跟进,L1-003 > L2-027 > L3-077,课程运营与服务 > 学员承接与课程服务 > 服务评价、投诉与口碑跟进,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-028,课程权益、费用与结算,L1-003 > L2-028,课程运营与服务 > 课程权益、费用与结算,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-078,学员课程权益、费用与退款,L1-003 > L2-028 > L3-078,课程运营与服务 > 课程权益、费用与结算 > 学员课程权益、费用与退款,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-079,教师课酬、薪资与奖励,L1-003 > L2-028 > L3-079,课程运营与服务 > 课程权益、费用与结算 > 教师课酬、薪资与奖励,human_confirmed_direction
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-029,教师合作与人员事务,L1-003 > L2-029,课程运营与服务 > 教师合作与人员事务,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-080,教师招聘、入职与资料,L1-003 > L2-029 > L3-080,课程运营与服务 > 教师合作与人员事务 > 教师招聘、入职与资料,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-081,教师工作规范、考核与人员处置,L1-003 > L2-029 > L3-081,课程运营与服务 > 教师合作与人员事务 > 教师工作规范、考核与人员处置,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-004,数字平台与技术,L1-004,数字平台与技术,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-008,账号、联系人与群组空间,L1-004 > L2-008,数字平台与技术 > 账号、联系人与群组空间,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-026,账号认证与资料设置,L1-004 > L2-008 > L3-026,数字平台与技术 > 账号、联系人与群组空间 > 账号认证与资料设置,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-082,联系人与通讯功能,L1-004 > L2-008 > L3-082,数字平台与技术 > 账号、联系人与群组空间 > 联系人与通讯功能,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-027,群组空间与成员治理,L1-004 > L2-008 > L3-027,数字平台与技术 > 账号、联系人与群组空间 > 群组空间与成员治理,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-009,设备、应用与访问,L1-004 > L2-009,数字平台与技术 > 设备、应用与访问,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-029,连接、设备与应用故障,L1-004 > L2-009 > L3-029,数字平台与技术 > 设备、应用与访问 > 连接、设备与应用故障,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-030,设备与应用配置,L1-004 > L2-009 > L3-030,数字平台与技术 > 设备、应用与访问 > 设备与应用配置,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-031,链接、权限与内容访问,L1-004 > L2-009 > L3-031,数字平台与技术 > 设备、应用与访问 > 链接、权限与内容访问,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-010,数字工具与文件操作,L1-004 > L2-010,数字平台与技术 > 数字工具与文件操作,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-032,在线课堂与协作工具,L1-004 > L2-010 > L3-032,数字平台与技术 > 数字工具与文件操作 > 在线课堂与协作工具,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-033,文件与媒体操作,L1-004 > L2-010 > L3-033,数字平台与技术 > 数字工具与文件操作 > 文件与媒体操作,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-005,人际关系与社交,L1-005,人际关系与社交,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-011,关系与相处,L1-005 > L2-011,人际关系与社交 > 关系与相处,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-034,恋爱与亲密关系,L1-005 > L2-011 > L3-034,人际关系与社交 > 关系与相处 > 恋爱与亲密关系,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-035,朋友同学关系与相处,L1-005 > L2-011 > L3-035,人际关系与社交 > 关系与相处 > 朋友同学关系与相处,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-036,家庭与亲属关系,L1-005 > L2-011 > L3-036,人际关系与社交 > 关系与相处 > 家庭与亲属关系,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-030,身份与自我认知,L1-005 > L2-030,人际关系与社交 > 身份与自我认知,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-037,个人身份、特征与自我认知,L1-005 > L2-030 > L3-037,人际关系与社交 > 身份与自我认知 > 个人身份、特征与自我认知,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-012,社交安排与社群参与,L1-005 > L2-012,人际关系与社交 > 社交安排与社群参与,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-038,见面、聚会与交流安排,L1-005 > L2-012 > L3-038,人际关系与社交 > 社交安排与社群参与 > 见面、聚会与交流安排,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-039,社群参与与成员交流,L1-005 > L2-012 > L3-039,人际关系与社交 > 社交安排与社群参与 > 社群参与与成员交流,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-040,玩笑、梗与语言游戏,L1-005 > L2-012 > L3-040,人际关系与社交 > 社交安排与社群参与 > 玩笑、梗与语言游戏,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-006,娱乐与创作,L1-006,娱乐与创作,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-013,娱乐内容、游玩与兴趣收藏,L1-006 > L2-013,娱乐与创作 > 娱乐内容、游玩与兴趣收藏,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-041,电子游戏与玩法,L1-006 > L2-013 > L3-041,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 电子游戏与玩法,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-042,影视、动漫与文学作品,L1-006 > L2-013 > L3-042,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 影视、动漫与文学作品,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-043,音乐作品、演出与艺人文化,L1-006 > L2-013 > L3-043,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 音乐作品、演出与艺人文化,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-083,体育赛事与运动娱乐,L1-006 > L2-013 > L3-083,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 体育赛事与运动娱乐,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-084,棋牌桌游与线下游戏,L1-006 > L2-013 > L3-084,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 棋牌桌游与线下游戏,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-049,兴趣周边与收藏,L1-006 > L2-013 > L3-049,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 兴趣周边与收藏,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-014,内容创作与虚构互动,L1-006 > L2-014,娱乐与创作 > 内容创作与虚构互动,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-045,视觉艺术与手作创作,L1-006 > L2-014 > L3-045,娱乐与创作 > 内容创作与虚构互动 > 视觉艺术与手作创作,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-046,故事、设定与文字创作,L1-006 > L2-014 > L3-046,娱乐与创作 > 内容创作与虚构互动 > 故事、设定与文字创作,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-047,音视频与多媒体创作,L1-006 > L2-014 > L3-047,娱乐与创作 > 内容创作与虚构互动 > 音视频与多媒体创作,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-048,角色扮演与虚构互动,L1-006 > L2-014 > L3-048,娱乐与创作 > 内容创作与虚构互动 > 角色扮演与虚构互动,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-007,日常生活、健康与出行,L1-007,日常生活、健康与出行,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-031,日常起居与个人事务,L1-007 > L2-031,日常生活、健康与出行 > 日常起居与个人事务,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-085,饮食与作息,L1-007 > L2-031 > L3-085,日常生活、健康与出行 > 日常起居与个人事务 > 饮食与作息,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-086,居住与生活用品,L1-007 > L2-031 > L3-086,日常生活、健康与出行 > 日常起居与个人事务 > 居住与生活用品,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-087,个人近况、经历与日常安排,L1-007 > L2-031 > L3-087,日常生活、健康与出行 > 日常起居与个人事务 > 个人近况、经历与日常安排,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-057,个人形象与穿着,L1-007 > L2-031 > L3-057,日常生活、健康与出行 > 日常起居与个人事务 > 个人形象与穿着,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-053,宠物与动物生活,L1-007 > L2-031 > L3-053,日常生活、健康与出行 > 日常起居与个人事务 > 宠物与动物生活,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-032,健康与身体活动,L1-007 > L2-032,日常生活、健康与出行 > 健康与身体活动,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-051,健康状况与医疗照护,L1-007 > L2-032 > L3-051,日常生活、健康与出行 > 健康与身体活动 > 健康状况与医疗照护,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-052,运动锻炼与体能,L1-007 > L2-032 > L3-052,日常生活、健康与出行 > 健康与身体活动 > 运动锻炼与体能,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-033,天气与出行,L1-007 > L2-033,日常生活、健康与出行 > 天气与出行,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-054,天气与自然环境状况,L1-007 > L2-033 > L3-054,日常生活、健康与出行 > 天气与出行 > 天气与自然环境状况,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-088,通勤、位置与行程,L1-007 > L2-033 > L3-088,日常生活、健康与出行 > 天气与出行 > 通勤、位置与行程,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-055,旅行与地点经历,L1-007 > L2-033 > L3-055,日常生活、健康与出行 > 天气与出行 > 旅行与地点经历,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-011,教育路径、研究与职业,L1-011,教育路径、研究与职业,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-034,教育路径与校园,L1-011 > L2-034,教育路径、研究与职业 > 教育路径与校园,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-058,校园事务与在校生活,L1-011 > L2-034 > L3-058,教育路径、研究与职业 > 教育路径与校园 > 校园事务与在校生活,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-089,入学、升学与录取,L1-011 > L2-034 > L3-089,教育路径、研究与职业 > 教育路径与校园 > 入学、升学与录取,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-090,专业、方向与选课,L1-011 > L2-034 > L3-090,教育路径、研究与职业 > 教育路径与校园 > 专业、方向与选课,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-035,专业研究与学术发表,L1-011 > L2-035,教育路径、研究与职业 > 专业研究与学术发表,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-091,研究设计、方法与分析,L1-011 > L2-035 > L3-091,教育路径、研究与职业 > 专业研究与学术发表 > 研究设计、方法与分析,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-092,学术写作、投稿与发表,L1-011 > L2-035 > L3-092,教育路径、研究与职业 > 专业研究与学术发表 > 学术写作、投稿与发表,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-036,职业与工作,L1-011 > L2-036,教育路径、研究与职业 > 职业与工作,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-093,求职、入离职与职业发展,L1-011 > L2-036 > L3-093,教育路径、研究与职业 > 职业与工作 > 求职、入离职与职业发展,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-094,工作安排与职场关系,L1-011 > L2-036 > L3-094,教育路径、研究与职业 > 职业与工作 > 工作安排与职场关系,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-012,商业、消费与金融,L1-012,商业、消费与金融,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-037,商业与消费,L1-012 > L2-037,商业、消费与金融 > 商业与消费,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-063,商业经营与客户服务,L1-012 > L2-037 > L3-063,商业、消费与金融 > 商业与消费 > 商业经营与客户服务,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-064,个人消费与购买,L1-012 > L2-037 > L3-064,商业、消费与金融 > 商业与消费 > 个人消费与购买,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-038,金融与经济,L1-012 > L2-038,商业、消费与金融 > 金融与经济,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-065,金融市场分析与交易,L1-012 > L2-038 > L3-065,商业、消费与金融 > 金融与经济 > 金融市场分析与交易,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-066,宏观、行业与企业信息,L1-012 > L2-038 > L3-066,商业、消费与金融 > 金融与经济 > 宏观、行业与企业信息,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-095,金融与交易安全,L1-012 > L2-038 > L3-095,商业、消费与金融 > 金融与经济 > 金融与交易安全,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,1,L1-013,法律与公共事务,L1-013,法律与公共事务,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-039,法律与公共安全,L1-013 > L2-039,法律与公共事务 > 法律与公共安全,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-096,法律规则、权利与维权,L1-013 > L2-039 > L3-096,法律与公共事务 > 法律与公共安全 > 法律规则、权利与维权,candidate_pending_migration_validation
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-097,公共安全与制度性风险,L1-013 > L2-039 > L3-097,法律与公共事务 > 法律与公共安全 > 公共安全与制度性风险,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,2,L2-040,公共事务与社会信息,L1-013 > L2-040,法律与公共事务 > 公共事务与社会信息,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-098,政策、政治与社会议题,L1-013 > L2-040 > L3-098,法律与公共事务 > 公共事务与社会信息 > 政策、政治与社会议题,low_or_unvalidated_evidence
+classin-im-semantic-topic-taxonomy-v2-candidate-20260902,3,L3-099,公共运行与事件信息,L1-013 > L2-040 > L3-099,法律与公共事务 > 公共事务与社会信息 > 公共运行与事件信息,low_or_unvalidated_evidence

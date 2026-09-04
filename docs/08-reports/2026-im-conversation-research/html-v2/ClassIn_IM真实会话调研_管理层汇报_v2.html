@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>ClassIn IM 真实会话调研</title>
+  <style>
+    :root {
+      --brand: #0fad7c;
+      --brand-deep: #0b6e4f;
+      --brand-ink: #084936;
+      --brand-soft: #dff5ed;
+      --brand-pale: #effaf6;
+      --ink: #10251e;
+      --ink-2: #263c35;
+      --muted: #687873;
+      --line: rgba(16, 37, 30, 0.15);
+      --line-strong: rgba(16, 37, 30, 0.28);
+      --paper: #f4f7f5;
+      --surface: #fbfdfc;
+      --white: #ffffff;
+      --radius: 18px;
+      --shadow: 0 22px 68px rgba(14, 58, 43, 0.12);
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; background: #dfe6e2; color: var(--ink); }
+    body {
+      overflow: hidden;
+      font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; }
+    mark { background: var(--brand-soft); color: var(--brand-ink); padding: 0.05em 0.16em; border-radius: 0.25em; }
+    strong { font-weight: 760; }
+
+    .deck { position: relative; width: 100vw; height: 100dvh; background: var(--paper); overflow: hidden; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(18px, 2.2vh, 28px);
+      padding: clamp(34px, 4.2vw, 68px) clamp(44px, 6.3vw, 96px) clamp(28px, 3.5vw, 52px);
+      background: var(--paper);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translate3d(22px, 0, 0);
+      transition: opacity 420ms var(--ease), transform 520ms var(--ease), visibility 0s linear 520ms;
+      overflow: hidden;
+    }
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translate3d(0, 0, 0);
+      transition-delay: 0s;
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--brand) 0 18%, transparent 18%);
+    }
+    .slide-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 34px;
+      align-items: start;
+    }
+    .section-label { color: var(--brand-deep); font-size: 15px; font-weight: 720; margin-bottom: 10px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2 { letter-spacing: -0.045em; }
+    h1 { font-size: clamp(50px, 5.8vw, 88px); line-height: 1.02; margin-bottom: 24px; }
+    h2 { font-size: clamp(38px, 4.1vw, 63px); line-height: 1.08; margin-bottom: 0; max-width: 1120px; }
+    h3 { font-size: clamp(22px, 2vw, 31px); line-height: 1.23; margin-bottom: 12px; }
+    p, li { font-size: clamp(17px, 1.45vw, 22px); line-height: 1.56; }
+    .lede { max-width: 980px; color: var(--muted); font-size: clamp(20px, 1.75vw, 27px); line-height: 1.5; }
+    .page-meta { color: var(--muted); font-size: 14px; text-align: right; line-height: 1.45; }
+    .slide-body { min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+    .slide-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 20px;
+      color: rgba(16, 37, 30, 0.48);
+      font-size: 12px;
+      letter-spacing: 0.01em;
+    }
+    .slide-foot .brand-name { color: var(--brand-deep); font-weight: 720; }
+    .slide-number { font-variant-numeric: tabular-nums; }
+
+    .cover { grid-template-rows: 1fr auto; }
+    .cover::before { height: 100%; width: min(34vw, 520px); background: var(--brand); opacity: 0.96; }
+    .cover-body { position: relative; z-index: 1; display: grid; grid-template-columns: 1.08fr 0.92fr; gap: clamp(48px, 7vw, 116px); align-items: center; }
+    .cover-copy { padding-left: clamp(18px, 2vw, 34px); }
+    .cover-copy .section-label { color: var(--brand-ink); }
+    .cover-copy h1 { max-width: 820px; }
+    .cover-question {
+      border-top: 1px solid var(--line-strong);
+      padding-top: 24px;
+      color: var(--ink-2);
+      font-size: clamp(20px, 1.65vw, 26px);
+      line-height: 1.55;
+      max-width: 700px;
+    }
+    .cover-evidence { display: grid; gap: 22px; align-self: stretch; align-content: center; }
+    .cover-evidence .quote-line { font-size: clamp(18px, 1.5vw, 23px); line-height: 1.45; padding: 18px 0 18px 34px; border-left: 3px solid var(--brand); }
+    .cover-evidence .quote-line:nth-child(2) { margin-left: 11%; }
+    .cover-evidence .quote-line:nth-child(3) { margin-left: 23%; }
+    .cover-evidence .speaker { color: var(--brand-deep); font-size: 13px; font-weight: 760; display: block; margin-bottom: 6px; }
+
+    .question-layout { display: grid; grid-template-columns: 0.86fr 1.14fr; gap: 76px; align-items: center; }
+    .big-answer { font-size: clamp(32px, 3.15vw, 49px); line-height: 1.22; letter-spacing: -0.035em; font-weight: 720; }
+    .question-list { display: grid; gap: 0; border-top: 1px solid var(--line-strong); }
+    .question-item { display: grid; grid-template-columns: 64px 1fr; gap: 20px; padding: 23px 0; border-bottom: 1px solid var(--line); }
+    .question-item b { color: var(--brand-deep); font-size: 14px; padding-top: 5px; }
+    .question-item span { font-size: clamp(19px, 1.55vw, 24px); line-height: 1.42; }
+
+    .sample-chain { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 22px; align-items: center; }
+    .sample-node { padding: 12px 0 20px; border-bottom: 4px solid var(--brand); }
+    .sample-node .number { font-size: clamp(40px, 4.2vw, 66px); line-height: 1; letter-spacing: -0.04em; font-weight: 780; }
+    .sample-node .label { color: var(--muted); font-size: 16px; margin-top: 13px; }
+    .sample-arrow { color: var(--brand-deep); font-size: 28px; }
+    .sample-note { margin-top: 52px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 44px; align-items: end; }
+    .sample-note p { margin-bottom: 0; }
+    .ratio-strip { display: grid; grid-template-columns: 78fr 22fr; height: 44px; overflow: hidden; border-radius: 12px; }
+    .ratio-strip span { display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 720; }
+    .ratio-strip .group { background: var(--brand); color: var(--brand-ink); }
+    .ratio-strip .direct { background: var(--brand-deep); color: white; }
+
+    .method-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; border-top: 1px solid var(--line-strong); }
+    .method-step { display: grid; grid-template-columns: 54px 1fr; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .method-step .index { color: var(--brand-deep); font-size: 15px; font-weight: 800; }
+    .method-step strong { display: block; font-size: 21px; margin-bottom: 5px; }
+    .method-step span { color: var(--muted); font-size: 16px; line-height: 1.45; }
+    .method-boundary { margin-top: 28px; color: var(--brand-ink); font-size: 16px; font-weight: 680; }
+
+    .scene-map { display: grid; grid-template-columns: 1fr 140px 1fr; gap: 34px; align-items: center; }
+    .scene-lane { border-top: 5px solid var(--brand); padding-top: 22px; }
+    .scene-lane.right { border-color: var(--brand-deep); }
+    .scene-lane-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; }
+    .scene-lane-head strong { font-size: 30px; }
+    .scene-lane-head span { color: var(--muted); font-size: 16px; }
+    .scene-list { display: grid; gap: 0; }
+    .scene-row { display: grid; grid-template-columns: 1fr auto; gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+    .scene-row span { font-size: 20px; }
+    .scene-row b { font-size: 18px; color: var(--brand-deep); }
+    .scene-core { width: 126px; height: 126px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; text-align: center; font-weight: 720; line-height: 1.35; box-shadow: var(--shadow); }
+
+    .role-stage { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 66px; align-items: center; }
+    .role-bars { display: grid; gap: 24px; }
+    .role-bar { display: grid; grid-template-columns: 190px 1fr 80px; gap: 18px; align-items: center; }
+    .role-bar .label { font-size: 17px; }
+    .role-bar .bar-wrap { height: 22px; position: relative; }
+    .role-bar .bar { height: 100%; width: var(--w); background: var(--brand); border-radius: 5px; transform-origin: left; }
+    .role-bar:nth-child(n+4) .bar { background: var(--brand-deep); }
+    .role-bar .value { font-size: 17px; font-weight: 760; text-align: right; }
+    .role-callout { padding-left: 34px; border-left: 1px solid var(--line-strong); }
+    .role-callout .number { font-size: clamp(64px, 7vw, 104px); line-height: 1; color: var(--brand-deep); letter-spacing: -0.06em; font-weight: 800; }
+    .role-callout p { color: var(--muted); }
+
+    .topic-layout { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 70px; align-items: center; }
+    .topic-bars { display: grid; gap: 15px; }
+    .topic-bar { display: grid; grid-template-columns: 240px 1fr 70px; gap: 16px; align-items: center; }
+    .topic-bar .label { font-size: 17px; }
+    .topic-bar .bar { height: 15px; width: var(--w); background: var(--brand); border-radius: 4px; }
+    .topic-bar:nth-child(n+4) .bar { background: var(--brand-deep); opacity: 0.84; }
+    .topic-bar .value { font-size: 16px; font-weight: 760; text-align: right; }
+    .topic-reading { border-left: 5px solid var(--brand); padding-left: 30px; }
+    .topic-reading strong { display: block; font-size: 28px; line-height: 1.35; margin-bottom: 15px; }
+    .topic-reading p { color: var(--muted); margin-bottom: 0; }
+
+    .endpoint-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 68px; border-top: 1px solid var(--line-strong); }
+    .endpoint { display: grid; grid-template-columns: 58px 1fr auto; gap: 18px; align-items: baseline; padding: 24px 0; border-bottom: 1px solid var(--line); }
+    .endpoint .rank { color: var(--brand-deep); font-size: 14px; font-weight: 800; }
+    .endpoint .name { font-size: clamp(19px, 1.55vw, 24px); }
+    .endpoint .rate { font-size: 24px; font-weight: 780; color: var(--brand-deep); }
+    .endpoint-note { margin-top: 24px; font-size: 16px; color: var(--muted); }
+
+    .multi-layout { display: grid; grid-template-columns: 0.62fr 1.38fr; gap: 72px; align-items: center; }
+    .multi-metrics { display: grid; gap: 28px; }
+    .multi-metric { border-bottom: 1px solid var(--line-strong); padding-bottom: 18px; }
+    .multi-metric strong { display: block; font-size: clamp(50px, 5vw, 76px); line-height: 1; color: var(--brand-deep); letter-spacing: -0.05em; }
+    .multi-metric span { color: var(--muted); font-size: 16px; }
+    .conversation-thread { position: relative; padding-left: 32px; }
+    .conversation-thread::before { content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--line-strong); }
+    .thread-topic { position: relative; padding: 13px 0 15px 24px; font-size: 19px; }
+    .thread-topic::before { content: ""; position: absolute; left: -32px; top: 22px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 6px var(--paper); }
+    .thread-topic b { color: var(--brand-deep); }
+    .thread-topic small { display: block; color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .case-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      justify-content: stretch;
+      width: 100%;
+      min-height: 0;
+    }
+    .case-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .case-tabs button {
+      border: 1px solid var(--line-strong);
+      background: transparent;
+      color: var(--ink-2);
+      border-radius: 999px;
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background 220ms var(--ease), color 220ms var(--ease), border-color 220ms var(--ease), transform 180ms var(--ease);
+    }
+    .case-tabs button:hover, .case-tabs button:focus-visible { border-color: var(--brand); outline: none; }
+    .case-tabs button:active { transform: scale(0.98); }
+    .case-tabs button.active { background: var(--brand-deep); color: white; border-color: var(--brand-deep); }
+    .case-scenes { position: relative; min-height: 0; }
+    .case-scene {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(12px);
+      transition: opacity 340ms var(--ease), transform 420ms var(--ease), visibility 0s linear 420ms;
+      display: grid;
+      grid-template-columns: 0.72fr 1.28fr;
+      gap: 64px;
+      align-items: start;
+    }
+    .case-scene.active { opacity: 1; visibility: visible; transform: translateY(0); transition-delay: 0s; }
+    .case-context { padding-top: 8px; }
+    .case-context h3 { font-size: clamp(29px, 2.8vw, 43px); letter-spacing: -0.035em; }
+    .case-context .topic-name { color: var(--brand-deep); font-size: 18px; font-weight: 760; margin: 20px 0 10px; }
+    .case-context p { color: var(--muted); font-size: 18px; }
+    .case-source { margin-top: 24px; color: var(--muted); font-size: 13px; }
+    .transcript { border-top: 1px solid var(--line-strong); padding-top: 10px; }
+    .transcript-line { display: grid; grid-template-columns: 145px 1fr; gap: 18px; padding: 10px 0; font-size: clamp(17px, 1.35vw, 21px); line-height: 1.45; }
+    .transcript-line .speaker { color: var(--brand-deep); font-size: 15px; font-weight: 760; padding-top: 3px; }
+    .transcript-line.key { background: linear-gradient(90deg, var(--brand-soft), transparent 86%); margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 8px; }
+    .case-hint { color: var(--muted); font-size: 13px; margin-left: auto; align-self: center; }
+
+    .role-meaning { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+    .meaning-col { border-top: 5px solid var(--brand); padding-top: 24px; }
+    .meaning-col:nth-child(2) { border-color: var(--brand-deep); }
+    .meaning-col:nth-child(3) { border-color: var(--ink-2); }
+    .meaning-col h3 { font-size: 29px; }
+    .meaning-col .role-rate { color: var(--brand-deep); font-size: 15px; font-weight: 720; margin-bottom: 18px; }
+    .meaning-col p { color: var(--muted); font-size: 17px; }
+    .meaning-col strong { color: var(--ink); }
+
+    .same-topic { display: grid; grid-template-columns: 0.76fr 1.24fr; gap: 72px; align-items: center; }
+    .same-topic .topic-word { font-size: clamp(74px, 8vw, 122px); line-height: 0.9; color: var(--brand-deep); font-weight: 830; letter-spacing: -0.07em; }
+    .same-topic .topic-caption { margin-top: 24px; color: var(--muted); font-size: 18px; }
+    .same-topic-rows { border-top: 1px solid var(--line-strong); }
+    .same-topic-row { display: grid; grid-template-columns: 180px 1fr; gap: 28px; padding: 21px 0; border-bottom: 1px solid var(--line); }
+    .same-topic-row b { color: var(--brand-deep); font-size: 16px; }
+    .same-topic-row span { font-size: 20px; line-height: 1.42; }
+
+    .thesis { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 80px; align-items: center; }
+    .thesis-statement { font-size: clamp(38px, 4vw, 62px); line-height: 1.17; letter-spacing: -0.045em; font-weight: 760; }
+    .thesis-statement em { color: var(--brand-deep); font-style: normal; }
+    .thesis-evidence { display: grid; border-top: 1px solid var(--line-strong); }
+    .thesis-evidence div { padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 20px; }
+    .thesis-evidence b { display: inline-block; width: 86px; color: var(--brand-deep); font-size: 14px; }
+
+    .transform-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+    .transform { padding: 24px 22px 30px; min-width: 0; border-right: 1px solid var(--line); }
+    .transform:last-child { border-right: 0; }
+    .transform .from { color: var(--muted); font-size: 14px; }
+    .transform .to { font-size: 24px; line-height: 1.28; margin: 20px 0 18px; font-weight: 760; }
+    .transform .example { color: var(--brand-deep); font-size: 15px; line-height: 1.45; }
+    .transform-caption { margin-top: 28px; color: var(--muted); font-size: 17px; }
+
+    .capability-map { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 66px; align-items: start; }
+    .capability-stack { display: grid; gap: 8px; }
+    .capability-layer { padding: 18px 22px; color: white; background: var(--ink); border-radius: 12px; }
+    .capability-layer:nth-child(2) { background: var(--brand-ink); }
+    .capability-layer:nth-child(3) { background: var(--brand-deep); }
+    .capability-layer:nth-child(4) { background: var(--brand); color: var(--brand-ink); }
+    .capability-layer strong { font-size: 19px; }
+    .capability-layer span { display: block; opacity: 0.76; font-size: 14px; margin-top: 4px; }
+    .opportunity-list { border-top: 1px solid var(--line-strong); }
+    .opportunity { display: grid; grid-template-columns: 160px 1fr; gap: 24px; padding: 17px 0; border-bottom: 1px solid var(--line); }
+    .opportunity b { color: var(--brand-deep); font-size: 15px; }
+    .opportunity span { font-size: 18px; line-height: 1.43; }
+
+    .context-intro { display: grid; grid-template-columns: 0.78fr 1.22fr; gap: 74px; align-items: center; }
+    .context-number { font-size: clamp(92px, 11vw, 164px); line-height: 0.86; color: var(--brand); font-weight: 830; letter-spacing: -0.08em; }
+    .context-kinds { border-top: 1px solid var(--line-strong); }
+    .context-kind { display: grid; grid-template-columns: 220px 1fr; gap: 30px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .context-kind strong { color: var(--brand-deep); font-size: 18px; }
+    .context-kind span { font-size: 20px; line-height: 1.45; }
+
+    .context-example { display: grid; grid-template-columns: 0.74fr 1.26fr; gap: 70px; align-items: center; }
+    .context-example-copy h3 { font-size: clamp(34px, 3.4vw, 52px); letter-spacing: -0.04em; }
+    .context-example-copy p { color: var(--muted); }
+    .context-path { border-top: 1px solid var(--line-strong); }
+    .context-path-row { display: grid; grid-template-columns: 145px 1fr; gap: 24px; padding: 19px 0; border-bottom: 1px solid var(--line); }
+    .context-path-row b { color: var(--brand-deep); font-size: 14px; }
+    .context-path-row span { font-size: 19px; line-height: 1.44; }
+
+    .context-chain { display: grid; grid-template-columns: 1fr auto 1.08fr auto 1.08fr auto 0.94fr; gap: 20px; align-items: center; }
+    .context-node { padding: 24px 0; border-top: 5px solid var(--brand); }
+    .context-node strong { display: block; font-size: 22px; margin-bottom: 10px; }
+    .context-node span { color: var(--muted); font-size: 15px; line-height: 1.45; }
+    .context-arrow { color: var(--brand-deep); font-size: 26px; }
+    .closing-line { margin-top: 54px; font-size: clamp(28px, 2.8vw, 43px); line-height: 1.3; font-weight: 720; }
+    .closing-line em { color: var(--brand-deep); font-style: normal; }
+
+    .controls {
+      position: fixed;
+      right: 18px;
+      bottom: 17px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(16, 37, 30, 0.9);
+      color: white;
+      box-shadow: 0 10px 32px rgba(9, 33, 25, 0.18);
+      backdrop-filter: blur(14px);
+    }
+    .controls button { width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: white; cursor: pointer; }
+    .controls button:hover, .controls button:focus-visible { background: var(--brand); color: var(--brand-ink); outline: none; }
+    .controls .counter { min-width: 60px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .progress { position: fixed; left: 0; bottom: 0; z-index: 45; height: 4px; width: var(--progress, 5%); background: var(--brand); transition: width 360ms var(--ease); }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: none;
+      background: rgba(8, 23, 18, 0.93);
+      color: white;
+      padding: 42px;
+      overflow: auto;
+    }
+    .overlay.open { display: block; }
+    .overlay-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .overlay-head h2 { font-size: 34px; letter-spacing: -0.03em; }
+    .overlay-close { border: 1px solid rgba(255,255,255,0.28); background: transparent; color: white; border-radius: 999px; padding: 9px 16px; cursor: pointer; }
+    .overview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .overview-item { min-height: 120px; padding: 18px; border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; background: rgba(255,255,255,0.04); color: white; text-align: left; cursor: pointer; }
+    .overview-item:hover, .overview-item:focus-visible { border-color: var(--brand); background: rgba(15,173,124,0.1); outline: none; }
+    .overview-item b { display: block; color: #8fe1c4; font-size: 12px; margin-bottom: 12px; }
+    .overview-item span { font-size: 17px; line-height: 1.35; }
+    .notes-content { max-width: 920px; font-size: 21px; line-height: 1.7; color: rgba(255,255,255,0.86); white-space: pre-wrap; }
+    .notes { display: none; }
+
+    @media (max-width: 900px) {
+      .slide { padding: 28px 26px 34px; overflow: auto; }
+      .cover-body, .question-layout, .sample-note, .scene-map, .role-stage, .topic-layout, .multi-layout,
+      .case-scene, .same-topic, .thesis, .capability-map, .context-intro, .context-example { grid-template-columns: 1fr; gap: 30px; }
+      .cover::before { width: 100%; height: 12px; }
+      .sample-chain, .context-chain { grid-template-columns: 1fr; }
+      .sample-arrow, .context-arrow, .scene-core { display: none; }
+      .method-grid, .endpoint-list { grid-template-columns: 1fr; }
+      .role-meaning, .transform-list { grid-template-columns: 1fr; }
+      .transform { border-right: 0; border-bottom: 1px solid var(--line); }
+      .overview-grid { grid-template-columns: 1fr 1fr; }
+      .case-scenes { min-height: 740px; }
+      .transcript-line { grid-template-columns: 110px 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    }
+
+    @media print {
+      @page { size: 13.333in 8.333in; margin: 0; }
+      html, body { background: white; overflow: visible; }
+      .deck { width: auto; height: auto; overflow: visible; }
+      .slide { position: relative; width: 13.333in; height: 8.333in; opacity: 1; visibility: visible; transform: none; pointer-events: auto; page-break-after: always; display: grid; }
+      .slide:not(.active) { opacity: 1; visibility: visible; }
+      .controls, .progress, .overlay { display: none !important; }
+      .case-scene { display: none; }
+      .case-scene.active { display: grid; opacity: 1; visibility: visible; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck" aria-label="ClassIn IM 真实会话调研演示文稿">
+
+    <section class="slide cover active" data-title="人们在 ClassIn IM 里，究竟在聊什么？">
+      <div class="cover-body">
+        <div class="cover-copy">
+          <div class="section-label">ClassIn IM 真实会话调研</div>
+          <h1>人们在 ClassIn IM 里，究竟在聊什么？</h1>
+          <p class="cover-question">从 1,000 个真实会话窗口出发，还原老师、管理者、学生与家长的沟通现场，并寻找 IM 与 AI 能力的事实起点。</p>
+        </div>
+        <div class="cover-evidence" aria-label="真实聊天原文节选">
+          <div class="quote-line"><span class="speaker">学生</span>今天数学能调到晚上吗？</div>
+          <div class="quote-line"><span class="speaker">教师</span>第五题有部分没翻译出来，先订正。</div>
+          <div class="quote-line"><span class="speaker">教师部</span>请核对课时，确认后提交审核并发给财务。</div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span class="brand-name">ClassIn</span><span>2026.09 研究汇报</span></footer>
+      <aside class="notes">开场只回答一个问题：用户已经在 IM 里做了哪些真实工作。今天先讲事实，再用很短的篇幅连接到下一份产品能力方案。</aside>
+    </section>
+
+    <section class="slide" data-title="我们要回答的，不是“哪句话命中了关键词”">
+      <header class="slide-head">
+        <div><div class="section-label">研究问题</div><h2>我们要回答的，不是“哪句话命中了关键词”</h2></div>
+        <div class="page-meta">研究单位<br />完整会话窗口</div>
+      </header>
+      <div class="slide-body question-layout">
+        <div class="big-answer">而是一个会话里，<mark>哪些人围绕哪些事情</mark>，形成了怎样的连续沟通。</div>
+        <div class="question-list">
+          <div class="question-item"><b>WHAT</b><span>用户实际聊了哪些 Topic？</span></div>
+          <div class="question-item"><b>WHERE</b><span>这些 Topic 出现在什么业务场景？</span></div>
+          <div class="question-item"><b>WHO</b><span>参与者的角色关系怎样改变 Topic 的意义？</span></div>
+          <div class="question-item"><b>WHY</b><span>哪些真实摩擦值得由 IM、业务工具或 AI 来承接？</span></div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>研究范围</span><span class="slide-number"></span></footer>
+      <aside class="notes">强调研究对象是上下文中的业务主题，不是单句标签。后面的所有比例和 Case 都围绕这四个问题组织。</aside>
+    </section>
+
+    <section class="slide" data-title="从 81.97 万条消息中，比例分层抽取 1,000 个会话">
+      <header class="slide-head">
+        <div><div class="section-label">抽样分析</div><h2>从 81.97 万条消息中，比例分层抽取 1,000 个会话</h2></div>
+        <div class="page-meta">固定随机种子<br />无人工换样</div>
+      </header>
+      <div class="slide-body">
+        <div class="sample-chain">
+          <div class="sample-node"><div class="number">819,700</div><div class="label">8 月脱敏消息</div></div>
+          <div class="sample-arrow">→</div>
+          <div class="sample-node"><div class="number">8,197</div><div class="label">原始会话窗口</div></div>
+          <div class="sample-arrow">→</div>
+          <div class="sample-node"><div class="number">1,000</div><div class="label">抽样窗口，抽样率 12.2%</div></div>
+          <div class="sample-arrow">→</div>
+          <div class="sample-node"><div class="number">100,000</div><div class="label">纳入语义分析的消息</div></div>
+        </div>
+        <div class="sample-note">
+          <p><strong>以会话而不是单句为抽样单位。</strong>每个窗口保留连续 100 条消息，才能判断回复、指代、话题转场和多 Topic 结构。</p>
+          <div>
+            <div class="ratio-strip" aria-label="样本会话形态比例"><span class="group">群聊 78%</span><span class="direct">1v1 22%</span></div>
+            <p class="endpoint-note">与抽样框 77.98% / 22.02% 基本一致。</p>
+          </div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>样本保持了原始群聊与 1v1 的结构比例</span><span class="slide-number"></span></footer>
+      <aside class="notes">方法只讲三句话：从 8,197 个固定长度窗口中按群聊和单聊比例抽样；两层抽中率接近一致；抽样前不看内容，所以不会先挑“教学相关”或“有意思”的聊天。</aside>
+    </section>
+
+    <section class="slide" data-title="完整上下文语义分析，而不是关键词计数">
+      <header class="slide-head">
+        <div><div class="section-label">分析方法</div><h2>完整上下文语义分析，而不是关键词计数</h2></div>
+        <div class="page-meta">Topic 可以多选<br />证据可回到原文</div>
+      </header>
+      <div class="slide-body">
+        <div class="method-grid">
+          <div class="method-step"><span class="index">01</span><div><strong>完整阅读 100 条消息</strong><span>综合发送者、回复关系、时间顺序、指代和前后承接。</span></div></div>
+          <div class="method-step"><span class="index">02</span><div><strong>一个会话允许多个 Topic</strong><span>以共同对象、事项或连续问题为单位，不把对话硬塞进单一标签。</span></div></div>
+          <div class="method-step"><span class="index">03</span><div><strong>普通 Topic 至少覆盖 5% 消息</strong><span>低于门槛的碎片不进入主统计；明确公告和业务提醒可作为特殊例外。</span></div></div>
+          <div class="method-step"><span class="index">04</span><div><strong>先理解主题，再映射分类</strong><span>分类目录经过多轮人工校准，不用关键词命中替代语义判断。</span></div></div>
+          <div class="method-step"><span class="index">05</span><div><strong>每个结论都能回到证据</strong><span>Topic 保留会话、消息和原始行的对应关系，支持人工复核。</span></div></div>
+          <div class="method-step"><span class="index">06</span><div><strong>用人工审阅校准模型</strong><span>经过已见样本校准、未见窗口复核、长尾审计和角色人工裁定。</span></div></div>
+        </div>
+        <div class="method-boundary">适用边界：本报告描述固定样本中的主要结构，不把样本比例直接写成全平台发生率。</div>
+      </div>
+      <footer class="slide-foot"><span>语义判断依赖上下文，而不是某个词出现了几次</span><span class="slide-number"></span></footer>
+      <aside class="notes">这页用于建立可信度。不要展开模型流程和阶段 A、B、C、D，只需要说明判断原则、Topic 门槛和人工复核。</aside>
+    </section>
+
+    <section class="slide" data-title="我们覆盖了两类会话形态与主要角色关系">
+      <header class="slide-head">
+        <div><div class="section-label">业务场景</div><h2>我们覆盖了两类会话形态与主要角色关系</h2></div>
+        <div class="page-meta">当前窗口关系<br />不代表永久身份</div>
+      </header>
+      <div class="slide-body scene-map">
+        <div class="scene-lane">
+          <div class="scene-lane-head"><strong>群聊</strong><span>780 个窗口</span></div>
+          <div class="scene-list">
+            <div class="scene-row"><span>师生班级群</span><b>741</b></div>
+            <div class="scene-row"><span>教师-管理者-教师（群聊）</span><b>32</b></div>
+            <div class="scene-row"><span>学生群</span><b>7</b></div>
+          </div>
+        </div>
+        <div class="scene-core">IM<br />100 条上下文</div>
+        <div class="scene-lane right">
+          <div class="scene-lane-head"><strong>1v1</strong><span>220 个窗口</span></div>
+          <div class="scene-list">
+            <div class="scene-row"><span>学生与学生</span><b>132</b></div>
+            <div class="scene-row"><span>教师-管理者-教师（1v1）</span><b>44</b></div>
+            <div class="scene-row"><span>教师与学生</span><b>37</b></div>
+            <div class="scene-row"><span>家长相关</span><b>7</b></div>
+          </div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>同一角色关系可跨越群聊与 1v1；教师-管理者-教师合计 76 个</span><span class="slide-number"></span></footer>
+      <aside class="notes">这里先建立业务现场全景。之后的 Topic 分析不能只看群聊和 1v1 总体，必须继续结合这些角色关系。</aside>
+    </section>
+
+    <section class="slide" data-title="样本主体是师生班级群，其次是学生同伴单聊">
+      <header class="slide-head">
+        <div><div class="section-label">场景结构</div><h2>样本主体是师生班级群，其次是学生同伴单聊</h2></div>
+        <div class="page-meta">占全部 1,000 会话</div>
+      </header>
+      <div class="slide-body role-stage">
+        <div class="role-bars">
+          <div class="role-bar"><span class="label">师生班级群</span><div class="bar-wrap"><div class="bar" style="--w:100%"></div></div><span class="value">74.1%</span></div>
+          <div class="role-bar"><span class="label">学生与学生 1v1</span><div class="bar-wrap"><div class="bar" style="--w:17.8%"></div></div><span class="value">13.2%</span></div>
+          <div class="role-bar"><span class="label">教师-管理者-教师</span><div class="bar-wrap"><div class="bar" style="--w:10.3%"></div></div><span class="value">7.6%</span></div>
+          <div class="role-bar"><span class="label">教师与学生 1v1</span><div class="bar-wrap"><div class="bar" style="--w:5%"></div></div><span class="value">3.7%</span></div>
+          <div class="role-bar"><span class="label">其他场景</span><div class="bar-wrap"><div class="bar" style="--w:1.9%"></div></div><span class="value">1.4%</span></div>
+        </div>
+        <div class="role-callout">
+          <div class="number">87.3%</div>
+          <p>由“师生班级群”和“学生同伴 1v1”两类场景构成。总体 Topic 排名会主要受到这两类大样本牵引。</p>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>教师-管理者-教师 = 32 个群聊 + 44 个 1v1</span><span class="slide-number"></span></footer>
+      <aside class="notes">本页按角色关系归并。“教师-管理者-教师”的群聊部分 32 个与 1v1 部分 44 个，合计 76 个窗口，占 7.6%。会话形态差异只在案例与明细分析中保留。</aside>
+    </section>
+
+    <section class="slide" data-title="用户聊得最多的，是课程如何发生、工具如何可用">
+      <header class="slide-head">
+        <div><div class="section-label">聊对话题</div><h2>用户聊得最多的，是课程如何发生、工具如何可用</h2></div>
+        <div class="page-meta">一级主题覆盖率<br />一个窗口可多选</div>
+      </header>
+      <div class="slide-body topic-layout">
+        <div class="topic-bars">
+          <div class="topic-bar"><span class="label">课程运营与服务</span><div><div class="bar" style="--w:100%"></div></div><span class="value">39.2%</span></div>
+          <div class="topic-bar"><span class="label">数字平台与技术</span><div><div class="bar" style="--w:89%"></div></div><span class="value">34.9%</span></div>
+          <div class="topic-bar"><span class="label">学习与学业内容</span><div><div class="bar" style="--w:82%"></div></div><span class="value">32.1%</span></div>
+          <div class="topic-bar"><span class="label">人际关系与社交</span><div><div class="bar" style="--w:66%"></div></div><span class="value">26.0%</span></div>
+          <div class="topic-bar"><span class="label">教学设计、实施与改进</span><div><div class="bar" style="--w:60%"></div></div><span class="value">23.5%</span></div>
+          <div class="topic-bar"><span class="label">娱乐与创作</span><div><div class="bar" style="--w:59%"></div></div><span class="value">23.3%</span></div>
+          <div class="topic-bar"><span class="label">日常生活、健康与出行</span><div><div class="bar" style="--w:32%"></div></div><span class="value">12.6%</span></div>
+        </div>
+        <div class="topic-reading">
+          <strong>IM 首先是教学服务发生的现场，其次才是纯粹的知识问答入口。</strong>
+          <p>教学、社交和生活内容长期共存。不能把非教学内容简单视为无效噪音。</p>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>覆盖率表示出现广度，不等于痛点强度</span><span class="slide-number"></span></footer>
+      <aside class="notes">强调结构而不是下结论说“最该做什么”。技术问题覆盖更多窗口，但学习讨论出现时往往占用更多消息，这两种指标不能互换。</aside>
+    </section>
+
+    <section class="slide" data-title="跨会话反复出现的，是六类具体事项">
+      <header class="slide-head">
+        <div><div class="section-label">高频 Topic</div><h2>跨会话反复出现的，是六类具体事项</h2></div>
+        <div class="page-meta">样本内会话覆盖率</div>
+      </header>
+      <div class="slide-body">
+        <div class="endpoint-list">
+          <div class="endpoint"><span class="rank">01</span><span class="name">课程改期、取消、续课与补课</span><span class="rate">23.0%</span></div>
+          <div class="endpoint"><span class="rank">02</span><span class="name">教材、教学资料与课件</span><span class="rate">16.1%</span></div>
+          <div class="endpoint"><span class="rank">03</span><span class="name">作业布置、完成与订正</span><span class="rate">14.7%</span></div>
+          <div class="endpoint"><span class="rank">04</span><span class="name">到课、请假与缺勤处置</span><span class="rate">14.3%</span></div>
+          <div class="endpoint"><span class="rank">05</span><span class="name">群组空间与成员治理</span><span class="rate">12.8%</span></div>
+          <div class="endpoint"><span class="rank">06</span><span class="name">技术故障与连接排查</span><span class="rate">11.3%</span></div>
+        </div>
+        <p class="endpoint-note">这些事项有大量不同会话和精确原文支持，不是由少数特别 Case 拉高。</p>
+      </div>
+      <footer class="slide-foot"><span>高频只说明入口足够大，是否由 AI 承担仍需继续判断</span><span class="slide-number"></span></footer>
+      <aside class="notes">这一页是后续产品讨论的事实底盘。改课、资料、作业、出勤、群治理和排障是跨会话重复最多的具体问题。</aside>
+    </section>
+
+    <section class="slide" data-title="一个会话平均不是一个主题，而是 3.18 个">
+      <header class="slide-head">
+        <div><div class="section-label">复合现场</div><h2>一个会话平均不是一个主题，而是 3.18 个</h2></div>
+        <div class="page-meta">851 个窗口<br />包含 2 个及以上 Topic</div>
+      </header>
+      <div class="slide-body multi-layout">
+        <div class="multi-metrics">
+          <div class="multi-metric"><strong>3.18</strong><span>每窗平均正式 Topic</span></div>
+          <div class="multi-metric"><strong>5</strong><span>90% 的窗口不超过 5 个 Topic</span></div>
+          <div class="multi-metric"><strong>10</strong><span>单窗最高 Topic 数</span></div>
+        </div>
+        <div class="conversation-thread" aria-label="复合会话主题示意">
+          <div class="thread-topic"><b>课程改期</b><small>学生时间与教师可用时段冲突</small></div>
+          <div class="thread-topic"><b>到课与缺勤</b><small>最终选择请假，等待后续处置</small></div>
+          <div class="thread-topic"><b>教材资料</b><small>确认本次课需要使用的材料</small></div>
+          <div class="thread-topic"><b>技术排障</b><small>进入课堂后又遇到声音与连接问题</small></div>
+          <div class="thread-topic"><b>学习表现反馈</b><small>课后补充对本次学习状态的评价</small></div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>一个入口承载多个连续任务，产品不能只识别一条意图</span><span class="slide-number"></span></footer>
+      <aside class="notes">多 Topic 是本研究最重要的结构性发现之一。常见共现包括教材与改课、缺勤与改课、排障与改课。共现不自动等于因果，但证明了现场是复合的。</aside>
+    </section>
+
+    <section class="slide" data-title="师生班级群：课程、作业与课堂运行同时发生">
+      <header class="slide-head">
+        <div><div class="section-label">真实场景</div><h2>师生班级群：课程、作业与课堂运行同时发生</h2></div>
+        <div class="case-hint">点击标签或按空格切换本页 Case</div>
+      </header>
+      <div class="slide-body case-stage" data-case-group>
+        <div class="case-tabs" role="tablist">
+          <button class="active" data-case-target="0">课程协调</button>
+          <button data-case-target="1">作业闭环</button>
+          <button data-case-target="2">技术排障</button>
+        </div>
+        <div class="case-scenes">
+          <article class="case-scene active">
+            <div class="case-context"><h3>一句“今天请假”背后，是多方日程协商</h3><div class="topic-name">Topic：课程改期、取消、续课与补课</div><p>学生其他课程、教师满课、替代时段和最终请假，构成完整的课程协调现场。</p><div class="case-source">脱敏原文节选 · S1000-0424 · 42/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line"><span class="speaker">数学杨老师</span><span>今儿下午正常上课吧</span></div>
+              <div class="transcript-line"><span class="speaker">晟晟</span><span>7点半有语文，下午能连吗</span></div>
+              <div class="transcript-line"><span class="speaker">数学杨老师</span><span>我下午满课</span></div>
+              <div class="transcript-line key"><span class="speaker">晟晟</span><span>今天数学能调到晚上吗</span></div>
+              <div class="transcript-line key"><span class="speaker">数学杨老师</span><span>今儿晚上我有课了，调不了</span></div>
+              <div class="transcript-line key"><span class="speaker">晟晟</span><span>那今天请假</span></div>
+            </div>
+          </article>
+          <article class="case-scene">
+            <div class="case-context"><h3>作业的价值不在“提醒一次”，而在反馈闭环</h3><div class="topic-name">Topic：作业布置、完成与订正</div><p>提交、逐题反馈、订正和再次提交连续发生，单条“交作业啦”无法代表完整需求。</p><div class="case-source">脱敏原文节选 · S1000-0305 · 79/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line"><span class="speaker">Odin</span><span>邱老师，交作业啦</span></div>
+              <div class="transcript-line key"><span class="speaker">邱志敏 英语</span><span>第五题有部分没翻译出来，第六题是“阅读所需的神经通路”</span></div>
+              <div class="transcript-line key"><span class="speaker">Odin</span><span>现在让他订正</span></div>
+              <div class="transcript-line"><span class="speaker">邱志敏 英语</span><span>第十二题，基本翻译到位了</span></div>
+              <div class="transcript-line key"><span class="speaker">Odin</span><span>一会再拍照给您</span></div>
+            </div>
+          </article>
+          <article class="case-scene">
+            <div class="case-context"><h3>技术问题不是“有人说卡”，而是课程恢复过程</h3><div class="topic-name">Topic：技术故障与连接排查</div><p>双方连续判断声音、麦克风、临时教室和重新进入，直到课堂可以继续。</p><div class="case-source">脱敏原文节选 · S1000-0895 · 56/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line"><span class="speaker">葫芦爱学习</span><span>又卡出去了吗</span></div>
+              <div class="transcript-line key"><span class="speaker">学生</span><span>对，听不见</span></div>
+              <div class="transcript-line"><span class="speaker">学生</span><span>那开临时</span></div>
+              <div class="transcript-line key"><span class="speaker">葫芦爱学习</span><span>你检查一下有没有音量，能打开自己的话筒吗</span></div>
+              <div class="transcript-line key"><span class="speaker">学生</span><span>可以了，在进</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>师生班级群 741 个，占群聊 95%</span><span class="slide-number"></span></footer>
+      <aside class="notes">本页三个案例按整组切换。不要逐句点击。强调班群同时承担课程服务、学习任务和课堂运行，而不是单向通知板。</aside>
+    </section>
+
+    <section class="slide" data-title="教师管理沟通：一条对话往往就是一段工作流">
+      <header class="slide-head">
+        <div><div class="section-label">真实场景</div><h2>教师管理沟通：一条对话往往就是一段工作流</h2></div>
+        <div class="case-hint">点击标签或按空格切换本页 Case</div>
+      </header>
+      <div class="slide-body case-stage" data-case-group>
+        <div class="case-tabs" role="tablist"><button class="active" data-case-target="0">请假与改课</button><button data-case-target="1">课时与薪资</button></div>
+        <div class="case-scenes">
+          <article class="case-scene active">
+            <div class="case-context"><h3>教师请假同时触发规范、通知和课程变更</h3><div class="topic-name">教师-管理者-教师（群聊）</div><p>管理协作不能靠一个关键词识别，它表现为责任关系、管理动作和后续处置同时出现。</p><div class="case-source">脱敏原文节选 · S1000-0517</div></div>
+            <div class="transcript">
+              <div class="transcript-line"><span class="speaker">Phea 老师</span><span>Is it possible to take a day off today and reschedule our classes on Saturday?</span></div>
+              <div class="transcript-line key"><span class="speaker">Lisa王</span><span>老师如果你请假记得提前一周说，不要当天请假</span></div>
+              <div class="transcript-line key"><span class="speaker">Lisa王</span><span>今天已经通知学生取消</span></div>
+              <div class="transcript-line"><span class="speaker">Phea 老师</span><span>Can we move our classes? Still stuck in traffic.</span></div>
+              <div class="transcript-line key"><span class="speaker">Lisa王</span><span>改好了</span></div>
+            </div>
+          </article>
+          <article class="case-scene">
+            <div class="case-context"><h3>统计、核对、审核、财务发放，状态都在聊天里</h3><div class="topic-name">教师-管理者-教师（1v1）</div><p>这不是一般沟通，而是课时结算工作流被自然语言承载。</p><div class="case-source">脱敏原文节选 · S1000-0621 · 8/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line key"><span class="speaker">Ella 教师部</span><span>7月16日-7月31日总课时为42节，请核对课时</span></div>
+              <div class="transcript-line"><span class="speaker">Melika</span><span>right</span></div>
+              <div class="transcript-line key"><span class="speaker">Ella 教师部</span><span>核对完成后，我将提交审核并发给财务</span></div>
+              <div class="transcript-line"><span class="speaker">Ella 教师部</span><span>15号周六财务会休假</span></div>
+              <div class="transcript-line key"><span class="speaker">Ella 教师部</span><span>提前核对发放1-13号的工资</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>教师-管理者-教师共 76 个窗口；本页展示其群聊与 1v1 两种形态</span><span class="slide-number"></span></footer>
+      <aside class="notes">管理场景的关键不是聊天效率，而是自然语言里已经出现了业务对象、流程节点和正式状态。后续产品可以从这里寻找确定性工作流。</aside>
+    </section>
+
+    <section class="slide" data-title="教师与学生、家长：同样的话题，不同的沟通责任">
+      <header class="slide-head">
+        <div><div class="section-label">真实场景</div><h2>教师与学生、家长：同样的话题，不同的沟通责任</h2></div>
+        <div class="case-hint">点击标签或按空格切换本页 Case</div>
+      </header>
+      <div class="slide-body case-stage" data-case-group>
+        <div class="case-tabs" role="tablist"><button class="active" data-case-target="0">师生作业订正</button><button data-case-target="1">家长课程协调</button></div>
+        <div class="case-scenes">
+          <article class="case-scene active">
+            <div class="case-context"><h3>师生私聊承担持续的学习反馈</h3><div class="topic-name">教师与学生 1v1</div><p>反复发生的提交、检查、补漏、订正和确认，比一次提醒更接近真实学习过程。</p><div class="case-source">脱敏原文节选 · S1000-0017 · 41/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line"><span class="speaker">艺洋dcx</span><span>作业&笔记来啦</span></div>
+              <div class="transcript-line key"><span class="speaker">莎语</span><span>对比订正哦</span></div>
+              <div class="transcript-line"><span class="speaker">艺洋dcx</span><span>这是今天的订正哈</span></div>
+              <div class="transcript-line"><span class="speaker">莎语</span><span>收到订正</span></div>
+              <div class="transcript-line key"><span class="speaker">莎语</span><span>21题没发哦，对比订正完善</span></div>
+            </div>
+          </article>
+          <article class="case-scene">
+            <div class="case-context"><h3>家长的课程协调还带着家庭生活约束</h3><div class="topic-name">教师与家长 1v1</div><p>出行、恢复日期、原课表和临时时段共同决定是否调课。</p><div class="case-source">脱敏原文节选 · S1000-0301 · 15/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line"><span class="speaker">家长</span><span>孩子去舅舅家了，等回来我们再上课，8月8号回南京</span></div>
+              <div class="transcript-line key"><span class="speaker">玛丽老师</span><span>We resume on August 8, right?</span></div>
+              <div class="transcript-line key"><span class="speaker">家长</span><span>老师，今天晚上7点和7点半可以吗</span></div>
+              <div class="transcript-line"><span class="speaker">玛丽老师</span><span>Your original schedule is untouched.</span></div>
+              <div class="transcript-line key"><span class="speaker">玛丽老师</span><span>If you want to reschedule it early tonight, just let me know. I am available.</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>家长相关窗口只有 7 个，本页用于 Case 理解，不做稳定比例判断</span><span class="slide-number"></span></footer>
+      <aside class="notes">同样是作业或排课，师生关系和家校关系需要的对象、提醒方式、权限和责任不同。</aside>
+    </section>
+
+    <section class="slide" data-title="学生同伴交流：学习需求与同伴生活并存">
+      <header class="slide-head">
+        <div><div class="section-label">真实场景</div><h2>学生同伴交流：学习需求与同伴生活并存</h2></div>
+        <div class="case-hint">点击标签或按空格切换本页 Case</div>
+      </header>
+      <div class="slide-body case-stage" data-case-group>
+        <div class="case-tabs" role="tablist"><button class="active" data-case-target="0">写作互助</button><button data-case-target="1">游戏伙伴</button></div>
+        <div class="case-scenes">
+          <article class="case-scene active">
+            <div class="case-context"><h3>学生想要的有时不是答案，而是一个启发</h3><div class="topic-name">学生与学生 1v1</div><p>写作困难、同伴建议、家长检查和 AI 使用边界在同一段对话中被共同讨论。</p><div class="case-source">脱敏原文节选 · S1000-0455 · 43/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line key"><span class="speaker">Ruby</span><span>“我所憧憬的初中生活”到底怎么写，完全不知道怎么写</span></div>
+              <div class="transcript-line"><span class="speaker">Murphy</span><span>万能的豆包</span></div>
+              <div class="transcript-line"><span class="speaker">Ruby</span><span>不行，我爸妈会检查的</span></div>
+              <div class="transcript-line key"><span class="speaker">Ruby</span><span>给我个开头呗，我只想要个启发而已</span></div>
+              <div class="transcript-line"><span class="speaker">Murphy</span><span>小学毕业，步入初中，翻开新的一页……</span></div>
+            </div>
+          </article>
+          <article class="case-scene">
+            <div class="case-context"><h3>ClassIn IM 也是学生建立同伴连接的空间</h3><div class="topic-name">学生群</div><p>提出娱乐需求、选择游戏、协调时间和确认连接，构成完整的同伴社交目的。</p><div class="case-source">脱敏原文节选 · S1000-0286 · 12/100 条有效证据</div></div>
+            <div class="transcript">
+              <div class="transcript-line key"><span class="speaker">天真</span><span>有游戏陪吗</span></div>
+              <div class="transcript-line"><span class="speaker">sky王亿</span><span>什么游戏？</span></div>
+              <div class="transcript-line"><span class="speaker">天真</span><span>和平，王者也行，最好和平</span></div>
+              <div class="transcript-line key"><span class="speaker">sky王亿</span><span>只能明天玩</span></div>
+              <div class="transcript-line key"><span class="speaker">天真</span><span>可以</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>学生与学生 1v1：游戏 20.5%，见面 16.7%，校园生活 15.2%，作业 13.6%</span><span class="slide-number"></span></footer>
+      <aside class="notes">学生不是单一的学习任务执行者。非教学内容构成真实的同伴关系和归属感，产品需要考虑治理与安全，但不能简单删除或降格为噪音。</aside>
+    </section>
+
+    <section class="slide" data-title="同样叫“作业”，在不同关系里是三件不同的事">
+      <header class="slide-head">
+        <div><div class="section-label">角色改变意义</div><h2>同样叫“作业”，在不同关系里是三件不同的事</h2></div>
+        <div class="page-meta">Topic 名称相同<br />责任结构不同</div>
+      </header>
+      <div class="slide-body same-topic">
+        <div><div class="topic-word">作业</div><div class="topic-caption">不能仅凭 Topic 名称决定产品能力。</div></div>
+        <div class="same-topic-rows">
+          <div class="same-topic-row"><b>教师与学生</b><span>提交、批改、补漏、订正与确认，核心是<mark>教学反馈闭环</mark>。</span></div>
+          <div class="same-topic-row"><b>学生与学生</b><span>讨论题目、借鉴思路、互相提醒，核心是<mark>同伴互助</mark>。</span></div>
+          <div class="same-topic-row"><b>学生与家长</b><span>询问页码、检查进度、提醒背诵，核心是<mark>家庭监督与任务管理</mark>。</span></div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>场景 = 会话形态 × 角色关系 × Topic × 上下文</span><span class="slide-number"></span></footer>
+      <aside class="notes">这是从数据到产品最关键的桥。Topic 只告诉我们在聊什么，角色和上下文才告诉我们需要什么帮助。</aside>
+    </section>
+
+    <section class="slide" data-title="这些聊天特征，来自三类角色不同的责任结构">
+      <header class="slide-head">
+        <div><div class="section-label">观点总结</div><h2>这些聊天特征，来自三类角色不同的责任结构</h2></div>
+        <div class="page-meta">不是偶然的内容分布</div>
+      </header>
+      <div class="slide-body role-meaning">
+        <div class="meaning-col"><h3>教师</h3><div class="role-rate">教学执行者 + 专业判断者</div><p><strong>必须让课程和学习任务真正推进。</strong>所以会持续处理资料、作业、到课、反馈和技术异常。</p><p>教师也是学生、家长与机构之间的信息中继点。</p></div>
+        <div class="meaning-col"><h3>教学管理者</h3><div class="role-rate">多方约束协调者 + 机构规则执行者</div><p><strong>必须协调时间、资源、人员和正式状态。</strong>所以改课、缺勤、排班、课酬、通知和审核集中出现。</p><p>聊天经常承担轻量运营系统的作用。</p></div>
+        <div class="meaning-col"><h3>学生</h3><div class="role-rate">学习者 + 社会主体</div><p><strong>既要完成学习任务，也要维持同伴关系和自我表达。</strong>所以作业、校园、游戏、见面和关系话题自然共存。</p><p>学生侧不能只按“被管理对象”设计。</p></div>
+      </div>
+      <footer class="slide-foot"><span>家长是知情者、协调者和部分决策者，但本次样本只支持 Case 级理解</span><span class="slide-number"></span></footer>
+      <aside class="notes">这页吸收了人工观察，不把用户文章原文照搬。核心解释是责任结构：谁对什么结果负责，就会在 IM 中反复产生相应内容。</aside>
+    </section>
+
+    <section class="slide" data-title="IM 的独特价值，是业务意图刚刚形成的现场">
+      <header class="slide-head">
+        <div><div class="section-label">核心观点</div><h2>IM 的独特价值，是业务意图刚刚形成的现场</h2></div>
+        <div class="page-meta">从“聊清楚”走向“事情完成”</div>
+      </header>
+      <div class="slide-body thesis">
+        <div class="thesis-statement">它天然处在<em>意图、约束、承诺和人类判断</em>刚刚产生的地方。</div>
+        <div class="thesis-evidence">
+          <div><b>意图</b>“今天请假”“能不能调到晚上”</div>
+          <div><b>约束</b>教师满课、学生有其他课程、财务周六休假</div>
+          <div><b>承诺</b>“一会再拍照”“核对后提交审核”</div>
+          <div><b>判断</b>“第五题没翻译出来”“今天注意力不好”</div>
+          <div><b>状态声明</b>“已提交”“可以了，在进”</div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>真实摩擦往往发生在：信息留在自然语言里，后续仍需要人再次处理</span><span class="slide-number"></span></footer>
+      <aside class="notes">这是全场最重要的观点。IM 的机会不只是多一个 AI 聊天入口，而是把刚出现的自然语言意图连接到课程、作业、报告和处理动作。</aside>
+    </section>
+
+    <section class="slide" data-title="AI 的价值，不是多说一句，而是帮助完成五种转化">
+      <header class="slide-head">
+        <div><div class="section-label">AI 与 IM 能力引子</div><h2>AI 的价值，不是多说一句，而是帮助完成五种转化</h2></div>
+        <div class="page-meta">候选方向<br />不是已立项结论</div>
+      </header>
+      <div class="slide-body">
+        <div class="transform-list">
+          <div class="transform"><div class="from">聊天中的意图</div><div class="to">业务对象或动作</div><div class="example">请假 → 课程变更申请</div></div>
+          <div class="transform"><div class="from">多方约束</div><div class="to">可比较方案</div><div class="example">教师时间 + 学生时间 → 调课候选</div></div>
+          <div class="transform"><div class="from">人类证据与判断</div><div class="to">可审阅成果物</div><div class="example">课堂表现 + 作业 → 反馈草稿</div></div>
+          <div class="transform"><div class="from">异常信号</div><div class="to">可跟踪事项</div><div class="example">听不到声音 → 排障与恢复状态</div></div>
+          <div class="transform"><div class="from">短暂表达</div><div class="to">任务级 Context</div><div class="example">学生困难 → 本次辅导所需背景</div></div>
+        </div>
+        <p class="transform-caption">真正需要 AI 的地方，是理解多轮上下文、整理复杂约束和生成可审阅草稿；确定性事实与正式写回仍由业务系统和用户控制。</p>
+      </div>
+      <footer class="slide-foot"><span>高频不自动等于 AI，应先判断由基础 IM、业务工作流还是 AI 承担</span><span class="slide-number"></span></footer>
+      <aside class="notes">这里只抛出能力框架，后续产品汇报再逐项展开。尤其不要把投票、回复、附件组织等基础 IM 问题包装成 AI。</aside>
+    </section>
+
+    <section class="slide" data-title="关键场景需要四层能力共同承接">
+      <header class="slide-head">
+        <div><div class="section-label">能力落点</div><h2>关键场景需要四层能力共同承接</h2></div>
+        <div class="page-meta">从基础工具到受控执行</div>
+      </header>
+      <div class="slide-body capability-map">
+        <div class="capability-stack">
+          <div class="capability-layer"><strong>基础 IM 交互</strong><span>引用、回复、附件、投票、群与成员治理</span></div>
+          <div class="capability-layer"><strong>教育业务对象</strong><span>课程、课表、课堂、作业、材料、到课和报告</span></div>
+          <div class="capability-layer"><strong>Agent 辅助</strong><span>理解上下文、比较约束、检索资料、生成草稿</span></div>
+          <div class="capability-layer"><strong>治理与执行</strong><span>权限、审批、领域校验、通知范围和执行回执</span></div>
+        </div>
+        <div class="opportunity-list">
+          <div class="opportunity"><b>调课与请假</b><span>自动汇总双方可用时段，形成候选方案，确认后写回课表并通知相关人。</span></div>
+          <div class="opportunity"><b>作业与订正</b><span>把提交、反馈、缺漏和订正状态串成闭环，减少老师反复追踪。</span></div>
+          <div class="opportunity"><b>资料与课件</b><span>在当前课程范围内检索、核对版本和权限，并直接带回原会话。</span></div>
+          <div class="opportunity"><b>技术排障</b><span>结合设备与课堂状态给出排查顺序，恢复后留下可追踪结果。</span></div>
+          <div class="opportunity"><b>教学反馈</b><span>根据有来源的课堂和作业证据生成草稿，由教师完成专业判断和发布。</span></div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>AI 不拥有业务事实，也不绕过教师和管理者的确认责任</span><span class="slide-number"></span></footer>
+      <aside class="notes">这页是本报告与下一份产品方案的接缝。重点是四层组合，而不是“加一个大模型按钮”。</aside>
+    </section>
+
+    <section class="slide" data-title="真实聊天还提供了三类高价值 Human Input">
+      <header class="slide-head">
+        <div><div class="section-label">Last but not least</div><h2>真实聊天还提供了三类高价值 Human Input</h2></div>
+        <div class="page-meta">它们是人类表达<br />不是自动成立的客观事实</div>
+      </header>
+      <div class="slide-body context-intro">
+        <div><div class="context-number">3</div><p class="lede">这些信息能增强 AI 对当下任务的理解，但必须保留来源、时间和适用范围。</p></div>
+        <div class="context-kinds">
+          <div class="context-kind"><strong>教师对学生的评价</strong><span>课堂状态、知识掌握、作业表现和下一步教学建议。</span></div>
+          <div class="context-kind"><strong>管理者对教师的反馈</strong><span>课程进度、教学方法、课堂体验、执行规范和协作质量。</span></div>
+          <div class="context-kind"><strong>学生对自己的表达</strong><span>困难、需求、兴趣、情绪、偏好和对帮助方式的期待。</span></div>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>“来自真实聊天”只证明表达真实发生过，不证明表达内容客观正确</span><span class="slide-number"></span></footer>
+      <aside class="notes">这里转入 Context 延展。三类输入都很有价值，但如果去掉说话人、时间和任务范围，就会被错误地固化为个人画像。</aside>
+    </section>
+
+    <section class="slide" data-title="Context 应服务于当前任务，而不是沉淀成永久画像">
+      <header class="slide-head">
+        <div><div class="section-label">Context 延展</div><h2>Context 应服务于当前任务，而不是沉淀成永久画像</h2></div>
+        <div class="case-hint">点击标签或按空格切换本页示例</div>
+      </header>
+      <div class="slide-body case-stage" data-case-group>
+        <div class="case-tabs" role="tablist"><button class="active" data-case-target="0">教师评价学生</button><button data-case-target="1">管理者反馈教师</button><button data-case-target="2">学生自我表达</button></div>
+        <div class="case-scenes">
+          <article class="case-scene active context-example">
+            <div class="context-example-copy"><h3>“今天注意力不太集中”</h3><p>它可以帮助老师形成本次课后反馈和下一次教学准备，但不能脱离课堂、时间和说话人，被固化为学生长期特征。</p></div>
+            <div class="context-path">
+              <div class="context-path-row"><b>保留什么</b><span>谁评价、针对哪堂课、观察依据、发生时间、原始消息。</span></div>
+              <div class="context-path-row"><b>本次可用</b><span>生成课后反馈草稿、提醒下次关注点、与作业表现交叉核对。</span></div>
+              <div class="context-path-row"><b>不能直接做</b><span>自动写入永久学情结论，或给学生贴“注意力差”的长期标签。</span></div>
+            </div>
+          </article>
+          <article class="case-scene context-example">
+            <div class="context-example-copy"><h3>“这节课进度偏慢，活动组织还可以更清楚”</h3><p>它可以支持教师复盘和管理协作，但需要区分管理者意见、机构规范与课堂客观记录。</p></div>
+            <div class="context-path">
+              <div class="context-path-row"><b>保留什么</b><span>反馈者角色、适用课程、具体证据、可见范围和是否已经与教师沟通。</span></div>
+              <div class="context-path-row"><b>本次可用</b><span>形成复盘提纲、新教师辅导建议、后续观察项和待确认改进计划。</span></div>
+              <div class="context-path-row"><b>不能直接做</b><span>自动生成绩效结论，或把单次主观反馈升级为机构正式评价。</span></div>
+            </div>
+          </article>
+          <article class="case-scene context-example">
+            <div class="context-example-copy"><h3>“我完全不知道怎么写，只想要个启发”</h3><p>它同时表达了学习困难、帮助方式偏好和对 AI 代写的顾虑，适合成为当前写作辅导的任务 Context。</p></div>
+            <div class="context-path">
+              <div class="context-path-row"><b>保留什么</b><span>学生原话、当前任务、期望的帮助程度、有效期和使用权限。</span></div>
+              <div class="context-path-row"><b>本次可用</b><span>提供提问、结构提示或开头启发，而不是直接替写整篇作文。</span></div>
+              <div class="context-path-row"><b>不能直接做</b><span>推断学生长期能力、性格或所谓个人 Soul，并跨场景持续使用。</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>三类示例均是 Context 设计输入，不是模型自动行动授权</span><span class="slide-number"></span></footer>
+      <aside class="notes">本页进一步延展三类 Human Input。每个例子都分为保留什么、当前任务怎么用、不能直接做什么。</aside>
+    </section>
+
+    <section class="slide" data-title="让 IM 从消息容器，成长为教学业务与 AI 的可信入口">
+      <header class="slide-head">
+        <div><div class="section-label">结语</div><h2>让 IM 从消息容器，成长为教学业务与 AI 的可信入口</h2></div>
+        <div class="page-meta">事实层已经完成<br />下一步进入产品方案</div>
+      </header>
+      <div class="slide-body">
+        <div class="context-chain">
+          <div class="context-node"><strong>Message Event</strong><span>真实发生的聊天消息与回复关系</span></div>
+          <div class="context-arrow">→</div>
+          <div class="context-node"><strong>Context Claim</strong><span>谁在何时、针对谁、表达了什么</span></div>
+          <div class="context-arrow">→</div>
+          <div class="context-node"><strong>Context Snapshot</strong><span>只装入当前任务需要且权限允许的上下文</span></div>
+          <div class="context-arrow">→</div>
+          <div class="context-node"><strong>可确认的结果</strong><span>草稿、建议、业务动作与执行回执</span></div>
+        </div>
+        <div class="closing-line">下一份材料将继续回答：围绕这些高频场景，<em>基础 IM、业务工具与 AI Agent</em> 应该怎样分工。</div>
+      </div>
+      <footer class="slide-foot"><span class="brand-name">ClassIn IM 真实会话调研</span><span class="slide-number"></span></footer>
+      <aside class="notes">结束时回到主线：研究不是为了得到一个漂亮目录，而是让后续产品能力有真实用户现场、有责任边界、有可验证结果。</aside>
+    </section>
+
+  </main>
+
+  <div class="controls" aria-label="演示控制">
+    <button id="prevBtn" type="button" aria-label="上一页">‹</button>
+    <span class="counter" id="counter">1 / 21</span>
+    <button id="nextBtn" type="button" aria-label="下一页">›</button>
+    <button id="overviewBtn" type="button" aria-label="打开目录">O</button>
+    <button id="fullscreenBtn" type="button" aria-label="全屏">F</button>
+  </div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <section class="overlay" id="overview" aria-label="演示目录">
+    <div class="overlay-head"><h2>演示目录</h2><button class="overlay-close" data-close-overlay>关闭</button></div>
+    <div class="overview-grid" id="overviewGrid"></div>
+  </section>
+  <section class="overlay" id="notesOverlay" aria-label="讲者备注">
+    <div class="overlay-head"><h2>讲者备注</h2><button class="overlay-close" data-close-overlay>关闭</button></div>
+    <div class="notes-content" id="notesContent"></div>
+  </section>
+
+  <script>
+    (() => {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const counter = document.getElementById('counter');
+      const progress = document.getElementById('progress');
+      const overview = document.getElementById('overview');
+      const notesOverlay = document.getElementById('notesOverlay');
+      const notesContent = document.getElementById('notesContent');
+      const overviewGrid = document.getElementById('overviewGrid');
+      let current = 0;
+
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+      function updateNumbers() {
+        slides.forEach((slide, index) => {
+          slide.querySelectorAll('.slide-number').forEach((node) => {
+            node.textContent = String(index + 1).padStart(2, '0');
+          });
+        });
+      }
+
+      function showSlide(index, pushHash = true) {
+        current = clamp(index, 0, slides.length - 1);
+        slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+        counter.textContent = `${current + 1} / ${slides.length}`;
+        progress.style.setProperty('--progress', `${((current + 1) / slides.length) * 100}%`);
+        document.title = `${slides[current].dataset.title} | ClassIn IM 调研`;
+        if (pushHash) history.replaceState(null, '', `#slide-${current + 1}`);
+      }
+
+      function caseGroupOnCurrentSlide() {
+        return slides[current].querySelector('[data-case-group]');
+      }
+
+      function showCase(group, targetIndex) {
+        if (!group) return;
+        const tabs = Array.from(group.querySelectorAll('[data-case-target]'));
+        const scenes = Array.from(group.querySelectorAll('.case-scene'));
+        const index = clamp(Number(targetIndex), 0, scenes.length - 1);
+        tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+        scenes.forEach((scene, i) => scene.classList.toggle('active', i === index));
+        group.dataset.caseIndex = String(index);
+      }
+
+      function cycleCase() {
+        const group = caseGroupOnCurrentSlide();
+        if (!group) return false;
+        const scenes = group.querySelectorAll('.case-scene');
+        const index = Number(group.dataset.caseIndex || 0);
+        showCase(group, (index + 1) % scenes.length);
+        return true;
+      }
+
+      function openOverlay(target) {
+        overview.classList.remove('open');
+        notesOverlay.classList.remove('open');
+        target.classList.add('open');
+      }
+
+      function closeOverlays() {
+        overview.classList.remove('open');
+        notesOverlay.classList.remove('open');
+      }
+
+      slides.forEach((slide) => {
+        slide.querySelectorAll('[data-case-group]').forEach((group) => {
+          group.dataset.caseIndex = '0';
+          group.querySelectorAll('[data-case-target]').forEach((button) => {
+            button.addEventListener('click', () => showCase(group, button.dataset.caseTarget));
+          });
+        });
+      });
+
+      slides.forEach((slide, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'overview-item';
+        button.innerHTML = `<b>${String(index + 1).padStart(2, '0')}</b><span>${slide.dataset.title}</span>`;
+        button.addEventListener('click', () => { closeOverlays(); showSlide(index); });
+        overviewGrid.appendChild(button);
+      });
+
+      document.getElementById('prevBtn').addEventListener('click', () => showSlide(current - 1));
+      document.getElementById('nextBtn').addEventListener('click', () => showSlide(current + 1));
+      document.getElementById('overviewBtn').addEventListener('click', () => openOverlay(overview));
+      document.getElementById('fullscreenBtn').addEventListener('click', () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      });
+      document.querySelectorAll('[data-close-overlay]').forEach((button) => button.addEventListener('click', closeOverlays));
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') { closeOverlays(); return; }
+        if (overview.classList.contains('open') || notesOverlay.classList.contains('open')) return;
+        if (event.key === 'ArrowRight' || event.key === 'PageDown') showSlide(current + 1);
+        else if (event.key === 'ArrowLeft' || event.key === 'PageUp') showSlide(current - 1);
+        else if (event.key === 'Home') showSlide(0);
+        else if (event.key === 'End') showSlide(slides.length - 1);
+        else if (event.key === ' ') { event.preventDefault(); if (!cycleCase()) showSlide(current + 1); }
+        else if (event.key.toLowerCase() === 'o') openOverlay(overview);
+        else if (event.key.toLowerCase() === 'n') {
+          const notes = slides[current].querySelector('.notes');
+          notesContent.textContent = notes ? notes.textContent.trim() : '本页暂无讲者备注。';
+          openOverlay(notesOverlay);
+        }
+        else if (event.key.toLowerCase() === 'f') document.getElementById('fullscreenBtn').click();
+      });
+
+      const hashMatch = location.hash.match(/slide-(\d+)/);
+      if (hashMatch) current = clamp(Number(hashMatch[1]) - 1, 0, slides.length - 1);
+      updateNumbers();
+      showSlide(current, false);
+    })();
+  </script>
+</body>
+</html>

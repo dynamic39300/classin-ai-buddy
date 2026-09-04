@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "classin-im-staff-communication-purpose/v1",
+  "title": "Semantic communication purpose for one staff-only window",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "window_id",
+    "clusterid",
+    "purpose_label",
+    "confidence",
+    "management_test",
+    "evidence_message_ids",
+    "topic_instance_ids",
+    "reasoning_brief"
+  ],
+  "properties": {
+    "window_id": {"type": "string", "minLength": 1},
+    "clusterid": {"type": "string", "minLength": 1},
+    "purpose_label": {
+      "enum": [
+        "teaching_management_collaboration",
+        "teacher_internal_communication",
+        "not_teacher_internal_window",
+        "insufficient_evidence"
+      ]
+    },
+    "confidence": {"enum": ["high", "medium_high", "medium", "low"]},
+    "management_test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["has_management_object", "has_management_action", "has_organizational_direction_or_state_change"],
+      "properties": {
+        "has_management_object": {"type": "boolean"},
+        "has_management_action": {"type": "boolean"},
+        "has_organizational_direction_or_state_change": {"type": "boolean"}
+      }
+    },
+    "management_action_families": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "schedule_attendance",
+          "staffing_assignment_capacity",
+          "student_service_handoff",
+          "compensation_settlement",
+          "rules_performance_personnel",
+          "administrative_execution"
+        ]
+      }
+    },
+    "evidence_message_ids": {"type": "array", "items": {"type": "string"}},
+    "topic_instance_ids": {"type": "array", "items": {"type": "string"}},
+    "reasoning_brief": {"type": "string", "minLength": 1},
+    "uncertainty": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"purpose_label": {"const": "teaching_management_collaboration"}}},
+      "then": {
+        "properties": {
+          "management_test": {
+            "properties": {
+              "has_management_object": {"const": true},
+              "has_management_action": {"const": true},
+              "has_organizational_direction_or_state_change": {"const": true}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

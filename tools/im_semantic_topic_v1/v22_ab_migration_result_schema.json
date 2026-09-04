@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://classin.local/schemas/v22-ab-migration-result-v1.json",
+  "title": "ClassIn IM Taxonomy v2.2 A+B migration preview row",
+  "description": "One immutable source Topic and its preview-only Taxonomy v2.2 routing decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "dataset_id",
+    "taxonomy_from_version",
+    "taxonomy_to_version",
+    "research_phase",
+    "window_id",
+    "sample_index",
+    "topic_instance_id",
+    "source_review",
+    "source_snapshot",
+    "semantic_frame",
+    "migration",
+    "assurance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "classin-im-taxonomy-migration-preview/v1"
+    },
+    "run_id": {"type": "string", "minLength": 1},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "taxonomy_from_version": {"type": "string", "minLength": 1},
+    "taxonomy_to_version": {"type": "string", "minLength": 1},
+    "research_phase": {"enum": ["A", "B"]},
+    "window_id": {
+      "type": "string",
+      "pattern": "^S1000-(00(?:0[1-9]|[1-4][0-9]|50)|01(?:0[1-9]|[12][0-9]|30))$"
+    },
+    "sample_index": {
+      "type": "integer",
+      "anyOf": [
+        {"minimum": 1, "maximum": 50},
+        {"minimum": 101, "maximum": 130}
+      ]
+    },
+    "topic_instance_id": {"type": "string", "minLength": 1},
+    "source_review": {"$ref": "#/$defs/source_review"},
+    "source_snapshot": {"$ref": "#/$defs/source_snapshot"},
+    "semantic_frame": {"$ref": "#/$defs/semantic_frame"},
+    "migration": {"$ref": "#/$defs/migration"},
+    "assurance": {"$ref": "#/$defs/assurance"}
+  },
+  "$defs": {
+    "non_empty_string_array": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "path_ids": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^L[123]-[0-9A-Za-z_-]+$"},
+      "minItems": 2,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "path_names": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "source_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adjudication_status", "unresolved_codes", "source_publishable"],
+      "properties": {
+        "adjudication_status": {
+          "enum": [
+            "accepted",
+            "corrected",
+            "partially_corrected_unresolved",
+            "unresolved",
+            "unreviewed"
+          ]
+        },
+        "unresolved_codes": {"$ref": "#/$defs/non_empty_string_array"},
+        "source_publishable": {"type": "boolean"}
+      }
+    },
+    "source_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effective_name",
+        "effective_description",
+        "qualification",
+        "special_business_type",
+        "special_reason",
+        "old_path_names",
+        "source_row_sha256",
+        "effective_message_count",
+        "message_share",
+        "evidence_message_ids"
+      ],
+      "properties": {
+        "effective_name": {"type": "string", "minLength": 1},
+        "effective_description": {"type": "string", "minLength": 1},
+        "qualification": {
+          "enum": ["standard", "special_business", "short_candidate"]
+        },
+        "special_business_type": {"type": "string"},
+        "special_reason": {"type": "string"},
+        "old_path_names": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "maxItems": 3
+        },
+        "source_row_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "effective_message_count": {"type": "integer", "minimum": 1},
+        "message_share": {"type": "number", "minimum": 0, "maximum": 1},
+        "evidence_message_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "semantic_frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core_object",
+        "communicative_action",
+        "goal_or_issue",
+        "business_context",
+        "tool_is_medium_or_goal",
+        "boundary_state",
+        "grounding_note"
+      ],
+      "properties": {
+        "core_object": {"type": "string", "minLength": 1},
+        "communicative_action": {"type": "string", "minLength": 1},
+        "goal_or_issue": {"type": "string", "minLength": 1},
+        "business_context": {"type": "string", "minLength": 1},
+        "tool_is_medium_or_goal": {
+          "enum": ["medium", "goal", "both", "not_applicable", "uncertain"]
+        },
+        "boundary_state": {
+          "enum": ["coherent", "possible_split", "context_insufficient"]
+        },
+        "grounding_note": {"type": "string", "minLength": 1}
+      }
+    },
+    "rejected_alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_id", "reason"],
+      "properties": {
+        "node_id": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "residual_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["message_id", "reason"],
+      "properties": {
+        "message_id": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "split_child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child_proposal_id",
+        "proposed_name",
+        "proposed_description",
+        "routing_status",
+        "target_terminal_node_id",
+        "target_path_ids",
+        "target_path_names",
+        "evidence_message_ids",
+        "evidence_count",
+        "message_share",
+        "proposed_qualification",
+        "overlap_evidence_ids",
+        "overlap_reason",
+        "rationale"
+      ],
+      "properties": {
+        "child_proposal_id": {"type": "string", "minLength": 1},
+        "proposed_name": {"type": "string", "minLength": 1},
+        "proposed_description": {"type": "string", "minLength": 1},
+        "routing_status": {
+          "enum": ["assigned", "taxonomy_gap", "context_insufficient"]
+        },
+        "target_terminal_node_id": {
+          "type": ["string", "null"]
+        },
+        "target_path_ids": {
+          "oneOf": [
+            {"$ref": "#/$defs/path_ids"},
+            {"type": "array", "maxItems": 0}
+          ]
+        },
+        "target_path_names": {
+          "oneOf": [
+            {"$ref": "#/$defs/path_names"},
+            {"type": "array", "maxItems": 0}
+          ]
+        },
+        "evidence_message_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "evidence_count": {"type": "integer", "minimum": 1},
+        "message_share": {"type": "number", "minimum": 0, "maximum": 1},
+        "proposed_qualification": {
+          "enum": ["standard", "special_business", "short_candidate"]
+        },
+        "overlap_evidence_ids": {"$ref": "#/$defs/non_empty_string_array"},
+        "overlap_reason": {"type": "string"},
+        "rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "operation",
+        "target_terminal_node_id",
+        "target_path_ids",
+        "target_path_names",
+        "target_evidence_status",
+        "matched_rule_ids",
+        "rejected_alternatives",
+        "decisive_evidence_message_ids",
+        "rationale",
+        "split_children",
+        "residual_evidence"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "direct_fit",
+            "remap",
+            "split",
+            "taxonomy_gap",
+            "context_insufficient"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "identity",
+            "rename_merge",
+            "new_assignment",
+            "semantic_move",
+            "one_to_many",
+            "unassigned"
+          ]
+        },
+        "target_terminal_node_id": {"type": ["string", "null"]},
+        "target_path_ids": {
+          "oneOf": [
+            {"$ref": "#/$defs/path_ids"},
+            {"type": "array", "maxItems": 0}
+          ]
+        },
+        "target_path_names": {
+          "oneOf": [
+            {"$ref": "#/$defs/path_names"},
+            {"type": "array", "maxItems": 0}
+          ]
+        },
+        "target_evidence_status": {"type": ["string", "null"]},
+        "matched_rule_ids": {"$ref": "#/$defs/non_empty_string_array"},
+        "rejected_alternatives": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/rejected_alternative"},
+          "uniqueItems": true
+        },
+        "decisive_evidence_message_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "rationale": {"type": "string", "minLength": 1},
+        "split_children": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/split_child"}
+        },
+        "residual_evidence": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/residual_evidence"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"outcome": {"const": "direct_fit"}}},
+          "then": {
+            "properties": {
+              "operation": {
+                "enum": ["identity", "rename_merge", "new_assignment"]
+              },
+              "target_terminal_node_id": {"type": "string", "minLength": 1},
+              "split_children": {"maxItems": 0},
+              "residual_evidence": {"maxItems": 0}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"outcome": {"const": "remap"}}},
+          "then": {
+            "properties": {
+              "operation": {"const": "semantic_move"},
+              "target_terminal_node_id": {"type": "string", "minLength": 1},
+              "split_children": {"maxItems": 0},
+              "residual_evidence": {"maxItems": 0}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"outcome": {"const": "split"}}},
+          "then": {
+            "properties": {
+              "operation": {"const": "one_to_many"},
+              "target_terminal_node_id": {"type": "null"},
+              "target_path_ids": {"maxItems": 0},
+              "target_path_names": {"maxItems": 0},
+              "target_evidence_status": {"type": "null"},
+              "split_children": {"minItems": 2}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "enum": ["taxonomy_gap", "context_insufficient"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation": {"const": "unassigned"},
+              "target_terminal_node_id": {"type": "null"},
+              "target_path_ids": {"maxItems": 0},
+              "target_path_names": {"maxItems": 0},
+              "target_evidence_status": {"type": "null"},
+              "split_children": {"maxItems": 0},
+              "residual_evidence": {"maxItems": 0}
+            }
+          }
+        }
+      ]
+    },
+    "assurance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "router_confidence",
+        "verifier_decision",
+        "verifier_reason",
+        "deterministic_confidence",
+        "requires_human",
+        "publishable",
+        "quality_alerts",
+        "record_sha256"
+      ],
+      "properties": {
+        "router_confidence": {"enum": ["high", "medium", "low"]},
+        "verifier_decision": {"enum": ["support", "contradict", "uncertain"]},
+        "verifier_reason": {"type": "string", "minLength": 1},
+        "deterministic_confidence": {"enum": ["high", "medium", "low"]},
+        "requires_human": {"type": "boolean"},
+        "publishable": {"const": false},
+        "quality_alerts": {"$ref": "#/$defs/non_empty_string_array"},
+        "record_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

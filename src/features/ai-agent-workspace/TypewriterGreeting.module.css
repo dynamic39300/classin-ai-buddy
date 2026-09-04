@@ -1,0 +1,59 @@
+.typewriter {
+  display: inline-grid;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.measure,
+.visual {
+  min-width: 0;
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.measure {
+  visibility: hidden;
+}
+
+.visual {
+  display: inline-flex;
+  align-items: baseline;
+  justify-self: start;
+}
+
+.caret {
+  display: inline-block;
+  width: 0.075em;
+  height: 0.9em;
+  margin-left: 0.07em;
+  animation: caret-blink 620ms step-end infinite;
+  background: currentcolor;
+  transform: translateY(0.08em);
+}
+
+.assistive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@keyframes caret-blink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+}

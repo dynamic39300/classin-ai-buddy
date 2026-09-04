@@ -1,0 +1,20 @@
+{
+  "schema_version": "stage-d20-human-disposition-overrides-v1",
+  "created_at": "2026-09-02T00:00:00+08:00",
+  "scope": "Reconcile the two feedback rows exported as unreviewed with the user's explicit current-chat statement that Stage D review is complete and the model adjudication is essentially fully accepted.",
+  "source_message_summary": "用户明确表示阶段 D 已全部审阅完成，基本 100% 认同裁定，并要求继续查阅推进。",
+  "overrides": [
+    {
+      "topic_id": "D20-0907-T01",
+      "window_id": "S1000-0907",
+      "decision": "认同",
+      "reason": "反馈文件仍为未审，但用户在当前会话明确确认全部审阅完成并基本全部认同；作为独立聊天授权补齐，不改写原反馈文件。"
+    },
+    {
+      "topic_id": "D20-0907-T02",
+      "window_id": "S1000-0907",
+      "decision": "认同",
+      "reason": "反馈文件仍为未审，但用户在当前会话明确确认全部审阅完成并基本全部认同；作为独立聊天授权补齐，不改写原反馈文件。"
+    }
+  ]
+}

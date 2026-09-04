@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClassIn IM topic taxonomy assignments",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["batch_id", "taxonomy_version", "assignments"],
+  "properties": {
+    "batch_id": {"type": "string", "minLength": 1},
+    "taxonomy_version": {"type": "string", "minLength": 1},
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topic_instance_id", "primary_path_ids", "primary_path_names", "secondary_node_ids", "confidence", "reasoning_brief"],
+        "properties": {
+          "topic_instance_id": {"type": "string", "minLength": 1},
+          "primary_path_ids": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "primary_path_names": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "secondary_node_ids": {"type": "array", "maxItems": 0, "items": {"type": "string", "minLength": 1}},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+          "reasoning_brief": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

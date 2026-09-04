@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>希沃 AI 赋能教育全场景方案｜教学全业务链路 AI 能力覆盖图</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #f4f5f6;
+      --surface: #ffffff;
+      --surface-alt: #f8f9fa;
+      --ink: #17191c;
+      --muted: #61666d;
+      --line: #d9dde2;
+      --line-strong: #aeb5bd;
+      --blue: #1769aa;
+      --blue-soft: #e9f3fb;
+      --green: #25724a;
+      --green-soft: #eaf5ef;
+      --orange: #a95013;
+      --orange-soft: #fff0e5;
+      --purple: #6f4c9b;
+      --purple-soft: #f2edf8;
+      --red: #a23c3c;
+      --red-soft: #faecec;
+      --teal: #176d72;
+      --teal-soft: #e7f4f4;
+      --focus: #005fcc;
+      --shadow: 0 1px 2px rgb(0 0 0 / 6%);
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--canvas); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    button, input { font: inherit; letter-spacing: 0; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent); outline-offset: 2px; }
+    [hidden] { display: none !important; }
+
+    .shell { min-height: 100vh; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgb(255 255 255 / 96%);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-inner, .content { width: min(1680px, calc(100% - 32px)); margin: 0 auto; }
+    .topbar-inner { display: flex; align-items: center; gap: 20px; min-height: 70px; padding: 10px 0; }
+    .title-block { min-width: 280px; flex: 1; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 20px; line-height: 1.25; font-weight: 700; }
+    h2 { font-size: 16px; line-height: 1.35; font-weight: 700; }
+    h3 { font-size: 14px; line-height: 1.35; font-weight: 700; }
+    .subtitle { margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .truth-label { color: var(--blue); font-weight: 700; }
+
+    .summary { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .summary-item { min-width: 84px; padding: 7px 10px; background: var(--surface); text-align: center; }
+    .summary-item + .summary-item { border-left: 1px solid var(--line); }
+    .summary-item strong { display: block; font-size: 18px; line-height: 1.1; }
+    .summary-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+
+    .content { padding: 18px 0 48px; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .view-tabs, .role-filter { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+    .tab, .filter-btn {
+      min-height: 36px;
+      padding: 7px 12px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab:last-child, .filter-btn:last-child { border-right: 0; }
+    .tab[aria-selected="true"], .filter-btn[aria-pressed="true"] { color: #fff; background: var(--ink); }
+    .search-wrap { flex: 1; max-width: 340px; margin-left: auto; }
+    .search-wrap input {
+      width: 100%;
+      min-height: 36px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: var(--surface);
+    }
+
+    .section-band { margin-bottom: 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .section-head p { margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; color: var(--muted); font-size: 11px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+    .swatch { width: 9px; height: 9px; border-radius: 2px; }
+    .swatch.generate { background: var(--blue); }
+    .swatch.perceive { background: var(--purple); }
+    .swatch.interact { background: var(--teal); }
+    .swatch.analyze { background: var(--orange); }
+    .swatch.personalize { background: var(--green); }
+    .swatch.govern { background: var(--red); }
+
+    .journey-scroll { overflow-x: auto; scrollbar-width: thin; }
+    .journey { min-width: 1280px; padding: 0 16px 16px; }
+    .phase-axis { display: grid; grid-template-columns: 132px repeat(5, minmax(210px, 1fr)); align-items: stretch; }
+    .axis-corner { border-right: 1px solid var(--line); }
+    .phase {
+      position: relative;
+      min-height: 68px;
+      padding: 11px 26px 10px 12px;
+      border-right: 1px solid var(--line);
+      background: var(--surface-alt);
+    }
+    .phase:last-child { border-right: 0; }
+    .phase:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: 7px;
+      top: 22px;
+      color: var(--line-strong);
+      font-size: 18px;
+    }
+    .phase strong { display: block; }
+    .phase span { color: var(--muted); font-size: 11px; }
+    .phase-count { margin-top: 3px; color: var(--blue) !important; font-weight: 700; }
+
+    .lane { display: grid; grid-template-columns: 132px repeat(5, minmax(210px, 1fr)); border-top: 1px solid var(--line); }
+    .lane-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 178px;
+      padding: 12px 12px 10px 0;
+      border-right: 1px solid var(--line);
+    }
+    .lane-label strong { font-size: 13px; }
+    .lane-label span { color: var(--muted); font-size: 11px; }
+    .lane-cell { min-height: 178px; padding: 10px; border-right: 1px solid var(--line); background: var(--surface); }
+    .lane-cell:last-child { border-right: 0; }
+    .lane-cell.is-empty { background: var(--surface-alt); }
+    .capability-list { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; }
+    .capability {
+      position: relative;
+      max-width: 100%;
+      min-height: 30px;
+      padding: 6px 8px 6px 14px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--surface);
+      cursor: pointer;
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+      box-shadow: var(--shadow);
+    }
+    .capability::before { content: ""; position: absolute; left: 5px; top: 9px; width: 4px; height: 12px; border-radius: 1px; background: var(--kind-color); }
+    .capability:hover { border-color: var(--line-strong); }
+    .capability[aria-pressed="true"] { border-color: var(--kind-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--kind-color) 18%, transparent); }
+    .capability.is-risk { border-style: dashed; }
+    .capability.is-muted { display: none; }
+    .kind-generate { --kind-color: var(--blue); }
+    .kind-perceive { --kind-color: var(--purple); }
+    .kind-interact { --kind-color: var(--teal); }
+    .kind-analyze { --kind-color: var(--orange); }
+    .kind-personalize { --kind-color: var(--green); }
+    .kind-govern { --kind-color: var(--red); }
+
+    .feedback-arrow {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      background: #fcfcfd;
+    }
+    .feedback-arrow strong { padding: 8px 12px 8px 0; border-right: 1px solid var(--line); color: var(--ink); font-size: 11px; }
+    .feedback-arrow span { padding: 8px 12px; font-size: 11px; }
+
+    .detail {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1.2fr;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      background: var(--surface-alt);
+    }
+    .detail-block { min-width: 0; padding: 13px 16px; }
+    .detail-block + .detail-block { border-left: 1px solid var(--line); }
+    .eyebrow { margin-bottom: 4px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .detail-main { margin-top: 5px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+    .detail-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .tag { padding: 2px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); font-size: 10px; }
+    .tag.fact { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 35%, var(--line)); background: var(--blue-soft); }
+    .tag.risk { color: var(--red); border-color: color-mix(in srgb, var(--red) 35%, var(--line)); background: var(--red-soft); }
+
+    .matrix-wrap { overflow-x: auto; }
+    .matrix { min-width: 1040px; display: grid; grid-template-columns: 150px repeat(5, minmax(170px, 1fr)); }
+    .matrix > div, .matrix > button { min-height: 76px; padding: 10px; border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); text-align: left; }
+    .matrix .matrix-head { min-height: 46px; background: var(--surface-alt); font-weight: 700; }
+    .matrix .matrix-row-head { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+    .matrix-cell { cursor: pointer; }
+    .matrix-cell:hover, .matrix-cell[aria-pressed="true"] { background: var(--blue-soft); }
+    .matrix-count { display: block; font-size: 21px; font-weight: 700; }
+    .matrix-sample { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .register { padding: 14px 16px 16px; }
+    .register-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .register-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .register-item { padding: 10px 11px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+    .register-item strong { display: block; font-size: 12px; }
+    .register-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+
+    .loops { padding: 0 16px 16px; }
+    .loop { display: grid; grid-template-columns: 160px 1fr 190px; align-items: center; min-height: 74px; border-bottom: 1px solid var(--line); }
+    .loop:last-child { border-bottom: 0; }
+    .loop-label { padding-right: 14px; }
+    .loop-label strong, .loop-label span { display: block; }
+    .loop-label span { margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .loop-flow { display: flex; align-items: center; min-width: 0; overflow-x: auto; padding: 8px 0; }
+    .loop-step { flex: 0 0 auto; padding: 7px 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font-size: 12px; }
+    .loop-link { flex: 0 0 auto; padding: 0 7px; color: var(--line-strong); font-size: 16px; }
+    .loop-return { padding-left: 14px; border-left: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+
+    .boundary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .boundary { padding: 15px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .boundary:nth-child(2n) { border-right: 0; }
+    .boundary h3 { display: flex; align-items: center; gap: 7px; }
+    .boundary ul { margin: 9px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+    .boundary li + li { margin-top: 5px; }
+
+    .source-note { padding: 12px 16px; color: var(--muted); background: var(--surface-alt); font-size: 11px; }
+    .source-note strong { color: var(--ink); }
+    .empty-result { padding: 24px; color: var(--muted); text-align: center; }
+
+    @media (max-width: 1100px) {
+      .topbar-inner { align-items: flex-start; flex-direction: column; padding: 12px 0; }
+      .summary { width: 100%; }
+      .summary-item { flex: 1; }
+      .toolbar { align-items: stretch; flex-wrap: wrap; }
+      .search-wrap { order: 3; max-width: none; flex-basis: 100%; }
+      .detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .detail-block:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+      .detail-block:nth-child(4) { border-top: 1px solid var(--line); }
+      .register-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .topbar-inner, .content { width: min(100% - 20px, 1680px); }
+      .view-tabs, .role-filter { width: 100%; overflow-x: auto; }
+      .tab, .filter-btn { flex: 1; padding-inline: 9px; }
+      .section-head { align-items: flex-start; flex-direction: column; }
+      .legend { justify-content: flex-start; }
+      .detail, .boundary-grid { grid-template-columns: 1fr; }
+      .detail-block + .detail-block, .detail-block:nth-child(3), .detail-block:nth-child(4) { border-left: 0; border-top: 1px solid var(--line); }
+      .boundary { border-right: 0; }
+      .register-grid { grid-template-columns: 1fr; }
+      .loop { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
+      .loop-return { padding: 7px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .capability, .tab, .filter-btn, .matrix-cell { transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="seewo-map">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="title-block">
+          <h1>希沃 AI 赋能教育全场景方案｜教学全业务链路 AI 能力覆盖图</h1>
+          <p class="subtitle">课前 → 课上 → 课间 → 课后 → 区校治理 · <span class="truth-label">公开页面与截图产品体验证据</span></p>
+        </div>
+        <div class="summary" aria-label="能力映射摘要">
+          <div class="summary-item"><strong id="cap-count">0</strong><span>AI 能力节点</span></div>
+          <div class="summary-item"><strong>5</strong><span>业务阶段</span></div>
+          <div class="summary-item"><strong>3</strong><span>角色泳道</span></div>
+          <div class="summary-item"><strong>6</strong><span>能力深度</span></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="toolbar" aria-label="图表控制">
+        <div class="view-tabs" role="tablist" aria-label="视图">
+          <button class="tab" type="button" role="tab" data-view="journey" aria-selected="true">1 业务链路</button>
+          <button class="tab" type="button" role="tab" data-view="matrix" aria-selected="false">2 覆盖矩阵</button>
+          <button class="tab" type="button" role="tab" data-view="loops" aria-selected="false">3 反馈闭环</button>
+          <button class="tab" type="button" role="tab" data-view="boundaries" aria-selected="false">4 证据边界</button>
+        </div>
+        <div class="role-filter" aria-label="角色筛选">
+          <button class="filter-btn" type="button" data-role-filter="all" aria-pressed="true">全部</button>
+          <button class="filter-btn" type="button" data-role-filter="teacher" aria-pressed="false">教师/教研</button>
+          <button class="filter-btn" type="button" data-role-filter="student" aria-pressed="false">学生</button>
+          <button class="filter-btn" type="button" data-role-filter="manager" aria-pressed="false">管理/治理</button>
+        </div>
+        <label class="search-wrap"><span hidden>检索 AI 能力</span><input id="search" type="search" placeholder="检索能力、产品载体或输出"></label>
+      </div>
+
+      <section class="section-band" data-panel="journey">
+        <div class="section-head">
+          <div><h2>全业务泳道</h2><p>每个节点都是页面正文或截图中可定位的 AI 能力；虚线边框表示需要重点治理的敏感推断。</p></div>
+          <div class="legend" aria-label="能力类型图例">
+            <span class="legend-item"><i class="swatch generate"></i>生成优化</span>
+            <span class="legend-item"><i class="swatch perceive"></i>感知识别</span>
+            <span class="legend-item"><i class="swatch interact"></i>交互执行</span>
+            <span class="legend-item"><i class="swatch analyze"></i>分析诊断</span>
+            <span class="legend-item"><i class="swatch personalize"></i>推荐个性化</span>
+            <span class="legend-item"><i class="swatch govern"></i>治理协同</span>
+          </div>
+        </div>
+        <div class="journey-scroll">
+          <div class="journey">
+            <div class="phase-axis" id="phase-axis"><div class="axis-corner"></div></div>
+            <div id="lanes"></div>
+            <div class="feedback-arrow"><strong>证据回流</strong><span>教学意图 → AI 生成/感知 → 教师与学生行动 → 课堂/作业/治理证据 → 诊断与建议 → 下一轮备课和个性化学习</span></div>
+          </div>
+        </div>
+        <div class="detail" id="detail" aria-live="polite"></div>
+      </section>
+
+      <section class="section-band" data-panel="matrix" hidden>
+        <div class="section-head"><div><h2>阶段 × AI 能力深度覆盖矩阵</h2><p>数字表示已映射能力节点数量，只表达页面展示广度，不代表成熟度、准确率或生产可用率。</p></div></div>
+        <div class="matrix-wrap"><div class="matrix" id="matrix"></div></div>
+        <div class="register">
+          <div class="register-head"><h3 id="register-title">全部能力</h3><span class="subtitle" id="register-count"></span></div>
+          <div class="register-grid" id="register"></div>
+        </div>
+      </section>
+
+      <section class="section-band" data-panel="loops" hidden>
+        <div class="section-head"><div><h2>五条跨阶段产品闭环</h2><p>页面展示的真正纵深来自结果证据回流，而不是单点 AI 功能数量。</p></div></div>
+        <div class="loops" id="loops"></div>
+      </section>
+
+      <section class="section-band" data-panel="boundaries" hidden>
+        <div class="section-head"><div><h2>证据、风险与架构边界</h2><p>产品截图能够证明入口、状态和产物，但不能反推未公开的 Agent/Harness 实现。</p></div></div>
+        <div class="boundary-grid">
+          <article class="boundary"><h3><i class="swatch generate"></i>页面能够证明</h3><ul><li>能力入口、产品对象、角色与跨端协作方式。</li><li>课件、活动、作业、报告、学习计划、告警和看板等输出形态。</li><li>“应用层—终端层—算力层”以及课前至区校治理的场景覆盖。</li></ul></article>
+          <article class="boundary"><h3><i class="swatch analyze"></i>页面不能证明</h3><ul><li>内部 Agent、Skill、MCP、模型或 Runtime 的实际拓扑。</li><li>业务写回、审批、幂等、撤销、部分成功和执行回执。</li><li>准确率、误报率、延迟、可用性、数据保留和生产成熟度。</li><li>总览提到的“科学研究”域没有足够细节，未计入 81 个教学链路能力节点。</li></ul></article>
+          <article class="boundary"><h3><i class="swatch govern"></i>高风险能力</h3><ul><li>声纹识别、注意力/情绪判断、危险行为识别和长周期学生建模。</li><li>必须明确告知、授权、纠错、申诉、保留期和角色可见范围。</li><li>推断只能作为教师复核建议，不能直接成为学生事实或惩罚依据。</li></ul></article>
+          <article class="boundary"><h3><i class="swatch personalize"></i>对 WorkBuddy 的控制闭环</h3><ul><li>保持统一主 Agent 入口，内部能力由 Capability Manifest 组合。</li><li>AI 产物先成为 ArtifactDraft，正式变化先成为 ProposedAction。</li><li>执行遵循 Approval → 领域校验 → ExecutionReceipt → 复查。</li></ul></article>
+        </div>
+      </section>
+
+      <footer class="source-note"><strong>研究对象：</strong>希沃 AI 赋能教育全场景方案。<strong>证据源：</strong>公开 Notion 页面正文及约 113 张页面图片素材。能力节点为研究映射；“覆盖”不等同于已验证的后端实现或生产能力。总览中的“科学研究”仅保留为未展开域。</footer>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const stages = [
+        { id: 'pre', name: '课前', subtitle: '目标 · 备课 · 资源生产' },
+        { id: 'class', name: '课上', subtitle: '教学 · 互动 · 实时证据' },
+        { id: 'break', name: '课间', subtitle: '安全 · 看班 · 事件处置' },
+        { id: 'after', name: '课后', subtitle: '作业 · 学情 · 个性化' },
+        { id: 'district', name: '校区/区域', subtitle: '洞察 · 资源 · 治理' }
+      ];
+      const roles = [
+        { id: 'teacher', name: '教师 / 教研', subtitle: '设计 → 教学 → 诊断 → 改进' },
+        { id: 'student', name: '学生', subtitle: '参与 → 练习 → 反馈 → 成长' },
+        { id: 'manager', name: '管理 / 治理', subtitle: '感知 → 分析 → 处置 → 复盘' }
+      ];
+      const kinds = {
+        generate: { name: '生成优化', color: 'generate' },
+        perceive: { name: '感知识别', color: 'perceive' },
+        interact: { name: '交互执行', color: 'interact' },
+        analyze: { name: '分析诊断', color: 'analyze' },
+        personalize: { name: '推荐个性化', color: 'personalize' },
+        govern: { name: '治理协同', color: 'govern' }
+      };
+      const outputByKind = {
+        generate: '生成或优化后的教学内容草稿',
+        perceive: '来自语音、屏幕、图像或课堂行为的识别结果',
+        interact: '设备、课件或师生互动状态',
+        analyze: '可供教师或管理者复核的分析结果',
+        personalize: '面向班级或学生的建议与学习内容',
+        govern: '通知、事件、资源或治理视图'
+      };
+      const data = [
+        ['pre-01','从教材章节生成课件','pre','teacher','generate','希沃 AI 备课','fact',false,'课件草稿与预览'],
+        ['pre-02','课型与教材约束','pre','teacher','generate','希沃 AI 备课','fact',false,'新授课/班会课/习题课/阅读课方案'],
+        ['pre-03','基于班级学情优化课件','pre','teacher','personalize','希沃 AI 备课','fact',false,'面向当前班级的优化计划'],
+        ['pre-04','新课标适配优化','pre','teacher','analyze','希沃 AI 备课','fact',false,'新课标适配总结与修改建议'],
+        ['pre-05','课件目标生成','pre','teacher','generate','希沃 AI 备课','fact',false,'结构化教学目标'],
+        ['pre-06','教学活动设计','pre','teacher','generate','希沃 AI 备课 / AI 助教','fact',false,'活动流程与工具建议'],
+        ['pre-07','AI 讲解备注','pre','teacher','generate','希沃白板','fact',false,'课件页讲解提示'],
+        ['pre-08','互动网页生成','pre','teacher','generate','教学小工具','fact',false,'可交互网页资源'],
+        ['pre-09','对话智能体生成','pre','teacher','generate','教学小工具','fact',false,'学科对话智能体'],
+        ['pre-10','课堂活动生成','pre','teacher','generate','教学小工具','fact',false,'课堂活动资源'],
+        ['pre-11','听说交际生成','pre','teacher','generate','教学小工具','fact',false,'听说训练资源'],
+        ['pre-12','生成结果预览与确认','pre','teacher','interact','希沃 AI 备课','fact',false,'教师确认前的完整预览'],
+        ['pre-13','作品沉淀与云空间发送','pre','teacher','govern','我的作品 / 云空间','fact',false,'可复用教学资产'],
+        ['pre-14','跨班教学与组内教研复用','pre','teacher','govern','我的作品','fact',false,'跨班/教研组资源复用'],
+        ['pre-15','灵感资源推荐与获取','pre','teacher','personalize','灵感广场','fact',false,'带作者与使用数据的资源'],
+
+        ['class-01','声纹识别教师身份','class','teacher','perceive','希沃终端环境','fact',true,'教师身份识别结果'],
+        ['class-02','按历史习惯准备教学环境','class','teacher','personalize','希沃终端环境','claim',true,'应用与工具环境建议'],
+        ['class-03','语音调用教学设备','class','teacher','interact','希沃白板 / 教学终端','fact',false,'设备或教学工具操作'],
+        ['class-04','屏幕内容识别','class','teacher','perceive','全学科教学智能体','fact',false,'当前课件/屏幕语义'],
+        ['class-05','全学科教学智能体','class','teacher','interact','全学科教学智能体','fact',false,'讲解、拓展、检测与暂停'],
+        ['class-06','知识讲解与拓展','class','teacher','generate','全学科教学智能体','fact',false,'学科讲解与拓展内容'],
+        ['class-07','课堂即时检测','class','teacher','analyze','全学科教学智能体','fact',false,'课堂检测结果'],
+        ['class-08','数学画板与参数交互','class','teacher','interact','数学画板','fact',false,'函数图像、交点和参数变化'],
+        ['class-09','物理电路仿真','class','teacher','interact','物理教学工具','fact',false,'可交互电路状态'],
+        ['class-10','理化生实验仿真','class','teacher','interact','实验仿真工具','fact',false,'实验器材、步骤、过程与结论'],
+        ['class-11','拍摄习题并识别','class','teacher','perceive','视频展台 / 希沃白板','fact',false,'习题图像与结构'],
+        ['class-12','习题自动切题','class','teacher','analyze','习题讲评工具','fact',false,'分割后的题目对象'],
+        ['class-13','一键进入讲评模式','class','teacher','interact','习题讲评工具','fact',false,'课堂讲评工作区'],
+        ['class-14','知识点举一反三','class','teacher','generate','习题讲评工具','fact',false,'拓展题与关联知识'],
+        ['class-15','教师平板与大屏联动','class','teacher','interact','教师平板 / 交互大屏','fact',false,'跨端课堂控制'],
+        ['class-16','手势作答识别','class','student','perceive','班级作答采集','fact',true,'A/B/C/D 手势答案'],
+        ['class-17','全班作答实时统计','class','teacher','analyze','班级作答采集','fact',false,'选项分布与答题结果'],
+        ['class-18','课堂互动事件采集','class','student','perceive','课堂协力图','fact',true,'举手、答题与互动事件'],
+        ['class-19','课堂参与度分析','class','teacher','analyze','课堂分析','fact',true,'参与情况分析'],
+        ['class-20','专注度分析','class','student','analyze','课堂分析','fact',true,'专注度推断'],
+        ['class-21','情绪状态分析','class','student','analyze','课堂分析','fact',true,'情绪状态推断'],
+        ['class-22','学生平板接收互动课件','class','student','interact','学生平板','fact',false,'同步互动内容'],
+        ['class-23','学生自主探究','class','student','personalize','学生平板 / 教学智能体','fact',false,'个体探索过程与结果'],
+
+        ['break-01','教室画面智能感知','break','manager','perceive','AI 助管 / 哨兵模式','fact',true,'教室画面事件'],
+        ['break-02','危险行为识别','break','manager','perceive','AI 助管 / 哨兵模式','fact',true,'危险行为候选'],
+        ['break-03','风险等级分类','break','manager','analyze','AI 助管 / 哨兵模式','fact',true,'低危/高危事件'],
+        ['break-04','高危事件通知教师','break','manager','govern','AI 助管 / 手机通知','fact',true,'教师告警通知'],
+        ['break-05','事件视频回顾与筛选','break','manager','govern','事件回顾','fact',true,'带时间轴的事件证据'],
+        ['break-06','掌上看班','break','manager','interact','掌上看班','fact',true,'远程班级画面'],
+        ['break-07','多端事件同步','break','manager','govern','教师端 / 管理端','fact',true,'跨端事件状态'],
+
+        ['after-01','通过白板布置作业','after','teacher','interact','希沃白板','fact',false,'作业任务'],
+        ['after-02','纸质作业扫描识别','after','teacher','perceive','批阅机','fact',false,'数字化作业原卷'],
+        ['after-03','客观题与题库作业批改','after','teacher','analyze','作业批改','fact',false,'批改结果与正确率'],
+        ['after-04','作文 AI 批改','after','teacher','analyze','作文批改','fact',true,'作文批改建议'],
+        ['after-05','提交情况与正确率统计','after','teacher','analyze','学情报告','fact',false,'提交率、平均正确率与分布'],
+        ['after-06','题目级正确率分析','after','teacher','analyze','学情报告','fact',false,'题目级表现'],
+        ['after-07','薄弱考点诊断','after','teacher','analyze','学情报告','fact',true,'薄弱知识点候选'],
+        ['after-08','知识图谱生成','after','teacher','analyze','学情报告','fact',true,'知识点与掌握率关系图'],
+        ['after-09','AI 学情分析','after','teacher','analyze','希沃课堂智能反馈系统','fact',true,'班级与学生分析'],
+        ['after-10','分层学习建议','after','teacher','personalize','希沃课堂智能反馈系统','fact',true,'分层教学建议'],
+        ['after-11','课堂优化建议','after','teacher','personalize','希沃课堂智能反馈系统','fact',true,'下一轮课堂改进建议'],
+        ['after-12','课堂智能反馈报告','after','teacher','analyze','希沃课堂智能反馈系统','fact',true,'机会公平、兴趣、互动、学习与教学报告'],
+        ['after-13','教师对话解析报告','after','teacher','interact','希沃课堂智能反馈系统','fact',true,'报告问答与改进策略'],
+        ['after-14','个性化学习计划','after','student','personalize','学生平板','fact',true,'可执行学习计划'],
+        ['after-15','薄弱点专项练习','after','student','personalize','学生平板','fact',true,'针对性练习'],
+        ['after-16','错题重做与错题整理','after','student','personalize','学生平板','fact',false,'错题练习与订正结果'],
+        ['after-17','微课讲解','after','student','generate','AI 老师','fact',false,'微课式讲解内容'],
+        ['after-18','每日测评','after','student','personalize','学生平板','fact',false,'每日测评与结果'],
+        ['after-19','区域真题推荐','after','student','personalize','区域真题','fact',true,'按地区/学科/题型/难度召回的真题'],
+        ['after-20','AI 老师分步解题','after','student','generate','AI 老师','fact',false,'目标、条件、性质、步骤与总结'],
+        ['after-21','语音追问与答疑','after','student','interact','AI 老师','fact',false,'语音问答会话'],
+        ['after-22','动态图文板书讲解','after','student','generate','AI 老师','fact',false,'动态板书式讲解'],
+        ['after-23','AI 学生评语','after','manager','generate','AI 助评','fact',true,'学生评语建议'],
+        ['after-24','长期行为建模','after','manager','analyze','AI 助评','claim',true,'长周期学生画像推断'],
+        ['after-25','综合素质雷达图','after','manager','analyze','AI 助评','fact',true,'综合素质维度展示'],
+        ['after-26','学科兴趣分析','after','manager','analyze','AI 助评','fact',true,'学科兴趣推断'],
+        ['after-27','班级周报/月报','after','manager','generate','AI 助评','fact',true,'周期班级报告'],
+        ['after-28','关注/鼓励对象建议','after','manager','personalize','AI 助评','fact',true,'学生或小组关注建议'],
+        ['after-29','奖励发放建议','after','manager','govern','AI 助评','fact',true,'奖励对象与动作建议'],
+
+        ['district-01','校园数据驾驶舱','district','manager','analyze','希沃魔方区校管理平台','fact',true,'校园多维数据看板'],
+        ['district-02','全维度师生档案','district','manager','analyze','希沃魔方区校管理平台','fact',true,'师生档案视图'],
+        ['district-03','对话式资源查找','district','teacher','interact','希沃·小希','fact',false,'资源检索结果'],
+        ['district-04','区域教/学/研/评/管查询','district','manager','interact','希沃·小希','fact',true,'区域数据问答结果'],
+        ['district-05','自动生成管理看板','district','manager','generate','希沃魔方区校管理平台','fact',true,'管理看板'],
+        ['district-06','自动生成区域报告','district','manager','generate','希沃魔方区校管理平台','fact',true,'区域分析报告'],
+        ['district-07','区校一体化管理','district','manager','govern','希沃魔方区校管理平台','fact',true,'跨层级治理视图']
+      ].map(([id,name,stage,role,kind,product,evidence,risk,output]) => ({ id,name,stage,role,kind,product,evidence,risk,output }));
+
+      const loops = [
+        { title:'备课生产闭环', meta:'教师 · 课前', steps:['教材/学情/新课标','AI 生成与优化','教师预览确认','作品与云空间','跨班/教研复用'], back:'复用反馈进入下一次备课' },
+        { title:'课堂互动闭环', meta:'师生 · 课上', steps:['教师意图/屏幕内容','教学智能体与工具','学生互动/手势作答','实时统计与课堂证据','讲评与拓展'], back:'课堂证据进入课后诊断' },
+        { title:'作业学习闭环', meta:'师生 · 课后', steps:['作业/扫描原卷','AI 批改与学情分析','薄弱点/知识图谱','个性化计划与练习','订正/测评结果'], back:'新结果校准下一轮教学' },
+        { title:'安全治理闭环', meta:'管理 · 课间', steps:['教室画面','危险行为识别','风险分级','教师通知与人工确认','事件回顾'], back:'处置结果应回到事件审计' },
+        { title:'区校治理闭环', meta:'管理 · 区域', steps:['课堂/作业/档案证据','对话式查询','数据驾驶舱','看板与报告','管理决策'], back:'治理动作应形成可追踪回执' }
+      ];
+
+      const root = document.getElementById('seewo-map');
+      const phaseAxis = document.getElementById('phase-axis');
+      const laneRoot = document.getElementById('lanes');
+      const detail = document.getElementById('detail');
+      const matrix = document.getElementById('matrix');
+      const register = document.getElementById('register');
+      const registerTitle = document.getElementById('register-title');
+      const registerCount = document.getElementById('register-count');
+      const search = document.getElementById('search');
+      let activeRole = 'all';
+      let activeId = data[0].id;
+      let matrixFilter = null;
+
+      const stageName = id => stages.find(stage => stage.id === id)?.name || id;
+      const roleName = id => roles.find(role => role.id === id)?.name || id;
+      const evidenceName = evidence => evidence === 'fact' ? '页面可见' : '作者陈述';
+      const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+
+      document.getElementById('cap-count').textContent = data.length;
+      stages.forEach(stage => {
+        const count = data.filter(item => item.stage === stage.id).length;
+        phaseAxis.insertAdjacentHTML('beforeend', `<div class="phase"><strong>${stage.name}</strong><span>${stage.subtitle}</span><span class="phase-count">${count} 项能力</span></div>`);
+      });
+
+      const renderLanes = () => {
+        laneRoot.innerHTML = roles.map(role => {
+          const cells = stages.map(stage => {
+            const items = data.filter(item => item.role === role.id && item.stage === stage.id);
+            return `<div class="lane-cell ${items.length ? '' : 'is-empty'}" data-cell-role="${role.id}" data-cell-stage="${stage.id}"><div class="capability-list">${items.map(item => `<button type="button" class="capability kind-${item.kind} ${item.risk ? 'is-risk' : ''}" data-capability="${item.id}" aria-pressed="${item.id === activeId}">${escapeHtml(item.name)}</button>`).join('')}</div></div>`;
+          }).join('');
+          return `<div class="lane" data-lane="${role.id}"><div class="lane-label"><div><strong>${role.name}</strong><span>${role.subtitle}</span></div><span>${data.filter(item => item.role === role.id).length} 项已映射</span></div>${cells}</div>`;
+        }).join('');
+        root.querySelectorAll('[data-capability]').forEach(button => button.addEventListener('click', () => selectCapability(button.dataset.capability)));
+        applyFilters();
+      };
+
+      const selectCapability = id => {
+        const item = data.find(entry => entry.id === id);
+        if (!item) return;
+        activeId = id;
+        root.querySelectorAll('[data-capability]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.capability === id)));
+        detail.innerHTML = `
+          <div class="detail-block"><div class="eyebrow">${stageName(item.stage)} · ${roleName(item.role)}</div><h3>${escapeHtml(item.name)}</h3><div class="detail-tags"><span class="tag">${kinds[item.kind].name}</span><span class="tag fact">${evidenceName(item.evidence)}</span>${item.risk ? '<span class="tag risk">重点治理</span>' : ''}</div></div>
+          <div class="detail-block"><div class="eyebrow">产品 / 能力载体</div><h3>${escapeHtml(item.product)}</h3><p class="detail-main">页面明确出现的产品、模块或终端载体。</p></div>
+          <div class="detail-block"><div class="eyebrow">业务输出</div><h3>${escapeHtml(item.output || outputByKind[item.kind])}</h3><p class="detail-main">进入当前阶段的教学、学习或治理流程。</p></div>
+          <div class="detail-block"><div class="eyebrow">证据与边界</div><h3>${item.risk ? '页面展示能力，治理机制未披露' : '页面展示产品体验'}</h3><p class="detail-main">${item.risk ? '需核验准确率、授权、角色可见范围、人工复核、纠错申诉与数据保留。' : '截图不证明后端 Agent 拓扑、生产可靠性或正式业务写回。'}</p></div>`;
+      };
+
+      const applyFilters = () => {
+        const query = search.value.trim().toLowerCase();
+        data.forEach(item => {
+          const button = root.querySelector(`[data-capability="${item.id}"]`);
+          if (!button) return;
+          const text = `${item.name} ${item.product} ${item.output} ${stageName(item.stage)} ${roleName(item.role)}`.toLowerCase();
+          const visible = (activeRole === 'all' || item.role === activeRole) && (!query || text.includes(query));
+          button.classList.toggle('is-muted', !visible);
+        });
+        roles.forEach(role => {
+          const lane = root.querySelector(`[data-lane="${role.id}"]`);
+          if (lane) lane.hidden = activeRole !== 'all' && activeRole !== role.id;
+        });
+      };
+
+      const renderMatrix = () => {
+        matrix.innerHTML = `<div class="matrix-head">AI 深度</div>${stages.map(stage => `<div class="matrix-head">${stage.name}</div>`).join('')}`;
+        Object.entries(kinds).forEach(([kindId, kind]) => {
+          matrix.insertAdjacentHTML('beforeend', `<div class="matrix-row-head"><i class="swatch ${kind.color}"></i>${kind.name}</div>`);
+          stages.forEach(stage => {
+            const items = data.filter(item => item.kind === kindId && item.stage === stage.id);
+            const sample = items.slice(0, 3).map(item => item.name).join(' · ') || '未发现明确能力';
+            matrix.insertAdjacentHTML('beforeend', `<button type="button" class="matrix-cell" data-matrix-stage="${stage.id}" data-matrix-kind="${kindId}" aria-pressed="false"><span class="matrix-count">${items.length}</span><span class="matrix-sample">${escapeHtml(sample)}</span></button>`);
+          });
+        });
+        matrix.querySelectorAll('.matrix-cell').forEach(button => button.addEventListener('click', () => {
+          const next = { stage: button.dataset.matrixStage, kind: button.dataset.matrixKind };
+          matrixFilter = matrixFilter && matrixFilter.stage === next.stage && matrixFilter.kind === next.kind ? null : next;
+          matrix.querySelectorAll('.matrix-cell').forEach(peer => peer.setAttribute('aria-pressed', String(matrixFilter && peer.dataset.matrixStage === matrixFilter.stage && peer.dataset.matrixKind === matrixFilter.kind)));
+          renderRegister();
+        }));
+      };
+
+      const renderRegister = () => {
+        const items = matrixFilter ? data.filter(item => item.stage === matrixFilter.stage && item.kind === matrixFilter.kind) : data;
+        registerTitle.textContent = matrixFilter ? `${stageName(matrixFilter.stage)} · ${kinds[matrixFilter.kind].name}` : '全部能力';
+        registerCount.textContent = `${items.length} 项`;
+        register.innerHTML = items.length ? items.map(item => `<div class="register-item"><strong>${escapeHtml(item.name)}</strong><span>${stageName(item.stage)} · ${roleName(item.role)} · ${escapeHtml(item.product)}</span></div>`).join('') : '<div class="empty-result">当前组合未发现页面明确展示的能力。</div>';
+      };
+
+      const renderLoops = () => {
+        document.getElementById('loops').innerHTML = loops.map(loop => `<div class="loop"><div class="loop-label"><strong>${loop.title}</strong><span>${loop.meta}</span></div><div class="loop-flow">${loop.steps.map((step,index) => `${index ? '<span class="loop-link">→</span>' : ''}<span class="loop-step">${step}</span>`).join('')}</div><div class="loop-return">↺ ${loop.back}</div></div>`).join('');
+      };
+
+      root.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
+        const view = button.dataset.view;
+        root.querySelectorAll('[data-view]').forEach(peer => peer.setAttribute('aria-selected', String(peer === button)));
+        root.querySelectorAll('[data-panel]').forEach(panel => panel.hidden = panel.dataset.panel !== view);
+      }));
+      root.querySelectorAll('[data-role-filter]').forEach(button => button.addEventListener('click', () => {
+        activeRole = button.dataset.roleFilter;
+        root.querySelectorAll('[data-role-filter]').forEach(peer => peer.setAttribute('aria-pressed', String(peer === button)));
+        applyFilters();
+      }));
+      search.addEventListener('input', applyFilters);
+
+      renderLanes();
+      renderMatrix();
+      renderRegister();
+      renderLoops();
+      selectCapability(activeId);
+    })();
+  </script>
+</body>
+</html>

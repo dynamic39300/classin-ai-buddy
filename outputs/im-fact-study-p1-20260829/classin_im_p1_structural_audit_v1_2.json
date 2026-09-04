@@ -1,0 +1,866 @@
+{
+  "audit": {
+    "audit_id": "classin-im-p1-structure-audit-v1-2-20260829",
+    "method_version": "v1.2",
+    "generated_at": "2026-08-29T23:37:14.563045+08:00",
+    "elapsed_seconds": 109.55,
+    "privacy": "aggregate-only; no message text or identifiers emitted"
+  },
+  "source": {
+    "file_name": "2026年8月IM单聊&群聊内容抽样数据.xlsx",
+    "file_size_bytes": 137770992,
+    "sha256": "a28f4c3125326c2e0f9086f8c0f67104671b94b2992a0173f4c34f90690fee6c",
+    "sheet_count": 1,
+    "sheets": [
+      {
+        "name": "Sheet",
+        "declared_max_row": 819701,
+        "declared_max_column": 20
+      }
+    ],
+    "active_sheet_audited": "Sheet",
+    "data_rows_scanned": 819700
+  },
+  "schema": {
+    "duplicate_normalized_header_keys": [],
+    "fields": [
+      {
+        "position": 1,
+        "key": "identity",
+        "raw_header": "identity（发言用户身份）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 639195,
+          "string": 180505
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 2,
+        "key": "user_type",
+        "raw_header": "user_type（用户类型：班主任/旁听生/教师/其他/学生）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "string": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 3,
+        "key": "user_num",
+        "raw_header": "user_num（这字段是跑数据时候做的标记，包括三类：班级成员数<30，[30,100), [100,), 以区分不同群的规模，聊天的内容，主题是否有差异）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "string": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 4,
+        "key": "id",
+        "raw_header": "id（会话消息id）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 819700
+      },
+      {
+        "position": 5,
+        "key": "clusterid",
+        "raw_header": "clusterid（群id，如果是1v1私聊，系统也定义为1v1\"群\"的id，也认为是一个群，一个id即为一个私聊pair；如果是班级群聊，即为班级群id）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 8197
+      },
+      {
+        "position": 6,
+        "key": "clustertype",
+        "raw_header": "clustertype（群类型：1=1v1私聊，0=班级群聊）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 7,
+        "key": "msgbucketid",
+        "raw_header": "msgbucketid",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 4
+      },
+      {
+        "position": 8,
+        "key": "msgid",
+        "raw_header": "msgid",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 38427
+      },
+      {
+        "position": 9,
+        "key": "msgcmd",
+        "raw_header": "msgcmd",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 10,
+        "key": "msgdata",
+        "raw_header": "msgdata",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "string": 819700
+        },
+        "sensitivity": "restricted_content",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 11,
+        "key": "replymsgid",
+        "raw_header": "replymsgid",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 12384
+      },
+      {
+        "position": 12,
+        "key": "sourceuid",
+        "raw_header": "sourceuid（发信人id）",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 23064
+      },
+      {
+        "position": 13,
+        "key": "targetuids",
+        "raw_header": "targetuids",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "string": 819700
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 7301
+      },
+      {
+        "position": 14,
+        "key": "timetag",
+        "raw_header": "timetag",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "float": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 15,
+        "key": "timeformat",
+        "raw_header": "timeformat",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 16,
+        "key": "dt",
+        "raw_header": "dt",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "string": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 17,
+        "key": "rn",
+        "raw_header": "rn",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "integer": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 18,
+        "key": "concent",
+        "raw_header": "concent",
+        "blank": 759,
+        "whitespace_only": 642,
+        "nonempty": 818299,
+        "missing_rate": 0.001709,
+        "type_counts": {
+          "string": 818941,
+          "null": 759
+        },
+        "sensitivity": "restricted_content",
+        "distinct_nonempty": null
+      },
+      {
+        "position": 19,
+        "key": "strtalker",
+        "raw_header": "strtalker",
+        "blank": 4174,
+        "whitespace_only": 0,
+        "nonempty": 815526,
+        "missing_rate": 0.005092,
+        "type_counts": {
+          "string": 815526,
+          "null": 4174
+        },
+        "sensitivity": "restricted_identifier",
+        "distinct_nonempty": 23222
+      },
+      {
+        "position": 20,
+        "key": "from_unixtime",
+        "raw_header": "from_unixtime(a.timeformat)",
+        "blank": 0,
+        "whitespace_only": 0,
+        "nonempty": 819700,
+        "missing_rate": 0.0,
+        "type_counts": {
+          "string": 819700
+        },
+        "sensitivity": "internal_metadata",
+        "distinct_nonempty": null
+      }
+    ]
+  },
+  "categorical_counts": {
+    "identity": {
+      "1": 410369,
+      "NULL": 180505,
+      "192": 135655,
+      "3": 92763,
+      "2": 408
+    },
+    "user_type": {
+      "学生": 410369,
+      "其他": 180505,
+      "班主任": 135655,
+      "教师": 92763,
+      "旁听生": 408
+    },
+    "user_num": {
+      "班级成员 ＜ 30 人": 672200,
+      "班级成员 30 - 100 人": 116200,
+      "班级成员 ＞ 100 人": 31300
+    },
+    "clustertype": {
+      "0": 639200,
+      "1": 180500
+    },
+    "msgcmd": {
+      "50724904": 819700
+    },
+    "dt": {
+      "2026-08-01": 72548,
+      "2026-08-03": 60060,
+      "2026-08-04": 56471,
+      "2026-08-05": 48600,
+      "2026-08-02": 47563,
+      "2026-08-06": 43894,
+      "2026-08-07": 40333,
+      "2026-08-10": 36748,
+      "2026-08-11": 36122,
+      "2026-08-12": 33122,
+      "2026-08-08": 31729,
+      "2026-08-13": 29684,
+      "2026-08-14": 27102,
+      "2026-08-09": 26677,
+      "2026-08-17": 25188,
+      "2026-08-18": 24857,
+      "2026-08-19": 24449,
+      "2026-08-20": 20776,
+      "2026-08-15": 18919,
+      "2026-08-21": 18095,
+      "2026-08-16": 16955,
+      "2026-08-24": 16676,
+      "2026-08-22": 15139,
+      "2026-08-23": 13737,
+      "2026-08-25": 13132,
+      "2026-08-26": 10992,
+      "2026-08-27": 10132
+    }
+  },
+  "channel_and_role": {
+    "rows_by_declared_channel": {
+      "class_group_declared": 639200,
+      "direct_1v1": 180500
+    },
+    "user_type_by_channel": {
+      "direct_1v1": {
+        "其他": 180500
+      },
+      "class_group_declared": {
+        "学生": 410369,
+        "班主任": 135655,
+        "教师": 92763,
+        "旁听生": 408,
+        "其他": 5
+      }
+    },
+    "identity_by_channel": {
+      "direct_1v1": {
+        "NULL": 180500
+      },
+      "class_group_declared": {
+        "1": 410369,
+        "192": 135655,
+        "3": 92763,
+        "2": 408,
+        "NULL": 5
+      }
+    },
+    "user_num_by_channel": {
+      "direct_1v1": {
+        "班级成员 ＜ 30 人": 180500
+      },
+      "class_group_declared": {
+        "班级成员 ＜ 30 人": 491700,
+        "班级成员 30 - 100 人": 116200,
+        "班级成员 ＞ 100 人": 31300
+      }
+    },
+    "user_type_identity_cross": [
+      {
+        "channel": "class_group_declared",
+        "user_type": "学生",
+        "identity": "1",
+        "rows": 410369
+      },
+      {
+        "channel": "direct_1v1",
+        "user_type": "其他",
+        "identity": "NULL",
+        "rows": 180500
+      },
+      {
+        "channel": "class_group_declared",
+        "user_type": "班主任",
+        "identity": "192",
+        "rows": 135655
+      },
+      {
+        "channel": "class_group_declared",
+        "user_type": "教师",
+        "identity": "3",
+        "rows": 92763
+      },
+      {
+        "channel": "class_group_declared",
+        "user_type": "旁听生",
+        "identity": "2",
+        "rows": 408
+      },
+      {
+        "channel": "class_group_declared",
+        "user_type": "其他",
+        "identity": "NULL",
+        "rows": 5
+      }
+    ],
+    "observed_cluster_role_composition": {
+      "direct_1v1": {
+        "其他": 1805
+      },
+      "class_group_declared": {
+        "学生 | 班主任": 3073,
+        "学生 | 教师": 1264,
+        "学生": 1093,
+        "学生 | 教师 | 班主任": 535,
+        "班主任": 263,
+        "教师 | 班主任": 83,
+        "教师": 37,
+        "学生 | 教师 | 旁听生": 28,
+        "学生 | 教师 | 旁听生 | 班主任": 8,
+        "学生 | 旁听生": 3,
+        "学生 | 旁听生 | 班主任": 3,
+        "教师 | 旁听生": 1,
+        "其他 | 学生 | 教师": 1
+      }
+    },
+    "observed_cluster_identity_composition": {
+      "direct_1v1": {
+        "NULL": 1805
+      },
+      "class_group_declared": {
+        "1 | 192": 3073,
+        "1 | 3": 1264,
+        "1": 1093,
+        "1 | 192 | 3": 535,
+        "192": 263,
+        "192 | 3": 83,
+        "3": 37,
+        "1 | 2 | 3": 28,
+        "1 | 192 | 2 | 3": 8,
+        "1 | 2": 3,
+        "1 | 192 | 2": 3,
+        "2 | 3": 1,
+        "1 | 3 | NULL": 1
+      }
+    },
+    "observed_group_role_summary": {
+      "learner_and_staff_observed": 4913,
+      "learner_only_observed": 1096,
+      "staff_only_observed": 383
+    },
+    "warning": "Observed sender-role composition in the exported rows does not prove full group membership or group purpose."
+  },
+  "sampling_and_cluster_structure": {
+    "cluster_count": 8197,
+    "cluster_size_distribution": {
+      "100": 8197
+    },
+    "clusters_by_declared_channel": {
+      "class_group_declared": 6392,
+      "direct_1v1": 1805
+    },
+    "cluster_channel_consistency": {
+      "single_channel": 8197,
+      "mixed_channel": 0
+    },
+    "cluster_user_num_consistency": {
+      "single_value": 8197,
+      "multiple_values": 0
+    },
+    "cluster_rn_quality": {
+      "exact_1_to_100_and_100_rows": 8197
+    },
+    "sender_count_distribution_by_channel": {
+      "direct_1v1": {
+        "1": 45,
+        "2": 1760
+      },
+      "class_group_declared": {
+        "1": 318,
+        "2": 1605,
+        "3": 1268,
+        "4": 710,
+        "5": 473,
+        "6": 342,
+        "7": 256,
+        "8": 190,
+        "9": 177,
+        "10": 146,
+        "11": 141,
+        "12": 115,
+        "13": 94,
+        "14": 95,
+        "15": 72,
+        "16": 59,
+        "17": 63,
+        "18": 40,
+        "19": 35,
+        "20": 23,
+        "21": 28,
+        "22": 20,
+        "23": 11,
+        "24": 16,
+        "25": 14,
+        "26": 16,
+        "27": 4,
+        "28": 7,
+        "29": 4,
+        "30": 2,
+        "31": 3,
+        "32": 4,
+        "33": 3,
+        "34": 3,
+        "35": 1,
+        "36": 3,
+        "37": 2,
+        "38": 1,
+        "39": 3,
+        "40": 3,
+        "41": 1,
+        "42": 1,
+        "43": 2,
+        "44": 2,
+        "45": 2,
+        "47": 1,
+        "49": 1,
+        "50": 3,
+        "51": 1,
+        "53": 1,
+        "54": 1,
+        "56": 1,
+        "62": 1,
+        "63": 1,
+        "69": 1,
+        "78": 1,
+        "87": 1
+      }
+    },
+    "date_count_distribution_by_channel": {
+      "direct_1v1": {
+        "1": 217,
+        "2": 267,
+        "3": 174,
+        "4": 135,
+        "5": 135,
+        "6": 113,
+        "7": 108,
+        "8": 91,
+        "9": 94,
+        "10": 73,
+        "11": 58,
+        "12": 61,
+        "13": 58,
+        "14": 51,
+        "15": 42,
+        "16": 26,
+        "17": 30,
+        "18": 22,
+        "19": 11,
+        "20": 10,
+        "21": 8,
+        "22": 9,
+        "23": 5,
+        "24": 4,
+        "25": 1,
+        "26": 1,
+        "27": 1
+      },
+      "class_group_declared": {
+        "1": 1056,
+        "2": 581,
+        "3": 481,
+        "4": 374,
+        "5": 353,
+        "6": 347,
+        "7": 367,
+        "8": 341,
+        "9": 311,
+        "10": 303,
+        "11": 312,
+        "12": 283,
+        "13": 234,
+        "14": 203,
+        "15": 216,
+        "16": 147,
+        "17": 97,
+        "18": 100,
+        "19": 86,
+        "20": 62,
+        "21": 53,
+        "22": 36,
+        "23": 20,
+        "24": 11,
+        "25": 4,
+        "26": 9,
+        "27": 5
+      }
+    },
+    "time_span_distribution_by_channel": {
+      "direct_1v1": {
+        "7d-27d": 986,
+        "1d-7d": 534,
+        "1h-1d": 197,
+        "<=1h": 88
+      },
+      "class_group_declared": {
+        "7d-27d": 3471,
+        "1d-7d": 1604,
+        "1h-1d": 786,
+        "<=1h": 531
+      }
+    },
+    "user_num_distribution_by_cluster_and_channel": {
+      "direct_1v1": {
+        "班级成员 ＜ 30 人": 1805
+      },
+      "class_group_declared": {
+        "班级成员 ＜ 30 人": 4917,
+        "班级成员 30 - 100 人": 1162,
+        "班级成员 ＞ 100 人": 313
+      }
+    },
+    "rank_time_direction_by_channel": {
+      "direct_1v1": {
+        "rn1_older_than_rn100": 1805
+      },
+      "class_group_declared": {
+        "rn1_older_than_rn100": 6392
+      }
+    }
+  },
+  "identifier_integrity": {
+    "record_id_nonempty_distinct": 819700,
+    "record_id_duplicate_occurrences": 0,
+    "message_id_nonempty_distinct": 38427,
+    "message_id_duplicate_occurrences": 781273,
+    "cluster_message_pair_nonempty_distinct": 819700,
+    "cluster_message_pair_duplicate_occurrences": 0,
+    "exact_row_duplicate_occurrences": 0,
+    "payload_equivalent_occurrences": 9476,
+    "reply_reference_state": {
+      "empty_or_zero": 749695,
+      "nonempty": 70005,
+      "resolved_in_same_cluster_export_window": 57294,
+      "unresolved_in_same_cluster_export_window": 12711
+    },
+    "sensitive_field_distinct_counts": {
+      "id": 819700,
+      "clusterid": 8197,
+      "msgbucketid": 4,
+      "msgid": 38427,
+      "sourceuid": 23064,
+      "targetuids": 7301,
+      "replymsgid": 12384,
+      "strtalker": 23222
+    },
+    "note": "Distinct counts are emitted without values; payload equivalence is a structural flag, not an instruction to deduplicate business messages."
+  },
+  "time_integrity": {
+    "rn_invalid_or_missing_rows": 0,
+    "epoch_invalid_or_missing_rows": 0,
+    "dt_invalid_or_missing_rows": 0,
+    "epoch_dt_comparable_rows": 819700,
+    "epoch_dt_mismatch_rows": 0,
+    "timeformat_timetag_comparison": {
+      "over_60_seconds": 819700
+    },
+    "timeformat_timetag_scale_candidates": {
+      "timetag_div_1000": {
+        "over_60_seconds": 819700
+      },
+      "timetag_div_1000000": {
+        "over_60_seconds": 819700
+      },
+      "timetag_div_1000000000": {
+        "over_60_seconds": 819700
+      }
+    },
+    "timetag_min": 2.99559473385167e+16,
+    "timetag_max": 2.9995083701568e+16,
+    "from_unixtime_comparison": {
+      "exact_to_second": 819700
+    },
+    "epoch_min_asia_shanghai": "2026-08-01T00:00:00+08:00",
+    "epoch_max_asia_shanghai": "2026-08-27T23:58:29+08:00"
+  },
+  "content_structure": {
+    "shape_counts": {
+      "msgdata": {
+        "JSON_OBJECT_LIKE": 813580,
+        "LATIN_TEXT": 3792,
+        "CJK_LATIN_MIXED": 2328
+      },
+      "concent": {
+        "CJK_TEXT": 399272,
+        "LATIN_TEXT": 250019,
+        "CJK_LATIN_MIXED": 89997,
+        "SYMBOL_OR_EMOJI": 40403,
+        "JSON_ARRAY_LIKE": 27902,
+        "NUMERIC_OR_SYMBOL": 10670,
+        "EMPTY": 759,
+        "WHITESPACE_ONLY": 642,
+        "MARKUP_LIKE": 32,
+        "JSON_OBJECT_LIKE": 4
+      }
+    },
+    "length_buckets": {
+      "msgdata": {
+        "21-50": 399751,
+        "51-100": 315070,
+        "101-300": 77328,
+        "301-1000": 22434,
+        "1001+": 5117
+      },
+      "concent": {
+        "6-20": 321497,
+        "1-5": 243013,
+        "21-50": 135372,
+        "51-100": 53373,
+        "101-300": 43729,
+        "301-1000": 17283,
+        "1001+": 4674,
+        "0": 759
+      }
+    },
+    "length_quantiles": {
+      "msgdata": {
+        "p50": 51,
+        "p90": 120,
+        "p95": 208,
+        "p99": 715
+      },
+      "concent": {
+        "p50": 10,
+        "p90": 77,
+        "p95": 164,
+        "p99": 660
+      }
+    },
+    "max_length": {
+      "msgdata": 20524,
+      "concent": 20480
+    },
+    "msgdata_concent_relationship": {
+      "both_nonempty_different": 818299,
+      "only_msgdata_nonempty": 1401
+    },
+    "msgdata_json_profile": {
+      "object_like": 813580,
+      "valid_top_level_object": 813580,
+      "not_object_like": 6120
+    },
+    "msgdata_json_top_level_keys": {
+      "content": 813580,
+      "strTalker": 813580
+    },
+    "msgdata_json_top_level_key_types": {
+      "content": {
+        "string": 813580
+      },
+      "strTalker": {
+        "string": 813580
+      }
+    },
+    "msgdata_concent_equal_top_level_key": {
+      "content": 803525,
+      "strTalker": 97
+    },
+    "parsed_content_vs_concent": {
+      "exact_equal": 803525,
+      "different": 8726,
+      "only_parsed_content_nonempty": 684,
+      "both_empty": 642,
+      "equal_after_strip": 3
+    },
+    "parsed_content_length_delta_buckets_when_different": {
+      "6-20": 8240,
+      "21-50": 330,
+      "51-100": 67,
+      "101-300": 38,
+      "0": 24,
+      "1001+": 16,
+      "301-1000": 8,
+      "1-5": 3
+    },
+    "parsed_strtalker_vs_strtalker": {
+      "exact_equal": 809383,
+      "both_empty": 4174,
+      "different": 23
+    },
+    "targetuids_shape_counts": {
+      "SCALAR_LIKE": 818008,
+      "COMMA_LIST_LIKE": 1692
+    },
+    "targetuids_shape_counts_by_channel": {
+      "direct_1v1": {
+        "SCALAR_LIKE": 180496,
+        "COMMA_LIST_LIKE": 4
+      },
+      "class_group_declared": {
+        "SCALAR_LIKE": 637512,
+        "COMMA_LIST_LIKE": 1688
+      }
+    },
+    "targetuids_length_buckets": {
+      "1-5": 722485,
+      "6-20": 96390,
+      "21-50": 615,
+      "101-300": 125,
+      "51-100": 80,
+      "301-1000": 5
+    }
+  },
+  "semantic_placeholders": {
+    "identity": {
+      "NULL": 180505
+    }
+  },
+  "interpretation_limits": [
+    "The workbook contains exported rows, not necessarily complete natural conversations.",
+    "A declared class-group flag does not prove the observed messages are teacher-student instruction rather than teaching operations or staff coordination.",
+    "Observed sender roles do not prove full membership composition.",
+    "A nonempty reply reference does not prove that the issue was understood or resolved.",
+    "Payload-equivalent rows may be legitimate repeated communication and must not be silently removed.",
+    "No semantic topic, task, need, learning outcome, or AI opportunity is inferred in P1."
+  ]
+}

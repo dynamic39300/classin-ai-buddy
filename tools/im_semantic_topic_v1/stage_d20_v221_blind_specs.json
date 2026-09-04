@@ -1,0 +1,161 @@
+{
+  "schema_version": "stage-d20-v221-blind-specs-v1",
+  "taxonomy_version": "classin-im-semantic-taxonomy-v2.2.1-frozen-20260902",
+  "analysis_basis": "Only the 20 raw Stage-D windows were read. No prior topic or classification artifact was used.",
+  "windows": {
+    "S1000-0901": {
+      "topics": [
+        {"name": "暑假作业选择、完成进度与作业量交流", "description": "学生讨论暑假作业方案如何选择、尚未开始或已完成多少，以及作业量带来的压力。", "target_node_id": "L3-007", "evidence": [3, [13, 16], 34, 40, 50, [55, 59], [64, 69], 77, 100], "qualification": "standard", "confidence": "high"},
+        {"name": "同学在群内互相招呼并确认谁在线", "description": "成员持续用问候、呼叫和‘还有人吗’维系群内交流。", "target_node_id": "L3-100", "evidence": [[1, 12], 19, [29, 31], 49, [51, 54], 60, 63, [78, 85], [96, 99]], "qualification": "standard", "confidence": "high"},
+        {"name": "学校植物种植任务的发芽与生长进度", "description": "学生交流学校发放种子、向日葵发芽时间及各自植物生长情况；依据学校种子线索判断为学习任务。", "target_node_id": "L3-007", "evidence": [23, 24, [37, 39], [86, 89]], "qualification": "standard", "confidence": "medium"},
+        {"name": "同学赴美后的地点、时差与作息", "description": "成员围绕同学是否在美国、所在城市和当地时间进行讨论。", "target_node_id": "L2-052", "evidence": [[19, 28], [90, 92]], "qualification": "standard", "confidence": "medium"}
+      ]
+    },
+    "S1000-0902": {
+      "topics": [
+        {"name": "双方以亲昵称呼和爱意表达维系关系", "description": "对话反复出现爱意确认、亲昵称呼和情绪互动，但关系身份无法完全确认。", "target_node_id": "L3-034", "evidence": [[6, 30]], "qualification": "standard", "confidence": "medium"},
+        {"name": "偶像组合、CP互动与粉丝文化讨论", "description": "双方持续讨论艺人组合、签售互动、CP偏好、唯粉冲突及不同地区热度。", "target_node_id": "L3-043", "evidence": [[35, 86]], "qualification": "standard", "confidence": "high"},
+        {"name": "深夜完成政治学习任务的进度交流", "description": "双方提到深夜学习政治内容，并确认在不到一周内写完一个月的任务。", "target_node_id": "L3-007", "evidence": [88, [90, 95], 98, 99], "qualification": "standard", "confidence": "medium"}
+      ]
+    },
+    "S1000-0903": {
+      "topics": [
+        {"name": "反复邀请对方进入、游玩并确认是否在线", "description": "一方连续邀请对方进入互动、继续玩或回应，并多次确认对方是否仍在线。", "target_node_id": "L3-100", "evidence": [[1, 24], [75, 83]], "qualification": "standard", "confidence": "medium"},
+        {"name": "多语言表达、谜题与文字游戏", "description": "双方通过中英日韩语句、猜谜和提示进行语言娱乐互动。", "target_node_id": "L3-040", "evidence": [[25, 42], [84, 88]], "qualification": "standard", "confidence": "high"},
+        {"name": "因发图、求赞、拉黑等产生的朋友冲突", "description": "对话围绕要求点赞、图片评价、拉黑和双方指责形成持续冲突。", "target_node_id": "L3-035", "evidence": [[65, 74], [89, 100]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0904": {
+      "topics": [
+        {"name": "反复发送课堂会议链接并确认进入教室", "description": "教师按日期和课次发送 VooV 会议入口，双方确认是否进入课堂及会议链接使用。", "target_node_id": "L3-024", "evidence": [[1, 18], [28, 34], [48, 63], [70, 75], [80, 82], [88, 95], 100], "qualification": "standard", "confidence": "high"},
+        {"name": "确认当天由哪位学生到课", "description": "教师多次询问 Tian 或 Yumi 谁参加当天各节课，家长或学生给出确认。", "target_node_id": "L3-019", "evidence": [4, 5, 9, [13, 15], 19, [24, 27], [32, 34], [51, 52], 56, [60, 63]], "qualification": "standard", "confidence": "high"},
+        {"name": "Oxford Book 1 是否继续及课程进度衔接", "description": "双方根据已经学过的单元和教材剩余内容，决定是否继续 Book 1 后再进入 Book 2。", "target_node_id": "L3-012", "evidence": [[20, 27]], "qualification": "standard", "confidence": "high"},
+        {"name": "停电断网导致课程改期或取消", "description": "教师因突发停电和断网无法继续上课，双方协商恢复、改期或取消。", "target_node_id": "L3-017", "evidence": [[35, 41], [64, 69]], "qualification": "standard", "confidence": "high"},
+        {"name": "学生设备麦克风与音频质量排查", "description": "教师比较两位学生的麦克风效果，确认是否共用设备并约定后续排查。", "target_node_id": "L3-029", "evidence": [[42, 47]], "qualification": "standard", "confidence": "high"},
+        {"name": "为两位学生布置并持续补发课后作业", "description": "家长提出增加默写和句型作业，教师分别为 Tian、Yumi 布置并补发多次作业。", "target_node_id": "L3-007", "evidence": [[76, 79], [83, 87], [91, 99]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0905": {
+      "topics": [
+        {"name": "教师调整晚间可授课时段", "description": "教师说明因晚餐和教学专注度关闭一个晚间时段，管理者说明假期后再调整。", "target_node_id": "L3-018", "evidence": [[1, 6], [98, 100]], "qualification": "standard", "confidence": "medium"},
+        {"name": "课时数量核对与教师工资结算", "description": "教师和管理者多轮核对成功课、缺席课、课时误差、工资金额及下周课酬标准。", "target_node_id": "L3-079", "evidence": [[7, 16], [20, 22], [50, 60], [71, 89], [91, 95]], "qualification": "standard", "confidence": "high"},
+        {"name": "多名学生缺勤时的上报、等待与退出", "description": "教师持续报告不同学生未到课，管理者决定联系、等待或让教师退出。", "target_node_id": "L3-019", "evidence": [[17, 26], [39, 48], [68, 70], [75, 77], 90], "qualification": "standard", "confidence": "high"},
+        {"name": "暴雨造成网络中断并请求运营协助", "description": "教师因暴雨断网无法授课，反复向管理者求助并更新恢复状态。", "target_node_id": "L3-029", "evidence": [[29, 38]], "qualification": "standard", "confidence": "high"},
+        {"name": "推荐新教师并询问招聘时间", "description": "教师推荐一名可晚间授课的候选人，管理者说明招聘预计在假期后恢复。", "target_node_id": "L3-080", "evidence": [[49, 52], [98, 100]], "qualification": "standard", "confidence": "medium"}
+      ]
+    },
+    "S1000-0906": {
+      "topics": [
+        {"name": "分享相声录音、新稿并征求同学评价", "description": "学生多次预告、展示相声或新稿，邀请群友收听并询问是否有进步。", "target_node_id": "L3-047", "evidence": [[1, 20], [80, 81], [90, 99]], "qualification": "standard", "confidence": "high"},
+        {"name": "RTU课程阶段、积分进度与后续内容", "description": "学生比较 RTU 的积分、所处阶段、升营进度、课程难度以及 Oxford 等后续内容。", "target_node_id": "L3-012", "evidence": [[36, 78], [82, 91]], "qualification": "standard", "confidence": "high"},
+        {"name": "班主任单条提醒学生进入课堂", "description": "班主任 @ 指定学生来上课；虽只有一条，但属于明确、可执行的业务提醒。", "target_node_id": "L3-019", "evidence": [100], "qualification": "special_business_exception", "confidence": "high"}
+      ]
+    },
+    "S1000-0907": {
+      "topics": [
+        {"name": "试听课学员信息、教材和授课要求交接", "description": "运营持续向教师发送试听学员姓名、年龄、时间、教材与个别授课要求。", "target_node_id": "L3-076", "evidence": [[3, 18], [24, 36], [44, 51]], "qualification": "standard", "confidence": "high"},
+        {"name": "教师提交试听学员课堂表现与水平报告", "description": "教师按统一模板反馈多名试听学员的英语水平、课堂表现和学习问题。", "target_node_id": "L3-010", "evidence": [55, 58, 64, 65, 71, 75, 78, 83, 86, 92, 94, 97], "qualification": "standard", "confidence": "high"},
+        {"name": "学生迟到、缺席与课堂等待处理", "description": "运营与教师多次报告学生迟到或未到，并确认等待时长和是否继续授课。", "target_node_id": "L3-019", "evidence": [[19, 23], [35, 36], [61, 62], [68, 70], 77, 100], "qualification": "standard", "confidence": "high"},
+        {"name": "教师课时统计、差错修正与工资发放", "description": "运营要求每日统计课时，发送工资并纠正试听课与常规课的计数差错。", "target_node_id": "L3-079", "evidence": [[1, 2], 7, 30, [37, 43], 50, [87, 90]], "qualification": "standard", "confidence": "high"},
+        {"name": "常规学员退出或从教师课表消失", "description": "教师发现两名常规学员不再显示，向运营确认是退课、排课变化还是自身教学表现问题。", "target_node_id": "L3-017", "evidence": [23, [72, 73], [79, 80]], "qualification": "standard", "confidence": "medium"}
+      ]
+    },
+    "S1000-0908": {
+      "topics": [
+        {"name": "以星级奖励组织答题和课堂参与", "description": "群内建立星级规则，通过英语或数学题、答题得分和奖励来组织参与。", "target_node_id": "L3-074", "evidence": [[2, 43], [53, 65], 79], "qualification": "standard", "confidence": "high"},
+        {"name": "在线学习时间协商、改期与停电取消", "description": "成员围绕多个候选时间、临时停电和个人安排反复调整在线学习时间。", "target_node_id": "L3-017", "evidence": [[42, 52], [66, 78], [91, 99]], "qualification": "standard", "confidence": "high"},
+        {"name": "成员请假和无法参加在线学习", "description": "多名成员说明无法在线、申请休息或因有事不能参加，组织者确认请假。", "target_node_id": "L3-019", "evidence": [[69, 82], [91, 99]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0909": {
+      "topics": [
+        {"name": "按要求提交授课报告、截图和课程进度", "description": "教师持续提交课程完成报告，运营追补后台记录、截图和缺失报告，并说明与课时费核算的关系。", "target_node_id": "L3-081", "evidence": [[2, 7], [15, 29], [36, 42], [57, 60], [70, 73], [80, 82], [94, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "临时加课、取消、请假与课表更新", "description": "运营和教师就多次临时加课、已有冲突、学生取消、教师请假及课表变化进行协调。", "target_node_id": "L3-017", "evidence": [[8, 14], [30, 35], [43, 56], [74, 77], [83, 96]], "qualification": "standard", "confidence": "high"},
+        {"name": "家长投诉授课进度过快并触发质量复核", "description": "运营指出单课页数超标影响理解，教师解释教学设计，管理方说明投诉后的评估与处罚流程。", "target_node_id": "L3-015", "evidence": [[61, 69]], "qualification": "standard", "confidence": "high"},
+        {"name": "学生课堂会议号变更通知", "description": "运营向教师说明学生更换会议 ID，旧号码停用并要求及时查看课表。", "target_node_id": "L3-024", "evidence": [[88, 93]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0910": {
+      "topics": [
+        {"name": "音乐综艺、艺人队伍和歌曲排名讨论", "description": "学生持续讨论音乐节目、偏爱艺人、作品、组队、舞台表现和排名。", "target_node_id": "L3-043", "evidence": [[10, 64], [77, 89]], "qualification": "standard", "confidence": "high"},
+        {"name": "群内问候、斗嘴与关系维系", "description": "成员以问候、互相调侃和轻度斗嘴维持日常群聊。", "target_node_id": "L3-100", "evidence": [[1, 9], [90, 100]], "qualification": "standard", "confidence": "medium"},
+        {"name": "键盘卡顿和自动替换文字", "description": "两名学生交流键盘卡顿、自动替换输入文字的相似问题。", "target_node_id": "L3-029", "evidence": [[65, 72]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0911": {
+      "topics": [
+        {"name": "伴侣间的爱意表达与情感互动", "description": "双方多次使用爱称、爱意表达和亲密情绪互动，呈现伴侣关系语义。", "target_node_id": "L3-034", "evidence": [[1, 14], [38, 45], [72, 78]], "qualification": "standard", "confidence": "medium"},
+        {"name": "汇率、机票与赴美行程安排", "description": "双方讨论汇率、单程机票、飞行时长、中转及赴美日期。", "target_node_id": "L2-052", "evidence": [[15, 35]], "qualification": "standard", "confidence": "medium"},
+        {"name": "家庭成员、孩子、宠物与家务协调", "description": "对话围绕家中食物、孩子、狗、门锁、清洁和惩罚等家庭事务持续展开。", "target_node_id": "L3-036", "evidence": [[41, 71], [79, 85], [91, 100]], "qualification": "standard", "confidence": "medium"}
+      ]
+    },
+    "S1000-0912": {
+      "topics": [
+        {"name": "课件链接发送、核对与接收确认", "description": "家长或运营反复发送不同学生的课件链接，教师确认收到并纠正课件归属。", "target_node_id": "L3-073", "evidence": [[1, 17], [20, 23], [29, 47], [57, 70], [76, 90], [95, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "续接未完成课件并确认教学页码", "description": "双方持续确认上次上到哪一页、先完成旧课件还是进入新课件。", "target_node_id": "L3-012", "evidence": [[18, 19], [26, 27], 39, [48, 56], 68, [74, 75]], "qualification": "standard", "confidence": "high"},
+        {"name": "不同学生之间临时转课和课程替换", "description": "家长或运营多次变更当晚实际上课学生，并向教师确认课程归属。", "target_node_id": "L3-017", "evidence": [[24, 25], [71, 83], [91, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "家长单条提醒教师漏上课", "description": "家长明确指出教师忘记进入课堂；虽然只有一条，但属于直接影响履约的业务告警。", "target_node_id": "L3-019", "evidence": [92], "qualification": "special_business_exception", "confidence": "high"}
+      ]
+    },
+    "S1000-0913": {
+      "topics": [
+        {"name": "群成员互相辱骂、指责与关系冲突", "description": "群内多名成员围绕说谎、语言选择、冒犯和个人关系持续争执。", "target_node_id": "L3-035", "evidence": [[2, 14], [22, 61], 63, [86, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "管理员警告成员并管理群聊秩序", "description": "管理员发出警告、要求重置或继续聊天，并处理消息轰炸和成员造成的干扰。", "target_node_id": "L3-027", "evidence": [[25, 41], [48, 61]], "qualification": "standard", "confidence": "medium"},
+        {"name": "群内分享并评论短视频和 Meme", "description": "成员连续发送 YouTube 短视频与 Meme 链接，邀请他人观看并评价。", "target_node_id": "L3-040", "evidence": [[62, 85]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0914": {
+      "topics": [
+        {"name": "家庭作业布置、检查与次日复习", "description": "教师多次发布当天作业、限定活动范围，家长提交后请教师检查并约定复习。", "target_node_id": "L3-007", "evidence": [[1, 8], [40, 47]], "qualification": "standard", "confidence": "high"},
+        {"name": "根据学生水平选择 Peppa、Think、PU 或 Oxford 教材", "description": "家长与教师持续比较教材难度、趣味性、词汇语法覆盖和后续衔接，决定调整课程材料。", "target_node_id": "L3-073", "evidence": [[9, 39], [59, 64], [78, 92]], "qualification": "standard", "confidence": "high"},
+        {"name": "反馈学生口语、语法、词汇量与当前水平", "description": "家长询问学习进步和能力水平，教师反馈注意力、语法运用、A2 水平及 KET 准备建议。", "target_node_id": "L3-010", "evidence": [[48, 51], [93, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "约课时间冲突与相邻课次安排", "description": "双方确认旅行后恢复上课，并讨论两节课未连续、可预约时段被占用等约课安排。", "target_node_id": "L3-075", "evidence": [[53, 56], [68, 77]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0915": {
+      "topics": [
+        {"name": "教师可用时间与八月固定课表确认", "description": "教师和运营反复核对长期可授课时间、固定课表和每日确认方式。", "target_node_id": "L3-075", "evidence": [[5, 20], [31, 50]], "qualification": "standard", "confidence": "high"},
+        {"name": "教师空闲时段未排满及获课公平性反馈", "description": "教师反馈长期可用时段未获足够课程，管理者说明家长自主选择和开放时段数量的影响。", "target_node_id": "L3-018", "evidence": [[21, 27]], "qualification": "standard", "confidence": "high"},
+        {"name": "临时取消、学生替换与课表变更", "description": "运营多次用其他学生替换原定学生、调整日期或改变当日上课顺序。", "target_node_id": "L3-017", "evidence": [1, [51, 58], [73, 74], 81, [98, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "固定会议码创建、纠错和课堂进入", "description": "教师创建多组固定 VooV 会议码，运营检查日期、补要会议码并确认进入课堂。", "target_node_id": "L3-024", "evidence": [[2, 4], 15, 18, 25, [32, 50], [74, 76], [83, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "课前核对学生教材并补充新书", "description": "教师请求新教材，运营根据当前书名和进度确认后续单元，并要求提前一天核对。", "target_node_id": "L3-073", "evidence": [[59, 80]], "qualification": "standard", "confidence": "high"},
+        {"name": "课堂环境嘈杂引发家长投诉与整改", "description": "家长反馈教师端环境噪声影响体验，运营核实后教师移到安静地点。", "target_node_id": "L3-015", "evidence": [[85, 89]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0916": {
+      "topics": [
+        {"name": "合唱比赛选曲、难度评估与排练设计", "description": "双方围绕三四年级合唱比赛的曲目风格、语言咬字、声部、乐谱、获奖难度和排练时间进行完整教学设计讨论。", "target_node_id": "L3-014", "evidence": [[1, 100]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0917": {
+      "topics": [],
+      "quality_flags": [
+        {"code": "repetitive_spam_or_flooding", "severity": "high", "description": "窗口主要由重复数字、重复班级邀请、长句复制和刷屏构成，缺乏可恢复的讨论事项。"},
+        {"code": "single_keyword_not_promoted", "severity": "medium", "description": "第79条仅有‘上课！！！’，无明确时间、对象或后续响应；在刷屏上下文中不作为特殊业务主题。"}
+      ]
+    },
+    "S1000-0918": {
+      "topics": [
+        {"name": "电影、漫画人物与观看推荐", "description": "双方讨论蜘蛛侠、八仙等电影和漫画人物，并互相评价与推荐。", "target_node_id": "L3-042", "evidence": [[8, 24], [33, 34], [62, 71]], "qualification": "standard", "confidence": "high"},
+        {"name": "多语言问候和古风表达的语言游戏", "description": "双方用法语、日语、泰语、英语和古风中文互相问候并解释含义。", "target_node_id": "L3-040", "evidence": [[27, 60]], "qualification": "standard", "confidence": "high"},
+        {"name": "奶茶、自助餐与桂花糕等饮食闲聊", "description": "双方围绕奶茶、巧克力、自助餐和桂花糕进行日常饮食交流。", "target_node_id": "L2-047", "evidence": [[2, 8], [72, 77]], "qualification": "standard", "confidence": "medium"},
+        {"name": "用 AI 将纸绘头像转成电脑板绘", "description": "创作者分享纸绘原图和 AI 转板绘结果，解释提示语、颜色偏差及头像效果。", "target_node_id": "L3-045", "evidence": [[79, 96]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0919": {
+      "topics": [
+        {"name": "根据学生水平推荐、确认和更换教材", "description": "教师、助教和家长反复确认课程教材，评估现有教材难度并协商换用 Oxford Phonics 等材料。", "target_node_id": "L3-073", "evidence": [[1, 2], [26, 33], [44, 47], [59, 60], [72, 79], [99, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "课堂音频、课件显示和网络故障处理", "description": "多次出现静音、无声、课件空白和网络连接问题，双方尝试切换扬声器、重进教室、截图或屏幕共享。", "target_node_id": "L3-029", "evidence": [[5, 10], [18, 24], [34, 36], [65, 68], [93, 98]], "qualification": "standard", "confidence": "high"},
+        {"name": "学生迟到、离开或未进入课堂的运营联系", "description": "教师持续上报多名学生未到、迟到或中途离开，助教联系学生或家长协助恢复上课。", "target_node_id": "L3-019", "evidence": [[3, 4], [12, 16], [23, 25], [29, 30], 48, 58, 76, 80], "qualification": "standard", "confidence": "high"},
+        {"name": "教师长期固定可授课时间的提交与确认", "description": "教师提交固定课表，助教说明系统长期预约机制并反复核对开放时段。", "target_node_id": "L3-075", "evidence": [[37, 43], [49, 55], [82, 93]], "qualification": "standard", "confidence": "high"}
+      ]
+    },
+    "S1000-0920": {
+      "topics": [
+        {"name": "旅行、健康和临时安排引发改期与补课", "description": "师生因旅行、教师身体不适及其他课程冲突，多轮协商调课、合并课次和补课时间。", "target_node_id": "L3-017", "evidence": [[3, 20], [23, 27], [33, 39], [47, 82], [95, 100]], "qualification": "standard", "confidence": "high"},
+        {"name": "发送、复用和更换课堂会议链接", "description": "教师持续发送不同日期的 VooV 会议链接，双方确认是否复用或更换会议号。", "target_node_id": "L3-024", "evidence": [1, [21, 27], [39, 46], 63, 70, [84, 85]], "qualification": "standard", "confidence": "high"},
+        {"name": "学生忘记上课后的到课确认与补课处理", "description": "教师发现学生未到，家长联系后确认其忘记时间，随后协商补上一节课。", "target_node_id": "L3-019", "evidence": [[86, 100]], "qualification": "standard", "confidence": "high"}
+      ]
+    }
+  }
+}

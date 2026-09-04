@@ -1,0 +1,37 @@
+{
+  "schema_version": "classin-im-taxonomy-v23-build-manifest/v1",
+  "taxonomy_version": "classin-im-semantic-taxonomy-v2.3-frozen-20260903",
+  "base_taxonomy_version": "classin-im-semantic-taxonomy-v2.2.1-frozen-20260902",
+  "status": "pass",
+  "human_gate_confirmed": true,
+  "approved_topic_instance_ids": [
+    "STI-fb0c9df1207053c92a09",
+    "STI-2e6cc685512ecd006eef",
+    "STI-f07d9efd4e0e3bf2ac23",
+    "STI-c62203ff8a759efe7852"
+  ],
+  "source_hashes_before": {
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-ACTIVE-NODES-20260902.json": "72e0c210f36ba7232bedabcbb986ff7256595c1c17c34f42d2d31323a970943c",
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-RULE-CARDS-20260902.json": "f2d1867bd0210d5a5ac57a1e8af62379068277ada4d0e0208e1bf40a530e2460"
+  },
+  "source_hashes_after": {
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-ACTIVE-NODES-20260902.json": "72e0c210f36ba7232bedabcbb986ff7256595c1c17c34f42d2d31323a970943c",
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-RULE-CARDS-20260902.json": "f2d1867bd0210d5a5ac57a1e8af62379068277ada4d0e0208e1bf40a530e2460"
+  },
+  "evidence_inputs": {
+    "/Users/eeo/Desktop/202608-Classin-IM数据内容分析/outputs/classin-im-semantic-topic-sample1000-20260901/human-calibration/taxonomy-gap-audit-v1/reconciled/reconciled_gap_clusters.json": "ab6187997a7d4d971d2971d78efb899a494fea53100ceee27e630cae4d7ad808",
+    "/Users/eeo/Desktop/202608-Classin-IM数据内容分析/outputs/classin-im-semantic-topic-sample1000-20260901/human-calibration/final-review-adjudication-v1/effective_topics.jsonl": "68d5f09b0ee8b293fff6c22b56f4c73f55fbc0a1127f923347447fd17d9a6acf"
+  },
+  "output_hashes": {
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-3-ACTIVE-NODES-20260903.json": "14273fe4b9c17820629022b708c40522904356f3789f486bc75559992b8d1e29",
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-3-RULE-CARDS-20260903.json": "8daea212aa1a29b58a009b4cb821dd71837f3d97b310637a6ab61719084b2708",
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-3-FROZEN-TREE-20260903.md": "e9f3bc7b4b9e0e4d0a9a0fcd9c30dd702c2c922c9acc7660dd4938d5d2c622f5",
+    "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-3-VALIDATION-REPORT-20260903.md": "25d487a66c593d55d5d2859f36b40bd69882084000ba9ef448444a469cdb35dc"
+  },
+  "counts": {
+    "active_nodes": 85,
+    "terminal_nodes": 61,
+    "rule_cards": 61
+  },
+  "errors": []
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["taxonomy_version", "assignments", "clusters"],
+  "properties": {
+    "taxonomy_version": {"type": "string"},
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topic_instance_id", "final_disposition", "target_node_id", "cluster_id", "confidence", "reasoning_brief"],
+        "properties": {
+          "topic_instance_id": {"type": "string"},
+          "final_disposition": {"enum": ["existing_node", "reject_as_topic", "context_insufficient", "split_required", "gap_cluster"]},
+          "target_node_id": {"type": "string"},
+          "cluster_id": {"type": "string"},
+          "confidence": {"enum": ["high", "medium", "low"]},
+          "reasoning_brief": {"type": "string"}
+        }
+      }
+    },
+    "clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cluster_id", "candidate_name", "candidate_parent_node_id", "definition", "include", "exclude", "adjacent_boundary", "topic_instance_ids", "boundary_confidence"],
+        "properties": {
+          "cluster_id": {"type": "string"},
+          "candidate_name": {"type": "string"},
+          "candidate_parent_node_id": {"type": "string"},
+          "definition": {"type": "string"},
+          "include": {"type": "array", "items": {"type": "string"}},
+          "exclude": {"type": "array", "items": {"type": "string"}},
+          "adjacent_boundary": {"type": "string"},
+          "topic_instance_ids": {"type": "array", "items": {"type": "string"}},
+          "boundary_confidence": {"enum": ["high", "medium", "low"]}
+        }
+      }
+    }
+  }
+}

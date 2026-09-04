@@ -1,0 +1,100 @@
+import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
+import type { Approval, ExecutionReceipt, FailedExecutionReceipt, ProposedAction, SuccessfulExecutionReceipt } from '@domain/workbuddy/writeback';
+import {
+  assertCoursewareWritebackRequest, bindIdempotencyKey, cacheIdempotentReceipt, coursewareWritebackFingerprint, readIdempotentReceipt,
+  type IdempotencyEntry,
+} from './writeback-idempotency';
+
+type FailureInput =
+  | Readonly<{ id: string; status: 'permission_denied'; result: string; recovery: 'choose-another-target' }>
+  | Readonly<{ id: string; status: 'version_conflict'; result: string; recovery: 'compare-and-reconfirm'; expectedVersion: string; currentVersion: string }>
+  | Readonly<{ id: string; status: 'recoverable_failure' | 'timeout'; result: string; recovery: 'retry' }>;
+
+export class MockClassInWritebackAdapter implements ClassInWritebackAdapter, WritebackScenarioController {
+  private readonly receipts = new Map<string, IdempotencyEntry<ExecutionReceipt>>();
+  private readonly attempts = new Map<string, number>();
+  private scenario: WritebackScenario = 'success';
+
+  setScenario(scenario: WritebackScenario) {
+    this.scenario = scenario;
+    this.reset();
+  }
+
+  getScenario() {
+    return this.scenario;
+  }
+
+  private failure(action: ProposedAction, approval: Approval, receipt: FailureInput): FailedExecutionReceipt {
+    const common = {
+      id: receipt.id,
+      actionId: action.id,
+      approvalId: approval.id,
+      idempotencyKey: action.idempotencyKey,
+      executedAt: '2026-08-20T10:06:00+08:00',
+      unexecutedTarget: action.target.unitId,
+      truthLabel: '[模拟]单课件执行回执',
+      result: receipt.result,
+    } as const;
+
+    if (receipt.status === 'version_conflict') {
+      return Object.freeze({ ...common, status: receipt.status, recovery: receipt.recovery, expectedVersion: receipt.expectedVersion, currentVersion: receipt.currentVersion });
+    }
+    if (receipt.status === 'permission_denied') {
+      return Object.freeze({ ...common, status: receipt.status, recovery: receipt.recovery });
+    }
+    return Object.freeze({ ...common, status: receipt.status, recovery: receipt.recovery });
+  }
+
+  private success(action: ProposedAction, approval: Approval): SuccessfulExecutionReceipt {
+    const objectId = action.artifactRef.id.replace(/^artifact-/, 'classin-');
+    const courseLabel = action.target.label.split(' / ')[1] ?? '课程';
+    return Object.freeze({
+      id: action.id.replace(/^action-/, 'receipt-'), actionId: action.id, approvalId: approval.id, idempotencyKey: action.idempotencyKey,
+      status: 'success', executedAt: '2026-08-20T10:06:00+08:00',
+      truthLabel: '[模拟]单课件执行回执',
+      object: Object.freeze({
+        id: objectId,
+        version: action.artifactRef.version,
+        label: `${courseLabel}课件`,
+        returnUrl: `/teacher/classes/${action.target.classId}?course=${action.target.courseId}&unit=${action.target.unitId}&activity=${objectId}&source=workbuddy`,
+      }),
+      result: '课件已保存到 ClassIn 单元资料',
+    });
+  }
+
+  execute(action: ProposedAction, approval: Approval): ExecutionReceipt {
+    assertCoursewareWritebackRequest(action, approval);
+    const fingerprint = coursewareWritebackFingerprint(action, approval);
+    const existing = readIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint);
+    if (existing) return existing;
+    bindIdempotencyKey(this.receipts, action.idempotencyKey, fingerprint);
+    if (action.permission !== 'allowed' || this.scenario === 'permission_denied') {
+      const denied = this.failure(action, approval, { id: 'receipt-courseware-permission-denied-1', status: 'permission_denied', result: '当前教师无权写入所选位置；隐藏对象详情不会显示。', recovery: 'choose-another-target' });
+      return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, denied);
+    }
+    const currentTargetVersion = this.scenario === 'version_conflict'
+      ? action.target.expectedVersion.replace(/-v\d+$/, '-v2')
+      : action.target.expectedVersion;
+    if (action.target.expectedVersion !== currentTargetVersion) {
+      const conflict = this.failure(action, approval, { id: 'receipt-courseware-version-conflict-1', status: 'version_conflict', result: `目标版本已从 ${action.target.expectedVersion} 更新为 ${currentTargetVersion}`, recovery: 'compare-and-reconfirm', expectedVersion: action.target.expectedVersion, currentVersion: currentTargetVersion });
+      return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, conflict);
+    }
+    if ((this.scenario === 'recoverable_failure' || this.scenario === 'timeout') && (this.attempts.get(action.idempotencyKey) ?? 0) === 0) {
+      this.attempts.set(action.idempotencyKey, 1);
+      return this.failure(action, approval, {
+        id: `receipt-courseware-${this.scenario}-1`,
+        status: this.scenario,
+        result: this.scenario === 'timeout' ? '请求超时，尚未产生可确认的副作用。' : '[模拟]写回接口暂时不可用，尚未产生副作用。',
+        recovery: 'retry',
+      });
+    }
+
+    const receipt = this.success(action, approval);
+    return cacheIdempotentReceipt(this.receipts, action.idempotencyKey, fingerprint, receipt);
+  }
+
+  reset() {
+    this.receipts.clear();
+    this.attempts.clear();
+  }
+}

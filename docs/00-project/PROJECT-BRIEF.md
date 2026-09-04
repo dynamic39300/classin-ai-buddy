@@ -1,0 +1,42 @@
+---
+title: ClassIn TeacherIn 项目简报
+status: LOCKED
+version: v0.3
+date: 2026-09-04
+---
+
+# ClassIn TeacherIn 项目简报
+
+## 目标
+
+建设一套面向教师的 **ClassIn TeacherIn**（界面简称 **TeacherIn**，中文描述为 **AI 教学搭档**）：新用户可以独立使用教师工作台完成教研、备课、课堂指导、课后服务和个性化沟通；接入 ClassIn 后，系统获得课程、课堂、作业、互动和结果证据，产出更精细、更专业、更个性化。
+
+`WorkBuddy` / `workbuddy` 继续作为既有领域类型、模块、ClassIn 内部路由和存储的工程标识，不再作为产品展示名；独立 C 端产品的公开 URL 使用 `/teachbuddy/*`，旧 `/workbuddy/*` 只保留兼容跳转。完整迁移边界见 [ClassIn TeacherIn 品牌命名与迁移边界](./TEACHERIN-BRAND-MIGRATION.md)。
+
+终局产品是统一教师工作台和主 Agent 体验。AI 工具、Copilot、有限 Agent、Skills、MCP 和 A2A 是实现层能力，不是教师必须理解或选择的产品入口。
+
+## 当前主切片
+
+`课程目标 → 课程对象`。使用模拟机构“星河学习中心”、模拟教师林老师、八年级英语课程和可重置业务对象，验证目标澄清、上下文、课程产物、教师控制、模拟写回、回执和评价事件。
+
+## 当前边界
+
+- 没有真实 ClassIn 业务数据和生产 API；所有机构、课程、学生和执行结果均为模拟或集成模拟；
+- 原型不是最终 UI 视觉稿，不锁定 ClassIn 品牌色、字体或生产组件库；
+- 当前优先验证状态、信息架构、教师控制和 Harness 映射，不建设完整多 Agent 网络、插件市场或学生侧实时运行；
+- 产品逻辑、业务规则、Domain Knowledge、业务数据/API 和评价数据保持不同所有权。
+
+## 终局能力域
+
+1. 教研与课程设计；
+2. 备课与课堂准备；
+3. 课堂教学与实时支持；
+4. 作业、评价与反馈；
+5. 学情诊断与个性化干预；
+6. 课后服务与教师事务。
+
+## 共同交付原则
+
+以终为始确定全局低分辨率蓝图，以代表性场景提高局部分辨率；每个功能必须能映射到 Module、Interface、Domain Knowledge、业务 API、状态和评价事件。
+
+独立 TeacherIn AI 教学搭档运行态与 ClassIn 内 TeacherIn 内容生态采用“产品运行隔离、内容格式兼容”的双层关系：账号、路由、Workspace、权限和业务数据互不共享；所有内容资源按同一 TeacherIn 内容契约生产，使独立产品产物在未来获得授权连接后无需重新制作或转换格式即可进入内部内容生产、编辑、授权与分发生态。完整关系见 [TeacherIn 内容兼容与独立产品边界](../06-architecture/TEACHERIN-CONTENT-COMPATIBILITY.md)。

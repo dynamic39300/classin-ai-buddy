@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClassIn IM semantic topic taxonomy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["taxonomy_version", "principles", "level1_nodes"],
+  "properties": {
+    "taxonomy_version": {"type": "string", "minLength": 1},
+    "principles": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "level1_nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/level1"}
+    }
+  },
+  "$defs": {
+    "level3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "definition", "include", "exclude", "examples"],
+      "properties": {
+        "id": {"type": "string", "pattern": "L3-[0-9]{3,}"},
+        "name": {"type": "string", "minLength": 1},
+        "definition": {"type": "string", "minLength": 1},
+        "include": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "exclude": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "examples": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "level2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "definition", "include", "exclude", "examples", "children"],
+      "properties": {
+        "id": {"type": "string", "pattern": "L2-[0-9]{3,}"},
+        "name": {"type": "string", "minLength": 1},
+        "definition": {"type": "string", "minLength": 1},
+        "include": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "exclude": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "examples": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "children": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/level3"}}
+      }
+    },
+    "level1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "definition", "include", "exclude", "examples", "children"],
+      "properties": {
+        "id": {"type": "string", "pattern": "L1-[0-9]{3,}"},
+        "name": {"type": "string", "minLength": 1},
+        "definition": {"type": "string", "minLength": 1},
+        "include": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "exclude": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "examples": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "children": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/level2"}}
+      }
+    }
+  }
+}

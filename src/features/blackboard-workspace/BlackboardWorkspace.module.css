@@ -1,0 +1,31 @@
+.page {
+  display: grid;
+  min-width: 0;
+  min-height: 100%;
+  place-items: center;
+  padding: var(--space-xl);
+  background: var(--color-surface);
+}
+
+.placeholder {
+  display: grid;
+  width: min(30rem, 100%);
+  justify-items: center;
+  gap: var(--space-sm);
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
+.placeholder h2 {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.placeholder p {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}

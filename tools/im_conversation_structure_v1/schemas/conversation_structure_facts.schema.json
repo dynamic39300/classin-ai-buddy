@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "classin-im-conversation-structure-facts/v1",
+  "title": "Database adapter facts for one IM conversation",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "adapter_version",
+    "query_run_id",
+    "snapshot_at",
+    "clusterid",
+    "observed_type",
+    "course_matches",
+    "members",
+    "direct_relations"
+  ],
+  "properties": {
+    "adapter_version": {"type": "string", "minLength": 1},
+    "query_run_id": {"type": "string", "minLength": 1},
+    "snapshot_at": {"type": "string", "minLength": 1},
+    "clusterid": {"type": "string", "minLength": 1},
+    "observed_type": {"enum": ["0", "1"]},
+    "course_matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["course_id"],
+        "properties": {
+          "course_id": {"type": "string", "minLength": 1},
+          "course_institution_uid": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["uid", "member_status", "institution_roles"],
+        "properties": {
+          "uid": {"type": "string", "minLength": 1},
+          "member_status": {"enum": [0, "0", 255, "255"]},
+          "resolved_professional_role": {
+            "enum": ["teacher", "manager", "staff", "student", "guardian", "other"]
+          },
+          "resolved_conversation_role": {
+            "enum": ["teacher", "manager", "staff", "student", "guardian", "other"]
+          },
+          "resolved_course_role": {"enum": ["teacher", "student"]},
+          "resolved_context_institution_role": {"enum": ["teacher", "student"]},
+          "institution_context_role_status": {
+            "enum": [
+              "global_role_category_unique",
+              "course_role_confirmed_in_current_institution",
+              "course_role_conflicts_with_global_current_role",
+              "course_role_conflicts_with_current_institution_role",
+              "current_institution_role_unresolved",
+              "current_institution_role_unavailable"
+            ]
+          },
+          "institution_roles": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {"enum": ["teacher", "manager", "staff", "student", "guardian", "other"]},
+                {
+                  "type": "object",
+                  "required": ["role", "source"],
+                  "properties": {
+                    "role": {"enum": ["teacher", "manager", "staff", "student", "guardian", "other"]},
+                    "source": {"type": "string"}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "direct_relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["uid", "contactor_uid", "status"],
+        "properties": {
+          "uid": {"type": "string", "minLength": 1},
+          "contactor_uid": {"type": "string", "minLength": 1},
+          "status": {"enum": [0, "0", 255, "255"]}
+        }
+      }
+    }
+  }
+}

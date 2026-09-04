@@ -1,0 +1,16 @@
+{
+  "status": "candidate_pending_human_review",
+  "taxonomy_version": "classin-im-semantic-topic-taxonomy-v2-candidate-20260902",
+  "generated_at": "2026-09-02T05:13:16.843Z",
+  "source_markdown": "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-CANDIDATE-TREE-20260902.md",
+  "source_sha256": "c95aa8d667e11b1a54b71ce8ea3cef317ebe077077afb1a96776eb9f076982b6",
+  "flat_csv": "/Users/eeo/Documents/ai-projects/202608-Classin-AI-IM/docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-CANDIDATE-FLAT-20260902.csv",
+  "flat_csv_sha256": "b8a342eb87f0c40e7c6ae04afe7971706e2ffbbd4b759447549239b05563eed2",
+  "counts": {
+    "l1": 10,
+    "l2": 29,
+    "l3": 80
+  },
+  "migration_executed": false,
+  "stage_d_read": false
+}

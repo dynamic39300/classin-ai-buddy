@@ -1,0 +1,20 @@
+node_id,node_name,level,candidate_parent,status,stage_ab_evidence,activation_gate,id_policy
+L3-016,教学记录、总结与回放,L3,L2-042,inactive_candidate,A+B 无干净正例,至少 2 个有效 Topic、覆盖 2 个会话且可与教学质量互斥,历史 ID 保留，不复用
+L3-025,课堂开结、时长与中断,L3,L2-026,inactive_candidate,A+B 无干净正例,至少 2 个会话出现课堂实际开结/时长事项，并可与改期和故障互斥,历史 ID 保留，不复用
+L3-031,链接、权限与内容访问,L3,L2-045,inactive_candidate,A+B 无干净正例,至少 2 个会话以访问控制本身为主要问题,历史 ID 保留，不复用
+L3-084,棋牌桌游与线下游戏,L3,L2-013,inactive_candidate,A+B 无干净正例,至少 2 个会话形成独立游玩主题,历史 v2 已占用；不得分配给寒暄节点
+L3-057,个人形象与穿着,L3,L1-007,inactive_candidate,A+B 无干净正例,至少 2 个会话且可与消费、身份和创作互斥,历史 ID 保留，不复用
+L3-089,入学、升学与录取,L3,L1-011,inactive_candidate,A+B 无干净正例,至少 2 个会话出现教育阶段选择或录取事项,历史 ID 保留，不复用
+L3-090,专业、方向与选课,L3,L1-011,inactive_candidate,A+B 无干净正例,至少 2 个会话且与普通课程预约互斥,历史 ID 保留，不复用
+L2-054,专业研究与学术发表,L2,parent_tbd,inactive_candidate,A+B 两个旧研究实例均为学习/指导语境,出现至少 2 个跨会话、脱离教学指导的独立专业研究 Topic,v2.1 ID 保留；未来激活优先复用
+L3-091,研究设计、方法与分析,L3,L2-054,inactive_subcandidate,无干净独立专业研究正例,L2-054 激活后再评估内部二分,历史 v2 ID 保留，不复用
+L3-092,学术写作、投稿与发表,L3,L2-054,inactive_subcandidate,现有投稿实例仍属师生指导,L2-054 激活后再评估内部二分,历史 v2 ID 保留，不复用
+L2-036,职业与工作,L2,parent_tbd,inactive_candidate,A+B 无干净正例,至少 2 个会话形成普通职业而非教师机构事务,历史 v2 ID 保留，不复用
+L3-063,商业经营与客户服务,L3,L1-012,inactive_candidate,A+B 无干净正例,至少 2 个会话以经营或客户服务为主题,历史 ID 保留，不复用
+L3-066,宏观、行业与企业信息,L3,L1-012,inactive_candidate,A+B 无干净正例,至少 2 个会话且能与具体交易互斥,历史 ID 保留，不复用
+L3-095,金融与交易安全,L3,L1-012,inactive_candidate,A+B 无干净正例,至少 2 个会话以金融诈骗或交易安全为主要事项,历史 ID 保留，不复用
+L3-097,公共安全与制度性风险,L3,L1-013,inactive_candidate,A+B 无干净正例,至少 2 个会话且风险对象面向群体或制度,历史 ID 保留，不复用
+L3-098,政策、政治与社会议题,L3,L2-059,inactive_subcandidate,A+B 无干净二分证据,L2-059 获得多个干净正例后再评估,历史 ID 保留，不复用
+L3-099,公共运行与事件信息,L3,L2-059,inactive_subcandidate,唯一旧实例可能是个人位置事项,L2-059 获得多个干净正例后再评估,历史 ID 保留，不复用
+L2-048,个人近况、经历与日常安排,L2,none,retired_do_not_reactivate,人工确认边界过宽，会吞并健康、出行、生活和社交,不设晋升门槛；具体内容必须分流，纯关系维系归 L3-100,v2.1 ID 永久保留且不得复用
+L3-087,个人近况、经历与日常安排,L3,none,retired_do_not_reactivate,与退役 L2-048 同一过宽概念,不重新启用,历史 v2 ID 永久保留且不得复用

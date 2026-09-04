@@ -1,0 +1,2443 @@
+{
+  "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+  "status": "FROZEN_STRUCTURE_MIGRATION_PENDING",
+  "nodes": [
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-001",
+      "node_name": "学习与学业内容",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-001"
+      ],
+      "path_names": [
+        "学习与学业内容"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-001",
+      "node_name": "学科、技能与研究学习",
+      "parent_id": "L1-001",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-001",
+        "L2-001"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-001",
+      "node_name": "英语语言学习",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-001"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "英语语言学习"
+      ],
+      "definition": "围绕英语词汇、语法、听说读写、翻译或表达能力展开的学习。",
+      "include_rules": [
+        "英语知识讲解、语言练习、口语或写作学习。"
+      ],
+      "exclude_rules": [
+        "英语教材选择、英语课程排期、一般社交英文对话。"
+      ],
+      "neighbor_rules": [
+        "按正在学习的知识或技能对象裁决；教材对象归 L3-073，任务交付归 L3-007。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-002",
+      "node_name": "语文与中文学习",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-002"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "语文与中文学习"
+      ],
+      "definition": "围绕汉字、语文课文、古文、中文阅读或写作能力展开的学习。",
+      "include_rules": [
+        "中文语言知识、阅读理解、语文写作与表达训练。"
+      ],
+      "exclude_rules": [
+        "文学作品兴趣讨论、教材文件收发。"
+      ],
+      "neighbor_rules": [
+        "以学习目的为门槛；自主谈论小说作品归 L3-042。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-003",
+      "node_name": "数学学习",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-003"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "数学学习"
+      ],
+      "definition": "围绕数学概念、计算、几何、函数或数学解题展开的学习。",
+      "include_rules": [
+        "数学知识解释、习题思路和计算训练。"
+      ],
+      "exclude_rules": [
+        "数学课排期、一般考试管理、仅出现数字。"
+      ],
+      "neighbor_rules": [
+        "具体数学知识归本节点；正式考试结果归 L3-072。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-004",
+      "node_name": "自然科学与工程学习",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-004"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "自然科学与工程学习"
+      ],
+      "definition": "围绕物理、化学、生物、自然科学或工程知识展开的学习。",
+      "include_rules": [
+        "自然科学概念、实验原理或工程知识学习。"
+      ],
+      "exclude_rules": [
+        "通用设备故障、跨学科研究方法、纯数学。"
+      ],
+      "neighbor_rules": [
+        "研究方法与数据分析能力归 L3-071；设备排障归 L3-029。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-005",
+      "node_name": "编程与计算学习",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-005"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "编程与计算学习"
+      ],
+      "definition": "以学习为目的的编程、算法、软件项目或信息学问题。",
+      "include_rules": [
+        "代码理解、算法学习、编程项目调试和计算思维训练。"
+      ],
+      "exclude_rules": [
+        "一般应用操作、安装配置或软件运行故障。"
+      ],
+      "neighbor_rules": [
+        "以是否在学习计算知识为界；工具故障归 L3-029，普通操作归 L3-030/L3-033。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-006",
+      "node_name": "艺术技能学习",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-006"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "艺术技能学习"
+      ],
+      "definition": "以能力训练为目的的乐器、绘画、表演等艺术学习。",
+      "include_rules": [
+        "艺术技能练习、教师指导与训练反馈。"
+      ],
+      "exclude_rules": [
+        "艺术作品兴趣讨论、自主艺术创作。"
+      ],
+      "neighbor_rules": [
+        "技能训练归本节点；作品消费归 L3-042/L3-043，实际创作归 L3-045。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-071",
+      "node_name": "研究方法与学术项目能力",
+      "parent_id": "L2-001",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-001",
+        "L2-001",
+        "L3-071"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学科、技能与研究学习",
+        "研究方法与学术项目能力"
+      ],
+      "definition": "在教师指导、课程或学习语境中形成研究问题、方法、数据分析、学术写作与项目推进能力。",
+      "include_rules": [
+        "研究选题、研究设计、数据构建、实证分析、论文修改及学习型投稿准备。"
+      ],
+      "exclude_rules": [
+        "脱离学习或指导关系的独立职业研究与正式发表活动；一般作业催交。"
+      ],
+      "neighbor_rules": [
+        "先看活动目的而非‘论文/代码’关键词：学习或辅导语境归本节点。",
+        "若只讨论作业提交状态归 L3-007；独立专业研究证据充分后进入候选 L2-054。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-041",
+      "node_name": "学习任务、计划与评价",
+      "parent_id": "L1-001",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-001",
+        "L2-041"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学习任务、计划与评价"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-007",
+      "node_name": "作业布置、完成与订正",
+      "parent_id": "L2-041",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-001",
+        "L2-041",
+        "L3-007"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学习任务、计划与评价",
+        "作业布置、完成与订正"
+      ],
+      "definition": "围绕作业或练习的布置、完成、提交、批改、重做和订正。",
+      "include_rules": [
+        "作业要求、提交进度、答案修订和错题订正。"
+      ],
+      "exclude_rules": [
+        "纯知识讲解、长期学习规划、正式考试官方成绩。"
+      ],
+      "neighbor_rules": [
+        "以具体作业交付物为界；学习安排归 L3-009，正式测评结果归 L3-072。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-009",
+      "node_name": "学习计划、复习与备考",
+      "parent_id": "L2-041",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-001",
+        "L2-041",
+        "L3-009"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学习任务、计划与评价",
+        "学习计划、复习与备考"
+      ],
+      "definition": "围绕学习安排、复习策略、备考节奏或学习习惯形成计划。",
+      "include_rules": [
+        "复习计划、备考安排、学习目标和习惯调整。"
+      ],
+      "exclude_rules": [
+        "课程日历排期、作业单次提交、正式考试结果。"
+      ],
+      "neighbor_rules": [
+        "学习者的学习计划归本节点；课程时间绑定归 L2-025。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-072",
+      "node_name": "正式测评、考试与成绩",
+      "parent_id": "L2-041",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-001",
+        "L2-041",
+        "L3-072"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学习任务、计划与评价",
+        "正式测评、考试与成绩"
+      ],
+      "definition": "围绕明确的正式或标准化测评事件、官方成绩、等级、通过与否。",
+      "include_rules": [
+        "考试安排中的测评事项、正式分数、成绩发布和通过结果。"
+      ],
+      "exclude_rules": [
+        "练习估分、日常课堂观察、单纯备考。"
+      ],
+      "neighbor_rules": [
+        "有正式测评载体或官方结果才归本节点；教师日常观察归 L3-010。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-010",
+      "node_name": "日常学习表现与反馈",
+      "parent_id": "L2-041",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-001",
+        "L2-041",
+        "L3-010"
+      ],
+      "path_names": [
+        "学习与学业内容",
+        "学习任务、计划与评价",
+        "日常学习表现与反馈"
+      ],
+      "definition": "基于课堂、练习、作业或教师观察形成的日常学习表现、薄弱项与反馈。",
+      "include_rules": [
+        "课堂表现、理解程度、参与状态、练习表现及改进建议。"
+      ],
+      "exclude_rules": [
+        "正式考试官方成绩、对教师授课质量的评价。"
+      ],
+      "neighbor_rules": [
+        "评价对象是学习者归本节点；评价对象是教师或教学设计归 L3-015。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-002",
+      "node_name": "教学设计、实施与改进",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-002"
+      ],
+      "path_names": [
+        "教学设计、实施与改进"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-023",
+      "node_name": "教学内容规划与资源",
+      "parent_id": "L1-002",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-002",
+        "L2-023"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学内容规划与资源"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-073",
+      "node_name": "教材、教学资料与课件",
+      "parent_id": "L2-023",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-002",
+        "L2-023",
+        "L3-073"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学内容规划与资源",
+        "教材、教学资料与课件"
+      ],
+      "definition": "教学所用教材、读物、课件、音视频材料的选择、适配、制作、查找、获取、分享与使用。",
+      "include_rules": [
+        "教材适配、课件准备、资料推荐、查找或发送。"
+      ],
+      "exclude_rules": [
+        "文件权限或格式故障；仅讨论页码、单元与已学待学内容。"
+      ],
+      "neighbor_rules": [
+        "主要问题是‘用什么/在哪里/是否合适’归本节点。",
+        "主要问题是‘教什么/教到哪里’归 L3-012；两个事项均持续时拆 Topic。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-012",
+      "node_name": "课程内容范围与教学进度",
+      "parent_id": "L2-023",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed_boundary_review",
+      "path_ids": [
+        "L1-002",
+        "L2-023",
+        "L3-012"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学内容规划与资源",
+        "课程内容范围与教学进度"
+      ],
+      "definition": "围绕课程覆盖的内容范围、页码、单元、先后顺序、已完成和接下来教授的内容。",
+      "include_rules": [
+        "授课内容确认、章节推进、内容衔接和后续教学范围。"
+      ],
+      "exclude_rules": [
+        "日历排课、单纯换教材或找文件、教学方法。"
+      ],
+      "neighbor_rules": [
+        "回答‘教什么/教到哪’归本节点；回答‘怎么教’归 L3-014。",
+        "旧‘教材与课程进度’常为复合 Topic，迁移时必须回看证据并允许拆分。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-042",
+      "node_name": "教学方法、课堂规范与质量改进",
+      "parent_id": "L1-002",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-002",
+        "L2-042"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学方法、课堂规范与质量改进"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-014",
+      "node_name": "教学方法与课堂活动设计",
+      "parent_id": "L2-042",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-002",
+        "L2-042",
+        "L3-014"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学方法、课堂规范与质量改进",
+        "教学方法与课堂活动设计"
+      ],
+      "definition": "教师为达成学习目标而设计或调整提问、支架、语速、语言支持与课堂活动。",
+      "include_rules": [
+        "教学策略、课堂活动、互动方式和授课节奏设计。"
+      ],
+      "exclude_rules": [
+        "学生既有表现、参与纪律规则、对授课质量的评价结论。"
+      ],
+      "neighbor_rules": [
+        "教师采取的教学办法归本节点；学生应遵守什么归 L3-074；评价教学好坏归 L3-015。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-074",
+      "node_name": "课堂互动规范与参与要求",
+      "parent_id": "L2-042",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-002",
+        "L2-042",
+        "L3-074"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学方法、课堂规范与质量改进",
+        "课堂互动规范与参与要求"
+      ],
+      "definition": "课堂中对学习者发言、聊天、摄像头、专注和参与行为的明确要求或限制。",
+      "include_rules": [
+        "课堂聊天限制、摄像头要求、课堂用语、专注与参与规则。"
+      ],
+      "exclude_rules": [
+        "群组禁言和成员治理；教师工作纪律；一般教学活动设计。"
+      ],
+      "neighbor_rules": [
+        "规范约束的对象是学生课堂行为时归本节点；平台群治理归 L3-027。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-015",
+      "node_name": "教学质量评价与改进",
+      "parent_id": "L2-042",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-002",
+        "L2-042",
+        "L3-015"
+      ],
+      "path_names": [
+        "教学设计、实施与改进",
+        "教学方法、课堂规范与质量改进",
+        "教学质量评价与改进"
+      ],
+      "definition": "对教师、教学设计或授课效果进行观察、评价，并提出或确认改进。",
+      "include_rules": [
+        "授课内容是否跑题、难度与节奏是否适当、教师备课及教学质量改进。"
+      ],
+      "exclude_rules": [
+        "学生学习表现、课程客服体验、一般教学方法介绍。"
+      ],
+      "neighbor_rules": [
+        "评价对象是教学过程或教师归本节点；评价对象是学生归 L3-010。",
+        "投诉核心是服务流程或口碑处置归 L3-077。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-003",
+      "node_name": "课程运营与服务",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-003"
+      ],
+      "path_names": [
+        "课程运营与服务"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-025",
+      "node_name": "课程排期与变更",
+      "parent_id": "L1-003",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-003",
+        "L2-025"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "课程排期与变更"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-018",
+      "node_name": "可用时段与排班",
+      "parent_id": "L2-025",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-003",
+        "L2-025",
+        "L3-018"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "课程排期与变更",
+        "可用时段与排班"
+      ],
+      "definition": "尚未绑定具体课程的可授课或可参加时段以及供给排班。",
+      "include_rules": [
+        "开放、更新或核对可用时间和教师排班。"
+      ],
+      "exclude_rules": [
+        "已绑定学员的固定预约、既有课程改期。"
+      ],
+      "neighbor_rules": [
+        "供给时间池归本节点；绑定具体学员和课程归 L3-075。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-075",
+      "node_name": "课程预约与固定排课",
+      "parent_id": "L2-025",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-003",
+        "L2-025",
+        "L3-075"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "课程排期与变更",
+        "课程预约与固定排课"
+      ],
+      "definition": "把具体学员、课程和时间绑定，形成首次预约或固定课表。",
+      "include_rules": [
+        "预约具体课程、确认固定周课表或新增固定时段。"
+      ],
+      "exclude_rules": [
+        "修改已存在的课程、仅开放可用时间。"
+      ],
+      "neighbor_rules": [
+        "首次绑定归本节点；已有课程变更归 L3-017。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-017",
+      "node_name": "课程改期、取消与补课",
+      "parent_id": "L2-025",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-003",
+        "L2-025",
+        "L3-017"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "课程排期与变更",
+        "课程改期、取消与补课"
+      ],
+      "definition": "对已经存在的课程进行改期、取消、恢复、加课或补课。",
+      "include_rules": [
+        "换时间、取消课、补课与恢复课程。"
+      ],
+      "exclude_rules": [
+        "首次预约、单纯缺勤事实、仅开放可约时段。"
+      ],
+      "neighbor_rules": [
+        "存在既有课程且改变其状态归本节点；未绑定安排归 L3-018/L3-075。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-026",
+      "node_name": "到课与课堂运行",
+      "parent_id": "L1-003",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-003",
+        "L2-026"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "到课与课堂运行"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-019",
+      "node_name": "到课、请假与缺勤处置",
+      "parent_id": "L2-026",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-003",
+        "L2-026",
+        "L3-019"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "到课与课堂运行",
+        "到课、请假与缺勤处置"
+      ],
+      "definition": "围绕教师或学生是否到课、迟到、等待、请假、缺席、代课及即时处置。",
+      "include_rules": [
+        "出勤确认、请假、迟到、缺勤和催促进课。"
+      ],
+      "exclude_rules": [
+        "课堂入口配置、网络排障、主要诉求为结算申诉。"
+      ],
+      "neighbor_rules": [
+        "‘人是否到’归本节点；‘入口/教室是否可进入’归 L3-024；扣薪只作为后果或独立 L3-079。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-024",
+      "node_name": "教室与课堂接入",
+      "parent_id": "L2-026",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-003",
+        "L2-026",
+        "L3-024"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "到课与课堂运行",
+        "教室与课堂接入"
+      ],
+      "definition": "围绕教室创建、课堂入口、会议码、进入权限和接入配置。",
+      "include_rules": [
+        "查找或创建教室、获取课堂入口、确认进入权限。"
+      ],
+      "exclude_rules": [
+        "人没到、网络或设备故障排查。"
+      ],
+      "neighbor_rules": [
+        "询问入口或配置归本节点；出现异常并持续排障归 L3-029。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-043",
+      "node_name": "学员承接、服务与权益",
+      "parent_id": "L1-003",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-003",
+        "L2-043"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "学员承接、服务与权益"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-076",
+      "node_name": "试听、首课与学员承接",
+      "parent_id": "L2-043",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-003",
+        "L2-043",
+        "L3-076"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "学员承接、服务与权益",
+        "试听、首课与学员承接"
+      ],
+      "definition": "围绕试听、首课、新学员资料、首次家长联系和服务交接。",
+      "include_rules": [
+        "试听安排、新生首课通知、学员背景交接与课前准备。"
+      ],
+      "exclude_rules": [
+        "正式课程改期、一般服务评价和退款。"
+      ],
+      "neighbor_rules": [
+        "以学员进入服务生命周期的承接为界；既有课程变更归 L3-017。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-077",
+      "node_name": "服务评价、投诉与口碑跟进",
+      "parent_id": "L2-043",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-003",
+        "L2-043",
+        "L3-077"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "学员承接、服务与权益",
+        "服务评价、投诉与口碑跟进"
+      ],
+      "definition": "对课程服务体验的好评、差评、投诉、口碑以及后续客服处置。",
+      "include_rules": [
+        "投诉、评价删除请求、客服跟进和口碑处理。"
+      ],
+      "exclude_rules": [
+        "教师授课质量本身、学生学习表现。"
+      ],
+      "neighbor_rules": [
+        "评价对象是服务流程或处置体验归本节点；教学质量归 L3-015。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-078",
+      "node_name": "学员课程权益、费用与退款",
+      "parent_id": "L2-043",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-003",
+        "L2-043",
+        "L3-078"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "学员承接、服务与权益",
+        "学员课程权益、费用与退款"
+      ],
+      "definition": "学员侧的课时权益、学费、赠课、转课、退款和结算。",
+      "include_rules": [
+        "学员课时变更、课程退款、费用争议和权益处理。"
+      ],
+      "exclude_rules": [
+        "教师工资与扣罚、普通购物。"
+      ],
+      "neighbor_rules": [
+        "按结算对象裁决：学员侧归本节点，教师侧归 L3-079。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-044",
+      "node_name": "教师合作、规范与结算",
+      "parent_id": "L1-003",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-003",
+        "L2-044"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "教师合作、规范与结算"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-080",
+      "node_name": "教师招聘、入职与资料",
+      "parent_id": "L2-044",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-003",
+        "L2-044",
+        "L3-080"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "教师合作、规范与结算",
+        "教师招聘、入职与资料"
+      ],
+      "definition": "教师招聘、面试、入职、资质材料和初始分配。",
+      "include_rules": [
+        "教师招募、推荐、入职材料与初次工作交接。"
+      ],
+      "exclude_rules": [
+        "在岗考核、一次迟到、教学方法。"
+      ],
+      "neighbor_rules": [
+        "进入合作关系前后的一次性承接归本节点；持续工作规范归 L3-081。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-081",
+      "node_name": "教师工作规范、考核与人员处置",
+      "parent_id": "L2-044",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-003",
+        "L2-044",
+        "L3-081"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "教师合作、规范与结算",
+        "教师工作规范、考核与人员处置"
+      ],
+      "definition": "教师在岗工作规则、纪律、考核、替换、交接和离职处置。",
+      "include_rules": [
+        "工作群规则、请假流程、考核标准和人员处置。"
+      ],
+      "exclude_rules": [
+        "一般教学方法、学员请假本身、教师薪资金额。"
+      ],
+      "neighbor_rules": [
+        "制度约束或人员管理归本节点；单次出勤事实归 L3-019。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-079",
+      "node_name": "教师课酬、薪资与奖励",
+      "parent_id": "L2-044",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "human_confirmed",
+      "path_ids": [
+        "L1-003",
+        "L2-044",
+        "L3-079"
+      ],
+      "path_names": [
+        "课程运营与服务",
+        "教师合作、规范与结算",
+        "教师课酬、薪资与奖励"
+      ],
+      "definition": "教师侧课时费、工资、佣金、奖励、扣罚和结算。",
+      "include_rules": [
+        "教师工资、课酬计算、奖励和因出勤产生的扣罚。"
+      ],
+      "exclude_rules": [
+        "学员退款、普通金融投资。"
+      ],
+      "neighbor_rules": [
+        "按结算对象裁决：教师侧归本节点；缺勤事实仍归 L3-019，并用关系字段关联。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-004",
+      "node_name": "数字平台与技术",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-004"
+      ],
+      "path_names": [
+        "数字平台与技术"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-008",
+      "node_name": "账号、联系人与群组空间",
+      "parent_id": "L1-004",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-004",
+        "L2-008"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "账号、联系人与群组空间"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-026",
+      "node_name": "账号认证与资料设置",
+      "parent_id": "L2-008",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-004",
+        "L2-008",
+        "L3-026"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "账号、联系人与群组空间",
+        "账号认证与资料设置"
+      ],
+      "definition": "登录、验证码、密码、绑定、认证及账号资料设置。",
+      "include_rules": [
+        "账号登录、认证、绑定、密码和资料修改。"
+      ],
+      "exclude_rules": [
+        "现实人格身份讨论、联系人功能。"
+      ],
+      "neighbor_rules": [
+        "账号主体和认证资料归本节点；通讯关系归 L3-082。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-082",
+      "node_name": "联系人与通讯功能",
+      "parent_id": "L2-008",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-004",
+        "L2-008",
+        "L3-082"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "账号、联系人与群组空间",
+        "联系人与通讯功能"
+      ],
+      "definition": "好友、联系人、屏蔽、私信、通话或消息可用性等通讯功能。",
+      "include_rules": [
+        "添加好友、联系人状态、屏蔽和通讯功能是否可用。"
+      ],
+      "exclude_rules": [
+        "约联系时间、关系担忧、账号认证。"
+      ],
+      "neighbor_rules": [
+        "功能本身归本节点；沟通目的为见面安排归 L3-038。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-027",
+      "node_name": "群组空间与成员治理",
+      "parent_id": "L2-008",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-004",
+        "L2-008",
+        "L3-027"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "账号、联系人与群组空间",
+        "群组空间与成员治理"
+      ],
+      "definition": "数字群组的创建、加入退出、公告、禁言、移除、资料及成员治理。",
+      "include_rules": [
+        "建群、群设置、群成员和管理操作。"
+      ],
+      "exclude_rules": [
+        "社群内容互动、课堂参与规则。"
+      ],
+      "neighbor_rules": [
+        "数字空间治理归本节点；社群活动内容归 L3-039。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-045",
+      "node_name": "设备、应用与数字操作",
+      "parent_id": "L1-004",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-004",
+        "L2-045"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "设备、应用与数字操作"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-029",
+      "node_name": "技术故障与连接排查",
+      "parent_id": "L2-045",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-004",
+        "L2-045",
+        "L3-029"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "设备、应用与数字操作",
+        "技术故障与连接排查"
+      ],
+      "definition": "网络、供电、音视频、设备、页面或应用出现异常，并以定位和恢复为主要事项。",
+      "include_rules": [
+        "断线、报错、不可用、设备异常和持续排障。"
+      ],
+      "exclude_rules": [
+        "正常设置和使用限制；仅因故障提出的调课结果。"
+      ],
+      "neighbor_rules": [
+        "先看主要待解决事项：恢复技术状态归本节点；课程变更归 L3-017，并可记录故障原因。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-030",
+      "node_name": "设备设置、应用安装与使用限制",
+      "parent_id": "L2-045",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-004",
+        "L2-045",
+        "L3-030"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "设备、应用与数字操作",
+        "设备设置、应用安装与使用限制"
+      ],
+      "definition": "设备或应用处于正常可操作状态时的设置、安装、更新、权限或使用时长限制。",
+      "include_rules": [
+        "安装应用、调整设置、配置设备和限制应用时长。"
+      ],
+      "exclude_rules": [
+        "报错或连接异常排查；普通手机取用与位置协调。"
+      ],
+      "neighbor_rules": [
+        "异常恢复归 L3-029；消息或文件具体操作归 L3-033。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-032",
+      "node_name": "在线课堂与协作功能操作",
+      "parent_id": "L2-045",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-004",
+        "L2-045",
+        "L3-032"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "设备、应用与数字操作",
+        "在线课堂与协作功能操作"
+      ],
+      "definition": "对白板、黑板、共享、课堂互动或协作功能进行正常操作。",
+      "include_rules": [
+        "使用课堂白板、共享协作和互动工具。"
+      ],
+      "exclude_rules": [
+        "一般消息收发、账号登录、网络故障。"
+      ],
+      "neighbor_rules": [
+        "教育协作功能归本节点；通用消息和附件操作归 L3-033。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-033",
+      "node_name": "消息、文件与媒体操作",
+      "parent_id": "L2-045",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-004",
+        "L2-045",
+        "L3-033"
+      ],
+      "path_names": [
+        "数字平台与技术",
+        "设备、应用与数字操作",
+        "消息、文件与媒体操作"
+      ],
+      "definition": "消息输入，以及图片、录音、视频和文件的发送、接收、保存、删除、下载或格式处理。",
+      "include_rules": [
+        "打字或语音输入、消息发送、附件和媒体处理。"
+      ],
+      "exclude_rules": [
+        "教学资源的内容选择、创意作品制作、权限故障。"
+      ],
+      "neighbor_rules": [
+        "操作媒介本身归本节点；教学目的归 L3-073，创作目的归 L3-047。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-005",
+      "node_name": "人际关系与社交",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-005"
+      ],
+      "path_names": [
+        "人际关系与社交"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-011",
+      "node_name": "关系与相处",
+      "parent_id": "L1-005",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-005",
+        "L2-011"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "关系与相处"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-034",
+      "node_name": "恋爱与亲密关系",
+      "parent_id": "L2-011",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-005",
+        "L2-011",
+        "L3-034"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "关系与相处",
+        "恋爱与亲密关系"
+      ],
+      "definition": "围绕伴侣、表白、前任、分手和亲密关系的沟通。",
+      "include_rules": [
+        "恋爱状态、情感互动、亲密关系矛盾。"
+      ],
+      "exclude_rules": [
+        "普通朋友关系、成人内容安全属性。"
+      ],
+      "neighbor_rules": [
+        "以关系类型裁决；普通同伴关系归 L3-035。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-035",
+      "node_name": "朋友同学关系与相处",
+      "parent_id": "L2-011",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-005",
+        "L2-011",
+        "L3-035"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "关系与相处",
+        "朋友同学关系与相处"
+      ],
+      "definition": "朋友或同学之间的支持、误会、冲突、道歉和关系状态。",
+      "include_rules": [
+        "友谊、同伴矛盾、关系确认与相互支持。"
+      ],
+      "exclude_rules": [
+        "恋爱关系、单纯聚会时间安排。"
+      ],
+      "neighbor_rules": [
+        "关系本身归本节点；共同活动安排归 L3-038。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-036",
+      "node_name": "家庭与亲属关系",
+      "parent_id": "L2-011",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-005",
+        "L2-011",
+        "L3-036"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "关系与相处",
+        "家庭与亲属关系"
+      ],
+      "definition": "家长、手足、亲属角色及家庭成员之间的相处。",
+      "include_rules": [
+        "亲子、兄弟姐妹、亲属关系和家庭互动。"
+      ],
+      "exclude_rules": [
+        "医疗处置、一般居家用品。"
+      ],
+      "neighbor_rules": [
+        "关系互动归本节点；家庭只作为原因时不改变事项主路径。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-046",
+      "node_name": "个人身份、特征与自我认知",
+      "parent_id": "L1-005",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-005",
+        "L2-046"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "个人身份、特征与自我认知"
+      ],
+      "definition": "对现实身份、人格特征、MBTI、自我形象或自我认识的讨论。",
+      "include_rules": [
+        "人格类型、自我评价和现实身份特征。"
+      ],
+      "exclude_rules": [
+        "账号资料设置、关系冲突、穿着购物。"
+      ],
+      "neighbor_rules": [
+        "讨论‘我是谁/我有什么特征’归本节点；账号身份归 L3-026。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-012",
+      "node_name": "社交活动、日常交流与社群参与",
+      "parent_id": "L1-005",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-005",
+        "L2-012"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "社交活动、日常交流与社群参与"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-038",
+      "node_name": "见面、聚会与交流安排",
+      "parent_id": "L2-012",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-005",
+        "L2-012",
+        "L3-038"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "社交活动、日常交流与社群参与",
+        "见面、聚会与交流安排"
+      ],
+      "definition": "围绕线上或线下见面、聚餐、生日、共同活动或联系时间的社交安排。",
+      "include_rules": [
+        "约见、聚会、共同娱乐和联系时间协调。"
+      ],
+      "exclude_rules": [
+        "课程排期、旅行见闻、关系冲突本身。"
+      ],
+      "neighbor_rules": [
+        "社交目的的时间安排归本节点；课程安排归 L2-025。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-100",
+      "node_name": "日常寒暄与关系维系",
+      "parent_id": "L2-012",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-005",
+        "L2-012",
+        "L3-100"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "社交活动、日常交流与社群参与",
+        "日常寒暄与关系维系"
+      ],
+      "definition": "没有更具体持续内容主题时，以问候、关心、陪伴、回应近况或维持联系为主要功能的持续交流。",
+      "include_rules": [
+        "达到 Topic 门槛的问候、晚安、关心是否被忽略和关系维系对话。"
+      ],
+      "exclude_rules": [
+        "天气、饮食、影视等已有明确内容主题；笑话或梗本身；单句礼貌语。"
+      ],
+      "neighbor_rules": [
+        "必须同时满足：达到 Topic 门槛、没有更具体议题、主要功能是维持联系。",
+        "具体生活事务归 L2-047；幽默内容本身归 L3-040。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-039",
+      "node_name": "社群参与与成员交流",
+      "parent_id": "L2-012",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-005",
+        "L2-012",
+        "L3-039"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "社交活动、日常交流与社群参与",
+        "社群参与与成员交流"
+      ],
+      "definition": "围绕现实社群的招募、欢迎、共同兴趣和成员参与内容。",
+      "include_rules": [
+        "社群活动、成员欢迎、共同兴趣和参与互动。"
+      ],
+      "exclude_rules": [
+        "数字群设置、禁言、公告或移除。"
+      ],
+      "neighbor_rules": [
+        "社群为何聚集和交流归本节点；数字空间怎样治理归 L3-027。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-040",
+      "node_name": "玩笑、梗与语言游戏",
+      "parent_id": "L2-012",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed_boundary_review",
+      "path_ids": [
+        "L1-005",
+        "L2-012",
+        "L3-040"
+      ],
+      "path_names": [
+        "人际关系与社交",
+        "社交活动、日常交流与社群参与",
+        "玩笑、梗与语言游戏"
+      ],
+      "definition": "调侃、梗、接龙、脑筋急转弯或语言游戏本身成为持续讨论对象。",
+      "include_rules": [
+        "持续围绕误读、梗、虚构称呼或语言游戏展开的互动。"
+      ],
+      "exclude_rules": [
+        "有稳定内容的个人经历、一般轻松语气、日常寒暄。"
+      ],
+      "neighbor_rules": [
+        "幽默是内容对象时归本节点；轻松只是语气时仍按真实内容分类。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-006",
+      "node_name": "娱乐与创作",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-006"
+      ],
+      "path_names": [
+        "娱乐与创作"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-013",
+      "node_name": "娱乐内容、游玩与兴趣收藏",
+      "parent_id": "L1-006",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-006",
+        "L2-013"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "娱乐内容、游玩与兴趣收藏"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-041",
+      "node_name": "游戏与游玩",
+      "parent_id": "L2-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-006",
+        "L2-013",
+        "L3-041"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "娱乐内容、游玩与兴趣收藏",
+        "游戏与游玩"
+      ],
+      "definition": "电子游戏、桌面或线下游戏的角色、关卡、装备、对局和玩法讨论。",
+      "include_rules": [
+        "游戏内容、玩法、角色、对局和游玩安排。"
+      ],
+      "exclude_rules": [
+        "游戏项目开发、登录故障、纯语言玩笑。"
+      ],
+      "neighbor_rules": [
+        "消费或参与游戏归本节点；编程学习归 L3-005。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-042",
+      "node_name": "影视、动漫与文学作品",
+      "parent_id": "L2-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-006",
+        "L2-013",
+        "L3-042"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "娱乐内容、游玩与兴趣收藏",
+        "影视、动漫与文学作品"
+      ],
+      "definition": "影视、动漫、小说等既有作品的角色、剧情、评价和推荐。",
+      "include_rules": [
+        "观看阅读、剧情角色讨论和作品推荐。"
+      ],
+      "exclude_rules": [
+        "原创故事、课程阅读任务。"
+      ],
+      "neighbor_rules": [
+        "消费既有作品归本节点；创作新内容归 L3-046。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-043",
+      "node_name": "音乐作品、演出与艺人文化",
+      "parent_id": "L2-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-006",
+        "L2-013",
+        "L3-043"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "娱乐内容、游玩与兴趣收藏",
+        "音乐作品、演出与艺人文化"
+      ],
+      "definition": "歌曲、演出、艺人、偶像和粉丝文化的兴趣讨论。",
+      "include_rules": [
+        "歌曲、演唱会、艺人和粉丝互动。"
+      ],
+      "exclude_rules": [
+        "乐器技能学习、音频剪辑创作。"
+      ],
+      "neighbor_rules": [
+        "作品或艺人兴趣归本节点；技能训练归 L3-006。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-083",
+      "node_name": "体育赛事与运动娱乐",
+      "parent_id": "L2-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-006",
+        "L2-013",
+        "L3-083"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "娱乐内容、游玩与兴趣收藏",
+        "体育赛事与运动娱乐"
+      ],
+      "definition": "体育赛事、运动员、赛事观看和单次休闲运动的娱乐讨论。",
+      "include_rules": [
+        "看比赛、聊球队运动员和休闲运动。"
+      ],
+      "exclude_rules": [
+        "持续体能训练、康复或健康目标。"
+      ],
+      "neighbor_rules": [
+        "娱乐消费或单次活动归本节点；健康训练归 L2-050。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-049",
+      "node_name": "兴趣周边与收藏",
+      "parent_id": "L2-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-006",
+        "L2-013",
+        "L3-049"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "娱乐内容、游玩与兴趣收藏",
+        "兴趣周边与收藏"
+      ],
+      "definition": "卡片、手办、周边、藏品及收藏交流。",
+      "include_rules": [
+        "收藏、交换、展示或评价兴趣周边。"
+      ],
+      "exclude_rules": [
+        "普通购物决策、个人穿着、账号头像。"
+      ],
+      "neighbor_rules": [
+        "收藏价值与兴趣是主旨时归本节点；购买流程本身归 L2-056。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-014",
+      "node_name": "内容创作与虚构互动",
+      "parent_id": "L1-006",
+      "node_type": "group",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-006",
+        "L2-014"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "内容创作与虚构互动"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-045",
+      "node_name": "视觉艺术与手作创作",
+      "parent_id": "L2-014",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-006",
+        "L2-014",
+        "L3-045"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "内容创作与虚构互动",
+        "视觉艺术与手作创作"
+      ],
+      "definition": "绘画、设计、手作等实际创作、改编或发布。",
+      "include_rules": [
+        "制作视觉作品、绘画、设计和手工创作。"
+      ],
+      "exclude_rules": [
+        "只购买工具、只谈论既有作品。"
+      ],
+      "neighbor_rules": [
+        "必须有创作动作；技能教学归 L3-006。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-046",
+      "node_name": "故事、角色设定与虚构互动",
+      "parent_id": "L2-014",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-006",
+        "L2-014",
+        "L3-046"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "内容创作与虚构互动",
+        "故事、角色设定与虚构互动"
+      ],
+      "definition": "原创故事、人物设定、世界观、文本创作以及有共同设定的持续虚构互动。",
+      "include_rules": [
+        "写故事、设计角色、共同角色扮演和世界观创作。"
+      ],
+      "exclude_rules": [
+        "阅读既有文学作品、普通称谓或玩笑。"
+      ],
+      "neighbor_rules": [
+        "有持续虚构设定归本节点；无设定调侃归 L3-040。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 3,
+      "node_id": "L3-047",
+      "node_name": "音视频与多媒体创作",
+      "parent_id": "L2-014",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-006",
+        "L2-014",
+        "L3-047"
+      ],
+      "path_names": [
+        "娱乐与创作",
+        "内容创作与虚构互动",
+        "音视频与多媒体创作"
+      ],
+      "definition": "剪辑、配乐、录制和制作音视频或多媒体作品。",
+      "include_rules": [
+        "视频剪辑、配音、录制和多媒体作品生产。"
+      ],
+      "exclude_rules": [
+        "单纯发送、下载、格式转换或播放。"
+      ],
+      "neighbor_rules": [
+        "创作产物归本节点；纯媒介操作归 L3-033。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-007",
+      "node_name": "日常生活、健康与出行",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-007"
+      ],
+      "path_names": [
+        "日常生活、健康与出行"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-047",
+      "node_name": "饮食、作息与生活事务",
+      "parent_id": "L1-007",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-007",
+        "L2-047"
+      ],
+      "path_names": [
+        "日常生活、健康与出行",
+        "饮食、作息与生活事务"
+      ],
+      "definition": "具体的饮食、睡眠作息、生活用品、寄取和日常办事事项。",
+      "include_rules": [
+        "吃饭与点餐、睡眠安排、生活用品、快递寄取和具体生活事务。"
+      ],
+      "exclude_rules": [
+        "健康医疗、旅行位置、社交聚会、纯晚安寒暄。"
+      ],
+      "neighbor_rules": [
+        "存在具体生活对象或待办归本节点；交流目的仅为关心陪伴归 L3-100。",
+        "聚餐的社交组织目的归 L3-038。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-049",
+      "node_name": "宠物与动物生活",
+      "parent_id": "L1-007",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-007",
+        "L2-049"
+      ],
+      "path_names": [
+        "日常生活、健康与出行",
+        "宠物与动物生活"
+      ],
+      "definition": "宠物、动物照护以及与动物共同生活的日常事项。",
+      "include_rules": [
+        "饲养、照护、宠物状态和动物生活经历。"
+      ],
+      "exclude_rules": [
+        "生物学学习、纯影视角色。"
+      ],
+      "neighbor_rules": [
+        "现实动物生活归本节点；知识学习归 L3-004。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-050",
+      "node_name": "健康与身体活动",
+      "parent_id": "L1-007",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-007",
+        "L2-050"
+      ],
+      "path_names": [
+        "日常生活、健康与出行",
+        "健康与身体活动"
+      ],
+      "definition": "症状、医疗照护、康复，以及以体能或健康为目的的持续运动。",
+      "include_rules": [
+        "身体状态、就医治疗、康复、锻炼和体能目标。"
+      ],
+      "exclude_rules": [
+        "疾病仅作为请假原因、赛事观看、单次休闲运动。"
+      ],
+      "neighbor_rules": [
+        "健康问题本身归本节点；若只解释缺勤则作为 cause 并归 L3-019。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-051",
+      "node_name": "天气与自然环境状况",
+      "parent_id": "L1-007",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-007",
+        "L2-051"
+      ],
+      "path_names": [
+        "日常生活、健康与出行",
+        "天气与自然环境状况"
+      ],
+      "definition": "天气、气候和自然环境的实际状况成为持续讨论对象。",
+      "include_rules": [
+        "天气变化、气候体验和自然环境状态。"
+      ],
+      "exclude_rules": [
+        "天气只作为断网、请假或调课原因。"
+      ],
+      "neighbor_rules": [
+        "天气本身归本节点；若只是业务原因则记录 cause，不改变业务主路径。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-052",
+      "node_name": "位置、行程与旅行",
+      "parent_id": "L1-007",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-007",
+        "L2-052"
+      ],
+      "path_names": [
+        "日常生活、健康与出行",
+        "位置、行程与旅行"
+      ],
+      "definition": "当前位置、通勤、具体行程协调及旅行地点经历。",
+      "include_rules": [
+        "在哪里、怎样前往、返程安排、旅行见闻和地点探索。"
+      ],
+      "exclude_rules": [
+        "社交见面目的、公共交通政策。"
+      ],
+      "neighbor_rules": [
+        "个人移动或地点体验归本节点；约人见面归 L3-038。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-011",
+      "node_name": "教育环境与校园事务",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-011"
+      ],
+      "path_names": [
+        "教育环境与校园事务"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-053",
+      "node_name": "校园事务与校园生活",
+      "parent_id": "L1-011",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-011",
+        "L2-053"
+      ],
+      "path_names": [
+        "教育环境与校园事务",
+        "校园事务与校园生活"
+      ],
+      "definition": "发生在学校或校园环境中的班级变动、校内活动、学校规则和整体校园生活体验。",
+      "include_rules": [
+        "学校班级情况、校园活动、校内制度及学校生活体验。"
+      ],
+      "exclude_rules": [
+        "学科知识、作业、朋友关系、普通饮食作息、课程平台运营。"
+      ],
+      "neighbor_rules": [
+        "学校只是背景不够；主要问题必须是校园制度、活动或整体在校情境。",
+        "复合 Topic 同时含学习计划或日常作息时应拆分。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-012",
+      "node_name": "商业、消费与金融",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-012"
+      ],
+      "path_names": [
+        "商业、消费与金融"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-056",
+      "node_name": "消费与购买",
+      "parent_id": "L1-012",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-012",
+        "L2-056"
+      ],
+      "path_names": [
+        "商业、消费与金融",
+        "消费与购买"
+      ],
+      "definition": "商品或服务的比较、价格、下单、充值、收货和购买决策。",
+      "include_rules": [
+        "选择商品、讨论价格、购买和收货。"
+      ],
+      "exclude_rules": [
+        "课程费用退款、金融投资、收藏内容本身、生活用品寄取但无购买决策。"
+      ],
+      "neighbor_rules": [
+        "交易购买过程归本节点；商品只是兴趣内容时归 L3-049/L3-042。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-057",
+      "node_name": "金融市场分析与交易",
+      "parent_id": "L1-012",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "evidence_backed",
+      "path_ids": [
+        "L1-012",
+        "L2-057"
+      ],
+      "path_names": [
+        "商业、消费与金融",
+        "金融市场分析与交易"
+      ],
+      "definition": "股票、期货、贵金属、外汇等行情、策略、仓位和交易行动。",
+      "include_rules": [
+        "市场行情、进出场、止损、仓位和交易策略。"
+      ],
+      "exclude_rules": [
+        "普通消费、课程结算、无具体交易的社会新闻。"
+      ],
+      "neighbor_rules": [
+        "具体金融标的和交易决策归本节点；普通购买归 L2-056。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 1,
+      "node_id": "L1-013",
+      "node_name": "法律与公共事务",
+      "parent_id": null,
+      "node_type": "domain",
+      "is_terminal": false,
+      "evidence_status": "frozen_structure",
+      "path_ids": [
+        "L1-013"
+      ],
+      "path_names": [
+        "法律与公共事务"
+      ],
+      "definition": "",
+      "include_rules": [
+
+      ],
+      "exclude_rules": [
+
+      ],
+      "neighbor_rules": [
+
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-058",
+      "node_name": "法律与权利",
+      "parent_id": "L1-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-013",
+        "L2-058"
+      ],
+      "path_names": [
+        "法律与公共事务",
+        "法律与权利"
+      ],
+      "definition": "法律规则、权利义务、合法性判断和维权行动。",
+      "include_rules": [
+        "是否合法、法律责任、权利受损与维权。"
+      ],
+      "exclude_rules": [
+        "金融交易安全、账号安全、单纯个人险情。"
+      ],
+      "neighbor_rules": [
+        "以法律规范或权利主张为主要对象时归本节点；只陈述风险不够。"
+      ]
+    },
+    {
+      "taxonomy_version": "classin-im-semantic-taxonomy-v2.2-frozen-20260902",
+      "level": 2,
+      "node_id": "L2-059",
+      "node_name": "公共事务与社会信息",
+      "parent_id": "L1-013",
+      "node_type": "terminal",
+      "is_terminal": true,
+      "evidence_status": "provisional",
+      "path_ids": [
+        "L1-013",
+        "L2-059"
+      ],
+      "path_names": [
+        "法律与公共事务",
+        "公共事务与社会信息"
+      ],
+      "definition": "面向群体或社会运行的政策、公共事件、公共服务和社会信息讨论。",
+      "include_rules": [
+        "政策社会议题、公共运行事件和影响群体的外部信息。"
+      ],
+      "exclude_rules": [
+        "个人位置行程、天气事实、学校或工作中的个人事务。"
+      ],
+      "neighbor_rules": [
+        "必须有公共或群体层面的对象；唯一旧实例若主要是个人地点应迁往 L2-052。"
+      ]
+    }
+  ]
+}

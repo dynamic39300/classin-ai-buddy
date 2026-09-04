@@ -1,0 +1,296 @@
+.frame {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.frame[data-message-immersive='true'] {
+  height: 100%;
+  grid-template-rows: 3rem minmax(0, 1fr);
+}
+
+.toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: 0 var(--space-md);
+  border-bottom: var(--rule-thin) solid var(--color-line-subtle);
+  background: var(--color-surface);
+}
+
+.location,
+.exitArea {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.location {
+  gap: var(--space-sm);
+}
+
+.location h1 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+}
+
+.brandMark {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: var(--radius-control);
+  background: var(--color-brand);
+  color: var(--color-brand-ink);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+}
+
+.brandMark img {
+  width: 1.25rem;
+  height: auto;
+}
+
+.exitArea {
+  flex: 0 0 auto;
+  gap: var(--space-md);
+}
+
+.escapeHint {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.exitButton {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid var(--color-line-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.exitButton:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.content {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.frame[data-message-shell-mode='entering'] .content,
+.frame[data-message-shell-mode='exiting'] .content {
+  animation: message-shell-content-settle var(--message-shell-transition-duration, 320ms) var(--ease-out) both;
+  transform-origin: center;
+}
+
+@keyframes message-shell-content-settle {
+  from {
+    opacity: .82;
+    transform: scale(.996);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.exitGuidance {
+  position: fixed;
+  z-index: var(--z-toast);
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(27rem, calc(100vw - 2 * var(--space-lg)));
+  grid-template-columns: 2.25rem minmax(0, 1fr) 1.75rem;
+  align-items: start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: var(--rule-thin) solid var(--color-line-control);
+  border-radius: var(--radius-overlay);
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-surface-muted));
+  box-shadow: var(--shadow-overlay);
+  color: var(--color-ink);
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  animation:
+    exit-guidance-in var(--dur-short) var(--ease-out),
+    exit-guidance-out var(--dur-short) 5.7s var(--ease-out) forwards;
+}
+
+.exitGuidance[data-paused='true'] {
+  animation-play-state: paused;
+}
+
+.exitGuidanceIcon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: var(--rule-thin) solid var(--color-line-faint);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+  color: var(--color-action-strong);
+}
+
+.exitGuidanceContent,
+.exitGuidanceCopy {
+  display: grid;
+}
+
+.exitGuidanceContent {
+  gap: var(--space-xs);
+}
+
+.exitGuidanceCopy {
+  gap: var(--space-2xs);
+}
+
+.exitGuidance strong {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.exitGuidanceCopy small {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.exitGuidanceActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.exitGuidancePreference {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.exitGuidancePreference input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--color-action-strong);
+  cursor: pointer;
+}
+
+.exitGuidanceActions > button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border: var(--rule-thin) solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-action-strong);
+  color: var(--color-on-action);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.exitGuidanceClose {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.exitGuidanceActions > button:hover,
+.exitGuidanceActions > button:focus-visible {
+  background: var(--color-action-strong-hover);
+}
+
+.exitGuidanceClose:hover,
+.exitGuidanceClose:focus-visible {
+  outline: 0;
+  background: color-mix(in srgb, var(--color-action-strong) 9%, transparent);
+  color: var(--color-ink);
+}
+
+@keyframes exit-guidance-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes exit-guidance-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.98);
+  }
+}
+
+@media (hover: hover) {
+  .exitButton:not(:disabled):hover {
+    border-color: var(--color-line-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+  }
+}
+
+@media (max-width: 52rem) {
+  .escapeHint,
+  .exitGuidance {
+    width: calc(100vw - 2 * var(--space-sm));
+    grid-template-columns: 2.25rem minmax(0, 1fr) 1.75rem;
+    animation: none;
+  }
+
+  .exitGuidanceActions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame[data-message-shell-mode='entering'] .content,
+  .frame[data-message-shell-mode='exiting'] .content,
+  .exitGuidance {
+    animation: none;
+  }
+}

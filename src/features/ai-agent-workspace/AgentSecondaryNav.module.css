@@ -1,0 +1,71 @@
+.panel {
+  display: grid;
+  width: 100%;
+  gap: var(--space-xs);
+  padding-left: var(--space-md);
+}
+
+.links {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.links a {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--sidebar-child-row-height);
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-control);
+  color: var(--color-shell-muted);
+  font: inherit;
+  white-space: nowrap;
+  transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+}
+
+.links a::before {
+  position: absolute;
+  left: 0;
+  width: 0.1875rem;
+  height: 1rem;
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: transparent;
+  content: '';
+}
+
+.links a span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.links a[aria-current='page'] {
+  background: var(--color-shell-selected);
+  color: var(--color-shell-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.links a[aria-current='page']::before {
+  background: var(--color-brand);
+}
+
+.systemLinks {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+@media (hover: hover) {
+  .links a:hover {
+    background: var(--color-shell-hover);
+    color: var(--color-shell-text);
+  }
+
+  .links a[aria-current='page']:hover {
+    background: var(--color-shell-selected);
+  }
+}

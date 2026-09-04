@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WorkBuddy 课程方案包：交互与状态原型</title>
+  <style>
+    :root { color-scheme: light; --bg: #f4f5f2; --surface: #fff; --ink: #202520; --muted: #687069; --line: #d9ded8; --accent: #2f6a57; --accent-soft: #e7f0ea; --warn: #9a6726; --warn-soft: #fbf3e4; --danger: #a34e48; --danger-soft: #f8e9e6; --radius: 8px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #79a991; outline-offset: 2px; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 56px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 28px; line-height: 1.25; }
+    h2 { font-size: 17px; }
+    h3 { font-size: 14px; }
+    .eyebrow { color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+    .intro { max-width: 760px; margin-top: 8px; color: var(--muted); }
+    .truth { flex: 0 0 auto; padding: 5px 8px; border: 1px solid #b9cebf; border-radius: 5px; color: var(--accent); background: var(--accent-soft); font-size: 11px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, .8fr); gap: 16px; align-items: start; }
+    .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .panel-body { padding: 18px; }
+    .state-line { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .state-pill { padding: 6px 9px; border-radius: 5px; color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+    .state-reason { color: var(--muted); font-size: 12px; }
+    .progress { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 14px 0 20px; }
+    .progress i { height: 5px; border-radius: 3px; background: #e4e8e3; }
+    .progress i.done { background: var(--accent); }
+    .progress i.current { background: #8eb49e; }
+    .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .fact { padding: 11px 12px; border: 1px solid var(--line); border-radius: 6px; }
+    .fact span, .meta { display: block; color: var(--muted); font-size: 11px; }
+    .fact strong { display: block; margin-top: 3px; font-size: 13px; }
+    .section { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .unit { padding: 12px; border: 1px solid var(--line); border-radius: 6px; }
+    .unit + .unit { margin-top: 8px; }
+    .unit-top { display: flex; justify-content: space-between; gap: 10px; }
+    .unit p { margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .comment { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); }
+    .comment:first-child { border-top: 0; }
+    .severity { width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: var(--warn); }
+    .severity.suggestion { background: #89958c; }
+    .comment p { color: var(--muted); font-size: 12px; }
+    .comment-status { margin-top: 4px; color: var(--warn); font-size: 11px; }
+    .comment-status.resolved { color: var(--accent); }
+    .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: var(--surface); font-size: 12px; }
+    button.primary { border-color: var(--accent); color: #fff; background: var(--accent); font-weight: 700; }
+    button.warn { border-color: #d9c096; color: var(--warn); background: var(--warn-soft); }
+    button.danger { border-color: #ddb8b4; color: var(--danger); background: var(--danger-soft); }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .action-list { display: grid; gap: 8px; }
+    .action-button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; }
+    .action-button small { color: var(--muted); }
+    .scenario-tabs { display: flex; gap: 4px; padding: 10px 12px 0; }
+    .tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--muted); background: transparent; }
+    .tab.active { border-bottom-color: var(--accent); color: var(--ink); font-weight: 700; }
+    .scenario { padding: 14px 18px 18px; }
+    .scenario p { margin: 5px 0 12px; color: var(--muted); font-size: 12px; }
+    .step { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; color: var(--muted); font-size: 12px; }
+    .step::before { content: ""; width: 6px; height: 6px; flex: 0 0 auto; margin-top: 7px; border-radius: 50%; background: #c6cec7; }
+    .step.done { color: var(--accent); }
+    .step.done::before { background: var(--accent); }
+    .step.current { color: var(--ink); font-weight: 700; }
+    .step.current::before { background: #8eb49e; }
+    .log { max-height: 190px; overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: #fafbf9; }
+    .log div { padding: 5px 0; border-bottom: 1px solid #edf0ec; color: var(--muted); font-size: 11px; }
+    .log div:last-child { border-bottom: 0; }
+    .receipt { padding: 12px; border: 1px solid #b9cebf; border-radius: 6px; background: var(--accent-soft); }
+    .receipt strong { color: var(--accent); }
+    .receipt ul { margin: 7px 0 0 18px; padding: 0; color: #4f6958; font-size: 12px; }
+    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } header { display: block; } .truth { display: inline-block; margin-top: 12px; } }
+    @media (max-width: 520px) { .shell { width: calc(100% - 22px); padding-top: 24px; } h1 { font-size: 23px; } .facts { grid-template-columns: 1fr; } .panel-head, .panel-body { padding: 14px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">WorkBuddy · 交互与状态原型</div>
+        <h1>课程方案包审教闭环，状态模型是否顺畅？</h1>
+        <p class="intro">这个原型让你用教师语言推动“生成 → 审教 → 修订 → 校验 → 确认 → 审批 → 回执”。它用于验证产品状态和操作顺序，不连接真实 ClassIn，也不保存数据。</p>
+      </div>
+      <div class="truth">[模拟] 内存状态，可重置</div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-head"><h2>当前方案状态</h2><button id="reset">重置原型</button></div>
+        <div class="panel-body">
+          <div class="state-line"><span id="state-pill" class="state-pill"></span><span id="state-reason" class="state-reason"></span></div>
+          <div id="progress" class="progress" aria-label="业务进度"></div>
+          <div id="facts" class="facts"></div>
+
+          <div class="section">
+            <div class="section-title"><h3>课程方案包 v<span id="version"></span></h3><span class="meta">整体方案 · 单元 · 活动</span></div>
+            <div id="units"></div>
+          </div>
+
+          <div class="section">
+            <div class="section-title"><h3>审教意见</h3><span id="comment-count" class="meta"></span></div>
+            <div id="comments"></div>
+          </div>
+
+          <div id="receipt-section" class="section" hidden>
+            <div class="section-title"><h3>执行回执</h3><span class="meta">[模拟]</span></div>
+            <div id="receipt" class="receipt"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-head"><h2>可以做什么</h2><span class="meta">仅显示当前可理解的动作</span></div>
+        <div id="actions" class="panel-body action-list"></div>
+        <div class="section scenario-section">
+          <div class="section-title"><h3>引导场景</h3><span class="meta">从已知状态开始</span></div>
+          <div id="tabs" class="scenario-tabs"></div>
+          <div id="scenario" class="scenario"></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><h3>最近变化</h3></div>
+          <div id="log" class="log" aria-live="polite"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // The state machine is intentionally pure and portable. The HTML shell only renders it.
+    const initialState = () => ({
+      status: "empty", version: 1, goal: "让八年级学生完成一篇约 500 字的个人叙事文", grade: "八年级", lessons: 8,
+      comments: [], validation: { blocking: ["尚未完成方案审教"], warnings: [] }, receipt: null, log: ["已创建新的 WorkBuddy Run"], scenario: "happy"
+    });
+    const units = [
+      ["01", "认识叙事结构", "理解开头、发展、转折和结尾", "2 课时"],
+      ["02", "写出具体细节", "练习场景、动作和人物视角", "3 课时"],
+      ["03", "完成并修改作品", "完成初稿，互相交流并修改", "3 课时"]
+    ];
+    const stateNames = { empty: "空白", generating: "生成中", review: "待审教", revising: "待修订", revised: "待再次审教", validating: "规则校验", confirmed: "待审批", executing: "执行中", completed: "已完成待复查", conflict: "版本冲突" };
+    const stateReasons = { empty: "还没有开始这项教学工作", generating: "正在整理目标、依据和课程结构", review: "方案包初稿已准备好，等待你的专业判断", revising: "有审教意见需要处理", revised: "新版本已生成，需要再次审教", validating: "正在检查目标、课时、结构和意见", confirmed: "最终确认稿已准备好，等待批准保存", executing: "正在按课程、单元和活动逐项保存", completed: "保存结果已返回，可以复查", conflict: "课程版本发生变化，不能覆盖现有事实" };
+    const stages = ["empty", "generating", "review", "revising", "revised", "validating", "confirmed", "completed"];
+    const actions = {
+      empty: [{ id: "generate", label: "生成课程方案包", hint: "根据目标、课时和示例依据生成初稿", className: "primary" }],
+      generating: [{ id: "finish-generation", label: "完成生成", hint: "模拟目标澄清、依据构建和结构生成" }],
+      review: [{ id: "add-blocking", label: "提出一个阻断性意见", hint: "例如：第二单元活动与目标的对应关系不清", className: "warn" }, { id: "add-suggestion", label: "提出一个建议", hint: "例如：补充一个可选的课堂示例" }, { id: "start-validation", label: "没有意见，开始校验", hint: "适用于教师完成方案审教" }],
+      revising: [{ id: "revise-manual", label: "人工修改并生成新版本", hint: "教师自己修改方案包内容" }, { id: "revise-ai", label: "要求 AI 定向修改", hint: "只处理已指定的审教意见", className: "primary" }, { id: "accept-comment", label: "接受当前意见", hint: "接受意见但不改变方案内容" }],
+      revised: [{ id: "verify-comment", label: "再次审教并验证意见", hint: "教师确认新版本是否真正解决了意见", className: "primary" }, { id: "restore", label: "恢复上一版本", hint: "放弃本次修订，保留原版本" }],
+      validating: [{ id: "finish-validation", label: "完成规则校验", hint: "检查目标、课时、结构和阻断意见", className: "primary" }],
+      confirmed: [{ id: "approve", label: "批准保存课程方案", hint: "创建模拟写回动作并执行", className: "primary" }, { id: "return", label: "退回继续修改", hint: "回到审教工作区" }],
+      executing: [{ id: "finish-save", label: "完成模拟保存", hint: "返回课程、单元和活动逐项回执" }],
+      completed: [{ id: "continue", label: "继续完善课程方案", hint: "回到当前方案继续编辑" }, { id: "simulate-conflict", label: "模拟版本冲突", hint: "演示业务课程在保存后发生变化", className: "warn" }, { id: "reset", label: "开始另一项工作", hint: "重置当前 Run" }],
+      conflict: [{ id: "resolve-conflict", label: "查看变化并重新准备保存", hint: "不覆盖业务事实，回到确认前" }, { id: "continue-edit", label: "继续编辑方案", hint: "保留当前 WorkBuddy 版本" }]
+    };
+    const scenarioData = {
+      happy: { name: "正常完成", description: "从目标开始，完成一轮审教、校验、确认和模拟保存。重点观察：教师确认和执行回执是两个不同节点。", steps: [["generate", "生成课程方案包"], ["finish-generation", "完成初稿"], ["start-validation", "开始校验"], ["finish-validation", "通过校验"], ["approve", "批准保存"], ["finish-save", "查看回执"]] },
+      blocking: { name: "阻断意见", description: "先提出阻断性意见，再要求 AI 定向修改。重点观察：新版本不会自动把意见标记为已解决。", steps: [["generate", "生成课程方案包"], ["finish-generation", "完成初稿"], ["add-blocking", "提出阻断性意见"], ["revise-ai", "要求 AI 定向修改"], ["verify-comment", "再次审教并验证"], ["start-validation", "开始校验"], ["finish-validation", "通过校验"]] },
+      conflict: { name: "版本冲突", description: "在确认后模拟业务课程被别人更新。重点观察：冲突只阻止写回，不丢失 WorkBuddy 方案。", steps: [["generate", "生成课程方案包"], ["finish-generation", "完成初稿"], ["start-validation", "开始校验"], ["finish-validation", "通过校验"], ["approve", "批准保存"], ["finish-save", "触发保存"], ["simulate-conflict", "模拟版本冲突"], ["resolve-conflict", "查看变化"]] }
+    };
+    let state = initialState();
+    let scenario = "happy";
+    let stepIndex = 0;
+
+    function appendLog(next, message) { next.log = [message, ...next.log].slice(0, 12); }
+    function reviewComment(severity) { return { id: `R-${state.comments.length + 1}`, severity, status: "open", target: severity === "blocking" ? "单元 02" : "活动 03-02", text: severity === "blocking" ? "第二单元的活动与课程目标对应关系不清，需要补充可观察的产出。" : "可以增加一个贴近学生经验的课堂示例。" }; }
+    function reduce(current, action) {
+      const next = structuredClone(current);
+      switch (action) {
+        case "generate": next.status = "generating"; appendLog(next, "开始整理目标、依据和课程结构"); break;
+        case "finish-generation": next.status = "review"; next.validation = { blocking: [], warnings: [] }; appendLog(next, "课程方案包 v1 已生成，进入待审教"); break;
+        case "add-blocking": next.comments.push(reviewComment("blocking")); next.status = "revising"; next.validation.blocking = ["存在未解决的阻断性审教意见"]; appendLog(next, "新增阻断性意见 R-1，不能直接确认"); break;
+        case "add-suggestion": next.comments.push(reviewComment("suggestion")); appendLog(next, "新增建议性意见 R-1，可在明确提示后保留"); break;
+        case "start-validation": next.status = "validating"; appendLog(next, "开始检查目标覆盖、课时、结构和审教意见"); break;
+        case "finish-validation":
+          if (next.comments.some(c => c.severity === "blocking" && c.status !== "verified" && c.status !== "rejected")) { next.status = "review"; next.validation.blocking = ["存在未解决的阻断性审教意见"]; appendLog(next, "校验未通过：阻断性意见尚未解决"); }
+          else { next.status = "confirmed"; next.validation = { blocking: [], warnings: next.comments.filter(c => c.status === "open").map(c => `意见 ${c.id} 尚未处理`) }; appendLog(next, "规则校验通过，等待教师明确确认并审批"); }
+          break;
+        case "revise-manual": case "revise-ai":
+          next.version += 1; next.status = "revised"; next.comments = next.comments.map(c => ({ ...c, status: c.status === "open" ? "applied" : c.status })); appendLog(next, `已生成课程方案包 v${next.version}，意见仍需再次审教`); break;
+        case "accept-comment": next.comments = next.comments.map(c => c.status === "open" ? { ...c, status: "accepted" } : c); next.status = "review"; appendLog(next, "教师接受当前意见，方案内容未自动改变"); break;
+        case "verify-comment": next.comments = next.comments.map(c => c.status === "applied" ? { ...c, status: "verified", resolvedInVersion: next.version } : c); next.status = "review"; next.validation.blocking = []; appendLog(next, "教师再次审教，确认指定意见已解决"); break;
+        case "restore": next.version = Math.max(1, next.version - 1); next.status = "review"; next.comments = next.comments.map(c => c.status === "applied" ? { ...c, status: "open" } : c); appendLog(next, `已恢复到课程方案包 v${next.version}`); break;
+        case "approve": next.status = "executing"; appendLog(next, "教师批准 ProposedAction，开始模拟写回"); break;
+        case "return": next.status = "review"; appendLog(next, "教师退回方案，继续审教和修改"); break;
+        case "finish-save": next.status = "completed"; next.receipt = { status: "saved", objects: ["课程草稿 v4", "3 个单元草稿", "6 个活动草稿"] }; appendLog(next, "模拟写回完成，返回逐项执行回执"); break;
+        case "simulate-conflict": next.status = "conflict"; next.receipt = null; appendLog(next, "检测到课程当前版本已从 v3 变为 v4，未覆盖业务事实"); break;
+        case "resolve-conflict": next.status = "confirmed"; appendLog(next, "已查看版本变化，保留方案包并重新准备保存动作"); break;
+        case "continue-edit": next.status = "review"; appendLog(next, "继续编辑 WorkBuddy 方案包，业务课程事实未改变"); break;
+        case "continue": next.status = "review"; appendLog(next, "回到方案审教工作区"); break;
+        case "reset": return initialState();
+      }
+      return next;
+    }
+    function dispatch(action) { state = reduce(state, action); render(); }
+    function resetForScenario(name) { scenario = name; stepIndex = 0; state = initialState(); state.scenario = name; render(); }
+    function runScenarioStep() { const item = scenarioData[scenario].steps[stepIndex]; if (!item) return; dispatch(item[0]); stepIndex += 1; render(); }
+    function render() {
+      document.querySelector("#state-pill").textContent = stateNames[state.status];
+      document.querySelector("#state-reason").textContent = stateReasons[state.status];
+      document.querySelector("#version").textContent = state.version;
+      const index = Math.max(0, stages.indexOf(state.status));
+      document.querySelector("#progress").innerHTML = stages.map((_, i) => `<i class="${i < index ? "done" : i === index ? "current" : ""}"></i>`).join("");
+      document.querySelector("#facts").innerHTML = [
+        ["课程目标", state.goal], ["适用范围", `${state.grade} · 四周 · ${state.lessons} 课时`], ["意见状态", state.comments.length ? state.comments.map(c => `${c.id} ${c.status}`).join("、") : "暂无审教意见"], ["规则校验", state.validation.blocking.length ? `阻断 ${state.validation.blocking.length} 项` : state.validation.warnings.length ? `通过 · 警告 ${state.validation.warnings.length} 项` : "尚未运行"]
+      ].map(([label, value]) => `<div class="fact"><span>${label}</span><strong>${value}</strong></div>`).join("");
+      document.querySelector("#units").innerHTML = units.map(([number, title, detail, lessons]) => `<div class="unit"><div class="unit-top"><strong>${number} · ${title}</strong><span class="meta">${lessons}</span></div><p>${detail}</p></div>`).join("");
+      document.querySelector("#comment-count").textContent = `${state.comments.length} 条`;
+      document.querySelector("#comments").innerHTML = state.comments.length ? state.comments.map(c => `<div class="comment"><i class="severity ${c.severity === "suggestion" ? "suggestion" : ""}"></i><div><strong>${c.id} · ${c.target}</strong><p>${c.text}</p><div class="comment-status ${["verified", "rejected"].includes(c.status) ? "resolved" : ""}">${c.status}${c.resolvedInVersion ? ` · 在 v${c.resolvedInVersion} 验证` : ""}</div></div></div>`).join("") : `<p class="meta">还没有意见。教师可以按整体方案、单元或活动提出意见。</p>`;
+      const available = actions[state.status] ?? [];
+      document.querySelector("#actions").innerHTML = available.map(a => `<button class="action-button ${a.className ?? ""}" data-action="${a.id}"><span><strong>${a.label}</strong><small>${a.hint}</small></span><span>→</span></button>`).join("") || `<p class="meta">当前没有可执行动作。</p>`;
+      document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => dispatch(button.dataset.action)));
+      document.querySelector("#receipt-section").hidden = !state.receipt;
+      if (state.receipt) document.querySelector("#receipt").innerHTML = `<strong>保存结果：${state.receipt.status}</strong><ul>${state.receipt.objects.map(item => `<li>${item}</li>`).join("")}</ul>`;
+      document.querySelector("#log").innerHTML = state.log.map(item => `<div>${item}</div>`).join("");
+      document.querySelector("#tabs").innerHTML = Object.entries(scenarioData).map(([key, value]) => `<button class="tab ${key === scenario ? "active" : ""}" data-scenario="${key}">${value.name}</button>`).join("");
+      document.querySelectorAll("[data-scenario]").forEach(button => button.addEventListener("click", () => resetForScenario(button.dataset.scenario)));
+      const data = scenarioData[scenario];
+      const currentStep = data.steps[stepIndex];
+      document.querySelector("#scenario").innerHTML = `<h3>${data.name}</h3><p>${data.description}</p>${data.steps.map((step, i) => `<div class="step ${i < stepIndex ? "done" : i === stepIndex ? "current" : ""}">${i + 1}. ${step[1]}</div>`).join("")}<div class="button-row"><button class="primary" id="next-step" ${currentStep ? "" : "disabled"}>${currentStep ? `执行第 ${stepIndex + 1} 步` : "场景已完成"}</button><button id="restart-scenario">重来</button></div>`;
+      document.querySelector("#next-step").addEventListener("click", runScenarioStep);
+      document.querySelector("#restart-scenario").addEventListener("click", () => resetForScenario(scenario));
+    }
+    document.querySelector("#reset").addEventListener("click", () => resetForScenario("happy"));
+    render();
+  </script>
+</body>
+</html>

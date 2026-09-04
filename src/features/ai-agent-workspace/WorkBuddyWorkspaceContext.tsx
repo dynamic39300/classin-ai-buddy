@@ -1,0 +1,386 @@
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
+import type { ClassInWritebackAdapter, WritebackScenario, WritebackScenarioController } from '@contracts/workbuddy/classin-writeback';
+import type { PackageWritebackAdapter, PackageWritebackScenario, PackageWritebackScenarioController } from '@contracts/workbuddy/package-writeback';
+import type { WorkBuddyRuntimeFixture } from '@contracts/workbuddy/runtime-fixture';
+import type { WorkBuddyClock } from '@contracts/workbuddy/clock';
+import type { TeacherInAdapter } from '@contracts/workbuddy/teacherin';
+import type { QuizActivityDraftAdapter, QuizActivityDraftScenario, QuizActivityDraftScenarioController } from '@contracts/workbuddy/quiz-activity-draft';
+import type { TaskMaterialCatalogPort } from '@contracts/workbuddy/task-material-source';
+import {
+  confirmContext, createContextProposal, projectContext, selectContextItems, toggleContextItem, upsertContextReference,
+  type CapabilityContextManifest, type ContextSnapshot, type CoreContextItem, type WorkBuddyTaskType,
+} from '@domain/workbuddy/core-context';
+import { approveTeacherInDraft, proposeTeacherInDraft, type CreateTeacherInDraftInput, type TeacherInDraftReceipt } from '@domain/workbuddy/teacherin';
+import type { CoursewareExecutionOutput, CoursewareRunDefinition, SingleCoursewareRun } from '@domain/workbuddy/course-production';
+import type { CoursePackageDefinition, CoursePackageRun, PackageExecutionReceipt } from '@domain/workbuddy/course-package';
+import type { PackageActionInput, PackageApproval, PackageProposedAction } from '@domain/workbuddy/package-writeback';
+import type { Approval, CoursewareSaveActionInput, ExecutionReceipt, ProposedAction } from '@domain/workbuddy/writeback';
+import type { QuizActivityCreationRun, QuizPaperArtifact } from '@domain/workbuddy/quiz-activity-creation';
+import {
+  taskAssemblyModule,
+  type TaskAssemblyCommand,
+  type TaskAssemblySnapshot,
+} from '@domain/workbuddy/task-assembly';
+import { createWorkBuddyCoursewareController } from './workbuddy-courseware-controller';
+import { projectCoreContextView, projectCoursewareRunView, projectPackageRunView } from './workbuddy-course-production-view';
+import { useWorkBuddyHistory } from './use-workbuddy-history';
+import { createWorkBuddyPackageController } from './workbuddy-package-controller';
+import { createWorkBuddyQuizActivityController } from './workbuddy-quiz-activity-controller';
+import { projectCoursewareConversationRun, projectPackageConversationRun } from './conversation-run-projection';
+import {
+  createBrowserConversationRunScheduler,
+  createConversationRunHostPort,
+  createConversationRunModule,
+  type ConversationRunHost,
+} from './conversation-run-module';
+import {
+  clearWorkBuddyWorkspaceSession,
+  loadWorkBuddyWorkspaceSession,
+  saveWorkBuddyWorkspaceSession,
+} from './workbuddy-workspace-session';
+import { WorkBuddyWorkspaceContext, type CoursewarePanel, type PackagePanel, type WorkBuddyPersonalContent, type WorkBuddyWorkspace } from './workbuddy-workspace';
+import { clearTeacherInDraftReceipts, loadTeacherInDraftReceipts, saveTeacherInDraftReceipts } from './teacherin-draft-session';
+
+type WorkBuddyWorkspaceProviderProps = Readonly<{
+  workspaceNamespace?: string;
+  initialRuns: readonly WorkBuddyRunViewModel[];
+  initialContextItems: readonly CoreContextItem[];
+  recommendedContextItemIds: readonly string[];
+  coursewareDefinition: CoursewareRunDefinition;
+  coursewareOutput: CoursewareExecutionOutput;
+  replannedCoursewareOutput: CoursewareExecutionOutput;
+  capabilityManifests: readonly CapabilityContextManifest[];
+  coursewareActionInput: CoursewareSaveActionInput;
+  packageDefinition: CoursePackageDefinition;
+  packageActionInput: PackageActionInput;
+  packageFailedArtifactIds: readonly string[];
+  runtimeFixture: WorkBuddyRuntimeFixture;
+  clock: WorkBuddyClock;
+  writebackAdapter: ClassInWritebackAdapter;
+  writebackScenarioController: WritebackScenarioController;
+  packageWritebackAdapter: PackageWritebackAdapter;
+  packageWritebackScenarioController: PackageWritebackScenarioController;
+  teacherInAdapter: TeacherInAdapter;
+  personalContent?: WorkBuddyPersonalContent | null;
+  quizPaper: QuizPaperArtifact;
+  quizActivityDraftAdapter: QuizActivityDraftAdapter;
+  quizActivityDraftScenarioController: QuizActivityDraftScenarioController;
+  taskMaterialCatalogs?: Readonly<{
+    myFiles: TaskMaterialCatalogPort;
+    classInSpace: TaskMaterialCatalogPort;
+  }> | null;
+  children: ReactNode;
+}>;
+
+function contextItemsForTaskType(items: readonly CoreContextItem[], taskType: WorkBuddyTaskType): readonly CoreContextItem[] {
+  if (taskType !== 'quiz-activity-creation') return items;
+  const labels: Readonly<Record<string, string>> = Object.freeze({
+    'physics-3': '高二物理 3 班',
+    'course-momentum': '动量与碰撞',
+    'unit-momentum-1': '第一单元 受力与动量',
+    'activity-momentum-lesson': '动量守恒模型 · 8 月 8 日 14:30',
+    'physics-standard-v2': '普通高中物理课程标准 v2',
+  });
+  return items.map((item) => labels[item.id] ? Object.freeze({ ...item, label: labels[item.id]! }) : item);
+}
+
+function createTaskAssemblySessionCell(initial: ReturnType<typeof taskAssemblyModule.create>) {
+  let current = initial;
+  return Object.freeze({
+    read: () => current,
+    write: (next: typeof current) => { current = next; },
+  });
+}
+
+export function WorkBuddyWorkspaceProvider(props: WorkBuddyWorkspaceProviderProps) {
+  const {
+    workspaceNamespace = 'ideal-full',
+    initialRuns, initialContextItems, recommendedContextItemIds, coursewareDefinition, coursewareOutput, replannedCoursewareOutput,
+    capabilityManifests, coursewareActionInput, packageDefinition, packageActionInput, packageFailedArtifactIds, runtimeFixture, clock,
+    writebackAdapter, writebackScenarioController, packageWritebackAdapter, packageWritebackScenarioController, teacherInAdapter, personalContent = null,
+    quizPaper, quizActivityDraftAdapter, quizActivityDraftScenarioController, taskMaterialCatalogs = null, children,
+  } = props;
+  const restoredSession = useMemo(() => loadWorkBuddyWorkspaceSession(workspaceNamespace), [workspaceNamespace]);
+  const [contextProposal, setContextProposal] = useState(() => restoredSession?.contextProposal ?? createContextProposal(initialContextItems, 'single-courseware'));
+  const [contextSnapshot, setContextSnapshot] = useState<ContextSnapshot | null>(() => restoredSession?.contextSnapshot ?? null);
+  const [snapshotsById, setSnapshotsById] = useState<Readonly<Record<string, ContextSnapshot>>>(() => restoredSession?.snapshotsById ?? {});
+  const [taskType, setTaskTypeState] = useState<WorkBuddyTaskType>(() => restoredSession?.taskType ?? 'single-courseware');
+  const [coursewareRun, setCoursewareRun] = useState<SingleCoursewareRun | null>(() => restoredSession?.coursewareRun ?? null);
+  const [coursewareAction, setCoursewareAction] = useState<ProposedAction | null>(() => restoredSession?.coursewareAction ?? null);
+  const [coursewareApproval, setCoursewareApproval] = useState<Approval | null>(() => restoredSession?.coursewareApproval ?? null);
+  const [coursewareReceipt, setCoursewareReceipt] = useState<ExecutionReceipt | null>(() => restoredSession?.coursewareReceipt ?? null);
+  const [writebackScenario, setWritebackScenario] = useState<WritebackScenario>(() => restoredSession?.writebackScenario ?? writebackScenarioController.getScenario());
+  const [activeCoursewarePanel, setActiveCoursewarePanel] = useState<CoursewarePanel>(() => restoredSession?.activeCoursewarePanel ?? 'none');
+  const [packageRun, setPackageRun] = useState<CoursePackageRun | null>(() => restoredSession?.packageRun ?? null);
+  const [packageAction, setPackageAction] = useState<PackageProposedAction | null>(() => restoredSession?.packageAction ?? null);
+  const [packageApproval, setPackageApproval] = useState<PackageApproval | null>(() => restoredSession?.packageApproval ?? null);
+  const [packageReceipt, setPackageReceipt] = useState<PackageExecutionReceipt | null>(() => restoredSession?.packageReceipt ?? null);
+  const [packageReceiptHistory, setPackageReceiptHistory] = useState<readonly PackageExecutionReceipt[]>(() => restoredSession?.packageReceiptHistory ?? []);
+  const [packageActionHistory, setPackageActionHistory] = useState<readonly PackageProposedAction[]>(() => restoredSession?.packageActionHistory ?? []);
+  const [packageApprovalHistory, setPackageApprovalHistory] = useState<readonly PackageApproval[]>(() => restoredSession?.packageApprovalHistory ?? []);
+  const [packageWritebackScenario, setPackageWritebackScenario] = useState<PackageWritebackScenario>(() => restoredSession?.packageWritebackScenario ?? packageWritebackScenarioController.getScenario());
+  const [activePackagePanel, setActivePackagePanel] = useState<PackagePanel>(() => restoredSession?.activePackagePanel ?? 'none');
+  const [activePackageArtifactId, setActivePackageArtifactId] = useState<string | null>(() => restoredSession?.activePackageArtifactId ?? null);
+  const [taskAssemblySession, setTaskAssemblySession] = useState(() => restoredSession?.taskAssembly ?? taskAssemblyModule.create());
+  const [taskAssemblySessionCell] = useState(() => createTaskAssemblySessionCell(taskAssemblySession));
+  const [taskAssemblySnapshotsById, setTaskAssemblySnapshotsById] = useState<Readonly<Record<string, TaskAssemblySnapshot>>>(() => restoredSession?.taskAssemblySnapshotsById ?? {});
+  const [quizRun, setQuizRun] = useState<QuizActivityCreationRun | null>(() => restoredSession?.quizRun ?? null);
+  const [quizScenario, setQuizScenarioState] = useState<QuizActivityDraftScenario>(() => restoredSession?.quizScenario ?? quizActivityDraftScenarioController.getScenario());
+  const [teacherInDraftReceipts, setTeacherInDraftReceipts] = useState<Readonly<Record<string, TeacherInDraftReceipt>>>(() => loadTeacherInDraftReceipts(workspaceNamespace));
+  const [conversationHostPort] = useState(() => createConversationRunHostPort());
+  const [conversationModule] = useState(() => createConversationRunModule(
+    conversationHostPort.host,
+    createBrowserConversationRunScheduler(),
+    workspaceNamespace,
+  ));
+
+  const coursewareController = createWorkBuddyCoursewareController({
+    contextSnapshot, initialContextItems, coursewareDefinition, coursewareOutput, replannedCoursewareOutput, coursewareActionInput,
+    runtimeFixture, clock, writebackAdapter, writebackScenarioController, run: coursewareRun, action: coursewareAction,
+    approval: coursewareApproval, receipt: coursewareReceipt, writebackScenario, activePanel: activeCoursewarePanel,
+    setRun: setCoursewareRun, setAction: setCoursewareAction, setApproval: setCoursewareApproval, setReceipt: setCoursewareReceipt,
+    setWritebackScenario, setActivePanel: setActiveCoursewarePanel, setContextSnapshot, setContextProposal, setSnapshotsById,
+  });
+  const packageController = createWorkBuddyPackageController({
+    contextSnapshot, taskType, initialContextItems, packageDefinition, packageActionInput, failedArtifactIds: packageFailedArtifactIds,
+    runtimeFixture, clock, writebackAdapter: packageWritebackAdapter, writebackScenarioController: packageWritebackScenarioController,
+    sourceCoursewareRun: coursewareRun, run: packageRun, action: packageAction, approval: packageApproval, receipt: packageReceipt,
+    writebackScenario: packageWritebackScenario, activePanel: activePackagePanel, activeArtifactId: activePackageArtifactId,
+    setRun: setPackageRun, setAction: setPackageAction, setApproval: setPackageApproval, setReceipt: setPackageReceipt, setReceiptHistory: setPackageReceiptHistory,
+    setActionHistory: setPackageActionHistory, setApprovalHistory: setPackageApprovalHistory,
+    setWritebackScenario: setPackageWritebackScenario, setActivePanel: setActivePackagePanel, setActiveArtifactId: setActivePackageArtifactId,
+    setTaskType: setTaskTypeState, setContextSnapshot, setContextProposal, setSnapshotsById,
+  });
+  const quizController = createWorkBuddyQuizActivityController({
+    contextSnapshot, taskType, run: quizRun, scenario: quizScenario, paper: quizPaper,
+    adapter: quizActivityDraftAdapter, scenarioController: quizActivityDraftScenarioController,
+    setRun: setQuizRun, setScenario: setQuizScenarioState,
+  });
+  const history = useWorkBuddyHistory(initialRuns, coursewareRun, packageRun, quizRun, snapshotsById, runtimeFixture);
+  const coursewareSnapshot = coursewareRun ? snapshotsById[coursewareRun.contextSnapshotId] ?? null : null;
+  const projections = useMemo(() => coursewareSnapshot && coursewareRun
+    ? capabilityManifests.map((manifest) => projectContext(coursewareSnapshot, manifest, {
+      generatedAt: runtimeFixture.projectionGeneratedAt,
+      taskGoal: coursewareRun.goal,
+    }))
+    : [], [capabilityManifests, coursewareRun, coursewareSnapshot, runtimeFixture.projectionGeneratedAt]);
+  const derivedPackageRunRef = packageRun && packageRun.parentRunRef === coursewareRun?.id
+    && packageRun.sourceArtifactRef?.id === coursewareRun?.artifact?.id
+    && packageRun.sourceArtifactRef?.version === coursewareRun?.artifact?.version
+    ? packageRun.id : null;
+  const coursewareView = projectCoursewareRunView(
+    coursewareRun, projections, coursewareAction, coursewareApproval, coursewareReceipt, snapshotsById, derivedPackageRunRef,
+  );
+  const packageView = projectPackageRunView(
+    packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageActionHistory, packageApprovalHistory,
+  );
+
+  const conversationHost: ConversationRunHost = Object.freeze({
+    open: (runRef) => {
+      if (coursewareView?.run.id === runRef) return Object.freeze({
+        projection: projectCoursewareConversationRun(coursewareView),
+        progressStepCount: coursewareView.run.plan.length,
+      });
+      if (packageView?.run.id === runRef) return Object.freeze({
+        projection: projectPackageConversationRun(packageView),
+        progressStepCount: 3,
+      });
+      return null;
+    },
+    execute: (runRef: string, command: Parameters<typeof conversationModule.dispatch>[1]) => {
+      const accepted = (resultRef?: string | null) => Object.freeze({ status: 'accepted' as const, resultRef: resultRef ?? undefined });
+      const rejected = (reason = 'command-not-supported-by-host') => Object.freeze({ status: 'rejected' as const, reason });
+      if (coursewareView?.run.id === runRef) {
+        switch (command.type) {
+          case 'submit_clarification':
+            coursewareController.commands.updateCoursewareTaskBrief({
+              durationMinutes: command.durationMinutes,
+              teachingApproach: command.teachingApproach,
+            });
+            coursewareController.commands.confirmCoursewareTaskBrief();
+            return accepted();
+          case 'confirm_clarification': coursewareController.commands.confirmCoursewareTaskBrief(); return accepted();
+          case 'revise_plan': coursewareController.commands.reviseCoursewareTaskBrief(); return accepted();
+          case 'start_plan': return accepted();
+          case 'complete_generation': coursewareController.commands.executeCoursewareTaskPlan(); return accepted();
+          case 'confirm_replan': coursewareController.commands.replanToWaveContext(); return accepted();
+          case 'dismiss_replan': return accepted();
+          case 'supplement': return accepted();
+          case 'approve_artifact': coursewareController.commands.approveCoursewareArtifact(); return accepted();
+          case 'revise_artifact': coursewareController.commands.reviseCoursewareArtifact({ instruction: command.instruction, changes: command.changes }); return accepted();
+          case 'propose_action': coursewareController.commands.proposeCoursewareSave(); return accepted();
+          case 'approve_action': coursewareController.commands.approveCoursewareSave(); return accepted();
+          case 'reject_action': coursewareController.commands.rejectCoursewareSave(); return accepted();
+          case 'execute_action': coursewareController.commands.executeApprovedCoursewareSave(); return accepted();
+          case 'recover_action': coursewareController.commands.recoverCoursewareSave(); return accepted();
+          case 'derive_package': return accepted(coursewareController.run ? packageController.commands.derivePackageFromCourseware() : null);
+          case 'set_scenario':
+            if (command.scenario !== 'partial_success') coursewareController.commands.setWritebackScenario(command.scenario);
+            return accepted();
+          default: return rejected();
+        }
+      }
+      if (packageView?.run.id === runRef) {
+        switch (command.type) {
+          case 'begin_package': packageController.commands.beginPackageGeneration(); return accepted();
+          case 'complete_generation': packageController.commands.completePackageGeneration(); return accepted();
+          case 'supplement': return accepted();
+          case 'set_package_item_included': packageController.commands.setPackageItemIncluded(command.artifactId, command.included); return accepted();
+          case 'revise_package_artifact': packageController.commands.revisePackageArtifact(command.artifactId); return accepted();
+          case 'select_package_artifact': packageController.commands.setActivePackageArtifactId(command.artifactId); return accepted();
+          case 'propose_action': packageController.commands.proposePackageSave(); return accepted();
+          case 'approve_action': packageController.commands.approvePackageSave(); return accepted();
+          case 'reject_action': packageController.commands.rejectPackageSave(); return accepted();
+          case 'execute_action': packageController.commands.executeApprovedPackageSave(); return accepted();
+          case 'recover_action': packageController.commands.recoverPackageSave(); return accepted();
+          case 'retry_failed': packageController.commands.retryFailedPackageItems(); return accepted();
+          case 'set_scenario':
+            packageController.commands.setPackageWritebackScenario(command.scenario === 'partial_success' ? 'partial_success' : 'success');
+            return accepted();
+          default: return rejected();
+        }
+      }
+      return rejected('run-not-found');
+    },
+  });
+
+  useLayoutEffect(() => conversationHostPort.bind(conversationHost), [conversationHost, conversationHostPort]);
+
+  useEffect(() => {
+    writebackScenarioController.setScenario(writebackScenario);
+    packageWritebackScenarioController.setScenario(packageWritebackScenario);
+    saveWorkBuddyWorkspaceSession(Object.freeze({
+      version: 4,
+      contextProposal, contextSnapshot, snapshotsById, taskType,
+      coursewareRun, coursewareAction, coursewareApproval, coursewareReceipt, writebackScenario, activeCoursewarePanel,
+      packageRun, packageAction, packageApproval, packageReceipt, packageReceiptHistory, packageActionHistory, packageApprovalHistory, packageWritebackScenario,
+      activePackagePanel, activePackageArtifactId, quizRun, quizScenario, taskAssembly: taskAssemblySession, taskAssemblySnapshotsById,
+    }), workspaceNamespace);
+  }, [
+    activeCoursewarePanel, activePackageArtifactId, activePackagePanel, contextProposal, contextSnapshot, coursewareAction,
+    coursewareApproval, coursewareReceipt, coursewareRun, packageAction, packageApproval, packageReceipt,
+    packageActionHistory, packageApprovalHistory, packageReceiptHistory, packageRun, packageWritebackScenario, packageWritebackScenarioController, quizRun, quizScenario, snapshotsById, taskType,
+    taskAssemblySession, taskAssemblySnapshotsById, workspaceNamespace, writebackScenario, writebackScenarioController,
+  ]);
+
+  useEffect(() => quizActivityDraftScenarioController.setScenario(quizScenario), [quizActivityDraftScenarioController, quizScenario]);
+
+  useEffect(() => saveTeacherInDraftReceipts(teacherInDraftReceipts, workspaceNamespace), [teacherInDraftReceipts, workspaceNamespace]);
+
+  const dispatchTaskAssembly = (command: TaskAssemblyCommand) => {
+    const transition = taskAssemblyModule.dispatch(taskAssemblySessionCell.read(), command);
+    if (transition.result.outcome === 'changed') {
+      taskAssemblySessionCell.write(transition.session);
+      setTaskAssemblySession(transition.session);
+    }
+    return transition.result;
+  };
+
+  const workspace: WorkBuddyWorkspace = Object.freeze({
+    conversationRun: conversationModule,
+    history: Object.freeze({
+      runs: history.runs,
+      getRun: history.getRun,
+      renameRun: history.renameRun,
+      togglePinRun: history.togglePinRun,
+      removeRun: history.removeRun,
+    }),
+    taskDraft: Object.freeze({
+      goal: taskAssemblySession.text,
+      setGoal: (goal: string) => dispatchTaskAssembly({ type: 'replace-text', value: goal, caret: goal.length }),
+      clear: () => dispatchTaskAssembly({ type: 'clear' }),
+    }),
+    taskAssembly: Object.freeze({
+      session: taskAssemblySession,
+      view: taskAssemblyModule.project(taskAssemblySession),
+      dispatch: dispatchTaskAssembly,
+      createSnapshot: (input: Readonly<{ id: string; createdAt: string }>) => {
+        const result = taskAssemblyModule.createSnapshot(taskAssemblySessionCell.read(), input);
+        if (result.ok) {
+          setTaskAssemblySnapshotsById((current) => Object.freeze({ ...current, [result.snapshot.id]: result.snapshot }));
+        }
+        return result;
+      },
+      snapshotsById: taskAssemblySnapshotsById,
+    }),
+    taskMaterialCatalogs,
+    context: Object.freeze({
+      contextView: projectCoreContextView(contextProposal, contextSnapshot),
+      coursewareContextView: coursewareSnapshot ? projectCoreContextView(contextProposal, coursewareSnapshot) : null,
+      applyRecommendedContext: () => {
+        setContextSnapshot(null);
+        setContextProposal((current) => selectContextItems(current, recommendedContextItemIds));
+      },
+      toggleCoreContextItem: (itemId: string) => {
+        setContextSnapshot(null);
+        setContextProposal((current) => toggleContextItem(current, itemId));
+      },
+      confirmCoreContext: () => {
+        const result = confirmContext(contextProposal, {
+          snapshotId: contextProposal.taskType === 'course-package' ? runtimeFixture.snapshot.packageId : contextProposal.taskType === 'quiz-activity-creation' ? 'context-quiz-activity-1' : runtimeFixture.snapshot.coursewareId,
+          confirmedAt: runtimeFixture.snapshot.confirmedAt,
+        });
+        if (!result.ok) return;
+        setContextSnapshot(result.snapshot);
+        setSnapshotsById((current) => Object.freeze({ ...current, [result.snapshot.id]: result.snapshot }));
+        packageController.attachContext(result.snapshot);
+      },
+      resetCoreContext: () => {
+        if (coursewareRun) conversationModule.dispatch(coursewareRun.id, { id: `${coursewareRun.id}:reset`, type: 'reset' });
+        if (packageRun) conversationModule.dispatch(packageRun.id, { id: `${packageRun.id}:reset`, type: 'reset' });
+        clearWorkBuddyWorkspaceSession(workspaceNamespace);
+        clearTeacherInDraftReceipts(workspaceNamespace);
+        setTeacherInDraftReceipts({});
+        setContextSnapshot(null); setSnapshotsById({});
+        setContextProposal(createContextProposal(initialContextItems, 'single-courseware')); setTaskTypeState('single-courseware');
+        quizController.reset();
+        coursewareController.reset(); packageController.reset(); history.resetHistory();
+      },
+      taskType,
+      setTaskType: (nextTaskType: WorkBuddyTaskType) => {
+        if (nextTaskType === taskType) return;
+        setTaskTypeState(nextTaskType); setContextSnapshot(null);
+        setContextProposal(createContextProposal(contextItemsForTaskType(initialContextItems, nextTaskType), nextTaskType));
+      },
+      addReference: (item: CoreContextItem) => {
+        setContextSnapshot(null);
+        setContextProposal((current) => upsertContextReference(current, item));
+      },
+    }),
+    teacherIn: Object.freeze({
+      resources: teacherInAdapter.searchResources(''),
+      searchResources: (query: string) => teacherInAdapter.searchResources(query),
+      draftReceipts: teacherInDraftReceipts,
+      createDraft: (input: CreateTeacherInDraftInput) => {
+        const proposed = proposeTeacherInDraft(input);
+        const approved = approveTeacherInDraft(proposed, {
+          approvalId: proposed.id.replace(/^action-/, 'approval-'),
+          decidedBy: 'teacher-wang',
+          decidedAt: '2026-08-22T10:10:01+08:00',
+        });
+        if (!approved) throw new Error('TeacherIn draft proposal could not be approved.');
+        const receipt = teacherInAdapter.createDraft(approved.action, approved.approval);
+        setTeacherInDraftReceipts((current) => Object.freeze({ ...current, [input.artifactRef.id]: receipt }));
+        return receipt;
+      },
+    }),
+    personalContent,
+    courseware: Object.freeze({
+      coursewareView,
+      ...coursewareController.commands,
+      createCoursewareTask: (goal: string, taskAssemblySnapshotId: string | null = null) => {
+        const runRef = coursewareController.commands.createCoursewareTask(goal, taskAssemblySnapshotId);
+        if (runRef) conversationModule.dispatch(runRef, { id: `${runRef}:reset`, type: 'reset' });
+        return runRef;
+      },
+    }),
+    coursePackage: Object.freeze({
+      packageView,
+      ...packageController.commands,
+    }),
+    quizActivity: quizController.commands,
+  });
+
+  return <WorkBuddyWorkspaceContext.Provider value={workspace}>{children}</WorkBuddyWorkspaceContext.Provider>;
+}

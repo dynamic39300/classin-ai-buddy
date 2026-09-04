@@ -1,0 +1,26 @@
+{
+  "schema_version": "classin-im-taxonomy-v221-patch-manifest/v1",
+  "taxonomy_version": "classin-im-semantic-taxonomy-v2.2.1-frozen-20260902",
+  "status": "pass",
+  "stage_d_read": false,
+  "source_hashes_before": {
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-ACTIVE-NODES-20260902.json": "9d9f11238a3fc4337f1a50d94e15484c4ea8e966725c3657d5fdc236dc7d5c00",
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-RULE-CARDS-20260902.json": "58e02f478d268142b771f6c2721d9efb9f672db8a288ae764933706ffbc0eb5f"
+  },
+  "source_hashes_after": {
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-ACTIVE-NODES-20260902.json": "9d9f11238a3fc4337f1a50d94e15484c4ea8e966725c3657d5fdc236dc7d5c00",
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-RULE-CARDS-20260902.json": "58e02f478d268142b771f6c2721d9efb9f672db8a288ae764933706ffbc0eb5f"
+  },
+  "output_hashes": {
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-ACTIVE-NODES-20260902.json": "72e0c210f36ba7232bedabcbb986ff7256595c1c17c34f42d2d31323a970943c",
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-RULE-CARDS-20260902.json": "f2d1867bd0210d5a5ac57a1e8af62379068277ada4d0e0208e1bf40a530e2460",
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-FROZEN-TREE-20260902.md": "5e64f0d103081997f932f7da8c8d67f0d1cad179d5b62e77b651d237cda67475",
+    "docs/01-research/im-conversation-topic-semantic-analysis/TAXONOMY-V2-2-1-VALIDATION-REPORT-20260902.md": "ca9dea1ad34b426ac9e098e3097e720bb01eaa9566c36a5e1a2c91266cee06f8"
+  },
+  "counts": {
+    "active_nodes": 84,
+    "terminal_nodes": 60,
+    "rule_cards": 60
+  },
+  "errors": []
+}

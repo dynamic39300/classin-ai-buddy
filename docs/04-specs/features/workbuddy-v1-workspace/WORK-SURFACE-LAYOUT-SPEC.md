@@ -1,0 +1,179 @@
+---
+title: WorkBuddy V1 Work Surface 布局规格
+status: REVIEWED_APPROVED
+version: v0.2
+date: 2026-08-20
+target_viewport: 1440x900
+---
+
+# WorkBuddy V1 Work Surface 布局规格
+
+## 1. 目标
+
+布局需要同时保留 ClassIn 一级主导航、嵌入其下的 Work Buddy 二级能力目录、Work Surface 顶部任务 Tab、Agent Run 主轴和一个当前最重要的辅助对象。左侧不再包含任务历史；全部任务通过当前 Tab 的下拉选择器滚动访问，不能增加独立历史栏，也不能让 Context 与 Artifact 同时常驻。
+
+## 2. 1440×900 基准画布
+
+以下为 `TARGET_SPEC`，用于下一阶段原型标定：
+
+| 区域 | 基准值 | 允许范围/行为 |
+|---|---:|---|
+| Viewport | `1440×900` | Phase 3/4 主验收尺寸 |
+| ClassIn 一级主导航 + WorkBuddy 二级目录 | `220px` | 锁定范围 `216-224px`；目录可由一级入口独立展开/收起，紧凑收起态目标 `64px` |
+| 全局顶部栏 | Work Buddy 任务路由不显示 | 二级能力页与其他 ClassIn 页面继续使用 `44-56px` 通用 Topbar |
+| Work Buddy 任务 Tab 条 | `42px` | 仅位于新建任务和具体 Run 的右侧 Stage 顶部，白色底、底部细分隔线、单行横向滚动；当前 Tab 的下拉选择器在原槽位切换任务，不追加 Tab；只有紧跟最后一个 Tab 的加号入口新增并行 Tab；每个 Run Tab 的编辑与关闭操作在对应 Hover / Focus 时成组显现，能力页改用标准 Topbar |
+| Agent 主工作区 | `1204×834px` | 位于唯一左侧栏右侧、任务 Tab 条下方 |
+| Work Surface 外边距 | `12px` | 四边一致，遵循 4px 网格 |
+| Work Surface | `1180×828px` | 白色连续表面，外层 `16px` 圆角 |
+| Run Header | `48px` | 固定，不随时间线滚动 |
+| Composer 区 | `auto`，最小 `72px` | 固定底部，最多约 6 行后内部滚动 |
+| 右侧活动区 | 展开时 `360px` | 新任务首页默认收起；`344-400px` 可并列，更宽进入 Overlay/Focus |
+| 中央 Run 最小宽 | `560px` | 达到下限后辅助区改为 Overlay/Focus |
+
+## 3. 布局模式
+
+### L1：New Task
+
+```text
+┌─ ClassIn Sidebar 220 ─┬──────────────── Main 1204 ──────────────────────┐
+│ 首页                   │ Task Tabs / +                 / Panel          │
+│ Work Buddy               ├────────────────────────────────────────────────┤
+│  ├ 技能市场            │                                                │
+│  ├ 工具连接            │                                                │
+│  ├ 内容资源/文件       │        Goal Composer                           │
+│  └ 定时任务/设置       │        Core Context / Task Type Shortcuts      │
+└────────────────────────┴────────────────────────────────────────────────┘
+```
+
+- 主输入区域视觉中心位于 Work Surface 中上部，不用营销 Hero 挤占任务输入；
+- 初次使用显示价值说明和示例，已有使用记录时优先显示最近业务入口与任务类型；
+- Core Context 摘要紧邻输入器，不放到页面远端卡片；
+- 新建入口属于 Tab 横向序列并紧贴最后一个 Tab；其固定热区始终显示加号，Hover / Focus 只改变背景和前景色，不改变图标语义，也不引起 Tab、入口或最右辅助区开关位移；
+- 新任务首页的右侧辅助区默认收起，任务 Tab 条最右侧使用图标开关表达全局展开状态；
+- 展开后主区与 `360px` Core Context 面板无间隙共边，任务条底边、面板顶边和主区顶边处于同一结构基线；
+- 收起只隐藏面板并回收主区宽度，不卸载 Context 搜索、树展开、选择或滚动现场；达到中央主区宽度下限时，辅助区改为右侧 Overlay。
+
+### L2：Run，仅主轴
+
+```text
+┌ ClassIn Sidebar ┬──────────────────── Work Surface ───────────────────┐
+│ Primary         │ Task Tabs / Current Task Selector / +               │
+│ Work Buddy      ├─────────────────────────────────────────────────────┤
+│  能力目录        │ Run Header                                          │
+│                 │ Goal / Context Summary                              │
+│                 │ Timeline / Plan / Process / Artifact refs           │
+│                 ├─────────────────────────────────────────────────────┤
+│                 │ Composer / Stop / Waiting action                    │
+└─────────────────┴─────────────────────────────────────────────────────┘
+```
+
+- 时间线正文舒适阅读宽度为 `640-760px`，不让长文本横贯全部屏幕；
+- 计划、事件和 Artifact 可以超出文本宽度但不得超过内容主栏；
+- 教师手动上滚后停止自动跟随，并显示“回到最新”。
+
+### L3：Run + 活动辅助区
+
+```text
+┌ ClassIn Sidebar ┬────── Run Main ≥560 ─────────┬ Active Panel 360 ──┐
+│ Primary         │ Run Header                    │ Panel Header         │
+│ Work Buddy      │ Timeline                      │ Artifact / Context / │
+│  能力目录        │                               │ Process Detail       │
+│                 │ Composer                      │ Footer/Actions       │
+└─────────────────┴───────────────────────────────┴──────────────────────┘
+```
+
+- 活动区只能有一个 `activePanelMode`：`artifact | core_context | process_detail | none`；
+- 切换模式保存各自滚动、选中对象和未应用草稿；
+- Panel Header 固定；正文单一滚动；主行动固定在 Footer 或 Header；
+- 关闭 Panel 返回 `none`，不终止 Run、不清空选中 Artifact。
+
+### L4：Artifact Focus
+
+```text
+┌──────────────────────── Focus Surface ────────────────────────────────┐
+│ Back to Run │ Artifact title/version │ Compare │ AI revise │ Save     │
+├─────────────┬───────────────────────────────────────┬─────────────────┤
+│ Package nav │ Artifact canvas/editor               │ Optional detail │
+│ optional    │                                       │ / comments      │
+└─────────────┴───────────────────────────────────────┴─────────────────┘
+```
+
+- 单课件默认隐藏 Package nav；课程方案包显示可收起的 Artifact 导航；
+- 返回时恢复 Run 的时间线位置、活动面板模式、选中 Artifact 和版本；
+- Focus Surface 仍继承 ClassIn 顶部身份/组织，但可收起侧栏以增加画布。
+
+## 4. 右侧活动区模式
+
+### 4.1 Artifact
+
+Header：类型图标、标题、版本、状态、关闭/扩展。
+
+Body：预览、编辑或多 Artifact 导航；格式不支持内嵌时显示明确占位、下载和外部打开。
+
+Footer：随状态显示 `编辑 / AI 修改 / 比较 / 保存 / 保存到 ClassIn`。主行动不能因正文滚动不可达。
+
+### 4.2 Core Context
+
+Header：核心上下文数量、Snapshot 状态、更新时间、关闭。
+
+Body：Actor/组织、教学范围、学习者、时间、资源、证据、Domain Knowledge 七类 Section。
+
+Footer：未开始时为“应用更改”；运行后变更主范围时为“查看影响并重新规划”。
+
+### 4.3 执行详情
+
+Header：当前步骤/事件、状态、耗时、关闭。
+
+Body：教师摘要 → 能力追踪 → 技术详情三级 Disclosure；Context Projection 单独可查。
+
+Footer：按状态显示停止、重试、换策略、复制诊断、返回最新事件。
+
+## 5. 尺寸切换规则
+
+| 可用 Work Surface 宽度 | 行为 |
+|---:|---|
+| Agent 主工作区 `≥960px` | Run + 默认 360px 活动区并列 |
+| Agent 主工作区 `904-959px` | 活动区压缩到 344px；Run 保持 ≥560px |
+| `720-903px` | 活动区变为从右覆盖的 Overlay，不同时压缩 Run |
+| `<720px` | 不作为 PC V1 主验收；使用 Focus/全宽转场，关键动作仍可达 |
+
+当 Artifact 需要宽编辑画布、复杂表格或视频时，即使宽度足够也允许主动进入 Focus Surface。
+
+## 6. 垂直滚动所有权
+
+| 区域 | 滚动所有者 | 禁止行为 |
+|---|---|---|
+| ClassIn 一级主导航 + WorkBuddy 二级目录 | 左侧栏内部 | 页面正文推动导航离开视口；能力入口产生第三级菜单 |
+| 已打开任务 Tab | Work Surface 顶部横向滚动 | 压缩标题到不可识别；关闭 Tab 同时删除 Run |
+| 全部任务 | 当前 Tab 下拉选择器内部 | 新事件强制跳到列表顶部；推动页面正文滚动 |
+| Run Timeline | 主内容区 | Composer 随正文滚走 |
+| Active Panel | Panel Body | Header/Footer 双重嵌套滚动 |
+| Focus Editor | Artifact Canvas | 页面与编辑器同时争夺垂直滚动 |
+
+## 7. 信息密度
+
+- 任务历史、过程事件、对象选择使用 Compact 密度；
+- 长文本、课件预览和编辑使用 Comfortable 密度；
+- 一级状态用文字 + 图标，不只依赖颜色；
+- 高级技术详情使用等宽字体，仅在展开区域出现；
+- 任何空白都服务于分组和阅读，不用大面积 Hero 制造“高级感”。
+
+## 8. 焦点与键盘
+
+- 打开 Popover/Dialog/Panel 后，焦点进入首个可操作对象；
+- 关闭后返回原触发点；
+- `Esc` 先关闭最上层 Overlay，不终止 Run；
+- 发送与停止不能共享没有文本说明的同一不可辨图标状态；
+- 历史 `…`、Panel Tab、Disclosure、Artifact 导航均可键盘访问；
+- Focus Surface 返回使用明确按钮与系统后退，二者结果一致。
+
+## 9. 原型验收点
+
+1. 1440×900 首屏可见 ClassIn 一级主导航、其下的 Work Buddy 二级能力目录、并行任务 Tab、新/当前 Run 与唯一主行动；
+2. WorkBuddy 二级目录位于同一左侧栏且没有任务历史或第三级菜单；任务历史进入当前 Tab 下拉选择器，不形成第三根栏；
+3. 打开任一右侧模式后只新增一个活动辅助区；
+4. 360-400px Artifact 与 Core Context 切换不造成 Run 状态丢失；
+5. 更宽面板或复杂编辑会转入 Overlay/Focus，而不是把 Run 压到 560px 以下；
+6. 长时间线、长 Context 和长 Artifact 各自只有一个清晰滚动所有者；
+7. 主行动不藏在不可见滚动底部；
+8. 返回现场恢复任务、滚动、展开和版本。

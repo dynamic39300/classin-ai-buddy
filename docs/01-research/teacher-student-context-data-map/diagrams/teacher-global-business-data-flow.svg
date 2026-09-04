@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" role="img" aria-labelledby="title desc">
+  <title id="title">教师全局业务数据流</title>
+  <desc id="desc">教师账号经机构成员、班级角色进入课节排课、课堂参与与评价、LMS 活动；IM、空间资源与既有 AI 会话共同组装教师上下文快照。圆面积近似表达语义字段组数量。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#55575B"/>
+    </marker>
+    <style>
+      text { font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      .title { font-size: 38px; font-weight: 600; fill: #F6F6F7; }
+      .subtitle { font-size: 18px; font-weight: 400; fill: #96979B; }
+      .legend { font-size: 17px; font-weight: 400; fill: #A5A6AA; }
+      .lane { font-size: 17px; font-weight: 500; fill: #939499; }
+      .lane-line { stroke: #303135; stroke-width: 2; }
+      .edge { fill: none; stroke: #404146; stroke-width: 2.3; marker-end: url(#arrow); }
+      .edge.secondary { stroke: #35363A; stroke-dasharray: 7 8; stroke-width: 2; }
+      .edge-label { font-size: 14px; font-weight: 400; fill: #85868A; }
+      .node-title { font-size: 20px; font-weight: 500; fill: #F4F4F5; text-anchor: middle; }
+      .node-value { font-size: 16px; font-weight: 400; fill: #A2A3A7; text-anchor: middle; }
+      .node-key { font-size: 14px; font-weight: 400; fill: #8F9094; text-anchor: middle; }
+      .subject { fill: #1D2738; stroke: #3478D4; stroke-width: 3.5; }
+      .teaching { fill: #393321; stroke: #FFD25A; stroke-width: 3.5; }
+      .collaboration { fill: #3B2934; stroke: #F287C2; stroke-width: 3.5; }
+      .ai { fill: #213837; stroke: #55D1CC; stroke-width: 3.5; }
+      .unavailable { stroke-dasharray: 9 7; }
+      .snapshot { fill: #1D2532; stroke: #3478D4; stroke-width: 3.5; }
+      .snapshot-title { font-size: 22px; font-weight: 500; fill: #F5F5F6; text-anchor: middle; }
+      .snapshot-note { font-size: 15px; font-weight: 400; fill: #A1A2A6; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1180" fill="#171718"/>
+
+  <text x="54" y="60" class="title">教师全局业务数据流</text>
+  <text x="54" y="96" class="subtitle">圆面积 ≈ 当前教师上下文矩阵中的语义字段组数量；数字不是业务数据行数。虚线节点表示已有业务定义、当前不可直接查询。</text>
+
+  <g transform="translate(54 137)">
+    <circle cx="10" cy="0" r="8" fill="#3478D4"/><text x="27" y="6" class="legend">主体与组织</text>
+    <circle cx="174" cy="0" r="8" fill="#FFD25A"/><text x="191" y="6" class="legend">教学运行</text>
+    <circle cx="332" cy="0" r="8" fill="#F287C2"/><text x="349" y="6" class="legend">沟通与资源</text>
+    <circle cx="512" cy="0" r="8" fill="#55D1CC"/><text x="529" y="6" class="legend">既有 AI 数据</text>
+  </g>
+
+  <text x="54" y="192" class="lane">01　主体与组织</text>
+  <line x1="235" y1="185" x2="1546" y2="185" class="lane-line"/>
+  <text x="54" y="500" class="lane">02　教学运行</text>
+  <line x1="235" y1="493" x2="1546" y2="493" class="lane-line"/>
+  <text x="54" y="792" class="lane">03　沟通与延展</text>
+  <line x1="235" y1="785" x2="1546" y2="785" class="lane-line"/>
+  <text x="54" y="1052" class="lane">04　AI 上下文装配</text>
+  <line x1="270" y1="1045" x2="1546" y2="1045" class="lane-line"/>
+
+  <!-- 数据关系先绘制，确保节点始终位于连线之上 -->
+  <g aria-label="数据关系">
+    <path d="M390 315 C500 315 610 315 708 315" class="edge"/>
+    <path d="M892 315 C1000 315 1100 315 1196 315" class="edge"/>
+    <path d="M1235 378 C1110 455 620 480 374 566" class="edge"/>
+    <path d="M1250 392 C1130 470 1015 530 881 590" class="edge"/>
+    <path d="M392 620 C500 620 610 620 715 620" class="edge"/>
+    <path d="M885 620 C990 620 1070 620 1165 620" class="edge"/>
+
+    <path d="M1214 373 C1060 550 790 705 634 820" class="edge secondary"/>
+    <path d="M1287 397 C1260 575 1120 720 997 829" class="edge secondary"/>
+    <path d="M1180 700 C900 730 470 790 275 848" class="edge secondary"/>
+    <text x="215" y="772" class="edge-label">按状态推导</text>
+    <path d="M385 671 C560 760 760 818 899 858" class="edge secondary"/>
+    <text x="625" y="771" class="edge-label">教学产物</text>
+    <path d="M688 900 C810 900 888 900 895 900" class="edge"/>
+    <path d="M1043 900 C1120 900 1190 900 1260 900" class="edge"/>
+
+    <path d="M260 956 C355 1010 490 1034 654 1071" class="edge secondary"/>
+    <path d="M577 988 C650 1030 720 1052 765 1070" class="edge secondary"/>
+    <path d="M970 975 C930 1028 895 1047 870 1070" class="edge secondary"/>
+    <path d="M1320 974 C1210 1020 1080 1044 958 1071" class="edge secondary"/>
+    <path d="M1280 734 C1200 880 1080 995 925 1072" class="edge secondary"/>
+  </g>
+
+  <!-- 主体与组织 -->
+  <g aria-label="账号与身份，8 字段组">
+    <circle cx="320" cy="315" r="70" class="subject"/>
+    <text x="320" y="307" class="node-title">账号 / 身份</text>
+    <text x="320" y="338" class="node-value">8 字段组</text>
+    <text x="320" y="410" class="node-key">uid · identity_id</text>
+  </g>
+  <g aria-label="机构成员与权限，16 字段组">
+    <circle cx="800" cy="315" r="90" class="subject"/>
+    <text x="800" y="297" class="node-title">机构成员</text>
+    <text x="800" y="324" class="node-title">与权限</text>
+    <text x="800" y="356" class="node-value">16 字段组</text>
+    <text x="800" y="430" class="node-key">school_uid · st_id</text>
+  </g>
+  <g aria-label="班级与角色，16 字段组">
+    <circle cx="1280" cy="315" r="82" class="subject"/>
+    <text x="1280" y="307" class="node-title">班级 / 角色</text>
+    <text x="1280" y="338" class="node-value">16 字段组</text>
+    <text x="1280" y="422" class="node-key">course_id</text>
+  </g>
+
+  <!-- 教学运行 -->
+  <g aria-label="课节与排课，13 字段组">
+    <circle cx="320" cy="620" r="72" class="teaching"/>
+    <text x="320" y="612" class="node-title">课节 / 排课</text>
+    <text x="320" y="643" class="node-value">13 字段组</text>
+    <text x="320" y="719" class="node-key">class_id</text>
+  </g>
+  <g aria-label="课堂参与与评价，15 字段组">
+    <circle cx="800" cy="620" r="83" class="teaching"/>
+    <text x="800" y="602" class="node-title">课堂参与</text>
+    <text x="800" y="629" class="node-title">与评价</text>
+    <text x="800" y="660" class="node-value">15 字段组</text>
+    <text x="800" y="730" class="node-key">class_id + uid</text>
+  </g>
+  <g aria-label="LMS 活动与学习证据，55 字段组">
+    <circle cx="1280" cy="620" r="112" class="teaching"/>
+    <text x="1280" y="601" class="node-title">LMS 活动</text>
+    <text x="1280" y="628" class="node-title">与学习证据</text>
+    <text x="1280" y="663" class="node-value">55 字段组</text>
+    <text x="1280" y="758" class="node-key">activity_id → biz_type + biz_id</text>
+  </g>
+
+  <!-- 沟通与延展 -->
+  <g aria-label="统一待办，6 字段组，当前无标准视图">
+    <circle cx="230" cy="900" r="58" class="teaching unavailable"/>
+    <text x="230" y="892" class="node-title">统一待办</text>
+    <text x="230" y="923" class="node-value">6 字段组</text>
+    <text x="230" y="986" class="node-key">当前无标准视图</text>
+  </g>
+  <g aria-label="IM 与沟通，19 字段组">
+    <circle cx="600" cy="900" r="88" class="collaboration"/>
+    <text x="600" y="892" class="node-title">IM / 沟通</text>
+    <text x="600" y="923" class="node-value">19 字段组</text>
+    <text x="600" y="1013" class="node-key">clusterid · message_key</text>
+  </g>
+  <g aria-label="空间与文件，12 字段组">
+    <circle cx="970" cy="900" r="73" class="collaboration"/>
+    <text x="970" y="892" class="node-title">空间 / 文件</text>
+    <text x="970" y="923" class="node-value">12 字段组</text>
+    <text x="970" y="1000" class="node-key">file_id · folder_id + auth</text>
+  </g>
+  <g aria-label="既有 AI 会话历史，14 字段组">
+    <circle cx="1340" cy="900" r="78" class="ai"/>
+    <text x="1340" y="880" class="node-title">既有 AI</text>
+    <text x="1340" y="907" class="node-title">会话历史</text>
+    <text x="1340" y="937" class="node-value">14 字段组</text>
+    <text x="1340" y="1005" class="node-key">agent_id · session_id</text>
+  </g>
+
+  <!-- AI 上下文装配 -->
+  <g aria-label="教师上下文快照">
+    <rect x="430" y="1070" width="740" height="90" rx="44" class="snapshot"/>
+    <text x="800" y="1107" class="snapshot-title">Teacher ContextSnapshot</text>
+    <text x="800" y="1137" class="snapshot-note">当前任务 × 权限 × 来源 × 时间 × 质量 × 推导规则</text>
+  </g>
+</svg>

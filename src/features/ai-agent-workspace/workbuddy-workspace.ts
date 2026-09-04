@@ -1,0 +1,169 @@
+import { createContext, useContext } from 'react';
+import type { WorkBuddyRunViewModel } from '@contracts/workbuddy/workspace';
+import type { WritebackScenario } from '@contracts/workbuddy/classin-writeback';
+import type { PackageWritebackScenario } from '@contracts/workbuddy/package-writeback';
+import type { ConversationRunModule } from '@contracts/workbuddy/conversation-run';
+import type { WorkBuddyTaskType } from '@domain/workbuddy/core-context';
+import type { CoreContextItem } from '@domain/workbuddy/core-context';
+import type { CreateTeacherInDraftInput, TeacherInDraftReceipt, TeacherInResource } from '@domain/workbuddy/teacherin';
+import type {
+  PersonalContentReceipt,
+  PublishPersonalContentInput,
+  PublishPersonalContentResult,
+  TeacherInCompatibleContentPackage,
+} from '@domain/standalone-workbuddy/content';
+import type { CoursewareArtifactRevisionInput, CoursewareBrief } from '@domain/workbuddy/course-production';
+import type { QuizActivitySettings, QuizPaperBrief } from '@domain/workbuddy/quiz-activity-creation';
+import type {
+  TaskAssemblyCommand,
+  TaskAssemblyResult,
+  TaskAssemblySession,
+  TaskAssemblySnapshot,
+  TaskAssemblySnapshotResult,
+  TaskAssemblyView,
+} from '@domain/workbuddy/task-assembly';
+import type { QuizActivityDraftScenario } from '@contracts/workbuddy/quiz-activity-draft';
+import type { TaskMaterialCatalogPort } from '@contracts/workbuddy/task-material-source';
+import type { CoreContextView, CoursewareRunView, PackageRunView, QuizActivityRunView } from './workbuddy-course-production-view';
+
+export type CoursewarePanel = 'artifact' | 'core_context' | 'process_detail' | 'action' | 'receipt' | 'replan' | 'none';
+export type PackagePanel = 'navigator' | 'approval' | 'receipt' | 'core_context' | 'none';
+
+export type WorkBuddyHistory = Readonly<{
+  runs: readonly WorkBuddyRunViewModel[];
+  getRun: (runId: string) => WorkBuddyRunViewModel | undefined;
+  renameRun: (runId: string, title: string) => void;
+  togglePinRun: (runId: string) => void;
+  removeRun: (runId: string) => void;
+}>;
+
+export type WorkBuddyTaskDraft = Readonly<{
+  goal: string;
+  setGoal: (goal: string) => void;
+  clear: () => void;
+}>;
+
+export type WorkBuddyTaskAssembly = Readonly<{
+  session: TaskAssemblySession;
+  view: TaskAssemblyView;
+  dispatch: (command: TaskAssemblyCommand) => TaskAssemblyResult;
+  createSnapshot: (input: Readonly<{ id: string; createdAt: string }>) => TaskAssemblySnapshotResult;
+  snapshotsById: Readonly<Record<string, TaskAssemblySnapshot>>;
+}>;
+
+export type WorkBuddyTaskMaterialCatalogs = Readonly<{
+  myFiles: TaskMaterialCatalogPort;
+  classInSpace: TaskMaterialCatalogPort;
+}>;
+
+export type WorkBuddyContext = Readonly<{
+  contextView: CoreContextView;
+  coursewareContextView: CoreContextView | null;
+  applyRecommendedContext: () => void;
+  toggleCoreContextItem: (itemId: string) => void;
+  confirmCoreContext: () => void;
+  resetCoreContext: () => void;
+  taskType: WorkBuddyTaskType;
+  setTaskType: (taskType: WorkBuddyTaskType) => void;
+  addReference: (item: CoreContextItem) => void;
+}>;
+
+export type WorkBuddyTeacherIn = Readonly<{
+  resources: readonly TeacherInResource[];
+  searchResources: (query: string) => readonly TeacherInResource[];
+  draftReceipts: Readonly<Record<string, TeacherInDraftReceipt>>;
+  createDraft: (input: CreateTeacherInDraftInput) => TeacherInDraftReceipt;
+}>;
+
+export type WorkBuddyPersonalContent = Readonly<{
+  accountId: string;
+  list: () => readonly TeacherInCompatibleContentPackage[];
+  receiptForArtifact: (artifactId: string) => PersonalContentReceipt | null;
+  publish: (input: Omit<PublishPersonalContentInput, 'accountId'>) => PublishPersonalContentResult;
+}>;
+
+export type WorkBuddyCourseware = Readonly<{
+  coursewareView: CoursewareRunView | null;
+  createCoursewareTask: (goal: string, taskAssemblySnapshotId?: string | null) => string | null;
+  updateCoursewareTaskBrief: (patch: Partial<CoursewareBrief>) => void;
+  confirmCoursewareTaskBrief: () => void;
+  reviseCoursewareTaskBrief: () => void;
+  executeCoursewareTaskPlan: () => void;
+  approveCoursewareArtifact: () => void;
+  reviseCoursewareArtifact: (input: CoursewareArtifactRevisionInput) => void;
+  proposeCoursewareSave: () => void;
+  approveCoursewareSave: () => void;
+  rejectCoursewareSave: () => void;
+  executeApprovedCoursewareSave: () => void;
+  recoverCoursewareSave: () => void;
+  writebackScenario: WritebackScenario;
+  setWritebackScenario: (scenario: WritebackScenario) => void;
+  activePanel: CoursewarePanel;
+  setActivePanel: (panel: CoursewarePanel) => void;
+  replanScope: Readonly<{ previousLabel: string; nextLabel: string }>;
+  replanToWaveContext: () => void;
+}>;
+
+export type WorkBuddyCoursePackage = Readonly<{
+  packageView: PackageRunView | null;
+  packageWritebackScenario: PackageWritebackScenario;
+  setPackageWritebackScenario: (scenario: PackageWritebackScenario) => void;
+  createPackageTask: (goal: string, taskAssemblySnapshotId?: string | null) => string | null;
+  beginPackageGeneration: () => void;
+  completePackageGeneration: () => void;
+  setPackageItemIncluded: (artifactId: string, included: boolean) => void;
+  revisePackageArtifact: (artifactId: string) => void;
+  proposePackageSave: () => void;
+  approvePackageSave: () => void;
+  rejectPackageSave: () => void;
+  executeApprovedPackageSave: () => void;
+  recoverPackageSave: () => void;
+  retryFailedPackageItems: () => void;
+  derivePackageFromCourseware: () => string | null;
+  activePanel: PackagePanel;
+  setActivePanel: (panel: PackagePanel) => void;
+  activePackageArtifactId: string | null;
+  setActivePackageArtifactId: (artifactId: string) => void;
+}>;
+
+export type WorkBuddyQuizActivity = Readonly<{
+  view: QuizActivityRunView | null;
+  createTask: (goal: string, taskAssemblySnapshotId?: string | null) => string | null;
+  updatePaperBrief: (patch: Partial<QuizPaperBrief>) => void;
+  confirmPaperBrief: (patch?: Partial<QuizPaperBrief>) => void;
+  beginGeneration: () => void;
+  generatePaper: () => void;
+  approvePaper: () => void;
+  markArtifactSaved: () => void;
+  updateActivitySettings: (patch: Partial<QuizActivitySettings>) => void;
+  prepareDraft: (patch: Partial<QuizActivitySettings>) => string | null;
+  proposeDraft: () => void;
+  approveDraft: () => void;
+  executeDraft: () => void;
+  retryDraft: () => void;
+  refreshTarget: () => void;
+  scenario: QuizActivityDraftScenario;
+  setScenario: (scenario: QuizActivityDraftScenario) => void;
+}>;
+
+export type WorkBuddyWorkspace = Readonly<{
+  conversationRun: ConversationRunModule;
+  history: WorkBuddyHistory;
+  taskDraft: WorkBuddyTaskDraft;
+  taskAssembly: WorkBuddyTaskAssembly;
+  taskMaterialCatalogs: WorkBuddyTaskMaterialCatalogs | null;
+  context: WorkBuddyContext;
+  teacherIn: WorkBuddyTeacherIn;
+  personalContent: WorkBuddyPersonalContent | null;
+  courseware: WorkBuddyCourseware;
+  coursePackage: WorkBuddyCoursePackage;
+  quizActivity: WorkBuddyQuizActivity;
+}>;
+
+export const WorkBuddyWorkspaceContext = createContext<WorkBuddyWorkspace | null>(null);
+
+export function useWorkBuddyWorkspace() {
+  const workspace = useContext(WorkBuddyWorkspaceContext);
+  if (!workspace) throw new Error('useWorkBuddyWorkspace must be used inside WorkBuddyWorkspaceProvider');
+  return workspace;
+}

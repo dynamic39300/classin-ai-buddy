@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="650" viewBox="0 0 1440 650" role="img" aria-labelledby="title desc">
+  <title id="title">固定 1000 会话中跨会话形态的角色场景构成</title>
+  <desc id="desc">师生班级群 741 个，占 74.1%；学生与学生一对一 132 个，占 13.2%；教师管理者教师 76 个，占 7.6%，由 32 个群聊和 44 个一对一组成；教师与学生一对一 37 个，占 3.7%；其他场景 14 个，占 1.4%。</desc>
+  <rect width="1440" height="650" fill="#f7faf8"/>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #10251e; }
+    .title { font-size: 32px; font-weight: 720; }
+    .subtitle { font-size: 17px; fill: #687873; }
+    .label { font-size: 20px; font-weight: 650; }
+    .detail { font-size: 14px; fill: #687873; }
+    .value { font-size: 20px; font-weight: 760; text-anchor: end; fill: #0b6e4f; }
+    .count { font-size: 14px; fill: #687873; text-anchor: end; }
+    .note { font-size: 15px; fill: #52665f; }
+  </style>
+
+  <text class="title" x="64" y="66">固定 1000 会话：跨会话形态的角色场景构成</text>
+  <text class="subtitle" x="64" y="98">同一角色关系跨群聊与 1v1 归并统计；条形长度表示占全部 1000 会话的比例</text>
+
+  <line x1="64" y1="128" x2="1376" y2="128" stroke="#cfdcd7"/>
+
+  <text class="label" x="64" y="185">师生班级群</text>
+  <rect x="390" y="158" width="780" height="30" rx="7" fill="#dce9e4"/>
+  <rect x="390" y="158" width="780" height="30" rx="7" fill="#0fad7c"/>
+  <text class="value" x="1348" y="181">74.1%</text>
+  <text class="count" x="1348" y="204">741 个窗口</text>
+
+  <text class="label" x="64" y="274">学生与学生 1v1</text>
+  <rect x="390" y="247" width="780" height="30" rx="7" fill="#dce9e4"/>
+  <rect x="390" y="247" width="139" height="30" rx="7" fill="#45a988"/>
+  <text class="value" x="1348" y="270">13.2%</text>
+  <text class="count" x="1348" y="293">132 个窗口</text>
+
+  <text class="label" x="64" y="355">教师-管理者-教师</text>
+  <text class="detail" x="64" y="381">32 个群聊 + 44 个 1v1</text>
+  <rect x="390" y="336" width="780" height="30" rx="7" fill="#dce9e4"/>
+  <rect x="390" y="336" width="80" height="30" rx="7" fill="#287a5e"/>
+  <text class="value" x="1348" y="359">7.6%</text>
+  <text class="count" x="1348" y="382">76 个窗口</text>
+
+  <text class="label" x="64" y="452">教师与学生 1v1</text>
+  <rect x="390" y="425" width="780" height="30" rx="7" fill="#dce9e4"/>
+  <rect x="390" y="425" width="39" height="30" rx="7" fill="#4b8d75"/>
+  <text class="value" x="1348" y="448">3.7%</text>
+  <text class="count" x="1348" y="471">37 个窗口</text>
+
+  <text class="label" x="64" y="541">其他场景</text>
+  <text class="detail" x="64" y="567">学生群 7 + 家长相关 1v1 7</text>
+  <rect x="390" y="514" width="780" height="30" rx="7" fill="#dce9e4"/>
+  <rect x="390" y="514" width="15" height="30" rx="7" fill="#78ad99"/>
+  <text class="value" x="1348" y="537">1.4%</text>
+  <text class="count" x="1348" y="560">14 个窗口</text>
+
+  <line x1="64" y1="600" x2="1376" y2="600" stroke="#cfdcd7"/>
+  <text class="note" x="64" y="631">群聊与 1v1 的组织形式差异在明细中保留；总览层不再把“教师-管理者-教师”拆成两类角色关系。</text>
+</svg>

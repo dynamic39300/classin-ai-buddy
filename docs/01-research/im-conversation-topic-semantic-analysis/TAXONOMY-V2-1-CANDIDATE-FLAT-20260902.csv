@@ -1,0 +1,86 @@
+﻿taxonomy_version,level,node_id,node_name,node_type,is_terminal,evidence_status,path_ids,path_names,path
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-001,学习与学业内容,domain,false,evidence_backed_candidate,L1-001,学习与学业内容,学习与学业内容
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-001,学科、技能与研究学习,group,false,evidence_backed_candidate,L1-001 > L2-001,学习与学业内容 > 学科、技能与研究学习,学习与学业内容 > 学科、技能与研究学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-001,英语语言学习,terminal,true,evidence_backed_candidate,L1-001 > L2-001 > L3-001,学习与学业内容 > 学科、技能与研究学习 > 英语语言学习,学习与学业内容 > 学科、技能与研究学习 > 英语语言学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-002,语文与中文学习,terminal,true,provisional_low_or_unvalidated,L1-001 > L2-001 > L3-002,学习与学业内容 > 学科、技能与研究学习 > 语文与中文学习,学习与学业内容 > 学科、技能与研究学习 > 语文与中文学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-003,数学学习,terminal,true,provisional_low_or_unvalidated,L1-001 > L2-001 > L3-003,学习与学业内容 > 学科、技能与研究学习 > 数学学习,学习与学业内容 > 学科、技能与研究学习 > 数学学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-004,自然科学与工程学习,terminal,true,provisional_low_or_unvalidated,L1-001 > L2-001 > L3-004,学习与学业内容 > 学科、技能与研究学习 > 自然科学与工程学习,学习与学业内容 > 学科、技能与研究学习 > 自然科学与工程学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-005,编程与计算学习,terminal,true,provisional_low_or_unvalidated,L1-001 > L2-001 > L3-005,学习与学业内容 > 学科、技能与研究学习 > 编程与计算学习,学习与学业内容 > 学科、技能与研究学习 > 编程与计算学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-006,艺术技能学习,terminal,true,provisional_low_or_unvalidated,L1-001 > L2-001 > L3-006,学习与学业内容 > 学科、技能与研究学习 > 艺术技能学习,学习与学业内容 > 学科、技能与研究学习 > 艺术技能学习
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-071,研究方法与学术项目学习,terminal,true,evidence_backed_candidate,L1-001 > L2-001 > L3-071,学习与学业内容 > 学科、技能与研究学习 > 研究方法与学术项目学习,学习与学业内容 > 学科、技能与研究学习 > 研究方法与学术项目学习
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-041,学习任务、计划与评价,group,false,evidence_backed_candidate,L1-001 > L2-041,学习与学业内容 > 学习任务、计划与评价,学习与学业内容 > 学习任务、计划与评价
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-007,作业布置、完成与订正,terminal,true,evidence_backed_candidate,L1-001 > L2-041 > L3-007,学习与学业内容 > 学习任务、计划与评价 > 作业布置、完成与订正,学习与学业内容 > 学习任务、计划与评价 > 作业布置、完成与订正
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-009,学习计划、复习与备考,terminal,true,evidence_backed_candidate,L1-001 > L2-041 > L3-009,学习与学业内容 > 学习任务、计划与评价 > 学习计划、复习与备考,学习与学业内容 > 学习任务、计划与评价 > 学习计划、复习与备考
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-072,正式测评、考试与成绩,terminal,true,human_confirmed_direction,L1-001 > L2-041 > L3-072,学习与学业内容 > 学习任务、计划与评价 > 正式测评、考试与成绩,学习与学业内容 > 学习任务、计划与评价 > 正式测评、考试与成绩
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-010,日常学习表现与反馈,terminal,true,human_confirmed_direction,L1-001 > L2-041 > L3-010,学习与学业内容 > 学习任务、计划与评价 > 日常学习表现与反馈,学习与学业内容 > 学习任务、计划与评价 > 日常学习表现与反馈
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-002,教学设计、实施与改进,domain,false,evidence_backed_candidate,L1-002,教学设计、实施与改进,教学设计、实施与改进
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-023,教学内容与资源,group,false,evidence_backed_candidate,L1-002 > L2-023,教学设计、实施与改进 > 教学内容与资源,教学设计、实施与改进 > 教学内容与资源
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-073,教材、教学资料与课件,terminal,true,human_confirmed_direction,L1-002 > L2-023 > L3-073,教学设计、实施与改进 > 教学内容与资源 > 教材、教学资料与课件,教学设计、实施与改进 > 教学内容与资源 > 教材、教学资料与课件
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-012,教学内容与课程进度,terminal,true,evidence_backed_candidate,L1-002 > L2-023 > L3-012,教学设计、实施与改进 > 教学内容与资源 > 教学内容与课程进度,教学设计、实施与改进 > 教学内容与资源 > 教学内容与课程进度
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-042,教学实施、评价与记录,group,false,evidence_backed_candidate,L1-002 > L2-042,教学设计、实施与改进 > 教学实施、评价与记录,教学设计、实施与改进 > 教学实施、评价与记录
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-014,教学方法与课堂活动设计,terminal,true,evidence_backed_candidate,L1-002 > L2-042 > L3-014,教学设计、实施与改进 > 教学实施、评价与记录 > 教学方法与课堂活动设计,教学设计、实施与改进 > 教学实施、评价与记录 > 教学方法与课堂活动设计
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-074,课堂互动规范与参与要求,terminal,true,provisional_low_or_unvalidated,L1-002 > L2-042 > L3-074,教学设计、实施与改进 > 教学实施、评价与记录 > 课堂互动规范与参与要求,教学设计、实施与改进 > 教学实施、评价与记录 > 课堂互动规范与参与要求
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-015,教学质量评价与改进,terminal,true,evidence_backed_candidate,L1-002 > L2-042 > L3-015,教学设计、实施与改进 > 教学实施、评价与记录 > 教学质量评价与改进,教学设计、实施与改进 > 教学实施、评价与记录 > 教学质量评价与改进
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-003,课程运营与服务,domain,false,evidence_backed_candidate,L1-003,课程运营与服务,课程运营与服务
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-025,课程排期与变更,group,false,evidence_backed_candidate,L1-003 > L2-025,课程运营与服务 > 课程排期与变更,课程运营与服务 > 课程排期与变更
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-018,可用时段与排班,terminal,true,evidence_backed_candidate,L1-003 > L2-025 > L3-018,课程运营与服务 > 课程排期与变更 > 可用时段与排班,课程运营与服务 > 课程排期与变更 > 可用时段与排班
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-075,课程预约与固定排课,terminal,true,provisional_low_or_unvalidated,L1-003 > L2-025 > L3-075,课程运营与服务 > 课程排期与变更 > 课程预约与固定排课,课程运营与服务 > 课程排期与变更 > 课程预约与固定排课
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-017,课程改期、取消与补课,terminal,true,evidence_backed_candidate,L1-003 > L2-025 > L3-017,课程运营与服务 > 课程排期与变更 > 课程改期、取消与补课,课程运营与服务 > 课程排期与变更 > 课程改期、取消与补课
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-026,到课与课堂运行,group,false,evidence_backed_candidate,L1-003 > L2-026,课程运营与服务 > 到课与课堂运行,课程运营与服务 > 到课与课堂运行
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-019,到课、请假与缺勤处置,terminal,true,human_confirmed_direction,L1-003 > L2-026 > L3-019,课程运营与服务 > 到课与课堂运行 > 到课、请假与缺勤处置,课程运营与服务 > 到课与课堂运行 > 到课、请假与缺勤处置
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-024,教室与课堂接入,terminal,true,evidence_backed_candidate,L1-003 > L2-026 > L3-024,课程运营与服务 > 到课与课堂运行 > 教室与课堂接入,课程运营与服务 > 到课与课堂运行 > 教室与课堂接入
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-043,学员承接、服务与权益,group,false,evidence_backed_candidate,L1-003 > L2-043,课程运营与服务 > 学员承接、服务与权益,课程运营与服务 > 学员承接、服务与权益
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-076,试听、首课与学员承接,terminal,true,human_confirmed_direction,L1-003 > L2-043 > L3-076,课程运营与服务 > 学员承接、服务与权益 > 试听、首课与学员承接,课程运营与服务 > 学员承接、服务与权益 > 试听、首课与学员承接
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-077,服务评价、投诉与口碑跟进,terminal,true,provisional_low_or_unvalidated,L1-003 > L2-043 > L3-077,课程运营与服务 > 学员承接、服务与权益 > 服务评价、投诉与口碑跟进,课程运营与服务 > 学员承接、服务与权益 > 服务评价、投诉与口碑跟进
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-078,学员课程权益、费用与退款,terminal,true,human_confirmed_direction,L1-003 > L2-043 > L3-078,课程运营与服务 > 学员承接、服务与权益 > 学员课程权益、费用与退款,课程运营与服务 > 学员承接、服务与权益 > 学员课程权益、费用与退款
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-044,教师合作、规范与结算,group,false,evidence_backed_candidate,L1-003 > L2-044,课程运营与服务 > 教师合作、规范与结算,课程运营与服务 > 教师合作、规范与结算
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-080,教师招聘、入职与资料,terminal,true,evidence_backed_candidate,L1-003 > L2-044 > L3-080,课程运营与服务 > 教师合作、规范与结算 > 教师招聘、入职与资料,课程运营与服务 > 教师合作、规范与结算 > 教师招聘、入职与资料
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-081,教师工作规范、考核与人员处置,terminal,true,evidence_backed_candidate,L1-003 > L2-044 > L3-081,课程运营与服务 > 教师合作、规范与结算 > 教师工作规范、考核与人员处置,课程运营与服务 > 教师合作、规范与结算 > 教师工作规范、考核与人员处置
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-079,教师课酬、薪资与奖励,terminal,true,human_confirmed_direction,L1-003 > L2-044 > L3-079,课程运营与服务 > 教师合作、规范与结算 > 教师课酬、薪资与奖励,课程运营与服务 > 教师合作、规范与结算 > 教师课酬、薪资与奖励
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-004,数字平台与技术,domain,false,evidence_backed_candidate,L1-004,数字平台与技术,数字平台与技术
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-008,账号、联系人与群组空间,group,false,evidence_backed_candidate,L1-004 > L2-008,数字平台与技术 > 账号、联系人与群组空间,数字平台与技术 > 账号、联系人与群组空间
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-026,账号认证与资料设置,terminal,true,evidence_backed_candidate,L1-004 > L2-008 > L3-026,数字平台与技术 > 账号、联系人与群组空间 > 账号认证与资料设置,数字平台与技术 > 账号、联系人与群组空间 > 账号认证与资料设置
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-082,联系人与通讯功能,terminal,true,evidence_backed_candidate,L1-004 > L2-008 > L3-082,数字平台与技术 > 账号、联系人与群组空间 > 联系人与通讯功能,数字平台与技术 > 账号、联系人与群组空间 > 联系人与通讯功能
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-027,群组空间与成员治理,terminal,true,evidence_backed_candidate,L1-004 > L2-008 > L3-027,数字平台与技术 > 账号、联系人与群组空间 > 群组空间与成员治理,数字平台与技术 > 账号、联系人与群组空间 > 群组空间与成员治理
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-045,设备、应用与数字操作,group,false,evidence_backed_candidate,L1-004 > L2-045,数字平台与技术 > 设备、应用与数字操作,数字平台与技术 > 设备、应用与数字操作
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-029,连接、设备与应用故障,terminal,true,evidence_backed_candidate,L1-004 > L2-045 > L3-029,数字平台与技术 > 设备、应用与数字操作 > 连接、设备与应用故障,数字平台与技术 > 设备、应用与数字操作 > 连接、设备与应用故障
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-030,设备与应用配置,terminal,true,evidence_backed_candidate,L1-004 > L2-045 > L3-030,数字平台与技术 > 设备、应用与数字操作 > 设备与应用配置,数字平台与技术 > 设备、应用与数字操作 > 设备与应用配置
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-032,在线课堂与协作工具,terminal,true,evidence_backed_candidate,L1-004 > L2-045 > L3-032,数字平台与技术 > 设备、应用与数字操作 > 在线课堂与协作工具,数字平台与技术 > 设备、应用与数字操作 > 在线课堂与协作工具
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-033,文件与媒体操作,terminal,true,provisional_low_or_unvalidated,L1-004 > L2-045 > L3-033,数字平台与技术 > 设备、应用与数字操作 > 文件与媒体操作,数字平台与技术 > 设备、应用与数字操作 > 文件与媒体操作
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-005,人际关系与社交,domain,false,evidence_backed_candidate,L1-005,人际关系与社交,人际关系与社交
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-011,关系与相处,group,false,evidence_backed_candidate,L1-005 > L2-011,人际关系与社交 > 关系与相处,人际关系与社交 > 关系与相处
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-034,恋爱与亲密关系,terminal,true,evidence_backed_candidate,L1-005 > L2-011 > L3-034,人际关系与社交 > 关系与相处 > 恋爱与亲密关系,人际关系与社交 > 关系与相处 > 恋爱与亲密关系
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-035,朋友同学关系与相处,terminal,true,evidence_backed_candidate,L1-005 > L2-011 > L3-035,人际关系与社交 > 关系与相处 > 朋友同学关系与相处,人际关系与社交 > 关系与相处 > 朋友同学关系与相处
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-036,家庭与亲属关系,terminal,true,evidence_backed_candidate,L1-005 > L2-011 > L3-036,人际关系与社交 > 关系与相处 > 家庭与亲属关系,人际关系与社交 > 关系与相处 > 家庭与亲属关系
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-046,个人身份、特征与自我认知,terminal,true,provisional_low_or_unvalidated,L1-005 > L2-046,人际关系与社交 > 个人身份、特征与自我认知,人际关系与社交 > 个人身份、特征与自我认知
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-012,社交安排与社群参与,group,false,evidence_backed_candidate,L1-005 > L2-012,人际关系与社交 > 社交安排与社群参与,人际关系与社交 > 社交安排与社群参与
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-038,见面、聚会与交流安排,terminal,true,evidence_backed_candidate,L1-005 > L2-012 > L3-038,人际关系与社交 > 社交安排与社群参与 > 见面、聚会与交流安排,人际关系与社交 > 社交安排与社群参与 > 见面、聚会与交流安排
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-039,社群参与与成员交流,terminal,true,evidence_backed_candidate,L1-005 > L2-012 > L3-039,人际关系与社交 > 社交安排与社群参与 > 社群参与与成员交流,人际关系与社交 > 社交安排与社群参与 > 社群参与与成员交流
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-040,玩笑、梗与语言游戏,terminal,true,evidence_backed_candidate,L1-005 > L2-012 > L3-040,人际关系与社交 > 社交安排与社群参与 > 玩笑、梗与语言游戏,人际关系与社交 > 社交安排与社群参与 > 玩笑、梗与语言游戏
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-006,娱乐与创作,domain,false,evidence_backed_candidate,L1-006,娱乐与创作,娱乐与创作
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-013,娱乐内容、游玩与兴趣收藏,group,false,evidence_backed_candidate,L1-006 > L2-013,娱乐与创作 > 娱乐内容、游玩与兴趣收藏,娱乐与创作 > 娱乐内容、游玩与兴趣收藏
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-041,游戏与游玩,terminal,true,evidence_backed_candidate,L1-006 > L2-013 > L3-041,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 游戏与游玩,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 游戏与游玩
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-042,影视、动漫与文学作品,terminal,true,evidence_backed_candidate,L1-006 > L2-013 > L3-042,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 影视、动漫与文学作品,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 影视、动漫与文学作品
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-043,音乐作品、演出与艺人文化,terminal,true,evidence_backed_candidate,L1-006 > L2-013 > L3-043,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 音乐作品、演出与艺人文化,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 音乐作品、演出与艺人文化
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-083,体育赛事与运动娱乐,terminal,true,provisional_low_or_unvalidated,L1-006 > L2-013 > L3-083,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 体育赛事与运动娱乐,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 体育赛事与运动娱乐
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-049,兴趣周边与收藏,terminal,true,provisional_low_or_unvalidated,L1-006 > L2-013 > L3-049,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 兴趣周边与收藏,娱乐与创作 > 娱乐内容、游玩与兴趣收藏 > 兴趣周边与收藏
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-014,内容创作与虚构互动,group,false,evidence_backed_candidate,L1-006 > L2-014,娱乐与创作 > 内容创作与虚构互动,娱乐与创作 > 内容创作与虚构互动
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-045,视觉艺术与手作创作,terminal,true,provisional_low_or_unvalidated,L1-006 > L2-014 > L3-045,娱乐与创作 > 内容创作与虚构互动 > 视觉艺术与手作创作,娱乐与创作 > 内容创作与虚构互动 > 视觉艺术与手作创作
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-046,故事、角色设定与虚构互动,terminal,true,evidence_backed_candidate,L1-006 > L2-014 > L3-046,娱乐与创作 > 内容创作与虚构互动 > 故事、角色设定与虚构互动,娱乐与创作 > 内容创作与虚构互动 > 故事、角色设定与虚构互动
+classin-im-semantic-taxonomy-v2.1-candidate,3,L3-047,音视频与多媒体创作,terminal,true,evidence_backed_candidate,L1-006 > L2-014 > L3-047,娱乐与创作 > 内容创作与虚构互动 > 音视频与多媒体创作,娱乐与创作 > 内容创作与虚构互动 > 音视频与多媒体创作
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-007,日常生活、健康与出行,domain,false,evidence_backed_candidate,L1-007,日常生活、健康与出行,日常生活、健康与出行
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-047,日常起居与生活事务,terminal,true,evidence_backed_candidate,L1-007 > L2-047,日常生活、健康与出行 > 日常起居与生活事务,日常生活、健康与出行 > 日常起居与生活事务
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-048,个人近况、经历与日常安排,terminal,true,provisional_low_or_unvalidated,L1-007 > L2-048,日常生活、健康与出行 > 个人近况、经历与日常安排,日常生活、健康与出行 > 个人近况、经历与日常安排
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-049,宠物与动物生活,terminal,true,provisional_low_or_unvalidated,L1-007 > L2-049,日常生活、健康与出行 > 宠物与动物生活,日常生活、健康与出行 > 宠物与动物生活
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-050,健康与身体活动,terminal,true,evidence_backed_candidate,L1-007 > L2-050,日常生活、健康与出行 > 健康与身体活动,日常生活、健康与出行 > 健康与身体活动
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-051,天气与自然环境状况,terminal,true,evidence_backed_candidate,L1-007 > L2-051,日常生活、健康与出行 > 天气与自然环境状况,日常生活、健康与出行 > 天气与自然环境状况
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-052,位置、行程与旅行,terminal,true,evidence_backed_candidate,L1-007 > L2-052,日常生活、健康与出行 > 位置、行程与旅行,日常生活、健康与出行 > 位置、行程与旅行
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-011,教育路径与研究,domain,false,evidence_backed_candidate,L1-011,教育路径与研究,教育路径与研究
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-053,校园事务与教育路径,terminal,true,evidence_backed_candidate,L1-011 > L2-053,教育路径与研究 > 校园事务与教育路径,教育路径与研究 > 校园事务与教育路径
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-054,专业研究与学术发表,terminal,true,provisional_low_or_unvalidated,L1-011 > L2-054,教育路径与研究 > 专业研究与学术发表,教育路径与研究 > 专业研究与学术发表
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-012,商业、消费与金融,domain,false,evidence_backed_candidate,L1-012,商业、消费与金融,商业、消费与金融
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-056,商业与消费,terminal,true,provisional_low_or_unvalidated,L1-012 > L2-056,商业、消费与金融 > 商业与消费,商业、消费与金融 > 商业与消费
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-057,金融市场分析与交易,terminal,true,evidence_backed_candidate,L1-012 > L2-057,商业、消费与金融 > 金融市场分析与交易,商业、消费与金融 > 金融市场分析与交易
+classin-im-semantic-taxonomy-v2.1-candidate,1,L1-013,法律与公共事务,domain,false,evidence_backed_candidate,L1-013,法律与公共事务,法律与公共事务
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-058,法律、权利与公共安全,terminal,true,provisional_low_or_unvalidated,L1-013 > L2-058,法律与公共事务 > 法律、权利与公共安全,法律与公共事务 > 法律、权利与公共安全
+classin-im-semantic-taxonomy-v2.1-candidate,2,L2-059,公共事务与社会信息,terminal,true,provisional_low_or_unvalidated,L1-013 > L2-059,法律与公共事务 > 公共事务与社会信息,法律与公共事务 > 公共事务与社会信息

@@ -1,0 +1,535 @@
+{
+  "manifest_id": "classin-im-pilot0-public-manifest-v1-1-20260829",
+  "protocol_version": "P2-v0.1",
+  "selection_method_version": "v1.1",
+  "source": {
+    "file_name": "2026年8月IM单聊&群聊内容抽样数据.xlsx",
+    "sha256": "a28f4c3125326c2e0f9086f8c0f67104671b94b2992a0173f4c34f90690fee6c",
+    "export_window_count": 8197,
+    "rows_scanned": 819700
+  },
+  "selection": {
+    "seed": "classin-im-pilot0-20260829-v1",
+    "quota": {
+      "direct_two_senders": 6,
+      "direct_one_sender": 2,
+      "group_learner_and_staff": 8,
+      "group_learner_only": 4,
+      "group_staff_only": 4
+    },
+    "candidate_counts": {
+      "direct_two_senders": 1760,
+      "direct_one_sender": 45,
+      "group_learner_and_staff": 4913,
+      "group_learner_only": 1096,
+      "group_staff_only": 383
+    },
+    "selected_count": 24,
+    "invalid_window_profiles": 0,
+    "profiles_outside_pilot_groups": 0,
+    "core_segment_distribution": {
+      "41-60": 5,
+      "21-40": 5,
+      "1-20": 5,
+      "81-100": 5,
+      "61-80": 4
+    },
+    "method": "balanced purposive coverage with deterministic structural-diversity round-robin",
+    "estimation_warning": "Pilot-0 is not a probability sample and must not be used for prevalence estimates."
+  },
+  "samples": [
+    {
+      "sample_id": "P0-DIR1-01",
+      "sample_group": "direct_one_sender",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "1",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "no_selected_structural_flag"
+      ],
+      "core_rn_start": 61,
+      "core_rn_end": 80,
+      "context_rn_start": 56,
+      "context_rn_end": 85,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR1-02",
+      "sample_group": "direct_one_sender",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "1",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_long_text"
+      ],
+      "core_rn_start": 41,
+      "core_rn_end": 60,
+      "context_rn_start": 36,
+      "context_rn_end": 65,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR2-01",
+      "sample_group": "direct_two_senders",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_missing_content",
+        "contains_non_object_msgdata"
+      ],
+      "core_rn_start": 41,
+      "core_rn_end": 60,
+      "context_rn_start": 36,
+      "context_rn_end": 65,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR2-02",
+      "sample_group": "direct_two_senders",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_long_text",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 21,
+      "core_rn_end": 40,
+      "context_rn_start": 16,
+      "context_rn_end": 45,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR2-03",
+      "sample_group": "direct_two_senders",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 1,
+      "core_rn_end": 20,
+      "context_rn_start": 1,
+      "context_rn_end": 25,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR2-04",
+      "sample_group": "direct_two_senders",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_missing_content"
+      ],
+      "core_rn_start": 81,
+      "core_rn_end": 100,
+      "context_rn_start": 76,
+      "context_rn_end": 100,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR2-05",
+      "sample_group": "direct_two_senders",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_non_object_msgdata",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 61,
+      "core_rn_end": 80,
+      "context_rn_start": 56,
+      "context_rn_end": 85,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-DIR2-06",
+      "sample_group": "direct_two_senders",
+      "channel": "direct_1v1",
+      "observed_role_composition": "其他",
+      "user_num_bucket": "not_applicable_direct",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 21,
+      "core_rn_end": 40,
+      "context_rn_start": 16,
+      "context_rn_end": 45,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GLEARN-01",
+      "sample_group": "group_learner_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 21,
+      "core_rn_end": 40,
+      "context_rn_start": 16,
+      "context_rn_end": 45,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GLEARN-02",
+      "sample_group": "group_learner_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "3-5",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_non_object_msgdata"
+      ],
+      "core_rn_start": 1,
+      "core_rn_end": 20,
+      "context_rn_start": 1,
+      "context_rn_end": 25,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GLEARN-03",
+      "sample_group": "group_learner_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生",
+      "user_num_bucket": "班级成员 30 - 100 人",
+      "observed_sender_count_bucket": "6+",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 61,
+      "core_rn_end": 80,
+      "context_rn_start": 56,
+      "context_rn_end": 85,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GLEARN-04",
+      "sample_group": "group_learner_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生",
+      "user_num_bucket": "班级成员 ＞ 100 人",
+      "observed_sender_count_bucket": "6+",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_non_object_msgdata"
+      ],
+      "core_rn_start": 41,
+      "core_rn_end": 60,
+      "context_rn_start": 36,
+      "context_rn_end": 65,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-01",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 30 - 100 人",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 1,
+      "core_rn_end": 20,
+      "context_rn_start": 1,
+      "context_rn_end": 25,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-02",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "6+",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_long_text",
+        "contains_non_object_msgdata",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 81,
+      "core_rn_end": 100,
+      "context_rn_start": 76,
+      "context_rn_end": 100,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-03",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "3-5",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_long_text"
+      ],
+      "core_rn_start": 61,
+      "core_rn_end": 80,
+      "context_rn_start": 56,
+      "context_rn_end": 85,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-04",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "6+",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "no_selected_structural_flag"
+      ],
+      "core_rn_start": 81,
+      "core_rn_end": 100,
+      "context_rn_start": 76,
+      "context_rn_end": 100,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-05",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "3-5",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_long_text",
+        "contains_missing_content",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 1,
+      "core_rn_end": 20,
+      "context_rn_start": 1,
+      "context_rn_end": 25,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-06",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 教师 | 班主任",
+      "user_num_bucket": "班级成员 30 - 100 人",
+      "observed_sender_count_bucket": "6+",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_long_text",
+        "contains_non_object_msgdata",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 41,
+      "core_rn_end": 60,
+      "context_rn_start": 36,
+      "context_rn_end": 65,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-07",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 ＞ 100 人",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_non_object_msgdata",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 21,
+      "core_rn_end": 40,
+      "context_rn_start": 16,
+      "context_rn_end": 45,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GMIX-08",
+      "sample_group": "group_learner_and_staff",
+      "channel": "class_group_declared",
+      "observed_role_composition": "学生 | 班主任",
+      "user_num_bucket": "班级成员 30 - 100 人",
+      "observed_sender_count_bucket": "3-5",
+      "window_time_span_bucket": "1d-7d",
+      "structural_flags": [
+        "contains_non_object_msgdata",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 81,
+      "core_rn_end": 100,
+      "context_rn_start": 76,
+      "context_rn_end": 100,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GSTAFF-01",
+      "sample_group": "group_staff_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "1",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_long_text",
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 81,
+      "core_rn_end": 100,
+      "context_rn_start": 76,
+      "context_rn_end": 100,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GSTAFF-02",
+      "sample_group": "group_staff_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "教师 | 班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "2",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_explicit_reply"
+      ],
+      "core_rn_start": 1,
+      "core_rn_end": 20,
+      "context_rn_start": 1,
+      "context_rn_end": 25,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GSTAFF-03",
+      "sample_group": "group_staff_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "1",
+      "window_time_span_bucket": "7d-27d",
+      "structural_flags": [
+        "contains_non_object_msgdata"
+      ],
+      "core_rn_start": 21,
+      "core_rn_end": 40,
+      "context_rn_start": 16,
+      "context_rn_end": 45,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    },
+    {
+      "sample_id": "P0-GSTAFF-04",
+      "sample_group": "group_staff_only",
+      "channel": "class_group_declared",
+      "observed_role_composition": "班主任",
+      "user_num_bucket": "班级成员 ＜ 30 人",
+      "observed_sender_count_bucket": "1",
+      "window_time_span_bucket": "<=1d",
+      "structural_flags": [
+        "contains_non_object_msgdata"
+      ],
+      "core_rn_start": 41,
+      "core_rn_end": 60,
+      "context_rn_start": 36,
+      "context_rn_end": 65,
+      "selection_status": "selected",
+      "replacement_for": null,
+      "loss_reason": null,
+      "estimation_eligibility": "none_method_validation_only"
+    }
+  ],
+  "privacy": "No raw cluster IDs, user IDs, message IDs, names, or message text are present."
+}

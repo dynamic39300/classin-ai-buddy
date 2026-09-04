@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="650" viewBox="0 0 1440 650" role="img" aria-labelledby="title desc">
+  <title id="title">固定 1000 会话中群聊与 1v1 的角色构成对照</title>
+  <desc id="desc">群聊 780 个，其中师生班级群 741 个，占群聊 95%；教师管理协作群 32 个，占 4.1%；学生群 7 个，占 0.9%。1v1 共有 220 个，其中学生与学生 132 个，占 60%；教师管理者教师 44 个，占 20%；教师与学生 37 个，占 16.8%；学生与家长 4 个，占 1.8%；教师与家长 3 个，占 1.4%。</desc>
+  <rect width="1440" height="650" fill="#ffffff"/>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17252b; }
+    .title { font-size: 30px; font-weight: 720; }
+    .subtitle { font-size: 16px; fill: #60717a; }
+    .panel-title { font-size: 23px; font-weight: 720; }
+    .panel-sub { font-size: 14px; fill: #65767e; }
+    .label { font-size: 16px; font-weight: 650; }
+    .value { font-size: 15px; font-weight: 700; text-anchor: end; }
+    .sample { font-size: 13px; fill: #65767e; text-anchor: end; }
+    .axis { font-size: 12px; fill: #718188; }
+    .note { font-size: 14px; fill: #5f7078; }
+  </style>
+
+  <text class="title" x="32" y="44">固定 1000 会话：群聊与 1v1 的角色构成</text>
+  <text class="subtitle" x="32" y="75">条形长度表示各自会话形态内占比；右侧同时给出数量、形态内占比与全样本占比</text>
+
+  <rect x="28" y="105" width="674" height="440" rx="12" fill="#f8fbfa" stroke="#cedddb"/>
+  <text class="panel-title" x="52" y="144">群聊 · 780 个</text>
+  <text class="panel-sub" x="52" y="170">占全部 1,000 会话的 78.0%</text>
+  <text class="axis" x="258" y="199">0%</text>
+  <text class="axis" x="600" y="199" text-anchor="end">100%（群聊内）</text>
+
+  <text class="label" x="52" y="241">师生班级群</text>
+  <rect x="258" y="220" width="342" height="24" rx="6" fill="#e0eeeb"/>
+  <rect x="258" y="220" width="325" height="24" rx="6" fill="#0f766e"/>
+  <text class="value" x="674" y="235">741 · 95.0%</text>
+  <text class="sample" x="674" y="256">全样本 74.1%</text>
+
+  <text class="label" x="52" y="331">教师管理协作群</text>
+  <rect x="258" y="310" width="342" height="24" rx="6" fill="#e0eeeb"/>
+  <rect x="258" y="310" width="14" height="24" rx="6" fill="#42a69d"/>
+  <text class="value" x="674" y="325">32 · 4.1%</text>
+  <text class="sample" x="674" y="346">全样本 3.2%</text>
+
+  <text class="label" x="52" y="421">学生群</text>
+  <rect x="258" y="400" width="342" height="24" rx="6" fill="#e0eeeb"/>
+  <rect x="258" y="400" width="7" height="24" rx="4" fill="#7fcac3"/>
+  <text class="value" x="674" y="415">7 · 0.9%</text>
+  <text class="sample" x="674" y="436">全样本 0.7%</text>
+
+  <text class="panel-sub" x="52" y="503">群聊的三类归并后合计 780 个，无剩余中间类型。</text>
+
+  <rect x="726" y="105" width="686" height="440" rx="12" fill="#fafafe" stroke="#d8d7eb"/>
+  <text class="panel-title" x="750" y="144">1v1 · 220 个</text>
+  <text class="panel-sub" x="750" y="170">占全部 1,000 会话的 22.0%</text>
+  <text class="axis" x="958" y="199">0%</text>
+  <text class="axis" x="1258" y="199" text-anchor="end">100%（1v1 内）</text>
+
+  <text class="label" x="750" y="231">学生—学生</text>
+  <rect x="958" y="212" width="300" height="20" rx="5" fill="#ececf8"/>
+  <rect x="958" y="212" width="180" height="20" rx="5" fill="#4f46b5"/>
+  <text class="value" x="1384" y="226">132 · 60.0%</text>
+  <text class="sample" x="1384" y="245">全样本 13.2%</text>
+
+  <text class="label" x="750" y="296">教师/管理者(教师)</text>
+  <rect x="958" y="277" width="300" height="20" rx="5" fill="#ececf8"/>
+  <rect x="958" y="277" width="60" height="20" rx="5" fill="#756dcc"/>
+  <text class="value" x="1384" y="291">44 · 20.0%</text>
+  <text class="sample" x="1384" y="310">全样本 4.4%</text>
+
+  <text class="label" x="750" y="361">教师—学生</text>
+  <rect x="958" y="342" width="300" height="20" rx="5" fill="#ececf8"/>
+  <rect x="958" y="342" width="50" height="20" rx="5" fill="#8d86d8"/>
+  <text class="value" x="1384" y="356">37 · 16.8%</text>
+  <text class="sample" x="1384" y="375">全样本 3.7%</text>
+
+  <text class="label" x="750" y="426">学生—家长</text>
+  <rect x="958" y="407" width="300" height="20" rx="5" fill="#ececf8"/>
+  <rect x="958" y="407" width="7" height="20" rx="4" fill="#aaa5e3"/>
+  <text class="value" x="1384" y="421">4 · 1.8%</text>
+  <text class="sample" x="1384" y="440">全样本 0.4%</text>
+
+  <text class="label" x="750" y="491">教师—家长</text>
+  <rect x="958" y="472" width="300" height="20" rx="5" fill="#ececf8"/>
+  <rect x="958" y="472" width="7" height="20" rx="4" fill="#c0bdec"/>
+  <text class="value" x="1384" y="486">3 · 1.4%</text>
+  <text class="sample" x="1384" y="505">全样本 0.3%</text>
+
+  <line x1="28" y1="580" x2="1412" y2="580" stroke="#d5dfe1"/>
+  <text class="note" x="32" y="612">统一归并后的全样本结构：师生班级群 74.1%｜教师管理协作群 3.2%｜学生群 0.7%｜五类 1v1 合计 22.0%。</text>
+  <text class="note" x="32" y="638">群聊类型描述多人沟通场景；1v1 类型描述双方角色关系。二者分别统计，不把群聊强行转换成角色配对。</text>
+</svg>

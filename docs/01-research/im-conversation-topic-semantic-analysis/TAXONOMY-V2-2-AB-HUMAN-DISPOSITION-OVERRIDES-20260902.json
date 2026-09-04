@@ -1,0 +1,93 @@
+{
+  "schema_version": "classin-im-v22-ab-human-disposition-overrides/v1",
+  "source_feedback_sha256": "3b239d62c56cee887443a5c77e3f0bdaadaf83882250a9f512086561963aecc3",
+  "authorized_missing_item_policy": {
+    "topic_instance_id": "STI-ae54d04719092288ce48",
+    "action": "accept_preview",
+    "reason": "用户于 2026-09-02 明确授权忽略漏审并接受当前判断。"
+  },
+  "overrides": [
+    {
+      "topic_instance_id": "STI-5ffc2d6b58f62894a06a",
+      "action": "replace_target",
+      "target_terminal_node_id": "L3-040",
+      "reason": "日常调侃，没有刻意的故事或角色设定。"
+    },
+    {
+      "topic_instance_id": "STI-30ffd603588244a68979",
+      "action": "replace_target",
+      "target_terminal_node_id": "L3-039",
+      "reason": "公开课视频在该会话中是群内日常交流媒介，不是正式课堂接入。"
+    },
+    {
+      "topic_instance_id": "STI-a3ad2e88f34cc08274b4",
+      "action": "accept_preview_with_rule_amendment",
+      "target_terminal_node_id": "L3-017",
+      "rule_amendment": "在 L3-017 的名称或定义、纳入项中显式补充续课／续排既有课程。",
+      "reason": "当前终点正确，但目录表达没有外显续课。"
+    },
+    {
+      "topic_instance_id": "STI-31455d5011bfc1705650",
+      "action": "replace_split_with_single_target",
+      "target_terminal_node_id": "L3-019",
+      "reason": "持续主题是多名孩子未到课；单条教室删除不足以独立成 Topic。"
+    },
+    {
+      "topic_instance_id": "STI-397365f59269e500ce45",
+      "action": "reject_as_topic",
+      "reason": "个性化日常内容，对当前研究目标无稳定解释力，无需形成目录节点。"
+    },
+    {
+      "topic_instance_id": "STI-ed5f4d10e7cde8313c8e",
+      "action": "reject_as_topic",
+      "reason": "一次性、个性化内容，不需要形成稳定研究 Topic。"
+    },
+    {
+      "topic_instance_id": "STI-9138b9f06f1778e63cdc",
+      "action": "reject_as_topic",
+      "reason": "消息数量过少且没有稳定沟通目标。"
+    },
+    {
+      "topic_instance_id": "STI-56e2013ddbfe9d33f7fc",
+      "action": "reject_as_topic",
+      "reason": "消息联系不充分，不形成稳定主题。"
+    },
+    {
+      "topic_instance_id": "STI-dace32bbaedcb5b64255",
+      "action": "replace_target",
+      "target_terminal_node_id": "L3-039",
+      "reason": "群内日常交流本身可以稳定承接，不必解释圈内对象。"
+    },
+    {
+      "topic_instance_id": "STI-a1f63588179f2c6369fb",
+      "action": "reject_as_topic",
+      "reason": "非核心、一次性信息，无需为其定义目录节点。"
+    },
+    {
+      "topic_instance_id": "STI-4ad513cdb2490fdb68d1",
+      "action": "reject_as_topic",
+      "reason": "反复出现但操作对象始终不明，不应仅凭次数形成 Topic。"
+    },
+    {
+      "topic_instance_id": "STI-0dfd65b33d6f76d520db",
+      "action": "reject_as_topic",
+      "reason": "缺少具体提交对象，不能形成可稳定表述的 Topic。"
+    },
+    {
+      "topic_instance_id": "STI-58e2afb7a7ec10ab6ac6",
+      "action": "reject_as_topic",
+      "reason": "比赛对象与语境缺失，不能形成可稳定表述的 Topic。"
+    },
+    {
+      "topic_instance_id": "STI-ab6db36381f7d9d7beea",
+      "action": "replace_target",
+      "target_terminal_node_id": "L3-010",
+      "reason": "核心是教师向家长反馈孩子的课堂表现，而非制定课堂参与规范。"
+    },
+    {
+      "topic_instance_id": "STI-77bf1b6ad951891d8515",
+      "action": "reject_as_topic",
+      "reason": "内容过少且对象不明，不形成稳定主题。"
+    }
+  ]
+}
